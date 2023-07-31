@@ -7,7 +7,7 @@ This project is a descendent of [Ayase](https://github.com/bibanon/ayase). I cho
 
 - I am more familiar with Flask environments, and Quart is practically just Flask with `async` and `await`.
 - Quart has convenient [extensions](http://pgjones.gitlab.io/quart/how_to_guides/quart_extensions.html#quart-extensions),.
-  - Quart Auth allowed me quickly add authentication to Ayase Quart.
+  - Quart Auth allowed me quickly add client authentication to Ayase. At the time of writing this, Ayase uses oath2 with gitgud.io.
 - It's been stated by numerous sources that the FastAPI developer is not supportive and does not like to accept PRs.
   - [GitHub](https://github.com/tiangolo/fastapi/pulls)
   - [Reddit](https://www.reddit.com/r/Python/comments/xk6ppx/comment/ipd8c62/?utm_source=share&utm_medium=web2x&context=3)
