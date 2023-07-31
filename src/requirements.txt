@@ -28,3 +28,5 @@ aiomysql
 
 # https://github.com/Delgan/loguru
 loguru
+
+pydantic<2
