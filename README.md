@@ -67,7 +67,7 @@ Note: You will need to create the database hayden\_asagi, but Hayden takes care 
 		"boards" : {
 			"g": {
 				"AnyFilter": "docker",
-        "AnyBlacklist": "useless|terrible|hate"
+                                "AnyBlacklist": "useless|terrible|hate"
 			},
 		},
 		
