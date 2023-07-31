@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div role="main" id="main">
+		{% if options.search %}
+			{% include 'search.html' %}
+		{% endif %}
+    <nav class="index_nav clearfix">
+        <h1></h1>
+        {% if archives %}
+        <ul class="pull-left clearfix">
+            <li><h2>Archives</h2></li>
+            <li>
+                <ul>
+                    <li>
+                        {% for archive in archives %}
+                        <h3>
+                            <a href="/{{ archive.shortname }}">/{{ archive.shortname }}/ <span class="help">{{ archive.name }}</span></a>
+                        </h3>
+                        {% endfor %}
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        {% endif %}
+        {% if boards %}
+        <ul class="pull-left clearfix">
+            <li><h2>Boards</h2></li>
+            <li>
+                <ul>
+                    {% for board in boards %}
+                    <li>
+                        <h3>
+                            <a href="/{{ board.shortname }}">/{{ board.shortname }}/ <span class="help">{{ board.name }}</span></a>
+                        </h3>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+        {%endif %}
+        {% if articles %}
+        <ul class="pull-left clearfix">
+            <li><h2>Articles</h2></li>
+            <li>
+                <ul>
+                    {% for article in articles %}
+                    <li>
+                        <h3><a href="{{ article.uri }}">{{ article.title }}</a></h3>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        </ul>
+        {% endif %}
+    </nav>
+</div>
+
+{% endblock %}

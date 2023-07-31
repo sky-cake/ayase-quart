@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ayase Quart</title>
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap-5.3.0-dist/css/bootstrap.css') }}">   
+    <link href="{{ url_for('static', filename='css/index.css') }}" rel="stylesheet">
+
+</head>
+
+<body class="bg-dark text-white mx-auto container p-2">
+    
+    <div class="container-fluid">
+        <h1><a href="/" class="text-white text-decoration-none">Ayase Quart</a></h1>
+        {% block body %}
+        {% endblock %}
+    </div>
+
+    <script src="{{ url_for('static', filename='bootstrap-5.3.0-dist/js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+
+</html>

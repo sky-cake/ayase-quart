@@ -1,0 +1,30 @@
+# https://flask-wtf.readthedocs.io/en/1.0.x/
+Flask-WTF
+
+# https://bootstrap-flask.readthedocs.io/en/stable/index.html
+bootstrap-flask
+
+# https://pgjones.gitlab.io/hypercorn/
+hypercorn
+
+# https://quart.palletsprojects.com/en/latest/how_to_guides/developing.html
+quart
+
+# https://github.com/pgjones/quart-schema
+quart-schema
+
+# https://github.com/pgjones/quart-auth
+quart-auth
+
+# https://github.com/Quart-Addons/quart-wtf
+quart-wtforms
+
+# https://github.com/pgjones/quart-rate-limiter
+quart-rate-limiter
+
+# https://aiomysql.readthedocs.io/en/stable/examples.html
+# https://github.com/aio-libs/aiomysql
+aiomysql
+
+# https://github.com/Delgan/loguru
+loguru

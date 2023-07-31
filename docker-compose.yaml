@@ -1,0 +1,14 @@
+version: '3'
+services:
+  app:
+    build:
+      context: ./src
+      dockerfile: ./Dockerfile
+    container_name: "ayase_quart_container"
+    ports:
+      - 8080:8080
+    restart: always
+    volumes:
+      - logs:/ayase_quart/src/logs
+volumes:
+  logs:
