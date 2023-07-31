@@ -39,6 +39,8 @@ If you're on Windows, you can use Git Bash to execute the command.
 
 Right now, this project is read-only -- the moderator functions do not work.
 
+Some functionality from Ayase still needs to be ported, namely setting different CSS skins, and other configs.
+
 
 ## Neofuuka
 
