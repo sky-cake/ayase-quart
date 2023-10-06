@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="generator" content="FoolFuuka 2.2.0">
-    <title>{{ title_window|safe }}</title>
+    <title>{{ tab_title|safe }}</title>
     <link href="/" rel="index" title="{{ site_name }}">
 
     <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css">
@@ -29,6 +29,7 @@
 <div class="letters">
 {% if archives %}Archives: [ {% for archive in archives %}<a href="/{{ archive.shortname }}">{{ archive.shortname }} {{ '/' if not loop.last }}</a> {% endfor %} ]{% endif %}
 {% if boards %}Boards: [ {% for internal_board in boards %}<a href="/{{ internal_board.shortname }}">{{ internal_board.shortname }} {{ '/' if not loop.last }}</a> {% endfor %} ]{% endif %}
+<a href="/stats">Stats</a>
 </div>
 {% endif %}
 <div class="container-fluid">
@@ -85,13 +86,7 @@
                             </li>
                         </ul>
                     </li>
-                    {% if options.ghost %}
-                    <li><a href="/{{ board }}/ghost">Ghost</a></li>
-                    {% endif %}
                     <li><a href="/{{ board }}/gallery">Gallery</a></li>
-                    {% if options.stats %}
-                    <li><a href="/{{ board }}/statistics">Stats</a></li>
-                    {% endif %}
                     {% endif %}
                     {% if mod_portal %}
                         {% if mod %}
@@ -110,8 +105,8 @@
 		{% block body %}
 		{% endblock %}
 </div>
-<footer id="footer">
-    <a href="https://github.com/bibanon/ayase" target="_blank">FoolFuuka template for Ayase</a> - <a href="{{ scraper[scraper.default].source }}" target="_blank">{{ scraper[scraper.default].name }} Fetcher</a>
+<footer id="footer" style="margin-top: 4em;">
+    <a href="https://github.com/sky-cake/ayase-quart" target="_blank">Ayase Quart</a>
     <div class="pull-right">
         <div class="btn-group dropup pull-right">
             <a href="#" class="btn btn-inverse btn-mini dropup-toggle" data-toggle="dropdown">

@@ -12,6 +12,7 @@ from quart_auth import (
 # from quart_schema import validate_request
 from quart_rate_limiter import RateLimiter, rate_limit
 import os
+import asyncio
 from forms import LoginForm
 from flask_bootstrap import Bootstrap5
 import aiomysql
@@ -19,7 +20,7 @@ from secrets import compare_digest
 from datetime import timedelta
 from loguru import logger
 import configs
-from db import execute_handler
+from db import query_handler, execute_handler
 from asagi_converter import (
     convert_thread,
     generate_index,
@@ -36,6 +37,7 @@ from templates import (
     template_post_sha256,
     template_posts,
     template_thread,
+    template_stats
 )
 from exceptions import NotFoundException, QueryException
 from utils import get_board_entry
@@ -96,8 +98,8 @@ async def error_handler_unauthorized(*errors: Exception):
 async def error_handler_not_found(*errors: Exception):
     content = template_404.render(
         **configs.render_constants,
-        title=errors[0].title_window,
-        title_window=errors[0].title_window,
+        title=errors[0].tab_title,
+        tab_title=errors[0].tab_title,
         skin=configs.default_skin,
         status_code=404,
         mod=current_user.auth_id == configs.mod_username,
@@ -109,8 +111,8 @@ async def error_handler_not_found(*errors: Exception):
 async def error_handler_query(*errors: Exception):
     content = template_debug.render(
         **configs.render_constants,
-        title=errors[0].title_window,
-        title_window=errors[0].title_window,
+        title=errors[0].tab_title,
+        tab_title=errors[0].tab_title,
         skin=configs.default_skin,
         status_code=500,
         mod=current_user.auth_id == configs.mod_username,
@@ -126,7 +128,7 @@ async def index_html():
     return template_index.render(
         **configs.render_constants,
         title=configs.site_name,
-        title_window=configs.site_name,
+        tab_title=configs.site_name,
         skin=configs.default_skin,
         mod=current_user.auth_id == configs.mod_username,
     )
@@ -150,7 +152,7 @@ async def board_html(board_name: str):
                 image_uri=configs.image_location["image"].format(board_name=board_name),
                 thumb_uri=configs.image_location["thumb"].format(board_name=board_name),
                 title=title,
-                title_window=title,
+                tab_title=title,
                 skin=configs.default_skin,
             )
             return content
@@ -166,7 +168,7 @@ async def gallery_html(board_name: str):
 
         board_description = get_board_entry(board_name)["name"]
         title = f"/{board_name}/ - {board_description}"
-        title_window = title + " » Gallery"
+        tab_title = title + " » Gallery"
         content = template_gallery.render(
             **configs.render_constants,
             gallery=gallery,
@@ -176,7 +178,7 @@ async def gallery_html(board_name: str):
             image_uri=configs.image_location["image"].format(board_name=board_name),
             thumb_uri=configs.image_location["thumb"].format(board_name=board_name),
             title=title,
-            title_window=title_window,
+            tab_title=tab_title,
             skin=configs.default_skin,
         )
         return content
@@ -191,7 +193,7 @@ async def gallery_index_html(board_name: str, page_num: int):
         gallery = await generate_gallery(board_name, page_num)
         board_description = get_board_entry(board_name)["name"]
         title = f"/{board_name}/ - {board_description}"
-        title_window = title + f" » Gallery Page {page_num}"
+        tab_title = title + f" » Gallery Page {page_num}"
         content = template_gallery.render(
             **configs.render_constants,
             gallery=gallery,
@@ -201,7 +203,7 @@ async def gallery_index_html(board_name: str, page_num: int):
             image_uri=configs.image_location["image"].format(board_name=board_name),
             thumb_uri=configs.image_location["thumb"].format(board_name=board_name),
             title=title,
-            title_window=title_window,
+            tab_title=tab_title,
             skin=configs.default_skin,
         )
         return content
@@ -217,7 +219,7 @@ async def board_index_html(board_name: str, page_num: int):
         if len(index["threads"]) > 0:
             board_description = get_board_entry(board_name)["name"]
             title = f"/{board_name}/ - {board_description}"
-            title_window = title + f" » Page {page_num}"
+            tab_title = title + f" » Page {page_num}"
             content = template_board_index.render(
                 **configs.render_constants,
                 page_num=page_num,
@@ -228,7 +230,7 @@ async def board_index_html(board_name: str, page_num: int):
                 image_uri=configs.image_location["image"].format(board_name=board_name),
                 thumb_uri=configs.image_location["thumb"].format(board_name=board_name),
                 title=title,
-                title_window=title_window,
+                tab_title=tab_title,
                 skin=configs.default_skin,
             )
             return content
@@ -247,7 +249,7 @@ async def thread_html(board_name: str, thread_id: int):
             subject_title = thread_dict["posts"][0]["sub"]
             board_description = get_board_entry(board_name)["name"]
             title = f"/{board_name}/ - {board_description}"
-            title_window = (
+            tab_title = (
                 title
                 + (f" - {subject_title}" if subject_title else "")
                 + f" » Thread #{thread_id} - {configs.site_name}"
@@ -265,7 +267,7 @@ async def thread_html(board_name: str, thread_id: int):
             image_uri=configs.image_location["image"].format(board_name=board_name),
             thumb_uri=configs.image_location["thumb"].format(board_name=board_name),
             title=title,
-            title_window=title_window,
+            tab_title=tab_title,
             skin=configs.default_skin,
         )
         return content
@@ -352,7 +354,7 @@ async def login():
         image_uri="",
         thumb_uri="",
         title=configs.site_name,
-        title_window="Login",
+        tab_title="Login",
         skin=configs.default_skin,
         form=form,
     )
@@ -372,6 +374,44 @@ DELETE_THREAD = "DELETE FROM {board} WHERE thread_num=:thread_num;"
 INSERT_POST_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE num=:num;"
 DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
 
+DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = '{configs.database["mysql"]["db"]}' group by table_name;"""
+DATABASE_STORAGE_SIZE = f"""select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = '{configs.database["mysql"]["db"]}' group by table_schema;"""
+
+async def run_subprocess(cmd):
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await proc.communicate()
+    if stdout:
+        return stdout.decode()
+    if stderr:
+        logger.error(stderr.decode())
+    return 'Error'
+
+
+@app.route("/stats")
+async def stats():
+    database_storage_size = await query_handler(DATABASE_STORAGE_SIZE, True)
+    database_table_storage_sizes = await query_handler(DATABASE_TABLE_STORAGE_SIZES, True)
+    
+    fs_sizes_cmd = f"cd {configs.image_location_absolute} && du -h -d 1"
+    fs_sizes = await run_subprocess(fs_sizes_cmd)
+
+    fs_file_counts_cmd = f"cd {configs.image_location_absolute} && du -a | cut -d/ -f2 | sort | uniq -c | sort -nr"
+    fs_file_counts = await run_subprocess(fs_file_counts_cmd)
+
+    return template_stats.render(
+        database_storage_size=database_storage_size,
+        database_table_storage_sizes=database_table_storage_sizes,
+        fs_sizes=fs_sizes,
+        fs_file_counts=fs_file_counts,
+        **configs.render_constants,
+        title=configs.site_name,
+        tab_title="Stats",
+        skin=configs.default_skin,
+    )
 
 @app.delete("/<string:board>/thread/<int:thread_num>")
 @login_required

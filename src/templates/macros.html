@@ -1,50 +1,20 @@
-{% macro table(k, d) %}
-    {% if d %}
-        <table id="{{k}}" class="table table-dark">
-          <thead>
+{% macro table(list_of_dicts) %}
+  <table>
+    <thead>
+        <tr>
+          {% for col in list_of_dicts[0].keys() %}
+            <td><b>{{ col }}</b></td>
+          {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in list_of_dicts %}
             <tr>
-                {% for col in d['columns'] %}
-                <th>{{col}}</th>
-                {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-              {% for row in d['rows'] %}
-              <tr>
-                  {% for col in d['columns'] %}
-                  <td>{{row[col]}}</td>
-                  {% endfor %}
-              </tr>
+              {% for col in row.keys() %}
+                <td>{{ row[col] }}</td>
               {% endfor %}
-          </tbody>
-        </table>
-    {% endif %}
-{% endmacro %}
-
-{% macro card(header, body) %}
-  <div class="card text-bg-dark mt-2 border-secondary">
-
-      {% if body %}
-        {% set header_colour = 'text-white'%}
-      {% else %}
-        {% set header_colour = 'text-secondary'%}
-      {% endif %}
-
-      <div class="card-header border-secondary">
-        <a class="{{header_colour}}" data-bs-toggle="collapse" href="#collapse{{header}}" role="button" aria-expanded="false" aria-controls="collapse{{header}}">
-          {{header}}
-        </a>
-      </div>
-
-      <div class="collapse" id="collapse{{header}}">
-        <div class="card-body">
-          {% if body %}
-            {{body}}
-          {% else %}
-            No data found.
-          {% endif %}
-        </div>
-      </div>
-      
-  </div>
+            </tr>
+        {% endfor %}
+    </tbody>
+  </table>
 {% endmacro %}

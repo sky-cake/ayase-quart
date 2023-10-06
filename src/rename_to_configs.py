@@ -29,6 +29,7 @@ board_list = []
 # need to port over support from Ayase
 default_skin: str = 'default'
 
+image_location_absolute = '/abs/path/to/static/hayden_asagi'
 image_location: Dict[str, str] = {
     'image': "/static/hayden_asagi/{board_name}/image",
     'thumb': "/static/hayden_asagi/{board_name}/thumb"

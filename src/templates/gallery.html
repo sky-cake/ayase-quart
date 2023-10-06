@@ -83,7 +83,9 @@
             </a>
         </div>
     </div>
-    <div class="thread_tools_bottom">Replies: {{ thread.replies }} | Images: {{ thread.images }} | Posters: {{ thread.replies + 1 }} <span class="post_type"> </span></div>
+    <div class="thread_tools_bottom">
+        Replies: {{ thread.replies }} | Images: {{ thread.images }} | Posters: {{ thread.replies + 1 }} <span class="post_type"> </span>
+    </div>
 </article>
 
 {% if (j+1) % 5 == 0 %}
@@ -92,6 +94,7 @@
 
 {% endfor %}
 {% endfor %}
+</div>
 
 <div class="paginate">
     <ul>
