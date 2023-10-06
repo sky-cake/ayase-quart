@@ -1,5 +1,7 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+import os
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 env = Environment(
     loader=FileSystemLoader("./templates"),

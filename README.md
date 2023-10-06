@@ -7,7 +7,7 @@ This project is a descendent of [Ayase](https://github.com/bibanon/ayase). I cho
 
 - I am more familiar with Flask environments, and Quart is practically just Flask with `async` and `await`.
 - Quart has convenient [extensions](http://pgjones.gitlab.io/quart/how_to_guides/quart_extensions.html#quart-extensions),.
-  - Quart Auth allowed me quickly add client authentication to Ayase. At the time of writing this, Ayase uses oath2 with gitgud.io.
+  - Quart Auth allowed me quickly add authentication to Ayase Quart.
 - It's been stated by numerous sources that the FastAPI developer is not supportive and does not like to accept PRs.
   - [GitHub](https://github.com/tiangolo/fastapi/pulls)
   - [Reddit](https://www.reddit.com/r/Python/comments/xk6ppx/comment/ipd8c62/?utm_source=share&utm_medium=web2x&context=3)
@@ -39,8 +39,6 @@ If you're on Windows, you can use Git Bash to execute the command.
 
 Right now, this project is read-only -- the moderator functions do not work.
 
-Some functionality from Ayase still needs to be ported, namely setting different CSS skins, and other configs.
-
 
 ## Neofuuka
 
@@ -69,7 +67,7 @@ Note: You will need to create the database hayden\_asagi, but Hayden takes care 
 		"boards" : {
 			"g": {
 				"AnyFilter": "docker",
-                                "AnyBlacklist": "useless|terrible|hate"
+        "AnyBlacklist": "useless|terrible|hate"
 			},
 		},
 		

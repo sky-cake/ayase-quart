@@ -23,11 +23,11 @@ async def query_handler(sql: str, fetchall: bool):
         async with current_app.db_pool.acquire() as connection:
             async with connection.cursor(AttrDictCursor) as cursor:
                 await cursor.execute(sql)
-
                 if fetchall:
-                    return await cursor.fetchall()
-
-                return await cursor.fetchone()
+                    res = await cursor.fetchall()
+                else:
+                    res = await cursor.fetchone()
+                return res
     except Exception as e:
         raise QueryException(e)
 

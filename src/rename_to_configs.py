@@ -69,7 +69,7 @@ _options: Dict[str, bool] = {
     'ghost': False,
     'search': False,
     'reports': False,
-    'moderation': False, # need to merge this with other mod config
+    'moderation': False,
 }
 
 _scraper = {

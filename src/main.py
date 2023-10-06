@@ -42,7 +42,6 @@ from utils import get_board_entry
 
 # see requirements.txt for a list of links directed to import packages' documentation
 
-
 this_dir = os.path.dirname(__file__)
 os.chdir(this_dir)
 
@@ -75,6 +74,7 @@ async def create_db_pool():
         db=configs.database["mysql"]["db"],
         minsize=configs.database["mysql"]["min_connections"],
         maxsize=configs.database["mysql"]["max_connections"],
+        pool_recycle=30 # renew pool connections every N seconds so data does not get stale
     )
     logger.info(f"Database pool created.")
 
