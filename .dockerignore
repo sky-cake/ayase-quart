@@ -1,0 +1,9 @@
+__pycache__
+8080
+.git
+.gitignore
+example.png
+*.log
+Dockerfile
+.dockerignore
+README.md
