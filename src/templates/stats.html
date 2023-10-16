@@ -22,10 +22,11 @@
     <h3>Filesystem</h3>
 
     <h4>Directory Size</h4>
-    <p style="white-space: pre;">{{fs_sizes}}</p>
+    <p style="white-space: pre;">You can run the following on your media directory: du -h -d 1</p>
 
     <h4>File Count</h4>
-    <p style="white-space: pre;">{{fs_file_counts}}</p>
+    <p style="white-space: pre;">You can run the following on your media directory: du -a | cut -d/ -f2 | sort | uniq -c | sort -nr</p>
+
   </div>
 </div>
 {% endblock %}

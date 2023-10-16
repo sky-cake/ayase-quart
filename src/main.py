@@ -12,7 +12,6 @@ from quart_auth import (
 # from quart_schema import validate_request
 from quart_rate_limiter import RateLimiter, rate_limit
 import os
-import asyncio
 from forms import LoginForm
 from flask_bootstrap import Bootstrap5
 import aiomysql
@@ -377,36 +376,14 @@ DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
 DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = '{configs.database["mysql"]["db"]}' group by table_name;"""
 DATABASE_STORAGE_SIZE = f"""select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = '{configs.database["mysql"]["db"]}' group by table_schema;"""
 
-async def run_subprocess(cmd):
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await proc.communicate()
-    if stdout:
-        return stdout.decode()
-    if stderr:
-        logger.error(stderr.decode())
-    return 'Error'
-
 
 @app.route("/stats")
 async def stats():
     database_storage_size = await query_handler(DATABASE_STORAGE_SIZE, True)
     database_table_storage_sizes = await query_handler(DATABASE_TABLE_STORAGE_SIZES, True)
-    
-    fs_sizes_cmd = f"cd {configs.image_location_absolute} && du -h -d 1"
-    fs_sizes = await run_subprocess(fs_sizes_cmd)
-
-    fs_file_counts_cmd = f"cd {configs.image_location_absolute} && du -a | cut -d/ -f2 | sort | uniq -c | sort -nr"
-    fs_file_counts = await run_subprocess(fs_file_counts_cmd)
-
     return template_stats.render(
         database_storage_size=database_storage_size,
         database_table_storage_sizes=database_table_storage_sizes,
-        fs_sizes=fs_sizes,
-        fs_file_counts=fs_file_counts,
         **configs.render_constants,
         title=configs.site_name,
         tab_title="Stats",
