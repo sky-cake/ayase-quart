@@ -1,0 +1,20 @@
+{% macro table(list_of_dicts) %}
+  <table>
+    <thead>
+      <tr>
+        {% for col in list_of_dicts[0].keys() %}
+          <td><b>{{ col }}</b></td>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in list_of_dicts %}
+        <tr>
+          {% for col in row.keys() %}
+            <td>{{ row[col] }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endmacro %}

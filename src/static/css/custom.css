@@ -1,0 +1,57 @@
+#body {
+    min-height: 95vh;
+}
+
+footer {
+    max-height: 5vh;
+    padding: 10px;
+    margin: 10px;
+    text-align: center;
+    border-top: 1px #c5c8c6 solid;
+}
+
+.center {
+    margin: auto;
+    text-align: center;
+}
+
+.post_title {
+    font-weight: bold;
+}
+
+.paginate ul {
+    display: inline;
+    list-style: none;
+}
+
+.paginate ul li {
+    display: inline;
+    list-style: none;
+    padding: 2px;
+}
+
+#threads {
+    text-align: center;
+}
+
+#catalog_threads>.thread {
+    vertical-align: top;
+    display: inline-block;
+    word-wrap: break-word;
+    overflow: hidden;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    padding: 5px 0 3px;
+    position: relative;
+    width: 270px;
+    max-height: 410px;
+}
+
+#catalog_threads {
+    padding: 20px 0;
+    text-align: center;
+}
+
+table {
+    margin: 2px;
+}

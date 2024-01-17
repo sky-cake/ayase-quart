@@ -1,0 +1,21 @@
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% extends 'base.html' %}
+
+{% block body %}
+
+  {% if is_user_mod %}
+    <div class="alert" style="margin:15%;">
+      <h4 class="alert-heading">Error!</h4>
+      User already logged in asis_user_mod.
+    </div>
+  {% else %}
+    <nav class="index_nav clearfix">
+      <ul class="pull-left clearfix">
+        {{ render_form(form, id="login_form", action="/login", method="post", novalidate=True) }}
+      </ul>
+    </nav>
+  {% endif %}
+
+
+{% endblock %}

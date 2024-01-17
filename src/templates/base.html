@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        
+        <title>{{ tab_title }}</title>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link href="/static/css/inline.css" rel="stylesheet" type="text/css">
+        <link href="/static/css/{{theme}}.css" rel="stylesheet" type="text/css">
+        <link href="/static/css/custom.css" rel="stylesheet" type="text/css">
+
+        <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+
+    </head>
+
+    <body>
+        <div id="body">
+            {% if not index %}
+            <div class="letters">
+                    {{site_name}}: [ <a href="/">Home</a> ]
+                    {% if board_objects %}
+                        Boards:
+                        [
+                        {% for board_object in board_objects %}
+                            <a href="/{{ board_object.shortname }}/catalog"> {{board_object.shortname }}</a>{{ ' /' if not loop.last }}
+                        {% endfor %}
+                        ]
+                    {% endif %}
+                    Admin: [
+                    <a href="/stats">Stats</a>
+                    ]
+                </div>
+            {% endif %}
+
+            <div class="container-fluid">
+                {% if board or search %}
+                    <div class="container">
+                        <h2 style="display: inline-block;">{{title}}</h2>
+                        {% if board %}
+                            [
+                            <a href="https://boards.4chan.org/{{ board }}" style="padding-right:4px;"> /{{board}}/ on 4chan</a> /
+                            <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
+                            <a href="/{{ board }}/catalog">Catalog</a>
+                            ]
+                        {% endif %}
+                        {% if search %}
+                            {% include 'search_new.html' %}
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% block body %}
+                {% endblock %}
+            </div>
+
+            {% if not request.endpoint in [''] %}
+            <script type="text/javascript" src="/static/js/index.js"></script>
+            {% endif %}
+
+        </div>
+        <footer id="footer">
+            Archive Powered By: <a href="https://github.com/sky-cake/ayase-quart" target="_blank">Ayase Quart</a>
+        </footer>
+
+    </body>
+
+</html>

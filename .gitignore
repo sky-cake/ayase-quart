@@ -1,0 +1,9 @@
+__pycache__/
+.env
+8080
+*.log
+*.pem
+configs.py
+hayden_asagi/
+venv
+secret.txt

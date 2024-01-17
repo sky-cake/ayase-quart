@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+
+    <div id="catalog_threads">
+
+        {% set thread_counter = 0 %}
+
+        {% for page_i in range(catalog|length) %}
+            {% for thread_i in range(catalog[page_i]['threads']|length) %}
+                {% set thread = catalog[page_i]['threads'][thread_i] %}
+                <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}">
+                    <div class="post_data">
+                        <br>
+                        <span class="post_title">{{ thread.sub }}</span>
+                        <br>
+                        Posted by <span class="post_author">{{ thread.name }}</span>
+                        {% if thread.trip %}<span class="post_trip">{{ thread.trip }}</span>{% endif %}
+                        <span class="poster_hash"></span>
+                        <br/>
+                        <time datetime="{{ thread.time }}">{{ thread.now }}</time>
+                        <span class="post_number">
+                            <a href="/{{ board }}/thread/{{ thread.no }}/#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
+                        </span>
+                        <span class="post_controls">
+                            <a href="/{{ board }}/thread/{{ thread.no }}" class="btnr parent">View</a>
+                            <a href="https://boards.4chan.org/a/thread/{{ thread.no }}" class="btnr parent">Original</a>
+                        </span>
+                    </div>
+
+                    <a href="/{{ board }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">
+                        {% if sha256_dirs %}
+                            <img class="thumb" src="{{ thumb_uri }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-1] }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-3:-1] }}/{{ thread.asagi_preview_filename }}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                        {% else %}
+                            <img class="thumb"  src="{% if thread.asagi_preview_filename %}{{ thumb_uri }}/{{ (thread.asagi_preview_filename|string)[0:4] }}/{{ (thread.asagi_preview_filename|string)[4:6] }}/{{ thread.asagi_preview_filename}}{% else %}{{ thumb_uri }}/{{ (thread.tim|string)[0:4] }}/{{ (thread.tim|string)[4:6] }}/{{ thread.tim }}s.jpg{% endif %}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                        {% endif %}
+                    </a>
+
+                    <div class="meta">
+                        Replies: <b>{{ thread.replies }}</b> / Images: <b>{{ thread.images }}</b> / Posters: <b>{{ thread.replies + 1 }}</b>
+                    </div>
+                    <div class="teaser">
+                        {% if thread.sub %}<b>{{thread.sub}}</b>:{% endif %}
+                        {{thread.com}}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+
+    {% include 'pagination.html' %}
+
+
+{% endblock %}
