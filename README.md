@@ -45,7 +45,7 @@ If you're on Windows, you can use Git Bash to execute the command.
 
 - Right now, only the `tomorrow` theme has complete support.
 - If you want to modifying CSS in any way, please modify `/static/css/custom.css`.
-- A search function is coming soon!
+
 
 ## Neofuuka
 

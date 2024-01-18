@@ -5,7 +5,8 @@ from asagi_converter import (
     generate_index,
     convert_post,
     generate_catalog,
-    get_op_thread_count
+    get_op_thread_count,
+    get_posts_filtered
 )
 
 from templates import (
@@ -15,12 +16,15 @@ from templates import (
     template_post,
     template_posts,
     template_thread,
-    template_error_404
+    template_error_404,
+    template_search
 )
 from configs import CONSTS
 from utils import render_controller, validate_board_shortname, validate_post, validate_threads, get_title
 from quart import Blueprint
 from flask_paginate import Pagination
+from forms import SearchForm
+from werkzeug.exceptions import NotFound
 
 blueprint_app = Blueprint("blueprint_app", __name__, template_folder="templates")
 
@@ -40,6 +44,41 @@ async def v_index():
         template_index,
         **CONSTS.render_constants,
         tab_title=CONSTS.site_name
+    )
+
+
+@blueprint_app.route("/search", methods=['GET', 'POST'])
+async def v_search():
+    if not CONSTS.search:
+        raise NotFound
+    
+    form = await SearchForm.create_form()
+
+    board_shortname = ''
+    posts = []
+    if await form.validate_on_submit():
+
+        board_shortname = form.boards.data # used until multiboard filter support is implemented
+        form.boards.data = [form.boards.data] # used until multiboard filter support is implemented
+
+        for board in form.boards.data:
+            validate_board_shortname(board)
+
+        params = form.data
+
+        posts = (await get_posts_filtered(params))[0]['posts']
+        form.boards.data = board_shortname # used until multiboard filter support is implemented
+
+    return await render_controller(
+        template_search,
+        form=form,
+        posts=posts,
+        search_result=True,
+        search_result_limit=CONSTS.search_result_limit,
+        tab_title=CONSTS.site_name,
+        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
+        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
+        **CONSTS.render_constants
     )
 
 
@@ -225,11 +264,6 @@ async def v_post(board_shortname: str, post_id: int):
 
     post = await convert_post(board_shortname, post_id)
 
-    # Switch to SHA256 template if hash option is set
-    template = template_post
-    if CONSTS.render_constants["sha256_dirs"]:
-        template = template_post_sha256
-
     validate_post(post)
 
     # set resto to a non zero value to prevent the template
@@ -238,7 +272,7 @@ async def v_post(board_shortname: str, post_id: int):
         post["resto"] = -1
 
     return await render_controller(
-        template, 
+        template_post, 
         **CONSTS.render_constants,
         post=post,
         board=board_shortname,

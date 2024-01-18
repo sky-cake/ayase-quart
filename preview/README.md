@@ -1,5 +1,9 @@
 # Ayase Quart Preview
 
+### Search
+
+![search](search.png)
+
 ### Intelligent Quotelink Previews
 
 ![quotelink_preview](quotelink_preview.gif)

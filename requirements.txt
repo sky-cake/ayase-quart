@@ -3,3 +3,8 @@ quart_flask_patch
 mysqlclient>=2.2.1
 aiomysql
 flask-paginate
+quart-wtf
+bootstrap-flask
+hypercorn
+werkzeug<3.0
+cryptography

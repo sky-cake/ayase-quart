@@ -1,7 +1,7 @@
 import html
 from configs import CONSTS
 from db import query_execute
-from typing import List
+from typing import List, Dict, Any
 import asyncio
 
 SELECTOR = """SELECT
@@ -48,6 +48,63 @@ def make_sequence_str(seq: list):
     if seq:
         return '(\'' + '\', \''.join([str(x) for x in seq]) + '\')'
     return None
+
+
+async def get_posts_filtered(params: Dict[Any, Any]):
+    """Params e.g.
+    ```
+        params = dict(
+            boards=['ck', 'mu'],
+            title=None,
+            comment='skill issue',
+            media_filename=None,
+            media_hash=None,
+            has_file=False,
+            is_op=False
+        )
+    ```
+    !IMPORTANT! boards are assumed to be validated before arriving here, like all other referenced to boards in this file
+    """
+    params_to_embed = {}
+    params_embeddable = ['title', 'comment', 'media_filename', 'media_hash']
+    likables = ['title', 'comment', 'media_file']
+    for p in params_embeddable:
+        # if field was submitted with content
+        if params[p]:
+            params_to_embed[p] = params[p]
+
+            # if field gets a like clause
+            if p in likables:
+                params_to_embed[p] = f'%{params[p]}%'
+
+    sqls = []
+    for board_shortname in params['boards']:
+        select = SELECTOR.format(board_shortname=board_shortname).replace('%', '%%')
+
+        s = ' ( \n ' + select + f" \n FROM `{board_shortname}` \n WHERE 1=1 "
+        
+        if params['title']:             s += "\n and `title` LIKE %(title)s "
+        if params['comment']:           s += "\n and `comment` LIKE %(comment)s "
+        if params['media_filename']:    s += "\n and `media_filename` LIKE %(media_filename)s "
+        if params['media_hash']:        s += "\n and `media_hash` = %(media_hash)s "
+        if params['has_file']:          s += "\n and `media_filename` is not null "
+        if params['is_op']:             s += "\n and `op` = 1 "
+
+        s += f'\n LIMIT {CONSTS.search_result_limit} '
+        s += '\n) '
+        sqls.append(s)
+
+    sql = '\n UNION ALL \n'.join(sqls) + '\n;'
+
+    posts = await query_execute(sql, params=params_to_embed)
+
+    images = []
+    for p in posts:
+        i = await get_post_images(board_shortname, p['no'])
+        images.append(i)
+
+    return convert(posts, images=images) # treat these results as a thread
+
 
 async def get_post(board_shortname:str, post_num: int):
     SELECT_POST = SELECTOR + "FROM `{board_shortname}` WHERE `num`={post_num}"

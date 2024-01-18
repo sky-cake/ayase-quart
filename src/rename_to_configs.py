@@ -24,7 +24,7 @@ class CONSTS(NamedTuple):
 
     SQLALCHEMY_ECHO = False
 
-    MAX_CONTENT_LENGTH = 0 * 1024 * 1024  # 0 MB upload capacity
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
 
     with open(make_path("secret.txt"), encoding="utf-8") as f:
         SECRET_KEY = f.read().strip()
@@ -65,7 +65,10 @@ class CONSTS(NamedTuple):
 
     theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 
-    search = False # not currently supported
+    search = True
+    search_result_limit = 100
+
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
 
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##

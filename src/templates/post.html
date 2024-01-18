@@ -1,4 +1,4 @@
-{% if post.resto == 0 %}
+{% if post.resto == 0 and not search_result %}
     <div class="postContainer opContainer" id="pc{{post.no}}">
 {% else %}
     <div class="postContainer replyContainer" id="pc{{post.no}}">
@@ -6,7 +6,7 @@
 
     <div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
 
-    {% if post.resto == 0 %}
+    {% if post.resto == 0 and not search_result %}
         <div id="p{{post.no}}" class="post op">
     {% else %}
         <div id="p{{post.no}}" class="post reply">
@@ -35,11 +35,13 @@
             </span>
             <a href="#" class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</a>
             <div id="bl_{{post.no}}" class="backlink">
-                {% for quotelink in quotelinks[post.no|string] %}
-                    <span class="quotelink">
-                        <a href="#p{{ quotelink }}" class="quotelink">&gt;&gt;{{ quotelink }}</a>
-                    </span>
-                {% endfor %}
+                {% if quotelinks %}
+                    {% for quotelink in quotelinks[post.no|string] %}
+                        <span class="quotelink">
+                            <a href="#p{{ quotelink }}" class="quotelink">&gt;&gt;{{ quotelink }}</a>
+                        </span>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
         {% if post.filename %}

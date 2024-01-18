@@ -20,6 +20,11 @@ class AttrDictCursor(aiomysql.DictCursor):
 async def query_execute(sql, params=None, fetchone=False, commit=False):
     async with current_app.db_pool.acquire() as connection:
         async with connection.cursor(AttrDictCursor) as cursor:
+
+            if CONSTS.SQLALCHEMY_ECHO:
+                final_sql = cursor.mogrify(sql, params)
+                print('::SQL::', final_sql, '')
+
             await cursor.execute(sql, params)
 
             if commit:
@@ -27,7 +32,7 @@ async def query_execute(sql, params=None, fetchone=False, commit=False):
 
             if fetchone:
                 return await cursor.fetchone()
-
+            
             return await cursor.fetchall()
         
 

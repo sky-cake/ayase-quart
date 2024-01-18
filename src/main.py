@@ -1,3 +1,5 @@
+import quart_flask_patch
+
 import os
 from quart import Quart
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -6,6 +8,7 @@ from blueprint_api import blueprint_api
 from blueprint_app import blueprint_app
 from blueprint_admin import blueprint_admin
 from db import db_pool_open, db_pool_close
+from flask_bootstrap import Bootstrap5
 
 def create_app():
 
@@ -15,6 +18,8 @@ def create_app():
     app = Quart(__name__)
 
     app.config.from_object(CONSTS)
+
+    Bootstrap5(app)
 
     app.register_blueprint(blueprint_api)
     app.register_blueprint(blueprint_app)

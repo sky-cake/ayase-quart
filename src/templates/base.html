@@ -20,7 +20,14 @@
         <div id="body">
             {% if not index %}
             <div class="letters">
-                    {{site_name}}: [ <a href="/">Home</a> ]
+                    {{site_name}}:
+                    [
+                        <a href="/">Home</a>
+                        {% if search %}
+                            / <a href="/search">Search</a>
+                        {% endif %}
+                    ]
+
                     {% if board_objects %}
                         Boards:
                         [
@@ -36,7 +43,7 @@
             {% endif %}
 
             <div class="container-fluid">
-                {% if board or search %}
+                {% if board %}
                     <div class="container">
                         <h2 style="display: inline-block;">{{title}}</h2>
                         {% if board %}
@@ -45,9 +52,6 @@
                             <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
                             <a href="/{{ board }}/catalog">Catalog</a>
                             ]
-                        {% endif %}
-                        {% if search %}
-                            {% include 'search_new.html' %}
                         {% endif %}
                     </div>
                 {% endif %}
