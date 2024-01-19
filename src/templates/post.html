@@ -1,4 +1,4 @@
-{% if post.resto == 0 and not search_result %}
+{% if post.resto == 0 %}
     <div class="postContainer opContainer" id="pc{{post.no}}">
 {% else %}
     <div class="postContainer replyContainer" id="pc{{post.no}}">
@@ -6,8 +6,8 @@
 
     <div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
 
-    {% if post.resto == 0 and not search_result %}
-        <div id="p{{post.no}}" class="post op">
+    {% if post.resto == 0 %}
+        <div id="p{{post.no}}" class="post op reply">
     {% else %}
         <div id="p{{post.no}}" class="post reply">
     {% endif %}
@@ -24,6 +24,9 @@
             </span>
         </div>
         <div class="postInfo desktop" id="pi{{post.no}}">
+            {% if search_result %}
+                <b>/{{post.board_shortname}}/</b>
+            {% endif %}
             <input type="checkbox" name="{{post.no}}" value="delete">
             <span class="nameBlock">
                 <span class="name">{{post.name}}</span>
@@ -34,13 +37,21 @@
                 <a href="javascript:quote('{{post.no}}');" title="Reply to this post">{{post.no}}</a>
             </span>
             <a href="#" class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</a>
+
+            {% if search_result and post.resto != 0 %}
+                <a href="/{{post.board_shortname}}/thread/{{post.resto}}#p{{post.no}}">View</a>
+            {% endif %}
+            {% if search_result and post.resto == 0 %}
+                <a href="/{{post.board_shortname}}/thread/{{post.no}}#p{{post.no}}">View</a>
+            {% endif %}
+
             <div id="bl_{{post.no}}" class="backlink">
                 {% if quotelinks %}
-                    {% for quotelink in quotelinks[post.no|string] %}
-                        <span class="quotelink">
-                            <a href="#p{{ quotelink }}" class="quotelink">&gt;&gt;{{ quotelink }}</a>
-                        </span>
-                    {% endfor %}
+                {% for quotelink in quotelinks[post.no|string] %}
+                    <span class="quotelink">
+                        <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
+                    </span>
+                {% endfor %}
                 {% endif %}
             </div>
         </div>
@@ -48,13 +59,13 @@
         <div class="file" id="f{{post.no}}">
             <div class="fileText" id="fT{{post.no}}">
                 File:
-                <a href="{{ thumb_uri }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" target="_blank">
+                <a href="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" target="_blank">
                     {{post.filename}}.{{post.ext}}
                 </a>
                 ({{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}})
             </div>
-            <a class="fileThumb" href="{{ image_uri }}/{{ (post.asagi_filename|string)[0:4] }}/{{ (post.asagi_filename|string)[4:6] }}/{{ post.asagi_filename}}" target="_blank">
-                <img src="{{ thumb_uri }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" loading="lazy">
+            <a class="fileThumb" href="{{ image_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_filename|string)[0:4] }}/{{ (post.asagi_filename|string)[4:6] }}/{{ post.asagi_filename}}" target="_blank">
+                <img src="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" loading="lazy">
             </a>
         </div>
         {% endif %}

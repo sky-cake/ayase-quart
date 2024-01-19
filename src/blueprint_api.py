@@ -1,10 +1,16 @@
 from asagi_converter import (
     convert_thread,
     generate_index,
-    generate_catalog,
+    convert_post,
+    generate_catalog
 )
-from quart import Blueprint
-from utils import validate_board_shortname
+
+from templates import (
+    template_post
+)
+from configs import CONSTS
+from utils import render_controller, validate_board_shortname, validate_post
+from quart import Blueprint, jsonify
 
 
 blueprint_api = Blueprint("blueprint_api", __name__, template_folder="templates")
@@ -36,3 +42,23 @@ async def board_index(board_shortname: str, page_num: int):
     res = await generate_index(board_shortname, page_num, html=False)
     if res and res.get("threads"):
         return res
+
+
+@blueprint_api.get("/<string:board_shortname>/post/<int:post_id>")
+async def v_post(board_shortname: str, post_id: int):
+    """Called by the client to generate posts not on the page - e.g. when viewing search results."""
+
+    validate_board_shortname(board_shortname)
+
+    post, quotelinks = await convert_post(board_shortname, post_id)
+    post = post[0]
+    validate_post(post)
+
+    html_content = await render_controller(
+        template_post, 
+        **CONSTS.render_constants,
+        post=post,
+        board=board_shortname,
+        quotelink=quotelinks
+    )
+    return jsonify(html_content=html_content)

@@ -6,6 +6,7 @@ import asyncio
 
 SELECTOR = """SELECT
     `num` AS `no`,
+    '{board_shortname}' AS `board_shortname`,
     (CASE WHEN 1=1 THEN 1 ELSE NULL END) AS `closed`,
     DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `now`,
     `name`,
@@ -50,7 +51,56 @@ def make_sequence_str(seq: list):
     return None
 
 
-async def get_posts_filtered(params: Dict[Any, Any]):
+def validate_and_generate_params(form_data):
+    """
+    Removes inauthentic/non-form data (malicious POST fields, CSRF tags, etc.)
+    Specifies the filters for each valid field.
+    """
+
+    param_filters = {
+        'title': {
+            'like': True,
+            's': '`title` LIKE %(title)s'
+        },
+        'comment': {
+            'like': True,
+            's': '`comment` LIKE %(comment)s'
+        },
+        'media_filename': {
+            'like': True,
+            's': '`media_filename` LIKE %(media_filename)s'
+        },
+        'media_hash': {
+            's': '`media_hash` = %(media_hash)s'
+        },
+        'num': {
+            's': '`num` = %(num)s'
+        },
+        'has_file': {
+            's': '`media_filename` is not null'
+        },
+        'is_op': {
+            's': '`op` = 1'
+        },
+        'is_not_op': {
+            's': '`op` != 1'
+        }
+    }
+
+    param_values = {}
+
+    for field in param_filters:
+
+        if 'like' in param_filters[field] and param_filters[field]['like'] and form_data[field]:
+            param_values[field] = f'%{form_data[field]}%'
+
+        elif form_data[field]:
+            param_values[field] = form_data[field]
+
+    return param_values, param_filters
+
+
+async def get_posts_filtered(form_data: Dict[Any, Any]):
     """Params e.g.
     ```
         params = dict(
@@ -63,40 +113,40 @@ async def get_posts_filtered(params: Dict[Any, Any]):
             is_op=False
         )
     ```
-    !IMPORTANT! boards are assumed to be validated before arriving here, like all other referenced to boards in this file
+    !IMPORTANT!
+        form_data['boards'] is assumed to be validated before arriving here,
+            like all other referenced to boards in this file.
     """
-    params_to_embed = {}
-    params_embeddable = ['title', 'comment', 'media_filename', 'media_hash']
-    likables = ['title', 'comment', 'media_file']
-    for p in params_embeddable:
-        # if field was submitted with content
-        if params[p]:
-            params_to_embed[p] = params[p]
 
-            # if field gets a like clause
-            if p in likables:
-                params_to_embed[p] = f'%{params[p]}%'
+    param_values, param_filters = validate_and_generate_params(form_data)
 
     sqls = []
-    for board_shortname in params['boards']:
-        select = SELECTOR.format(board_shortname=board_shortname).replace('%', '%%')
 
-        s = ' ( \n ' + select + f" \n FROM `{board_shortname}` \n WHERE 1=1 "
+    # With Asagi, each board has its own table,
+    # so we loop over boards and do UNION ALLs to get multi-board results
+    for board_shortname in form_data['boards']:
+
+        s =   ' ( '
+        s +=  ' \n ' + SELECTOR.format(board_shortname=board_shortname).replace('%', '%%')
+        s += f' \n FROM `{board_shortname}`'
+        s +=  ' \n WHERE 1=1 '
         
-        if params['title']:             s += "\n and `title` LIKE %(title)s "
-        if params['comment']:           s += "\n and `comment` LIKE %(comment)s "
-        if params['media_filename']:    s += "\n and `media_filename` LIKE %(media_filename)s "
-        if params['media_hash']:        s += "\n and `media_hash` = %(media_hash)s "
-        if params['has_file']:          s += "\n and `media_filename` is not null "
-        if params['is_op']:             s += "\n and `op` = 1 "
+        for field in param_values:
+            s += f" \n and {param_filters[field]['s']} "
 
-        s += f'\n LIMIT {CONSTS.search_result_limit} '
-        s += '\n) '
+        s += f' \n LIMIT {CONSTS.search_result_limit} \n ) '
+
         sqls.append(s)
 
-    sql = '\n UNION ALL \n'.join(sqls) + '\n;'
+    sql = ' \n UNION ALL \n '.join(sqls)
 
-    posts = await query_execute(sql, params=params_to_embed)
+    if sql.strip() == '':
+        return {'posts': []}, {} # no boards specified
+    
+    sql +=  ' \n order by `time` desc'
+    sql += f' \n LIMIT {CONSTS.search_result_limit} ;'
+
+    posts = await query_execute(sql, params=param_values)
 
     images = []
     for p in posts:
@@ -213,7 +263,7 @@ async def get_catalog_details(board_shortname:str, page_num: int):
     return await query_execute(sql)
 
 
-def restore_comment(com: str, post_no: int):
+def restore_comment(com: str, post_no: int, board_shortname: str):
     """
     Re-convert asagi stripped comment into clean html
     Also create a dictionary with keys containing the post.no, which maps to a
@@ -253,7 +303,7 @@ def restore_comment(com: str, post_no: int):
                 if curr_word[:8] == "&gt;&gt;" and curr_word[8:].isdigit():
                     quotelink_list.append(curr_word[8:])
                     subsplit_by_space[j] = (
-                        f"""<a href="#p{curr_word[8:]}" class="quotelink">{curr_word}</a>"""
+                        f"""<a href="#p{curr_word[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{curr_word}</a>"""
                     )
                 # TODO: build functionality
             com_line[i] = " ".join(subsplit_by_space)
@@ -469,7 +519,7 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
         # generate comment content
         if not is_catalog:
             post_quotelinks, posts[i]["com"] = restore_comment(
-                posts[i]["com"], posts[i]["no"]
+                posts[i]["com"], posts[i]["no"], posts[i]['board_shortname']
             )
             for quotelink in post_quotelinks:  # for each quotelink in the post
                 if quotelink not in quotelink_map:
@@ -479,7 +529,7 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
                 )  # add the current post.no to the quotelink's post.no key
 
     if is_post:
-        return posts[0] if len(posts) > 0 else posts
+        return posts, quotelink_map
 
     if is_catalog:
         return posts

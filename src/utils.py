@@ -12,7 +12,7 @@ def validate_threads(threads):
         raise NotFound(threads)
     
 def validate_post(post):
-    if len(post) < 1:
+    if not post:
         raise NotFound(post)
     
 def get_title(board_shortname):

@@ -55,3 +55,40 @@ footer {
 table {
     margin: 2px;
 }
+
+#searchform {
+    border: 1px solid black;
+    padding: 1em;
+    width: fit-content;
+}
+
+#searchform input[type=submit],
+#searchform .form-control{
+    list-style: none;
+    padding: 3px;
+    margin-bottom: 1em;
+    background-color: #282a2e;
+    color: #c5c8c6;
+    border: 1px solid black;
+    display: flex;
+    max-width: 80vw;
+    width: 300px;
+}
+
+#searchform input[type=submit]{
+    margin-top: 1em;
+}
+
+#searchform #comment{
+    width: 300px;
+    max-width: 80vw;
+
+}
+
+#searchform li{
+    margin: 5px;
+}
+
+textarea:focus, input:focus{
+    outline: 0;
+}

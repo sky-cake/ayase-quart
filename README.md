@@ -41,11 +41,44 @@ If you're on Windows, you can use Git Bash to execute the command.
 `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem`
 
 
-## Notes
+## Themes
 
 - Right now, only the `tomorrow` theme has complete support.
 - If you want to modifying CSS in any way, please modify `/static/css/custom.css`.
 
+
+## Development
+
+If you want to take debug/dev mode to the next level, you can run the following command which will keep spawning the app, even after errors are raised.
+
+`while true; do hypercorn -w 1 --reload -b 127.0.0.1:9001 'main:app'; done`
+
+## Production
+
+Here is what a systemctl service unit could look like for Ayase Quart.
+
+`sudo nano /etc/systemd/system/ayase_quart.service`
+
+```
+[Unit]
+Description=Ayase Quart - Hypercorn Service
+After=network.target
+
+[Service]
+User=USER1
+Group=USER1
+
+WorkingDirectory=/path/to/ayase_quart/src
+Environment="PATH=/path/to/venv/bin"
+ExecStart=/path/to/venv/bin/hypercorn -w 2 -b 127.0.0.1:9001 'main:app'
+
+Type=simple
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Neofuuka
 

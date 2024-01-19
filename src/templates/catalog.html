@@ -29,9 +29,9 @@
 
                     <a href="/{{ board }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">
                         {% if sha256_dirs %}
-                            <img class="thumb" src="{{ thumb_uri }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-1] }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-3:-1] }}/{{ thread.asagi_preview_filename }}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                            <img class="thumb" src="{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-1] }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-3:-1] }}/{{ thread.asagi_preview_filename }}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
                         {% else %}
-                            <img class="thumb"  src="{% if thread.asagi_preview_filename %}{{ thumb_uri }}/{{ (thread.asagi_preview_filename|string)[0:4] }}/{{ (thread.asagi_preview_filename|string)[4:6] }}/{{ thread.asagi_preview_filename}}{% else %}{{ thumb_uri }}/{{ (thread.tim|string)[0:4] }}/{{ (thread.tim|string)[4:6] }}/{{ thread.tim }}s.jpg{% endif %}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                            <img class="thumb"  src="{% if thread.asagi_preview_filename %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string)[0:4] }}/{{ (thread.asagi_preview_filename|string)[4:6] }}/{{ thread.asagi_preview_filename}}{% else %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.tim|string)[0:4] }}/{{ (thread.tim|string)[4:6] }}/{{ thread.tim }}s.jpg{% endif %}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
                         {% endif %}
                     </a>
 

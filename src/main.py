@@ -37,4 +37,4 @@ def create_app():
 
 app = create_app()
 
-app.run(CONSTS.site_host, port=CONSTS.site_port, debug=CONSTS.TESTING, certfile='cert.pem', keyfile='key.pem')
+app.run(CONSTS.site_host, port=CONSTS.site_port, debug=CONSTS.TESTING, certfile=CONSTS.cert_file, keyfile=CONSTS.key_file)

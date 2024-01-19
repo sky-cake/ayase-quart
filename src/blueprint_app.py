@@ -3,7 +3,6 @@ import quart_flask_patch
 from asagi_converter import (
     convert_thread,
     generate_index,
-    convert_post,
     generate_catalog,
     get_op_thread_count,
     get_posts_filtered
@@ -13,14 +12,13 @@ from templates import (
     template_board_index,
     template_catalog,
     template_index,
-    template_post,
     template_posts,
     template_thread,
     template_error_404,
     template_search
 )
 from configs import CONSTS
-from utils import render_controller, validate_board_shortname, validate_post, validate_threads, get_title
+from utils import render_controller, validate_board_shortname, validate_threads, get_title
 from quart import Blueprint
 from flask_paginate import Pagination
 from forms import SearchForm
@@ -54,30 +52,29 @@ async def v_search():
     
     form = await SearchForm.create_form()
 
-    board_shortname = ''
     posts = []
+    quotelinks = []
     if await form.validate_on_submit():
-
-        board_shortname = form.boards.data # used until multiboard filter support is implemented
-        form.boards.data = [form.boards.data] # used until multiboard filter support is implemented
 
         for board in form.boards.data:
             validate_board_shortname(board)
 
+        if form.is_op.data and form.is_not_op.data:
+            raise NotFound
+
         params = form.data
 
-        posts = (await get_posts_filtered(params))[0]['posts']
-        form.boards.data = board_shortname # used until multiboard filter support is implemented
-
+        posts, quotelinks = await get_posts_filtered(params)
+        posts = posts['posts']
+        
     return await render_controller(
         template_search,
         form=form,
         posts=posts,
+        quotelinks=quotelinks,
         search_result=True,
         search_result_limit=CONSTS.search_result_limit,
         tab_title=CONSTS.site_name,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         **CONSTS.render_constants
     )
 
@@ -118,8 +115,6 @@ async def v_board_index(board_shortname: str):
         threads=index["threads"],
         quotelinks=[],
         board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         title=get_title(board_shortname)
     )
 
@@ -142,8 +137,6 @@ async def v_board_index_page(board_shortname: str, page_num: int):
         threads=index["threads"],
         quotelinks=[],
         board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         title=get_title(board_shortname),
         tab_title=get_title(board_shortname)
     )
@@ -183,8 +176,6 @@ async def v_catalog(board_shortname: str):
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog"
     )
@@ -204,8 +195,6 @@ async def v_catalog_page(board_shortname: str, page_num: int):
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog"
     )
@@ -226,8 +215,6 @@ async def v_thread(board_shortname: str, thread_id: int):
         posts=thread_dict["posts"],
         quotelinks=quotelinks,
         board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         title=title,
         tab_title=title,
     )
@@ -251,32 +238,6 @@ async def v_posts(board_shortname: str, thread_id: int):
         posts=thread_dict["posts"],
         quotelinks=quotelinks,
         board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
         title=get_title(board_shortname),
         tab_title=get_title(board_shortname),
-    )
-
-
-@blueprint_app.get("/<string:board_shortname>/post/<int:post_id>")
-async def v_post(board_shortname: str, post_id: int):
-    validate_board_shortname(board_shortname)
-
-    post = await convert_post(board_shortname, post_id)
-
-    validate_post(post)
-
-    # set resto to a non zero value to prevent the template
-    # from rendering OPs with the format of an OP post
-    if post["resto"] == 0:
-        post["resto"] = -1
-
-    return await render_controller(
-        template_post, 
-        **CONSTS.render_constants,
-        post=post,
-        board=board_shortname,
-        image_uri=CONSTS.image_location["image"].format(board_shortname=board_shortname),
-        thumb_uri=CONSTS.image_location["thumb"].format(board_shortname=board_shortname),
-        quotelink=True
     )
