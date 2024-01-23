@@ -58,7 +58,6 @@ class CONSTS(NamedTuple):
 
     root_dir = os.path.dirname(__file__)
     chdir_to_root = True
-    static_dir = os.path.join(root_dir, "static")
 
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##
