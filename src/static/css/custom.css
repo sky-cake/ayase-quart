@@ -79,6 +79,16 @@ table {
     margin-top: 1em;
 }
 
+#searchform input[type=submit]:hover{
+    cursor: pointer;
+    background-color: #70396c;
+}
+
+#searchform input[type=submit]:disabled{
+    cursor: default;
+    background-color: #70396c;
+}
+
 #searchform #comment{
     width: 300px;
     max-width: 80vw;
@@ -87,6 +97,14 @@ table {
 
 #searchform li{
     margin: 5px;
+}
+
+.search_highlight_title {
+    background-color: #397070;
+}
+
+.search_highlight_comment {
+    background-color: #70396c;
 }
 
 textarea:focus, input:focus{

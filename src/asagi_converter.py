@@ -77,6 +77,15 @@ def validate_and_generate_params(form_data):
         'num': {
             's': '`num` = %(num)s'
         },
+        'date_before': {
+            's': '`timestamp` <= UNIX_TIMESTAMP(%(date_before)s)'
+        },
+        'date_after': {
+            's': '`timestamp` >= UNIX_TIMESTAMP(%(date_after)s)'
+        },
+        'has_no_file': {
+            's': '`media_filename` is null'
+        },
         'has_file': {
             's': '`media_filename` is not null'
         },
@@ -111,7 +120,8 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
             media_filename=None,
             media_hash=None,
             has_file=False,
-            is_op=False
+            is_op=False,
+            ...
         )
     ```
     !IMPORTANT!
@@ -175,9 +185,9 @@ async def convert_standalone_posts(posts, medias):
             post["asagi_filename"] = media["media"]
 
         if post['resto'] == 0:
-            op_num = post.no
+            op_num = post['no']
         else:
-            op_num = post.resto
+            op_num = post['resto']
 
         replies = await get_post_replies(post['board_shortname'], op_num, post['no'])
         for reply in replies:
@@ -188,7 +198,7 @@ async def convert_standalone_posts(posts, medias):
                     quotelink_map[quotelink] = []
                 quotelink_map[quotelink].append(reply["no"])
 
-        _, post.com = restore_comment(post.com, post.board_shortname)
+        _, post['com'] = restore_comment(post['com'], post['board_shortname'])
         result['posts'].append(post)
     return result, quotelink_map
 
@@ -348,7 +358,7 @@ def substitute_square_brackets(text):
 def restore_comment(com: str, board_shortname: str):
     """
     Re-convert asagi stripped comment into clean html.
-    Also create a dictionary with keys containing the post.no, which maps to a tuple containing the posts it links to.
+    Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
 
     Returns a string (the processed comment) and a list of quotelinks in
     the post.

@@ -1,6 +1,7 @@
 from configs import CONSTS
 from quart import render_template
 from jinja2 import Template
+from html import escape
 from werkzeug.exceptions import NotFound
 
 def validate_board_shortname(board_shortname: str) -> None:
@@ -33,3 +34,23 @@ async def render_controller(template: str | Template, **kwargs):
         return template.render(**kwargs)
     
     raise ValueError(CONSTS.TESTING, type(template), template)
+
+
+def highlight_search_results(form, posts):
+    """`posts = {'posts': [{...}, {...}, ...]}`"""
+
+    form_to_asagi_field_names = []
+    if form.comment.data: form_to_asagi_field_names.append({'form_name': 'comment', 'asagi_name': 'com'})
+    if form.title.data: form_to_asagi_field_names.append({'form_name': 'title', 'asagi_name': 'sub'})
+
+    for i, post in enumerate(posts['posts']):
+
+        for field in form_to_asagi_field_names:
+            asagi_name = field['asagi_name']
+            form_name = field['form_name']
+
+            escaped_field = escape(form[form_name].data)
+            
+            posts['posts'][i][asagi_name] = post[asagi_name].replace(escaped_field, f'<span class="search_highlight_{form_name}">{escaped_field}</span>')
+    
+    return posts

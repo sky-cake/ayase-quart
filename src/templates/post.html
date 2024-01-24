@@ -1,3 +1,4 @@
+
 {% if post.resto == 0 %}
     <div class="postContainer opContainer" id="pc{{post.no}}">
 {% else %}
@@ -68,6 +69,9 @@
                 <img src="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" loading="lazy">
             </a>
         </div>
+        {% endif %}
+        {% if post.resto == 0 %}
+            <div class="post_title">{{post.sub|safe}}</div>
         {% endif %}
         <blockquote class="postMessage" id="m{{post.no}}">{{post.com|safe}}</blockquote>
     </div>
