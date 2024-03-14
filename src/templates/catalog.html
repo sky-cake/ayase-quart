@@ -1,3 +1,5 @@
+{% from 'macros.html' import poster_heading, capcode_author %}
+
 {% extends "base.html" %}
 {% block body %}
 
@@ -8,40 +10,75 @@
         {% for page_i in range(catalog|length) %}
             {% for thread_i in range(catalog[page_i]['threads']|length) %}
                 {% set thread = catalog[page_i]['threads'][thread_i] %}
-                <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}">
+                <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}" tabindex="0">
                     <div class="post_data">
-                        <br>
-                        <span class="post_title">{{ thread.sub }}</span>
-                        <br>
-                        Posted by <span class="post_author">{{ thread.name }}</span>
-                        {% if thread.trip %}<span class="post_trip">{{ thread.trip }}</span>{% endif %}
-                        <span class="poster_hash"></span>
-                        <br/>
-                        <time datetime="{{ thread.time }}">{{ thread.now }}</time>
-                        <span class="post_number">
-                            <a href="/{{ board }}/thread/{{ thread.no }}/#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
-                        </span>
-                        <span class="post_controls">
-                            <a href="/{{ board }}/thread/{{ thread.no }}" class="btnr parent">View</a>
-                            <a href="https://boards.4chan.org/a/thread/{{ thread.no }}" class="btnr parent">Original</a>
-                        </span>
-                    </div>
-
-                    <a href="/{{ board }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">
-                        {% if sha256_dirs %}
-                            <img class="thumb" src="{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-1] }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-3:-1] }}/{{ thread.asagi_preview_filename }}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
-                        {% else %}
-                            <img class="thumb"  src="{% if thread.asagi_preview_filename %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string)[0:4] }}/{{ (thread.asagi_preview_filename|string)[4:6] }}/{{ thread.asagi_preview_filename}}{% else %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.tim|string)[0:4] }}/{{ (thread.tim|string)[4:6] }}/{{ thread.tim }}s.jpg{% endif %}" data-md5="{{ thread.md5 }}" class="thread_image" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                        {% if thread.sub %}
+                            <br>
+                            <span class="post_title">{{ thread.sub }}</span>
+                            <br>
                         {% endif %}
-                    </a>
+                        <span class="post_controls">
+                            [<a href="/{{ board }}/thread/{{ thread.no }}" class="btnr parent" target="_blank">View</a>]
+                            [<a href="https://boards.4chan.org/{{ board }}/thread/{{ thread.no }}" class="btnr parent" target="_blank">Original</a>]
+                        </span>
 
-                    <div class="meta">
-                        Replies: <b>{{ thread.replies }}</b> / Images: <b>{{ thread.images }}</b> / Posters: <b>{{ thread.replies + 1 }}</b>
-                    </div>
-                    <div class="teaser">
-                        {% if thread.sub %}<b>{{thread.sub}}</b>:{% endif %}
-                        {{thread.com}}
-                    </div>
+                        {{ capcode_author(thread) }}
+
+                        {% if thread.trip %}<span class="post_trip">{{ thread.trip }}</span>{% endif %}
+                        {% if thread.capcode and (not thread.capcode in 'AFMDGV') %}
+                            <strong class="capcode id_unknown">## {{thread.capcode}}</strong>
+                        {% endif %}
+                        {% if 'thread.capcode' == 'A' %}
+                            <strong class="capcode id_admin">## Admin</strong>
+                            <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">
+                        {% endif %}
+                        {% if thread.capcode == 'F' %}
+                            <strong class="capcode id_founder">## Founder</strong>
+                            <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">
+                        {% endif %}
+                        {% if thread.capcode == 'M' %}
+                            <strong class="capcode id_moderator">## Mod</strong>
+                            <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">
+                        {% endif %}{% if thread.capcode == 'D' %}
+                            <strong class="capcode id_developer"> ## Developer</strong>
+                            <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">
+                        {% endif %}
+                        {% if thread.capcode == 'G' %}
+                            <strong class="capcode id_manager">## Manager</strong>
+                            <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">
+                        {% endif %}
+                        {% if thread.capcode == 'V' %}
+                            <strong class="capcode id_verified">## Verified</strong>
+                        {% endif %}
+                    </span>
+                    <span class="poster_hash"></span>
+                    <br/>
+                    <time datetime="{{ thread.time }}">{{ thread.now }}</time>
+                    <span class="post_number">
+                        <a href="/{{ board }}/thread/{{ thread.no }}#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
+                    </span>
+
+                </div>
+
+                <a href="/{{ board }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">
+                    {% if sha256_dirs %}
+                        <img class="thumb thread_image" src="{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-1] }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-3:-1] }}/{{ thread.asagi_preview_filename }}" data-md5="{{ thread.md5 }}" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                    {% elif thread.md5 == None %}
+                        <img class="thumb nofile thread_image" src="/static/images/nofile.png" data-md5="null" loading="lazy"/>
+                    {% else %}
+                        <img class="thumb thread_image"  src="{% if thread.asagi_preview_filename %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string)[0:4] }}/{{ (thread.asagi_preview_filename|string)[4:6] }}/{{ thread.asagi_preview_filename}}{% else %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.tim|string)[0:4] }}/{{ (thread.tim|string)[4:6] }}/{{ thread.tim }}s.jpg{% endif %}" data-md5="{{ thread.md5 }}" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
+                    {% endif %}
+                </a>
+                {% if thread.sticky or thread.closed %}
+                    <div class="threadIcons">{% if thread.sticky %}<span title="Sticky" class="threadIcon stickyIconCatalog"></span>{% endif %}{% if thread.closed %}<span title="Closed" class="threadIcon closedIconCatalog"></span>{% endif %}</div>
+                {% endif %}
+                <div class="meta">
+                    Replies: <b>{{ thread.replies }}</b> / Images: <b>{{ thread.images }}</b> / Posters: <b>{% if thread.posters %}{{thread.posters}}{% else %}?{% endif %}</b>
+                </div>
+                <div class="teaser">
+                    {% if thread.sub %}<span class="post_title">{{thread.sub}}</span>:{% endif %}
+                    {{thread.com}}
+                </div>
                 </div>
             {% endfor %}
         {% endfor %}

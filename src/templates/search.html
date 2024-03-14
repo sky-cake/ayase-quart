@@ -5,20 +5,20 @@
 
 {% block body %}
 
-<h2>{{site_name}} Search</h2>
-<p>Search results are currently limited to {{search_result_limit}} records until more time is dedicated to the search function and paging is implemented.</p>
+  <h2>{{site_name}} Search</h2>
+  <p>Search results are currently limited to {{search_result_limit}} records until more time is dedicated to the search function and paging is implemented.</p>
 
-{{ render_form(form, id="searchform") }}
+  {{ render_form(form, id="searchform") }}
 
-<div>
-  {% if posts %}
-    <h3>Found <b>{{posts|length}}</b> results!</h3>
-    <div class="board">
+  <div>
+    {% if posts %}
+      <h3>Found <b>{{posts|length}}</b> results!</h3>
+      <div class="board">
         {% include 'posts.html' %}
-    </div>
-  {% else %}
-    <h3>No results found!</h3>
-  {% endif %}
-</div>
+      </div>
+    {% else %}
+      <h3>No results found!</h3>
+    {% endif %}
+  </div>
 
 {% endblock %}

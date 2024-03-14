@@ -50,7 +50,7 @@ async def v_post(board_shortname: str, post_id: int):
 
     validate_board_shortname(board_shortname)
 
-    post, quotelinks = await convert_post(board_shortname, post_id)
+    post, quotelinks = await convert_post(board_shortname, post_id)    
     post = post[0]
     validate_post(post)
 

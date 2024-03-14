@@ -16,7 +16,15 @@ footer {
 }
 
 .post_title {
-    font-weight: bold;
+    font-weight: 700;
+	color: #b294bb;
+}
+.post_author {
+	font-weight: 700;
+}
+.post_trip {
+	font-weight: 400 !important;
+	color: #c5c8c6;
 }
 
 .paginate ul {
@@ -51,11 +59,15 @@ footer {
     padding: 20px 0;
     text-align: center;
 }
+#catalog_threads > .thread:focus {
+	overflow-y: auto;
+	height: auto;
+	position: relative;
+}
 
 table {
     margin: 2px;
 }
-
 #searchform {
     border: 1px solid black;
     padding: 1em;
@@ -109,4 +121,56 @@ table {
 
 textarea:focus, input:focus{
     outline: 0;
+}
+.spoiler {
+	opacity: 0.5;
+}
+.spoiler:hover {
+	opacity: 1;
+}
+/*.postImg:hover {
+	-webkit-transform: scale(5);
+}*/
+.thumb {
+	box-shadow: 0 0 5px rgba(0,0,0,.25);
+}
+.nofile {
+	padding: 20px 36px;
+	min-height: 0 !important;
+}
+.threadIcons {
+	display: inline;
+	height: 16px;
+	margin: 2px 0 0 -33px;
+	position: absolute;
+	width: 32px;
+	text-align: right;
+}
+.threadIcon {
+	width: 16px;
+	height: 16px;
+	display: inline-block;
+}
+.stickyIconCatalog {
+	background-image: url(/static/images/sticky.gif);
+}
+.closedIconCatalog {
+	background-image: url(/static/images/closed.gif);
+}
+/*.postInfo {
+	white-space: nowrap;
+	overflow: auto;
+}
+.postContainer .replyContainer .post .reply{
+	
+	overflow: auto;
+}*/
+.warning {
+	color: red;
+}
+.poster {
+	display: inline-block;
+}
+.pu-img .n-pu {
+    background: url(/static/images/minileaf.gif) !important;
 }
