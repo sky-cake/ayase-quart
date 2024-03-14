@@ -49,11 +49,11 @@
         <b>/{{post.board_shortname}}/</b>
     {% endif %}
     <input type="checkbox" name="{{post.no}}" value="delete">
-    {% if post.filedeleted and not post.deltime %}
+    {% if post.filedeleted and not post.deleted_time %}
         <strong class="warning" title="This post was prematurely deleted.">[Deleted]</strong>
     {% endif %}
-    {% if post.filedeleted and post.deltime %}
-        <strong class="warning" title="This post was deleted on {{post.deltime}}.">[Deleted]</strong>
+    {% if post.filedeleted and post.deleted_time %}
+        <strong class="warning" title="This post was deleted on {{post.deleted_time}}.">[Deleted]</strong>
     {% endif %}
     {% if post.sub %}
         <span class="subject">{{post.sub}}</span>
@@ -64,7 +64,7 @@
         {% if post.capcode and post.capcode != 'A' and post.capcode != 'F' and post.capcode != 'M' and post.capcode != 'D' and post.capcode != 'G' and post.capcode != 'V' %}<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {{post.capcode}}</strong>{% endif %}{% if post.capcode == 'A' %}<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">{% endif %}{% if post.capcode == 'F' %}<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">{% endif %}{% if post.capcode == 'M' %}<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">{% endif %}{% if post.capcode == 'D' %}<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">{% endif %}{% if post.capcode == 'G' %}<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">{% endif %}{% if post.capcode == 'V' %}<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>{% endif %}
     </span>
     {% if post.since4pass %}<span class="n-pu" title="Pass user since {{post.since4pass}}."></span>{% endif %}
-    {% if post.id %}<span class="posteruid id_{{post.id}}">(ID: <a title="." href="#">{{post.id}}</a>) </span>{% endif %}
+    {% if post.poster_hash %}<span class="posteruid id_{{post.poster_hash}}">(ID: <a title="." href="#">{{post.poster_hash}}</a>) </span>{% endif %}
     {% if post.country %}<span title="{{post.country}}{{post.country_name}}" class="flag flag-{{post.country|lower}}"></span>{% endif %}
     {% if post.troll_country %}<span title="{{post.country_name}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
     <span class="dateTime" data-utc="{{post.time}}">{{post.now}}</span>
