@@ -3,6 +3,7 @@ from configs import CONSTS
 from db import query_execute
 from typing import List, Dict, Any
 import asyncio
+import re
 
 SELECTOR = """SELECT
     `num` AS `no`,
@@ -77,6 +78,15 @@ def validate_and_generate_params(form_data):
         'num': {
             's': '`num` = %(num)s'
         },
+        'date_before': {
+            's': '`timestamp` <= UNIX_TIMESTAMP(%(date_before)s)'
+        },
+        'date_after': {
+            's': '`timestamp` >= UNIX_TIMESTAMP(%(date_after)s)'
+        },
+        'has_no_file': {
+            's': '`media_filename` is null'
+        },
         'has_file': {
             's': '`media_filename` is not null'
         },
@@ -111,7 +121,8 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
             media_filename=None,
             media_hash=None,
             has_file=False,
-            is_op=False
+            is_op=False,
+            ...
         )
     ```
     !IMPORTANT!
@@ -123,8 +134,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
 
     sqls = []
 
-    # With Asagi, each board has its own table,
-    # so we loop over boards and do UNION ALLs to get multi-board results
+    # With the Asagi schema, each board has its own table, so we loop over boards and do UNION ALLs to get multi-board sql results
     for board_shortname in form_data['boards']:
 
         s =   ' ( '
@@ -153,8 +163,60 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
     for p in posts:
         i = await get_post_images(board_shortname, p['no'])
         images.append(i)
+    return await convert_standalone_posts(posts, images)
 
-    return convert(posts, images=images) # treat these results as a thread
+
+async def convert_standalone_posts(posts, medias):
+    """Converts asagi API data to 4chan API format for posts that don't include
+    an entire thread of data (e.g. search results, or other random posts grouped together).
+    """
+
+    result = {'posts': []}
+    quotelink_map = {}
+    for post, media in zip(posts, medias):
+        if media:
+            if post['md5'] != media['media_hash']:
+                raise ValueError('Not equal: ', post['md5'], media['media_hash'])
+                
+            if(post["resto"] == 0):
+                post["asagi_preview_filename"] = media["preview_op"]
+            else:
+                post["asagi_preview_filename"] = media["preview_reply"]
+
+            post["asagi_filename"] = media["media"]
+
+        if post['resto'] == 0:
+            op_num = post['no']
+        else:
+            op_num = post['resto']
+
+        replies = await get_post_replies(post['board_shortname'], op_num, post['no'])
+        for reply in replies:
+            post_quotelinks = get_text_quotelinks(reply["com"])
+
+            for quotelink in post_quotelinks:
+                if quotelink not in quotelink_map:
+                    quotelink_map[quotelink] = []
+                quotelink_map[quotelink].append(reply["no"])
+
+        _, post['com'] = restore_comment(post['com'], post['board_shortname'])
+        result['posts'].append(post)
+    return result, quotelink_map
+
+
+async def get_post_replies(board_shortname, thread_num, post_num):
+    comment_like = f'%>>{post_num}%'
+
+    sql = SELECTOR.replace('%', '%%') + """
+        from `{board_shortname}`
+        where
+        `comment` like %(comment_like)s
+        and `thread_num` = %(thread_num)s
+    ;"""
+    sql = sql.format(board_shortname=board_shortname)
+
+    params = dict(thread_num=thread_num, comment_like=comment_like)
+    return await query_execute(sql, params=params)
 
 
 async def get_post(board_shortname:str, post_num: int):
@@ -264,66 +326,80 @@ async def get_catalog_details(board_shortname:str, page_num: int):
     return await query_execute(sql)
 
 
-def restore_comment(com: str, post_no: int, board_shortname: str):
+def get_text_quotelinks(text: str):
+    """Given some escaped post/comment, `text`, returns a list of all the quotelinks (>>123456) in it.
     """
-    Re-convert asagi stripped comment into clean html
-    Also create a dictionary with keys containing the post.no, which maps to a
-    tuple containing the posts it links to.
-    Returns a String (the processed comment) and a list (list of quotelinks in
-    the post).
+    quotelinks = []
+    lines = html.escape(text).split("\n") # text = '>>20074095\n>>20074101\nYou may be buying the wrong eggs'
+
+    GTGT = "&gt;&gt;"
+    for i, line in enumerate(lines):
+
+        if line.startswith(GTGT):
+            tokens = line.split(" ")
+            for token in tokens:
+                if token[:8] == GTGT and token[8:].isdigit():
+                    quotelinks.append(token[8:])
+
+    return quotelinks # quotelinks = ['20074095', '20074101']
+
+
+def substitute_square_brackets(text):
+    if re.fullmatch(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*', text):
+        pattern_spoiler = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL) # with re.DOTALL, the dot matches any character, including newline characters.
+        pattern_code = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL) # ? makes the (.*) non-greedy
+        pattern_banned = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
+
+        text = re.sub(pattern_spoiler, r'<span class="spoiler">\1</span>', text)
+        text = re.sub(pattern_code, r'<code><pre>\1</pre></code>', text)
+        text = re.sub(pattern_banned, r'<span class="banned">\1</span>', text)
+    return text
+
+
+def restore_comment(com: str, board_shortname: str):
+    """
+    Re-convert asagi stripped comment into clean html.
+    Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
+
+    Returns a string (the processed comment) and a list of quotelinks in
+    the post.
+
+    greentext: a line that begins with a single ">" and ends with a '\n'
+    redirect: a line that begins with a single ">>", has a thread number afterward that exists in the current thread or another thread (may be inline)
+    
+    >> (show OP)
+    >>>/g/ (board redirect)
+    >>>/g/<post_num> (board post redirect)
     """
     
-    try:
-        com_line = html.escape(com).split("\n")  # split by line
-    except AttributeError:
-        if com is not None:
-            raise ()
-        return "", ""
-    quotelink_list = []
-    # greentext definition: a line that begins with a single ">" and ends with
-    # a '\n'
-    # redirect definition: a line that begins with a single ">>", has a thread
-    # number afterward that exists in the current thread or another thread
-    # (may be inline)
-    # >> (show OP)
-    # >>>/g/ (board redirect)
-    # >>>/g/<post_num> (board post redirect)
-    for i in range(len(com_line)):
-        curr_line = com_line[i]
-        if "&gt;" == curr_line[:4] and "&gt;" != curr_line[4:8]:
-            com_line[i] = f"""<span class="quote">{curr_line}</span>"""
+    quotelinks = []
+
+    GT = '&gt;'
+    GTGT = "&gt;&gt;"
+
+    lines = html.escape(com).split("\n")
+    for i, line in enumerate(lines):
+
+        # >green text
+        if GT == line[:4] and GT != line[4:8]:
+            lines[i] = f"""<span class="quote">{line}</span>"""
             continue
-        elif (
-            "&gt;&gt;" in curr_line
-        ):  # TODO: handle situations where text is in front or after the
-            # redirect
-            subsplit_by_space = curr_line.split(" ")
-            for j in range(len(subsplit_by_space)):
-                curr_word = subsplit_by_space[j]
-                # handle >>(post-num)
-                if curr_word[:8] == "&gt;&gt;" and curr_word[8:].isdigit():
-                    quotelink_list.append(curr_word[8:])
-                    subsplit_by_space[j] = (
-                        f"""<a href="#p{curr_word[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{curr_word}</a>"""
-                    )
-                # TODO: build functionality
-            com_line[i] = " ".join(subsplit_by_space)
-        if "[" in curr_line and "]" in curr_line:
-            com_line[i] = """<span class="spoiler">""".join(
-                com_line[i].split("[spoiler]")
-            )
-            com_line[i] = "</span>".join(com_line[i].split("[/spoiler]"))
-            com_line[i] = "</span>".join(com_line[i].split("[/spoiler]"))
-            if "[code]" in curr_line:
-                if "[/code]" in curr_line:
-                    com_line[i] = """<code>""".join(com_line[i].split("[code]"))
-                    com_line[i] = """</code>""".join(com_line[i].split("[/code]"))
-                else:
-                    com_line[i] = """<pre>""".join(com_line[i].split("[code]"))
-            com_line[i] = """</pre>""".join(com_line[i].split("[/code]"))
-            com_line[i] = """<span class="banned">""".join(com_line[i].split("[banned]"))
-            com_line[i] = "</span>".join(com_line[i].split("[/banned]"))
-    return quotelink_list, "</br>".join(com_line)
+
+        # >>123456789
+        elif line.startswith(GTGT):
+            tokens = line.split(" ")
+
+            for j, token in enumerate(tokens):
+                if token[:8] == GTGT and token[8:].isdigit():
+                    quotelinks.append(token[8:])
+                    tokens[j] = f"""<a href="#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
+
+            lines[i] = " ".join(tokens)
+
+    lines = "</br>".join(lines)
+    lines = substitute_square_brackets(lines)
+
+    return quotelinks, lines
 
 
 async def generate_index(board_shortname: str, page_num: int, html=True):
@@ -473,61 +549,27 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
         if not thread or not thread[i]:
             continue
 
-        # The record object doesn't support assignment so we convert it to a normal dict
-        posts.append(dict(thread[i]))
+        posts.append(dict(thread[i])) # The record object doesn't support assignment so we convert it to a normal dict
 
-        # TODO: asagi records time using an incorrect timezone configuration
-        # which will need to be corrected
-        if images and len(images) > 0:
-            # find dict where media_hash is equal
-            try:
-                for media in filter(
-                    lambda image: (image["media_hash"] == posts[i]["md5"])
-                    if image
-                    else False,
-                    images,
-                ):
-                    if(CONSTS.hash_format == 'sha256'):
-                        if(posts[i]["resto"] == 0):
-                            if media["preview_op_sha256"] is not None:
-                                posts[i]["asagi_preview_filename"] = f'{media["preview_op_sha256"]}.jpg'
-                            else:
-                                print(f"{posts[i]['no']} OP thumbnail missing.")
-                        else:
-                            if media["preview_reply_sha256"] is not None:
-                                posts[i]["asagi_preview_filename"] = f'{media["preview_reply_sha256"]}.{posts[i]["ext"]}'
-                            else:
-                                print(f"{posts[i]['no']} post thumbnail missing.")
-                        if(media["media_sha256"] is not None):
-                            posts[i]["asagi_filename"] = f'{media["media_sha256"]}.{posts[i]["ext"]}'
-                        else:
-                            print(f"{posts[i]['no']} media filename missing.")
+        if images:
+            for image in images:
+                if image and image["media_hash"] == posts[i]["md5"]:
+                    if(posts[i]["resto"] == 0):
+                        posts[i]["asagi_preview_filename"] = image["preview_op"]
                     else:
-                        # use preview_op for op images
-                        if(posts[i]["resto"] == 0):
-                            posts[i]["asagi_preview_filename"] = media["preview_op"]
-                        else:
-                            posts[i]["asagi_preview_filename"] = media["preview_reply"]
-                        posts[i]["asagi_filename"] = media["media"]
-            except Exception as e:
-                raise ValueError(f"{e}")
+                        posts[i]["asagi_preview_filename"] = image["preview_reply"]
+                    posts[i]["asagi_filename"] = image["media"]
 
-        # leaving semantic_url empty for now
         if details and posts[i]["resto"] == 0:
             posts[i]["replies"] = details[i]["nreplies"]
             posts[i]["images"] = details[i]["nimages"]
 
-        # generate comment content
         if not is_catalog:
-            post_quotelinks, posts[i]["com"] = restore_comment(
-                posts[i]["com"], posts[i]["no"], posts[i]['board_shortname']
-            )
-            for quotelink in post_quotelinks:  # for each quotelink in the post
+            post_quotelinks, posts[i]["com"] = restore_comment(posts[i]["com"], posts[i]['board_shortname'])
+            for quotelink in post_quotelinks:
                 if quotelink not in quotelink_map:
                     quotelink_map[quotelink] = []
-                quotelink_map[quotelink].append(
-                    posts[i]["no"]
-                )  # add the current post.no to the quotelink's post.no key
+                quotelink_map[quotelink].append(posts[i]["no"])
 
     if is_post:
         return posts, quotelink_map

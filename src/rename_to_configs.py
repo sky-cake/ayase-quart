@@ -51,6 +51,7 @@ class CONSTS(NamedTuple):
 
     search = True
     search_result_limit = 100
+    search_result_highlight = True
 
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
     REVERSE_PROXY = False
@@ -58,7 +59,6 @@ class CONSTS(NamedTuple):
 
     root_dir = os.path.dirname(__file__)
     chdir_to_root = True
-    static_dir = os.path.join(root_dir, "static")
 
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##

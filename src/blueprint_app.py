@@ -23,6 +23,7 @@ from quart import Blueprint
 from flask_paginate import Pagination
 from forms import SearchForm
 from werkzeug.exceptions import NotFound
+from utils import highlight_search_results
 
 blueprint_app = Blueprint("blueprint_app", __name__, template_folder="templates")
 
@@ -59,12 +60,17 @@ async def v_search():
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.is_op.data and form.is_not_op.data:
-            raise NotFound
+        if form.is_op.data and form.is_not_op.data: raise NotFound
+        if form.has_file.data and form.has_no_file.data: raise NotFound
+        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise NotFound
 
         params = form.data
+        
+        posts, quotelinks = await get_posts_filtered(params) # posts = {'posts': [{...}, {...}, ...]}
 
-        posts, quotelinks = await get_posts_filtered(params)
+        if CONSTS.search_result_highlight:
+            posts = highlight_search_results(form, posts)
+            
         posts = posts['posts']
         
     return await render_controller(
