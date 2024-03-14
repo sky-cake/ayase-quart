@@ -20,7 +20,7 @@ Assuming you have a data source set up, you can
 
 0. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
 1. Create a file called `./src/configs.py` using `./rename_to_configs.py`
-    - If you do not have a data source to point to, set up [neofuuka](https://github.com/bibanon/neofuuka-scraper) or [Hayden](https://github.com/bbepis/Hayden) with MySQL. See below for their details.
+    - If you do not have a data source to point to, set up [Neofuuka](https://github.com/bibanon/neofuuka-scraper) or [Hayden](https://github.com/bbepis/Hayden) with MySQL. See below for their details.
 2. Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
 3. Create a virtualenv and install dependencies,
     - `python3 -m venv venv`
@@ -97,13 +97,13 @@ GRANT ALL PRIVILEGES ON * . * TO 'myuser'@'%';
 
 ## Neofuuka
 
-Neofuuka is a good choice if you can't compile Hayden, or don't need Hayden's ultra low memory consumption, but note that you need to use this [Neofuuka fork](https://github.com/sky-cake/neofuuka-scraper) if you want to filter threads since it's not supported in the original verion. On the other hand, Hayden supports filtering threads out-of-the-box.
+[Neofuuka](https://github.com/bibanon/neofuuka-scraper) is a good choice if you can't compile Hayden, or don't need Hayden's ultra low memory consumption, but note that you need to use this [Neofuuka fork](https://github.com/sky-cake/neofuuka-scraper) if you want to filter threads since it's not supported in the original version. On the other hand, Hayden supports filtering threads out-of-the-box.
 
 To expedite schema creation, I have created `./utils/init_database.py` which will create the database specified in `configs.py` with all the necessary tables, triggers, and indexes. Again, Hayden does this out-of-the-box.
 
 ## Hayden
 
-Setting up the Hayden Scraper on a Linux Server:
+Setting up the [Hayden Scraper](https://github.com/bbepis/Hayden) on a Linux Server:
 
 1. Build Hayden on Windows by double clicking `Hayden-master/build.cmd`. This will create a `build-output` folder with zipped builds.
 2. Place the linux build on your server.
