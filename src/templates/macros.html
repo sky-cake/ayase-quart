@@ -18,3 +18,32 @@
     </tbody>
   </table>
 {% endmacro %}
+
+{% macro capcode_author(capcode) %}
+  {% set capcode_map = {'A': 'capcodeAdmin', 'F': 'capcodeFounder', 'M': 'capcodeMod', 'D': 'capcodeDeveloper', 'G': 'capcodeManager', 'V': 'capcodeVerified'} %}
+  {{ capcode_map[capcode] }}
+{% endmacro %}
+
+{% macro poster_heading(thread) %}
+  {% set verified = 'capcodeVerified' if thread.code == 'V' else '' %}
+  {% set exif = 'title="Exif: ' + thread.exif + '"' if thread.exif else '' %}
+
+  <span class="poster {{ capcode_author[thread.capcode] }}">Posted by
+    <span class="name post_author {{ capcode_map[code] }} {{ verified }}" {{ exif }}>{{ thread.name }}</span>
+  </span>
+{% endmacro %}
+
+{% macro thread_stats(post) %}
+  <div class="thread-stats">
+    {% if post.sticky %} Sticky / {% endif %}
+    {% if post.closed %} Closed / {% endif %}
+    <span class="ts-replies" data-tip="Replies" title="Replies">{{post.replies}}</span>
+    /
+    <span class="ts-images" data-tip="Images" title="Files">{{post.images}}</span>
+    /
+    <span data-tip="Posters" class="ts-ips" title="Posters">
+      {% if post.posters %} {{post.posters}} {% else %} ? {% endif %}
+    </span>
+  </div>
+{% endmacro %}
+

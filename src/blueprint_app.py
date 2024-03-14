@@ -206,6 +206,7 @@ async def v_thread(board_shortname: str, thread_id: int):
     
     # use the existing json app function to grab the data
     thread_dict, quotelinks = await convert_thread(board_shortname, thread_id)
+    validate_threads(thread_dict['posts'])
 
     title = f"/{board_shortname}/ #{thread_id}"
 
