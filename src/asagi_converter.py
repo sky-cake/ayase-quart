@@ -377,6 +377,9 @@ def restore_comment(com: str, board_shortname: str):
     GT = '&gt;'
     GTGT = "&gt;&gt;"
 
+    if com is None:
+        return [], ''
+
     lines = html.escape(com).split("\n")
     for i, line in enumerate(lines):
 
