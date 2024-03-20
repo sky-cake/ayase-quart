@@ -12,7 +12,10 @@ Before using any of these utilities, I suggest glancing at the code briefly to u
 Wondering if your API scraper is working? Run this sql to list the latest posts.
 
 ```sql
-select 'ck' as board, ck.doc_id, ck.thread_num, ck.num, ck.comment, ck.media_id
-from ck
-where timestamp > UNIX_TIMESTAMP() - 50*60*5 -- 5 represents the hour offset from UTC
+-- 5 represents the hour offset from UTC
+select 'ck' as board, timestamp, thread_num, num, comment, media_id from ck where timestamp > UNIX_TIMESTAMP() - 50*60*5
+union
+select 'g' as board, timestamp, thread_num, num, comment, media_id from g where timestamp > UNIX_TIMESTAMP() - 50*60*5
+order by timestamp desc
+limit 12;
 ```
