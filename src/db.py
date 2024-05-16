@@ -37,6 +37,7 @@ async def query_execute(sql, params=None, fetchone=False, commit=False):
         
 
 async def db_pool_open():
+    print('Creating database pool, started.')
     current_app.db_pool = await aiomysql.create_pool(
         host=CONSTS.db_host,
         user=CONSTS.db_user,
@@ -46,6 +47,7 @@ async def db_pool_open():
         maxsize=CONSTS.db_max_connections,
         pool_recycle=30 # renew pool connections every N seconds so data does not get stale
     )
+    print('Creating database pool, completed.')
 
 
 async def db_pool_close():

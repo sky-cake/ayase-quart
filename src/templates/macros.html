@@ -47,3 +47,33 @@
   </div>
 {% endmacro %}
 
+
+{% macro get_image_src(board, thread, thumb_uri, image_uri, prefer='thumb') %}
+
+  {% if prefer=='thumb' %}
+
+    {% if thumb_uri %}
+      {% set uri = thumb_uri %}
+      {% set fname = (thread.asagi_preview_filename|string) %}
+    {% else %}
+      {% set uri = image_uri %}
+      {% set fname = (thread.asagi_filename|string) %}
+    {% endif %}
+
+  {% else %}
+
+    {% if image_uri %}
+      {% set uri = image_uri %}
+      {% set fname = (thread.asagi_filename|string) %}
+    {% else %}
+      {% set uri = thumb_uri %}
+      {% set fname = (thread.asagi_preview_filename|string) %}
+    {% endif %}
+
+  {% endif %}
+
+  {{ uri.format(board_shortname=board)
+  + "/" + fname[0:4]
+  + "/" + fname[4:6]
+  + "/" + fname }}
+{% endmacro %}

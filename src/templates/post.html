@@ -1,4 +1,4 @@
-{% from 'macros.html' import capcode_author, thread_stats %}
+{% from 'macros.html' import capcode_author, thread_stats, get_image_src %}
 
 {% if post.resto == 0 and not search_result%}
     {{ thread_stats(post) }}
@@ -33,14 +33,14 @@
     <div class="file" id="f{{post.no}}">
         <div class="fileText" id="fT{{post.no}}">
             File:
-            <a href="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}">{{post.filename}}.{{post.ext}}</a>
+            <a href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}">{{post.filename}}.{{post.ext}}</a>
             (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}}){% endif %}</span>
             {% if search_result %}
                 Replies: {{post.replies}} Files: {{post.images}} {% if post.posters %}Posters: {{post.posters}}{% endif %}
             {% endif %}
         </div>
-        <a class="fileThumb" href="{{ image_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_filename|string)[0:4] }}/{{ (post.asagi_filename|string)[4:6] }}/{{ post.asagi_filename}}" target="_blank">
-            <img src="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="opImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
+        <a class="fileThumb" href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}" target="_blank">
+            <img src="{{ get_image_src(board, post, thumb_uri, image_uri) }}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="opImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
         </a>
     </div>
 {% endif %}
@@ -106,11 +106,11 @@
     <div class="file" id="f{{post.no}}">
         <div class="fileText" id="fT{{post.no}}">
             File:
-            <a href="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" target="_blank" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
+            <a href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}" target="_blank" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
             (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor') }} KB, {{post.w}}x{{post.h}}){% endif %}</span>
         </div>
-        <a class="fileThumb" href="{{ image_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_filename|string)[0:4] }}/{{ (post.asagi_filename|string)[4:6] }}/{{ post.asagi_filename}}" target="_blank">
-            <img src="{{ thumb_uri.format(board_shortname=post.board_shortname) }}/{{ (post.asagi_preview_filename|string)[0:4] }}/{{ (post.asagi_preview_filename|string)[4:6] }}/{{ post.asagi_preview_filename}}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="replyImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
+        <a class="fileThumb" href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}" target="_blank">
+            <img src="{{ get_image_src(board, post, thumb_uri, image_uri) }}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="replyImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
         </a>
     </div>
 {% endif %}

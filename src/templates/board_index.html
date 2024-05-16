@@ -7,8 +7,9 @@
                 {% set thread = i['posts'] %}
 
                 {% set post = thread[0] %}
-
+                
                 {% include 'post.html' %}
+                <a href="/{{ board }}/thread/{{ post.no }}" style="color: #4da57c!important; font-size: larger;">Visit Thread.</a>
 
                 {% for post in thread[1:] %}
                     {% include 'post.html' %}

@@ -43,8 +43,7 @@ SELECTOR = """SELECT
 
 def get_image_selector():
     MD5_IMAGE_SELECTOR = "`media_hash`,`media`,`preview_reply`,`preview_op`"
-    SHA256_IMAGE_SELECTOR = "`media_hash`,LOWER(HEX(`media_sha256`)) AS `media_sha256`,LOWER(HEX(`preview_reply_sha256`)) AS `preview_reply_sha256`,LOWER(HEX(`preview_op_sha256`)) AS `preview_op_sha256`"
-    return SHA256_IMAGE_SELECTOR if CONSTS.hash_format == 'sha256' else MD5_IMAGE_SELECTOR
+    return MD5_IMAGE_SELECTOR
 
 
 def make_sequence_str(seq: list):
@@ -314,8 +313,7 @@ async def get_catalog_threads(board_shortname:str, page_num: int):
 
 async def get_catalog_images(board_shortname:str, page_num: int):
     SELECT_GALLERY_THREAD_IMAGES_MD5 = "SELECT `{board_shortname}`.media_hash, `{board_shortname}_images`.`media`, `{board_shortname}_images`.`preview_reply`, `{board_shortname}_images`.`preview_op` FROM ((`{board_shortname}` INNER JOIN `{board_shortname}_threads` ON `{board_shortname}`.`thread_num` = `{board_shortname}_threads`.`thread_num`) INNER JOIN `{board_shortname}_images` ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`) WHERE OP=1 ORDER BY `{board_shortname}_threads`.`time_bump` DESC LIMIT 150 OFFSET {page_num};"
-    SELECT_GALLERY_THREAD_IMAGES_SHA256 = "SELECT `{board_shortname}`.media_hash, LOWER(HEX(`{board_shortname}_images`.`media_sha256`)) AS `media_sha256`, LOWER(HEX(`{board_shortname}_images`.`preview_reply_sha256`)) AS `preview_reply_sha256`, LOWER(HEX(`{board_shortname}_images`.`preview_op_sha256`)) AS `preview_op_sha256` FROM ((`{board_shortname}` INNER JOIN `{board_shortname}_threads` ON `{board_shortname}`.`thread_num` = `{board_shortname}_threads`.`thread_num`) INNER JOIN `{board_shortname}_images` ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`) WHERE OP=1 ORDER BY `{board_shortname}_threads`.`time_bump` DESC LIMIT 150 OFFSET {page_num};" 
-    selector = SELECT_GALLERY_THREAD_IMAGES_SHA256 if CONSTS.hash_format == 'sha256' else SELECT_GALLERY_THREAD_IMAGES_MD5
+    selector = SELECT_GALLERY_THREAD_IMAGES_MD5
     sql = selector.format(board_shortname=board_shortname, page_num=page_num)
     return await query_execute(sql)
 

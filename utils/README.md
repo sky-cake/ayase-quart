@@ -19,7 +19,13 @@ Merges a new database into an older database. If this script is successful, it w
 - Inserts new database records into old database.
 - Removes modified key columns.
 
-**Note:** This script only merges the tables `<board_name>`, and `<board_name>_images`, the others are currently ignored.
+**Note:** This script only merges the tables `<board_name>`, and `<board_name>_images`, the others are currently ignored. Also, mind the charsets and collations of the databases.
+
+```sql
+ALTER DATABASE `hayden`
+DEFAULT CHARACTER SET utf8mb4
+DEFAULT COLLATE utf8mb4_general_ci;
+```
 
 **How to run:** Configure `consolidate_databases.py`, and then run `python3 consolidate_databases.py`.
 

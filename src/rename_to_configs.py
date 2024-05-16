@@ -35,8 +35,6 @@ class CONSTS(NamedTuple):
     key_file = None # 'key.pem'
     cert_file = None # 'cert.pem'
 
-    hash_format = 'md5' # md5, sha256 # (only md5 has been tested)
-
     site_name= 'Ayase Quart'
 
     board_objects = [
@@ -44,6 +42,7 @@ class CONSTS(NamedTuple):
         {'shortname': 'mu', 'name': 'Music'},
     ]
 
+    # If you do not have full images, set image_uri to None. Likewise for thumbnails.
     image_uri = "/static/hayden_asagi/{board_shortname}/image" # must contain {board_shortname}
     thumb_uri = "/static/hayden_asagi/{board_shortname}/thumb" # must contain {board_shortname}
 
@@ -78,7 +77,6 @@ class CONSTS(NamedTuple):
     render_constants = dict(
         theme = theme,
         site_name = site_name,
-        sha256_dirs = hash_format=='sha256',
         board_objects = board_objects,
         search=search,
         image_uri=image_uri,

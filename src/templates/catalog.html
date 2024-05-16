@@ -1,4 +1,4 @@
-{% from 'macros.html' import poster_heading, capcode_author %}
+{% from 'macros.html' import poster_heading, capcode_author, get_image_src %}
 
 {% extends "base.html" %}
 {% block body %}
@@ -59,16 +59,10 @@
                     </span>
 
                 </div>
-
-                <a href="/{{ board }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">
-                    {% if sha256_dirs %}
-                        <img class="thumb thread_image" src="{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-1] }}/{{ (thread.asagi_preview_filename|string).split('.')[0][-3:-1] }}/{{ thread.asagi_preview_filename }}" data-md5="{{ thread.md5 }}" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
-                    {% elif thread.md5 == None %}
-                        <img class="thumb nofile thread_image" src="/static/images/nofile.png" data-md5="null" loading="lazy"/>
-                    {% else %}
-                        <img class="thumb thread_image"  src="{% if thread.asagi_preview_filename %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.asagi_preview_filename|string)[0:4] }}/{{ (thread.asagi_preview_filename|string)[4:6] }}/{{ thread.asagi_preview_filename}}{% else %}{{ thumb_uri.format(board_shortname=board) }}/{{ (thread.tim|string)[0:4] }}/{{ (thread.tim|string)[4:6] }}/{{ thread.tim }}s.jpg{% endif %}" data-md5="{{ thread.md5 }}" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
-                    {% endif %}
+                <a href="/{{ board }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">  
+                    <img class="thumb thread_image" src="{{get_image_src(board, thread, thumb_uri, image_uri)}}" data-md5="{{ thread.md5 }}" width="{{ thread.tn_w }}" height="{{ thread.tn_h }}" loading="lazy"/>
                 </a>
+
                 {% if thread.sticky or thread.closed %}
                     <div class="threadIcons">{% if thread.sticky %}<span title="Sticky" class="threadIcon stickyIconCatalog"></span>{% endif %}{% if thread.closed %}<span title="Closed" class="threadIcon closedIconCatalog"></span>{% endif %}</div>
                 {% endif %}
