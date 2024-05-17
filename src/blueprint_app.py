@@ -1,4 +1,4 @@
-import quart_flask_patch
+import quart_flask_patch # keep this here
 
 from asagi_converter import (
     convert_thread,
@@ -127,7 +127,6 @@ async def v_board_index(board_shortname: str):
 
 @blueprint_app.get("/<string:board_shortname>/page/<int:page_num>")
 async def v_board_index_page(board_shortname: str, page_num: int):
-
     validate_board_shortname(board_shortname)
 
     index = await generate_index(board_shortname, page_num)
@@ -167,9 +166,9 @@ async def make_pagination_catalog(board_shortname, catalog, page_num):
         show_single_page=True
     )
 
+
 @blueprint_app.get("/<string:board_shortname>/catalog")
 async def v_catalog(board_shortname: str):
-
     validate_board_shortname(board_shortname)
 
     catalog = await generate_catalog(board_shortname, 1)

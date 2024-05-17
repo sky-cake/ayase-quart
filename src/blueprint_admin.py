@@ -12,13 +12,13 @@ blueprint_admin = Blueprint('blueprint_admin', __name__, template_folder='templa
 # INSERT_POST_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE num=:num;"
 # DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
 
-DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = '{CONSTS.db_database}' group by table_name;"""
-DATABASE_STORAGE_SIZE = f"""select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = '{CONSTS.db_database}' group by table_schema;"""
+DATABASE_TABLE_STORAGE_SIZES = """select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %(db)s group by table_name;"""
+DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = %(db)s group by table_schema;"""
 
 @blueprint_admin.route("/stats")
 async def stats():
-    database_storage_size = await query_execute(DATABASE_STORAGE_SIZE)
-    database_table_storage_sizes = await query_execute(DATABASE_TABLE_STORAGE_SIZES)
+    database_storage_size = await query_execute(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
+    database_table_storage_sizes = await query_execute(DATABASE_TABLE_STORAGE_SIZES, params={'db': CONSTS.db_database})
     return await render_controller(
         template_stats,
         database_storage_size=database_storage_size,
