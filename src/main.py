@@ -1,4 +1,4 @@
-import quart_flask_patch
+import quart_flask_patch # keep this
 
 import os
 from quart import Quart
@@ -16,6 +16,10 @@ def create_app():
         os.chdir(CONSTS.root_dir)
 
     app = Quart(__name__)
+    
+    app.jinja_env.trim_blocks = True
+    app.jinja_env.lstrip_blocks = True
+    app.jinja_env.keep_trailing_newline = False
 
     app.config.from_object(CONSTS)
 
@@ -24,6 +28,7 @@ def create_app():
     app.register_blueprint(blueprint_api)
     app.register_blueprint(blueprint_app)
     app.register_blueprint(blueprint_admin)
+
 
     if CONSTS.REVERSE_PROXY:
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)

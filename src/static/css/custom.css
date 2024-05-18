@@ -17,14 +17,16 @@ footer {
 
 .post_title {
     font-weight: 700;
-	color: #b294bb;
+    color: #b294bb;
 }
+
 .post_author {
-	font-weight: 700;
+    font-weight: 700;
 }
+
 .post_trip {
-	font-weight: 400 !important;
-	color: #c5c8c6;
+    font-weight: 400 !important;
+    color: #c5c8c6;
 }
 
 .paginate ul {
@@ -56,18 +58,20 @@ footer {
 }
 
 #catalog_threads {
-    padding: 20px 0;
+    padding: 20px 20px;
     text-align: center;
 }
-#catalog_threads > .thread:focus {
-	overflow-y: auto;
-	height: auto;
-	position: relative;
+
+#catalog_threads>.thread:focus {
+    overflow-y: auto;
+    height: auto;
+    position: relative;
 }
 
 table {
     margin: 2px;
 }
+
 #searchform {
     border: 1px solid black;
     padding: 1em;
@@ -75,7 +79,7 @@ table {
 }
 
 #searchform input[type=submit],
-#searchform .form-control{
+#searchform .form-control {
     list-style: none;
     padding: 3px;
     margin-bottom: 1em;
@@ -87,27 +91,27 @@ table {
     width: 300px;
 }
 
-#searchform input[type=submit]{
+#searchform input[type=submit] {
     margin-top: 1em;
 }
 
-#searchform input[type=submit]:hover{
+#searchform input[type=submit]:hover {
     cursor: pointer;
     background-color: #70396c;
 }
 
-#searchform input[type=submit]:disabled{
+#searchform input[type=submit]:disabled {
     cursor: default;
     background-color: #70396c;
 }
 
-#searchform #comment{
+#searchform #comment {
     width: 300px;
     max-width: 80vw;
 
 }
 
-#searchform li{
+#searchform li {
     margin: 5px;
 }
 
@@ -119,58 +123,59 @@ table {
     background-color: #70396c;
 }
 
-textarea:focus, input:focus{
+textarea:focus,
+input:focus {
     outline: 0;
 }
+
 .spoiler {
-	opacity: 0.5;
+    opacity: 0.5;
 }
+
 .spoiler:hover {
-	opacity: 1;
+    opacity: 1;
 }
-/*.postImg:hover {
-	-webkit-transform: scale(5);
-}*/
+
 .thumb {
-	box-shadow: 0 0 5px rgba(0,0,0,.25);
+    box-shadow: 0 0 5px rgba(0, 0, 0, .25);
 }
+
 .nofile {
-	padding: 20px 36px;
-	min-height: 0 !important;
+    padding: 20px 36px;
+    min-height: 0 !important;
 }
+
 .threadIcons {
-	display: inline;
-	height: 16px;
-	margin: 2px 0 0 -33px;
-	position: absolute;
-	width: 32px;
-	text-align: right;
+    display: inline;
+    height: 16px;
+    margin: 2px 0 0 -33px;
+    position: absolute;
+    width: 32px;
+    text-align: right;
 }
+
 .threadIcon {
-	width: 16px;
-	height: 16px;
-	display: inline-block;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
 }
+
 .stickyIconCatalog {
-	background-image: url(/static/images/sticky.gif);
+    background-image: url(/static/images/sticky.gif);
 }
+
 .closedIconCatalog {
-	background-image: url(/static/images/closed.gif);
+    background-image: url(/static/images/closed.gif);
 }
-/*.postInfo {
-	white-space: nowrap;
-	overflow: auto;
-}
-.postContainer .replyContainer .post .reply{
-	
-	overflow: auto;
-}*/
+
 .warning {
-	color: red;
+    color: red;
 }
+
 .poster {
-	display: inline-block;
+    display: inline-block;
 }
+
 .pu-img .n-pu {
     background: url(/static/images/minileaf.gif) !important;
 }

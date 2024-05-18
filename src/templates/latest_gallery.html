@@ -1,0 +1,20 @@
+{% from 'macros.html' import table %}
+
+{% extends 'base.html' %}
+
+{% block body %}
+  <div>
+    <h2>Latest Archived Posts</h2>
+
+    <div>
+      <h3>Latest Media</h3>
+      <div style="display: inline;">
+        {% for post in posts %}
+            {% if post %}
+                {% include 'gallery_item.html' %}
+            {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

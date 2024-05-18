@@ -87,7 +87,6 @@ async def v_search():
 
 async def make_pagination_board_index(board_shortname, index, page_num):
     op_thread_count = await get_op_thread_count(board_shortname)
-    index_pages = int(op_thread_count / 10) # we grab 10 OPs per index page
 
     board_index_thread_count = len(index['threads'])
 
@@ -116,6 +115,7 @@ async def v_board_index(board_shortname: str):
     return await render_controller(
         template_board_index, 
         **CONSTS.render_constants,
+        board_index_page=True,
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
         threads=index["threads"],

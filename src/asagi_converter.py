@@ -7,9 +7,10 @@ import re
 from textwrap import dedent
 
 
-def get_selector(board_shortname):
+def get_selector(board_shortname, double_percent=True):
     SELECTOR = """
     SELECT
+    `{board_shortname}`.`thread_num`,
     `num` AS `no`,
     '{board_shortname}' AS `board_shortname`,
     DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `now`,
@@ -24,16 +25,12 @@ def get_selector(board_shortname):
     `timestamp` AS `time`,
     `preview_orig` AS `asagi_preview_filename`,
     `media_orig` AS `asagi_filename`,
-    (CASE WHEN `media_orig` IS NULL THEN timestamp * 1000
-        ELSE SUBSTRING_INDEX(media_orig, '.', 1) END) AS `tim`,
+    (CASE WHEN `media_orig` IS NULL THEN timestamp * 1000 ELSE SUBSTRING_INDEX(media_orig, '.', 1) END) AS `tim`,
     `{board_shortname}`.`media_hash` AS `md5`,
     `media_size` AS `fsize`,
-    (CASE WHEN `media_filename` IS NULL THEN NULL
-        ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `filename`,
-    (CASE WHEN `media_filename` IS NULL THEN NULL
-        ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS `ext`,
-    (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED)
-        ELSE `{board_shortname}`.`thread_num` END) AS `resto`,
+    (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `filename`,
+    (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS `ext`,
+    (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE `{board_shortname}`.`thread_num` END) AS `resto`,
     (CASE WHEN capcode='N' THEN NULL ELSE `capcode` END) AS `capcode`,
     `trip`,
     `spoiler`,
@@ -44,7 +41,10 @@ def get_selector(board_shortname):
     `exif`,
     `comment` AS `com`
     """
-    return dedent(SELECTOR).format(board_shortname=board_shortname).replace('%', '%%')
+    SELECTOR = dedent(SELECTOR).format(board_shortname=board_shortname)
+    if double_percent:
+        return SELECTOR.replace('%', '%%')
+    return SELECTOR
 
 
 def get_image_selector():
@@ -165,7 +165,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
     return await convert_standalone_posts(posts, images)
 
 
-async def convert_standalone_posts(posts, medias):
+async def convert_standalone_posts(posts, medias, return_quotelinks=True):
     """Converts asagi API data to 4chan API format for posts that don't include
     an entire thread of data (e.g. search results, or other random posts grouped together).
     """
@@ -189,16 +189,17 @@ async def convert_standalone_posts(posts, medias):
         else:
             op_num = post['resto']
 
-        replies = await get_post_replies(post['board_shortname'], op_num, post['no'])
-        for reply in replies:
-            post_quotelinks = get_text_quotelinks(reply["com"])
+        if return_quotelinks:
+            replies = await get_post_replies(post['board_shortname'], op_num, post['no'])
+            for reply in replies:
+                post_quotelinks = get_text_quotelinks(reply["com"])
 
-            for quotelink in post_quotelinks:
-                if quotelink not in quotelink_map:
-                    quotelink_map[quotelink] = []
-                quotelink_map[quotelink].append(reply["no"])
+                for quotelink in post_quotelinks:
+                    if quotelink not in quotelink_map:
+                        quotelink_map[quotelink] = []
+                    quotelink_map[quotelink].append(reply["no"])
 
-        _, post['com'] = restore_comment(post['com'], post['board_shortname'])
+        _, post['com'] = restore_comment(op_num, post['com'], post['board_shortname'])
         result['posts'].append(post)
     return result, quotelink_map
 
@@ -320,7 +321,7 @@ def substitute_square_brackets(text):
     return text
 
 
-def restore_comment(com: str, board_shortname: str):
+def restore_comment(op_num: int, com: str, board_shortname: str):
     """
     Re-convert asagi stripped comment into clean html.
     Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
@@ -359,7 +360,7 @@ def restore_comment(com: str, board_shortname: str):
             for j, token in enumerate(tokens):
                 if token[:8] == GTGT and token[8:].isdigit():
                     quotelinks.append(token[8:])
-                    tokens[j] = f"""<a href="#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
+                    tokens[j] = f"""<a href="/{board_shortname}/thread/{op_num}#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
 
             lines[i] = " ".join(tokens)
 
@@ -528,11 +529,16 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
                     posts[i]["asagi_filename"] = image["media"]
 
         if details and posts[i]["resto"] == 0:
-            posts[i]["replies"] = details[i]["nreplies"]
-            posts[i]["images"] = details[i]["nimages"]
+            posts[i]["replies"] = details[i].get("nreplies", None)
+            posts[i]["images"] = details[i].get("nimages", None)
 
         if not is_catalog:
-            post_quotelinks, posts[i]["com"] = restore_comment(posts[i]["com"], posts[i]['board_shortname'])
+            if posts[i]['resto'] == 0:
+                op_num = posts[i]['no']
+            else:
+                op_num = posts[i]['resto']
+        
+            post_quotelinks, posts[i]["com"] = restore_comment(op_num, posts[i]["com"], posts[i]['board_shortname'])
             for quotelink in post_quotelinks:
                 if quotelink not in quotelink_map:
                     quotelink_map[quotelink] = []

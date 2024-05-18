@@ -1,11 +1,12 @@
 {% from 'macros.html' import capcode_author, thread_stats, get_image_src %}
 
+
 {% if post.resto == 0 and not search_result%}
     {{ thread_stats(post) }}
     <div class="postContainer opContainer" id="pc{{post.no}}">
 {% else %}
     <div class="postContainer replyContainer" id="pc{{post.no}}">
-        <div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
+    <div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
 {% endif %}
 
 
@@ -25,22 +26,21 @@
     </span>
     <span class="dateTime postNum" data-utc="{{post.time}}">
         {{post.now}}
-        <a href="#{{post.num}}" title="Link to this post">No.</a>
-        <a href="javascript:quote('{{post.no}}');" title="Reply to this post">{{post.no}}</a>
+        <a href="#{{post.num}}" title="Link to this post">No. {{post.no}}</a>
     </span>
 </div>
 {% if post.resto == 0 and post.filename %}
     <div class="file" id="f{{post.no}}">
         <div class="fileText" id="fT{{post.no}}">
             File:
-            <a href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}">{{post.filename}}.{{post.ext}}</a>
+            <a href="{{ get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer='image') }}">{{post.filename}}.{{post.ext}}</a>
             (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}}){% endif %}</span>
             {% if search_result %}
                 Replies: {{post.replies}} Files: {{post.images}} {% if post.posters %}Posters: {{post.posters}}{% endif %}
             {% endif %}
         </div>
-        <a class="fileThumb" href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}" target="_blank">
-            <img src="{{ get_image_src(board, post, thumb_uri, image_uri) }}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="opImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
+        <a class="fileThumb" href="{{ get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer='image') }}" target="_blank">
+            <img src="{{ get_image_src(post.board_shortname, post, thumb_uri, image_uri) }}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="opImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
         </a>
     </div>
 {% endif %}
@@ -48,7 +48,9 @@
     {% if search_result %}
         <b>/{{post.board_shortname}}/</b>
     {% endif %}
-    <input type="checkbox" name="{{post.no}}" value="delete">
+    {% if search_result and post.resto == 0 %}
+        <strong style="color: #4da57c;">OP</strong>
+    {% endif %}
     {% if post.filedeleted and not post.deleted_time %}
         <strong class="warning" title="This post was prematurely deleted.">[Deleted]</strong>
     {% endif %}
@@ -74,7 +76,7 @@
         {% elif search_result and post.resto == 0 %}
             <a href="/{{post.board_shortname}}/thread/{{post.no}}#p{{post.no}}">No.{{post.no}}</a>
         {% else %}
-            <a href="#p{{post.no}}" title="Link to this post">No.</a><a href="javascript:quote('{{post.no}}');" title="Reply to this post">{{post.no}}</a>
+            <a href="#p{{post.no}}" title="Link to this post">No. {{post.no}}</a>
         {% endif %}
         {% if post.resto == 0 %}
             {% if post.sticky %}
@@ -85,12 +87,18 @@
             {% endif %}
         {% endif %}
     </span>
-    <a href="#" class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</a>
+    <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
     {% if search_result and post.resto != 0 %}
         [<a href="/{{post.board_shortname}}/thread/{{post.resto}}#p{{post.no}}" target="_blank">View</a>]
     {% endif %}
     {% if search_result and post.resto == 0 %}
         [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="_blank">View</a>]
+    {% endif %}
+    {% if not search_result and post.resto == 0 %}
+        {% if board_index_page %}
+            [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="_blank">View</a>]
+        {% endif %}
+        [<a href="https://boards.4chan.org/{{ post.board_shortname }}/thread/{{ post.no }}" rel="noreferrer" target="_blank">Source</a>]
     {% endif %}
     <div id="bl_{{post.no}}" class="backlink">
         {% if quotelinks %}
@@ -106,11 +114,11 @@
     <div class="file" id="f{{post.no}}">
         <div class="fileText" id="fT{{post.no}}">
             File:
-            <a href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}" target="_blank" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
+            <a href="{{ get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer='image') }}" target="_blank" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
             (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor') }} KB, {{post.w}}x{{post.h}}){% endif %}</span>
         </div>
-        <a class="fileThumb" href="{{ get_image_src(board, post, thumb_uri, image_uri, prefer='image') }}" target="_blank">
-            <img src="{{ get_image_src(board, post, thumb_uri, image_uri) }}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="replyImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
+        <a class="fileThumb" href="{{ get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer='image') }}" target="_blank">
+            <img src="{{ get_image_src(post.board_shortname, post, thumb_uri, image_uri) }}" data-md5="{{post.md5}}" style="height: {{post.tn_h}}px; width: {{post.tn_w}}px;" class="replyImg postImg{% if post.spoiler %} spoiler{% endif %}" loading="lazy">
         </a>
     </div>
 {% endif %}

@@ -1,0 +1,16 @@
+{% from 'macros.html' import table %}
+
+{% extends 'base.html' %}
+
+{% block body %}
+  <div>
+    <h2>Latest Archived Posts</h2>
+
+    <div>
+      <h3>Latest OPs</h3>
+      <div>
+          {{table(threads)}}
+      </div>
+    </div>
+  </div>
+{% endblock %}

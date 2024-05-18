@@ -1,79 +1,77 @@
-{% macro table(list_of_dicts) %}
-  <table>
+{%- macro table(list_of_dicts) -%}
+  <table style="border-collapse: collapse; font-family: Arial, sans-serif;">
     <thead>
       <tr>
-        {% for col in list_of_dicts[0].keys() %}
-          <td><b>{{ col }}</b></td>
-        {% endfor %}
+        {%- for col in list_of_dicts[0].keys() -%}
+          <td style="border: 1px solid #c5c8c6; padding: 8px; text-align: left;"><b>{{ col }}</b></td>
+        {%- endfor -%}
       </tr>
     </thead>
     <tbody>
-      {% for row in list_of_dicts %}
+      {%- for row in list_of_dicts -%}
         <tr>
-          {% for col in row.keys() %}
-            <td>{{ row[col] }}</td>
-          {% endfor %}
+          {%- for col in row.keys() -%}
+            <td style="border: 1px solid #c5c8c6; padding: 8px; max-width: 80ch; word-wrap: break-word; text-align: left;">{{ row[col] }}</td>
+          {%- endfor -%}
         </tr>
-      {% endfor %}
+      {%- endfor -%}
     </tbody>
   </table>
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro capcode_author(capcode) %}
-  {% set capcode_map = {'A': 'capcodeAdmin', 'F': 'capcodeFounder', 'M': 'capcodeMod', 'D': 'capcodeDeveloper', 'G': 'capcodeManager', 'V': 'capcodeVerified'} %}
+
+{%- macro capcode_author(capcode) -%}
+  {%- set capcode_map = {'A': 'capcodeAdmin', 'F': 'capcodeFounder', 'M': 'capcodeMod', 'D': 'capcodeDeveloper', 'G': 'capcodeManager', 'V': 'capcodeVerified'} -%}
   {{ capcode_map[capcode] }}
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro poster_heading(thread) %}
-  {% set verified = 'capcodeVerified' if thread.code == 'V' else '' %}
-  {% set exif = 'title="Exif: ' + thread.exif + '"' if thread.exif else '' %}
+{%- macro poster_heading(thread) -%}
+  {%- set verified = 'capcodeVerified' if thread.code == 'V' else '' -%}
+  {%- set exif = 'title="Exif: ' + thread.exif + '"' if thread.exif else '' -%}
 
   <span class="poster {{ capcode_author[thread.capcode] }}">Posted by
     <span class="name post_author {{ capcode_map[code] }} {{ verified }}" {{ exif }}>{{ thread.name }}</span>
   </span>
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro thread_stats(post) %}
+{%- macro thread_stats(post) -%}
   <div class="thread-stats">
-    {% if post.sticky %} Sticky / {% endif %}
-    {% if post.closed %} Closed / {% endif %}
+    {%- if post.sticky -%} Sticky / {%- endif -%}
+    {%- if post.closed -%} Closed / {%- endif -%}
     <span class="ts-replies" data-tip="Replies" title="Replies">{{post.replies}}</span>
     /
     <span class="ts-images" data-tip="Images" title="Files">{{post.images}}</span>
     /
     <span data-tip="Posters" class="ts-ips" title="Posters">
-      {% if post.posters %} {{post.posters}} {% else %} ? {% endif %}
+      {%- if post.posters -%} {{post.posters}} {%- else -%} ? {%- endif -%}
     </span>
   </div>
-{% endmacro %}
+{%- endmacro -%}
 
 
-{% macro get_image_src(board, thread, thumb_uri, image_uri, prefer='thumb') %}
+{%- macro get_image_src(board_shortname, thread, thumb_uri, image_uri, prefer='thumb') -%}
 
-  {% if prefer=='thumb' %}
+  {%- if prefer=='thumb' -%}
 
-    {% if thumb_uri %}
-      {% set uri = thumb_uri %}
-      {% set fname = (thread.asagi_preview_filename|string) %}
-    {% else %}
-      {% set uri = image_uri %}
-      {% set fname = (thread.asagi_filename|string) %}
-    {% endif %}
+    {%- if thumb_uri -%}
+      {%- set uri = thumb_uri -%}
+      {%- set fname = (thread.asagi_preview_filename|string) -%}
+    {%- else -%}
+      {%- set uri = image_uri -%}
+      {%- set fname = (thread.asagi_filename|string) -%}
+    {%- endif -%}
 
-  {% else %}
+  {%- else -%}
 
-    {% if image_uri %}
-      {% set uri = image_uri %}
-      {% set fname = (thread.asagi_filename|string) %}
-    {% else %}
-      {% set uri = thumb_uri %}
-      {% set fname = (thread.asagi_preview_filename|string) %}
-    {% endif %}
+    {%- if image_uri -%}
+      {%- set uri = image_uri -%}
+      {%- set fname = (thread.asagi_filename|string) -%}
+    {%- else -%}
+      {%- set uri = thumb_uri -%}
+      {%- set fname = (thread.asagi_preview_filename|string) -%}
+    {%- endif -%}
 
-  {% endif %}
+  {%- endif -%}
 
-  {{ uri.format(board_shortname=board)
-  + "/" + fname[0:4]
-  + "/" + fname[4:6]
-  + "/" + fname }}
-{% endmacro %}
+  {{ (uri.format(board_shortname=board_shortname) + "/" + fname[0:4] + "/" + fname[4:6] + "/" + fname) }}
+{%- endmacro -%}

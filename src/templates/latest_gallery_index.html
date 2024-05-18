@@ -1,0 +1,26 @@
+{% from 'macros.html' import table %}
+
+{% extends 'base.html' %}
+
+{% block body %}
+  <div>
+    <h2>Latest Archived Posts</h2>
+
+    <div>
+      <h3>Latest Media</h3>
+        <h2>Boards</h2>
+        
+        <ul style="list-style: none;">
+          <li><h3><a href="{{url_for('blueprint_admin.latest_gallery_all')}}">All boards</a></h3></li>
+          {% for board_object in board_objects %}
+            <li>
+              <h3>
+              <a href="{{ url_for('blueprint_admin.latest_gallery_board', board_shortname=board_object.shortname) }}">/{{ board_object.shortname }}/ - {{board_object.name}}</a>
+              </h3>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}
