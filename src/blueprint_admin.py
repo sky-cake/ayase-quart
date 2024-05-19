@@ -1,10 +1,9 @@
-from templates import template_stats, template_latest, template_latest_gallery, template_latest_gallery_index
+from templates import template_stats, template_latest
 from configs import CONSTS
 from db import query_execute
 from quart import Blueprint
-from utils import render_controller, validate_board_shortname
+from utils import render_controller
 from asagi_converter import get_selector
-from random import shuffle
 
 blueprint_admin = Blueprint('blueprint_admin', __name__, template_folder='templates')
 
@@ -55,51 +54,3 @@ async def latest():
         title='Latest',
         tab_title="Latest",
     )
-
-
-@blueprint_admin.route("/latest_gallery")
-async def latest_gallery():
-    return await render_controller(
-        template_latest_gallery_index,
-        **CONSTS.render_constants,
-        title='Gallery Index',
-        tab_title="Gallery Index",
-    )
-
-
-@blueprint_admin.route("/latest_gallery/all")
-async def latest_gallery_all():
-    posts = []
-    for board_shortname in CONSTS.board_shortnames:
-        sql = get_sql_latest_gallery(board_shortname, limit=CONSTS.gallery_limit)
-        latest_media_posts = await query_execute(sql)
-        if latest_media_posts:
-            posts.extend(latest_media_posts)
-
-    shuffle(posts)
-
-    return await render_controller(
-        template_latest_gallery,
-        board_shortname='All Boards',
-        posts=posts[:CONSTS.gallery_limit],
-        **CONSTS.render_constants,
-        title='Latest gallery',
-        tab_title='Latest gallery',
-    )
-
-@blueprint_admin.route("/latest_gallery/board/<string:board_shortname>")
-async def latest_gallery_board(board_shortname):
-    validate_board_shortname(board_shortname)
-
-    sql = get_sql_latest_gallery(board_shortname, limit=CONSTS.gallery_limit)
-    posts = await query_execute(sql)
-
-    return await render_controller(
-        template_latest_gallery,
-        board_shortname=board_shortname,
-        posts=posts,
-        **CONSTS.render_constants,
-        title=f'/{board_shortname}/ - gallery',
-        tab_title=f'/{board_shortname}/ - gallery',
-    )
-

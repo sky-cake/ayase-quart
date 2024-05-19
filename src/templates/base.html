@@ -42,11 +42,8 @@
                     {% endif %}
                     Admin: [
                     <a href="/stats">Stats</a>
-                    ]
-                    Latest: [
-                    <a href="/latest">OPs</a>
                     /
-                    <a href="/latest_gallery">Galleries</a>
+                    <a href="/latest">Latest OPs</a>
                     ]
                 </div>
             {% endif %}
@@ -64,14 +61,19 @@
                         {% endif %}
                     </div>
                 {% endif %}
+                
+                {% if request.path != '/' %}
+                    <span id="top">[<a href="#bottom">Bottom</a>]</span>
+                {% endif %}
 
                 {% block body %}
                 {% endblock %}
             </div>
 
-            {% if not request.endpoint in [''] %}
-                <script type="text/javascript" src="/static/js/index.js"></script>
-            {% endif %}
+        {% if request.path != '/' %}
+        <script type="text/javascript" src="/static/js/index.js"></script>
+        <span id="bottom">[<a href="#top">Top</a>]</span>
+        {% endif %}
 
         </div>
         <footer id="footer">

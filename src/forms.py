@@ -12,6 +12,7 @@ class MultiCheckboxField(SelectMultipleField):
 
 class SearchForm(QuartForm):
     search_mode = RadioField('Search Mode', choices=[('index', 'index'), ('gallery', 'gallery')], default='index')
+    order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
     result_limit = IntegerField('Result Limit', default=100, validators=[NumberRange(1, 10_000)], description='Per board')
     title = StringField("Title", validators=[Optional(), Length(2, 256)])

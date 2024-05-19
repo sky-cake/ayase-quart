@@ -15,8 +15,7 @@ from templates import (
     template_posts,
     template_thread,
     template_error_404,
-    template_search,
-    template_latest_gallery
+    template_search
 )
 from configs import CONSTS
 from utils import render_controller, validate_board_shortname, validate_threads, get_title
@@ -76,7 +75,9 @@ async def v_search():
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.search_mode.data not in ['index', 'gallery']: raise BadRequest('search mode is unknown')
+        if form.search_mode.data == 'gallery' and form.has_no_file.data: raise BadRequest("search mode 'gallery' only shows files")
+        if form.search_mode.data not in ['index', 'gallery']: raise BadRequest('search_mode is unknown')
+        if form.order_by.data not in ['asc', 'desc']: raise BadRequest('order_by is unknown')
         if form.is_op.data and form.is_not_op.data: raise BadRequest('is_op is contradicted')
         if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
         if form.has_file.data and form.has_no_file.data: raise BadRequest('has_file is contradicted')
@@ -84,7 +85,7 @@ async def v_search():
 
         params = form.data
         
-        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data) # posts = {'posts': [{...}, {...}, ...]}
+        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data) # posts = {'posts': [{...}, {...}, ...]}
 
         if CONSTS.search_result_highlight:
             posts = highlight_search_results(form, posts)

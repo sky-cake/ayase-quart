@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 import asyncio
 import re
 from textwrap import dedent
+from werkzeug.exceptions import BadRequest
 
 
 def get_selector(board_shortname, double_percent=True):
@@ -116,7 +117,7 @@ def validate_and_generate_params(form_data):
     return param_values, param_filters
 
 
-async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int):
+async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order_by: str):
     """Params e.g.
     ```
         params = dict(
@@ -135,6 +136,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int):
             like all other referenced to boards in this file.
     """
 
+    if order_by not in ['asc', 'desc']: raise BadRequest('order_by is unknown')
     param_values, param_filters = validate_and_generate_params(form_data)
 
     sqls = []
@@ -150,6 +152,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int):
         for field in param_values:
             s += f" \n and {param_filters[field]['s']} "
 
+        s += f' \n ORDER BY timestamp {order_by} \n '
         s += f' \n LIMIT {int(result_limit)} \n ) '
 
         sqls.append(s)
@@ -159,7 +162,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int):
     if sql.strip() == '':
         return {'posts': []}, {} # no boards specified
     
-    sql +=  ' \n order by `time` desc;'
+    sql +=  f' \n order by time {order_by};'
 
     posts = await query_execute(sql, params=param_values)
 
