@@ -15,14 +15,15 @@ from templates import (
     template_posts,
     template_thread,
     template_error_404,
-    template_search
+    template_search,
+    template_latest_gallery
 )
 from configs import CONSTS
 from utils import render_controller, validate_board_shortname, validate_threads, get_title
 from quart import Blueprint
 from flask_paginate import Pagination
 from forms import SearchForm
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest
 from utils import highlight_search_results
 
 blueprint_app = Blueprint("blueprint_app", __name__, template_folder="templates")
@@ -32,8 +33,20 @@ blueprint_app = Blueprint("blueprint_app", __name__, template_folder="templates"
 async def error_not_found(e):
     return await render_controller(
         template_error_404,
+        message='404 Not Found',
         **CONSTS.render_constants,
-        tab_title=f'Error!'
+        tab_title=f'Error'
+    )
+
+
+@blueprint_app.errorhandler(400)
+async def error_invalid(e):
+    return await render_controller(
+        template_error_404,
+        e=e.description,
+        message='The search parameters will result in 0 records.',
+        **CONSTS.render_constants,
+        tab_title=f'Invalid search'
     )
 
 
@@ -49,37 +62,47 @@ async def v_index():
 @blueprint_app.route("/search", methods=['GET', 'POST'])
 async def v_search():
     if not CONSTS.search:
-        raise NotFound
+        raise BadRequest('search is disabled')
     
     form = await SearchForm.create_form()
+    search_mode = 'index'
+    searched = False
 
     posts = []
     quotelinks = []
     if await form.validate_on_submit():
-
+        
+        if not form.boards.data: raise BadRequest('select a board')
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.is_op.data and form.is_not_op.data: raise NotFound
-        if form.has_file.data and form.has_no_file.data: raise NotFound
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise NotFound
+        if form.search_mode.data not in ['index', 'gallery']: raise BadRequest('search mode is unknown')
+        if form.is_op.data and form.is_not_op.data: raise BadRequest('is_op is contradicted')
+        if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
+        if form.has_file.data and form.has_no_file.data: raise BadRequest('has_file is contradicted')
+        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise BadRequest('the dates are contradicted')
 
         params = form.data
         
-        posts, quotelinks = await get_posts_filtered(params) # posts = {'posts': [{...}, {...}, ...]}
+        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data) # posts = {'posts': [{...}, {...}, ...]}
 
         if CONSTS.search_result_highlight:
             posts = highlight_search_results(form, posts)
             
         posts = posts['posts']
+        searched = True
         
+        if form.search_mode.data == 'gallery':
+            search_mode = 'gallery'
+
     return await render_controller(
         template_search,
+        search_mode=search_mode,
         form=form,
         posts=posts,
+        searched=searched,
         quotelinks=quotelinks,
         search_result=True,
-        search_result_limit=CONSTS.search_result_limit,
         tab_title=CONSTS.site_name,
         **CONSTS.render_constants
     )

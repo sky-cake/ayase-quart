@@ -4,16 +4,11 @@
 
 {% block body %}
   <div>
-    <h2>Latest Media - /{{board_shortname}}/</h2>
+    {% if board_shortname %}
+      <h2>Latest Media - /{{board_shortname}}/</h2>
+    {% endif %}
 
-    <div>
-      <div style="display: inline;">
-        {% for post in posts %}
-            {% if post %}
-                {% include 'gallery_item.html' %}
-            {% endif %}
-        {% endfor %}
-      </div>
-    </div>
+    {% include 'gallery.html' %}
+
   </div>
 {% endblock %}

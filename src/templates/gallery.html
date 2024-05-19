@@ -1,0 +1,9 @@
+<div>
+    <div style="display: inline;">
+        {% for post in posts %}
+            {% if post %}
+                {% include 'gallery_item.html' %}
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>

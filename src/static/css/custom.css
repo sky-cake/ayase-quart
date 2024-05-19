@@ -72,47 +72,99 @@ table {
     margin: 2px;
 }
 
-#searchform {
-    border: 1px solid black;
+form {
+    border: 1px solid #494949;
     padding: 1em;
-    width: fit-content;
+    margin: 1em;
+    background-color: #222222;
+    max-width: 1100px;
+    border-radius: 1em;
 }
 
-#searchform input[type=submit],
-#searchform .form-control {
+.form-control {
     list-style: none;
     padding: 3px;
     margin-bottom: 1em;
-    background-color: #282a2e;
-    color: #c5c8c6;
-    border: 1px solid black;
+}
+
+.row {
     display: flex;
-    max-width: 80vw;
-    width: 300px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 95%;
 }
 
-#searchform input[type=submit] {
-    margin-top: 1em;
+.column {
+    margin: 1em;
+    display: flex;
+    flex-direction: column;
 }
 
-#searchform input[type=submit]:hover {
+ul#boards {
+    column-count: 2;
+}
+
+input[type=submit],
+input[type=number],
+input[type=text],
+input[type=date] {
+    max-width: 90vw;
+    width: 240px;
+    display: block;
+    padding: 2px;
+    margin-bottom: 1em;
+    background-color: #282a2e;
+    border: 1px solid #666666;
+    margin: 2px;
+    color: #c5c8c6;
+    border-radius: 1em;
+}
+
+input[type=number] {
+    max-width: 100px;
+}
+
+textarea {
+    margin: 2px;
+    width: 240px;
+    height: 6em;
+    max-width: 90vw;
+    max-height: 40vh;
+    min-width: 2ch;
+    min-height: 2ch;
+    display: block;
+    background-color: #282a2e;
+    border: 1px solid #666666;
+    color: #c5c8c6;
+    border-radius: 1em;
+}
+
+li input[type=checkbox] {
+    min-width: 4ch;
+    text-align: right;
+}
+
+input[type=submit] {
+    background-color: #4b2748;
+    border: 1px solid #666666;
+    padding: 2px;
+    color: #c5c8c6;
+    border-radius: 1em;
+}
+
+input[type=submit]:hover {
     cursor: pointer;
-    background-color: #70396c;
+    background-color: #462443;
 }
 
-#searchform input[type=submit]:disabled {
+input[type=submit]:disabled {
     cursor: default;
-    background-color: #70396c;
+    background-color: #462443;
 }
 
-#searchform #comment {
-    width: 300px;
-    max-width: 80vw;
-
-}
-
-#searchform li {
-    margin: 5px;
+div.form-check {
+    margin: 6px;
+    padding-bottom: 6px;
 }
 
 .search_highlight_title {

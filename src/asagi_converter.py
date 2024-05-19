@@ -94,7 +94,13 @@ def validate_and_generate_params(form_data):
         },
         'is_not_op': {
             's': '`op` != 1'
-        }
+        },
+        'is_deleted': {
+            's': '`deleted` = 1'
+        },
+        'is_not_deleted': {
+            's': '`deleted` != 1'
+        },
     }
 
     param_values = {}
@@ -110,7 +116,7 @@ def validate_and_generate_params(form_data):
     return param_values, param_filters
 
 
-async def get_posts_filtered(form_data: Dict[Any, Any]):
+async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int):
     """Params e.g.
     ```
         params = dict(
@@ -144,7 +150,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
         for field in param_values:
             s += f" \n and {param_filters[field]['s']} "
 
-        s += f' \n LIMIT {int(CONSTS.search_result_limit)} \n ) '
+        s += f' \n LIMIT {int(result_limit)} \n ) '
 
         sqls.append(s)
 
@@ -153,8 +159,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any]):
     if sql.strip() == '':
         return {'posts': []}, {} # no boards specified
     
-    sql +=  ' \n order by `time` desc'
-    sql += f' \n LIMIT {int(CONSTS.search_result_limit)} ;'
+    sql +=  ' \n order by `time` desc;'
 
     posts = await query_execute(sql, params=param_values)
 

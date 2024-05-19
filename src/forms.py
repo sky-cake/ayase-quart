@@ -1,6 +1,6 @@
 from quart_wtf import QuartForm
-from wtforms.fields import StringField, TextAreaField, SubmitField, SelectMultipleField, BooleanField, DateField
-from wtforms.validators import Length, Optional
+from wtforms.fields import StringField, TextAreaField, SubmitField, SelectMultipleField, BooleanField, DateField, RadioField, IntegerField
+from wtforms.validators import Length, Optional, NumberRange
 from wtforms import widgets
 from configs import CONSTS
 
@@ -11,7 +11,9 @@ class MultiCheckboxField(SelectMultipleField):
     option_widget = widgets.CheckboxInput()
 
 class SearchForm(QuartForm):
+    search_mode = RadioField('Search Mode', choices=[('index', 'index'), ('gallery', 'gallery')], default='index')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
+    result_limit = IntegerField('Result Limit', default=100, validators=[NumberRange(1, 10_000)], description='Per board')
     title = StringField("Title", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     num = StringField("Post Number", validators=[Optional(), Length(2, 20)])
@@ -23,5 +25,6 @@ class SearchForm(QuartForm):
     has_no_file = BooleanField('Post contains no file', default=False, validators=[Optional()])
     is_op = BooleanField('Is opening post (OP)', default=False, validators=[Optional()])
     is_not_op = BooleanField('Is not opening post (OP)', default=False, validators=[Optional()])
-    
+    is_deleted = BooleanField('Is deleted', default=False, validators=[Optional()])
+    is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
     submit = SubmitField('Search')

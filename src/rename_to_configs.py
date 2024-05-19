@@ -52,7 +52,6 @@ class CONSTS(NamedTuple):
     gallery_thumbnails = True # load thumbnails instead of full images and videos?
 
     search = True
-    search_result_limit = 100
     search_result_highlight = True
 
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity

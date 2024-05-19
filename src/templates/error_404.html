@@ -3,7 +3,12 @@
 {% block body %}
 
     <div class="alert">
-        <h4 class="alert-heading">404 Not Found</h4>
+        <p class="alert-heading">
+            {{message}}
+        </p>
+        {% if e %}
+            <p>Note: {{e}}</p>
+        {% endif %}
     </div>
 
 {% endblock %}
