@@ -9,7 +9,6 @@
         </video>
     {% else %}
     {% set prefer = 'thumb' if gallery_thumbnails else 'image'%}
-    {{prefer}}
         <img
             src="{{get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer=prefer)}}"
             data-md5="{{ post.md5 }}"
