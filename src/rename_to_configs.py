@@ -43,10 +43,13 @@ class CONSTS(NamedTuple):
     ]
 
     # If you do not have full images, set image_uri to None. Likewise for thumbnails.
-    image_uri = "/static/hayden_asagi/{board_shortname}/image" # must contain {board_shortname}
-    thumb_uri = "/static/hayden_asagi/{board_shortname}/thumb" # must contain {board_shortname}
+    image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image" # must contain {board_shortname}
+    thumb_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
 
     theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+
+    gallery_limit = 100
+    gallery_thumbnails = True # load thumbnails instead of full images and videos?
 
     search = True
     search_result_limit = 100
@@ -58,6 +61,7 @@ class CONSTS(NamedTuple):
 
     root_dir = os.path.dirname(__file__)
     chdir_to_root = True
+    static_dir = os.path.join(root_dir, "static")
 
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##
@@ -75,10 +79,11 @@ class CONSTS(NamedTuple):
     board_shortnames = [board_object['shortname'] for board_object in board_objects]
 
     render_constants = dict(
-        theme = theme,
-        site_name = site_name,
-        board_objects = board_objects,
+        theme=theme,
+        site_name=site_name,
+        board_objects=board_objects,
         search=search,
         image_uri=image_uri,
         thumb_uri=thumb_uri,
+        gallery_thumbnails=gallery_thumbnails,
     )

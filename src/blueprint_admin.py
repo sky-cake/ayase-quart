@@ -23,7 +23,7 @@ def get_sql_latest_ops(board_shortname):
 
 
 def get_sql_latest_gallery(board_shortname, limit=100):
-    return f"""{get_selector(board_shortname)} from {board_shortname} where media_id is not null and media_filename is not null and media_filename not like '%.webm' order by timestamp desc limit {int(limit)};"""
+    return f"""{get_selector(board_shortname)} from {board_shortname} where media_id is not null and media_filename is not null order by timestamp desc limit {int(limit)};"""
 
 
 @blueprint_admin.route("/stats")
@@ -71,7 +71,7 @@ async def latest_gallery():
 async def latest_gallery_all():
     posts = []
     for board_shortname in CONSTS.board_shortnames:
-        sql = get_sql_latest_gallery(board_shortname, limit=30)
+        sql = get_sql_latest_gallery(board_shortname, limit=CONSTS.gallery_limit)
         latest_media_posts = await query_execute(sql)
         if latest_media_posts:
             posts.extend(latest_media_posts)
@@ -80,7 +80,8 @@ async def latest_gallery_all():
 
     return await render_controller(
         template_latest_gallery,
-        posts=posts,
+        board_shortname='All Boards',
+        posts=posts[:CONSTS.gallery_limit],
         **CONSTS.render_constants,
         title='Latest gallery',
         tab_title='Latest gallery',
@@ -90,11 +91,12 @@ async def latest_gallery_all():
 async def latest_gallery_board(board_shortname):
     validate_board_shortname(board_shortname)
 
-    sql = get_sql_latest_gallery(board_shortname)
+    sql = get_sql_latest_gallery(board_shortname, limit=CONSTS.gallery_limit)
     posts = await query_execute(sql)
 
     return await render_controller(
         template_latest_gallery,
+        board_shortname=board_shortname,
         posts=posts,
         **CONSTS.render_constants,
         title=f'/{board_shortname}/ - gallery',

@@ -3,7 +3,7 @@
     <thead>
       <tr>
         {%- for col in list_of_dicts[0].keys() -%}
-          <td style="border: 1px solid #c5c8c6; padding: 8px; text-align: left;"><b>{{ col }}</b></td>
+          <td style="border: 0.5px solid #585858; padding: 8px; text-align: left;"><b>{{ col }}</b></td>
         {%- endfor -%}
       </tr>
     </thead>
@@ -11,7 +11,7 @@
       {%- for row in list_of_dicts -%}
         <tr>
           {%- for col in row.keys() -%}
-            <td style="border: 1px solid #c5c8c6; padding: 8px; max-width: 80ch; word-wrap: break-word; text-align: left;">{{ row[col] }}</td>
+            <td style="border: 0.5px solid #585858; padding: 8px; max-width: 80ch; word-wrap: break-word; text-align: left;">{{ row[col] }}</td>
           {%- endfor -%}
         </tr>
       {%- endfor -%}
@@ -50,6 +50,7 @@
 
 
 {%- macro get_image_src(board_shortname, thread, thumb_uri, image_uri, prefer='thumb') -%}
+{%- if thumb_uri or image_uri -%}
 
   {%- if prefer=='thumb' -%}
 
@@ -74,4 +75,6 @@
   {%- endif -%}
 
   {{ (uri.format(board_shortname=board_shortname) + "/" + fname[0:4] + "/" + fname[4:6] + "/" + fname) }}
+
+{%- endif -%}
 {%- endmacro -%}
