@@ -3,6 +3,7 @@ from quart import render_template
 from jinja2 import Template
 from html import escape
 from werkzeug.exceptions import NotFound
+import re
 
 def validate_board_shortname(board_shortname: str) -> None:
     if not board_shortname in CONSTS.board_shortnames:
@@ -50,7 +51,14 @@ def highlight_search_results(form, posts):
             form_name = field['form_name']
 
             escaped_field = escape(form[form_name].data)
-            
-            posts['posts'][i][asagi_name] = post[asagi_name].replace(escaped_field, f'<span class="search_highlight_{form_name}">{escaped_field}</span>')
-    
+
+            indices = [m.start() for m in re.finditer(escaped_field.lower(), post[asagi_name].lower())]
+
+            for j in indices:
+                original_str = post[asagi_name][j:j+len(escaped_field)]
+                
+                highlight_str = f'<span class="search_highlight_{form_name}">{original_str}</span>'
+
+                posts['posts'][i][asagi_name] = post[asagi_name][:j] + highlight_str + post[asagi_name][j + len(escaped_field):]
+
     return posts
