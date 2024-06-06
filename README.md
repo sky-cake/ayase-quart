@@ -1,5 +1,23 @@
 # Ayase Quart
 
+## News
+
+To update to the latest main branch version (introducing sqlite3 support), you'll need to run ,
+
+```bash
+git fetch origin
+git reset --hard origin/master
+```
+
+and add the following to configs.CONSTS
+
+```python
+db_aiosqlite = False
+db_path = make_path('/path/to/archive.db')
+db_aiomysql = True
+```
+
+Refer to the `rename_to_configs.py` for guidance.
 
 ## About
 
@@ -13,6 +31,7 @@ This project is a descendent of [Ayase](https://github.com/bibanon/ayase). I cho
   - [GitHub](https://github.com/tiangolo/fastapi/pulls)
   - [Reddit](https://www.reddit.com/r/Python/comments/xk6ppx/comment/ipd8c62/?utm_source=share&utm_medium=web2x&context=3)
 
+It supports MySQL and SQLite databases.
 
 ## Set Up
 
