@@ -13,12 +13,18 @@ blueprint_admin = Blueprint('blueprint_admin', __name__, template_folder='templa
 # INSERT_POST_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE num=:num;"
 # DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
 
-DATABASE_TABLE_STORAGE_SIZES = """select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %(db)s group by table_name;"""
-DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = %(db)s group by table_schema;"""
+if CONSTS.db_aiomysql:
+    DATABASE_TABLE_STORAGE_SIZES = """select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %(db)s group by table_name;"""
+    DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = %(db)s group by table_schema;"""
+elif CONSTS.db_aiosqlite:
+    DATABASE_TABLE_STORAGE_SIZES = f"""SELECT name as "Table Name", ROUND(SUM("pgsize") / (1024. * 1024), 2) as "Size in MB" FROM "dbstat" GROUP BY name;"""
+    DATABASE_STORAGE_SIZE = """SELECT ROUND((page_count * page_size) / (1024.0 * 1024.0), 1) as "Size in MB" FROM pragma_page_count(), pragma_page_size();"""
+else:
+    raise ValueError(CONSTS.db_aiomysql, CONSTS.db_aiosqlite)
 
 
 def get_sql_latest_ops(board_shortname):
-    return f"""select '{board_shortname}' board_shortname, TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME(timestamp + TIMESTAMPDIFF(SECOND, NOW(), UTC_TIMESTAMP())), NOW()) as elapsed_minutes, num, case when title is null then '' else title end as title, comment from {board_shortname} where op=1 order by num desc limit 5;"""
+    return f"""select '{board_shortname}' as board_shortname, timestamp, num, case when title is null then '' else title end as title, comment from {board_shortname} where op=1 order by num desc limit 5;"""
 
 
 def get_sql_latest_gallery(board_shortname, limit=100):
