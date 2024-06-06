@@ -17,7 +17,6 @@ if CONSTS.db_aiomysql:
     DATABASE_TABLE_STORAGE_SIZES = """select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %(db)s group by table_name;"""
     DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = %(db)s group by table_schema;"""
 elif CONSTS.db_aiosqlite:
-    table_names = ', '.join([f'\'{b}\'' for b in CONSTS.board_shortnames])
     DATABASE_TABLE_STORAGE_SIZES = f"""SELECT name as "Table Name", ROUND(SUM("pgsize") / (1024. * 1024), 2) as "Size in MB" FROM "dbstat" GROUP BY name;"""
     DATABASE_STORAGE_SIZE = """SELECT ROUND((page_count * page_size) / (1024.0 * 1024.0), 1) as "Size in MB" FROM pragma_page_count(), pragma_page_size();"""
 else:
