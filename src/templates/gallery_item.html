@@ -1,0 +1,20 @@
+{% from 'macros.html' import poster_heading, capcode_author, get_image_src %}
+
+<a href="/{{ post.board_shortname }}/thread/{{ post.thread_num }}#p{{post.no}}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">  
+
+    {% if post.ext == 'webm' and not gallery_thumbnails %}
+        <video width="{{ post.tn_w }}" height="{{ post.tn_h }}" controls>
+            <source src="{{get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer='image')}}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    {% else %}
+    {% set prefer = 'thumb' if gallery_thumbnails else 'image'%}
+        <img
+            src="{{get_image_src(post.board_shortname, post, thumb_uri, image_uri, prefer=prefer)}}"
+            data-md5="{{ post.md5 }}"
+            width="{{ post.tn_w }}"
+            height="{{ post.tn_h }}"
+            loading="lazy"
+        />
+    {% endif %}
+</a>

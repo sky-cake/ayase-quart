@@ -1,0 +1,22 @@
+{% from 'macros.html' import poster_heading, capcode_author, get_image_src %}
+
+{% extends "base.html" %}
+{% block body %}
+
+    <div id="catalog_threads">
+
+        {% set thread_counter = 0 %}
+
+        {% for page_i in range(catalog|length) %}
+            {% for thread_i in range(catalog[page_i]['threads']|length) %}
+                {% set thread = catalog[page_i]['threads'][thread_i] %}
+                {% include 'catalog_card.html' %}
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+
+    {% include 'pagination.html' %}
+
+
+{% endblock %}

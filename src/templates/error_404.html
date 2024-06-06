@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+    <div class="alert">
+        <p class="alert-heading">
+            {{message}}
+        </p>
+        {% if e %}
+            <p>Note: {{e}}</p>
+        {% endif %}
+    </div>
+
+{% endblock %}
