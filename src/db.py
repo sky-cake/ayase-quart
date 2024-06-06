@@ -59,11 +59,19 @@ elif CONSTS.db_aiosqlite:
     import aiosqlite
     import re
 
-    def dict_factory(cursor, row):
-        d = {}
-        for i, col in enumerate(cursor.description):
-            d[col[0]] = row[i]
-        return d
+
+    class dotdict(dict):
+        """dot.notation access to dictionary attributes"""
+        __getattr__ = dict.get
+        __setattr__ = dict.__setitem__
+        __delattr__ = dict.__delitem__
+
+
+    def row_factory(cursor, data):
+        keys = [col[0] for col in cursor.description]
+        d = {k: v for k, v in zip(keys, data)}
+        return dotdict(d)
+
 
     async def query_execute(sql, params=None, fetchone=False, commit=False):
         pattern = r'%\((\w+)\)s'
@@ -71,6 +79,7 @@ elif CONSTS.db_aiosqlite:
         sql = re.sub(pattern, r':\1', sql)
 
         sql = sql.replace('`', '')
+        sql = sql.replace('%s', '?')
 
         if CONSTS.SQLALCHEMY_ECHO:
             print(sql)
@@ -91,7 +100,7 @@ elif CONSTS.db_aiosqlite:
     async def db_pool_open():
         print('Creating database pool, started.')
         current_app.db_pool = await aiosqlite.connect(CONSTS.db_path)
-        current_app.db_pool.row_factory = dict_factory
+        current_app.db_pool.row_factory = row_factory
         print('Creating database pool, completed.')
 
 

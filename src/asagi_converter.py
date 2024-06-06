@@ -44,15 +44,15 @@ def get_selector(board_shortname, double_percent=True):
         `comment` AS `com`
         """
         if double_percent:
-            return SELECTOR.replace('%', '%%')
+            SELECTOR = SELECTOR.replace('%', '%%')
     elif CONSTS.db_aiosqlite:
         SELECTOR = """
         SELECT
         {board_shortname}.thread_num,
         num AS no,
         '{board_shortname}' AS board_shortname,
-        strftime("%m/%d/%y (%a) %H:%M:%S", datetime(`timestamp`, 'unixepoch')) AS now,
-        strftime("%m/%d/%y (%a) %H:%M:%S", datetime(`timestamp_expired`, 'unixepoch')) AS deleted_time,
+        datetime(timestamp, 'unixepoch') AS now,
+        datetime(timestamp_expired, 'unixepoch') AS deleted_time,
         name,
         {board_shortname}.sticky,
         CASE WHEN title IS NULL THEN '' ELSE title END AS sub,
@@ -182,16 +182,12 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order
     # With the Asagi schema, each board has its own table, so we loop over boards and do UNION ALLs to get multi-board sql results
     for board_shortname in form_data['boards']:
 
-        s =   ' ( '
-        s +=  ' \n ' + get_selector(board_shortname)
+        s =  get_selector(board_shortname)
         s += f' \n FROM `{board_shortname}`'
         s +=  ' \n WHERE 1=1 '
         
         for field in param_values:
             s += f" \n and {param_filters[field]['s']} "
-
-        s += f' \n ORDER BY timestamp {order_by} \n '
-        s += f' \n LIMIT {int(result_limit)} \n ) '
 
         sqls.append(s)
 
@@ -200,8 +196,9 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order
     if sql.strip() == '':
         return {'posts': []}, {} # no boards specified
     
-    sql +=  f' \n order by time {order_by};'
-
+    sql +=  f' \n ORDER BY time {order_by}'
+    sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
+    
     posts = await query_execute(sql, params=param_values)
 
     images = []
@@ -298,7 +295,7 @@ async def get_thread_preview_images(board_shortname:str, thread_num: int):
 
 
 async def get_op_list(board_shortname:str, page_num: int):
-    SELECT_OP_LIST_BY_OFFSET = get_selector(board_shortname) + f"FROM {board_shortname} INNER JOIN {board_shortname}_threads ON {board_shortname}_threads.thread_num = {board_shortname}.thread_num WHERE OP=1 ORDER BY `time_bump` DESC LIMIT 10 OFFSET %(page_num)s;"
+    SELECT_OP_LIST_BY_OFFSET = get_selector(board_shortname) + f"FROM {board_shortname} INNER JOIN {board_shortname}_threads ON `{board_shortname}_threads`.`thread_num` = `{board_shortname}`.`thread_num` WHERE OP=1 ORDER BY `time_bump` DESC LIMIT 10 OFFSET %(page_num)s;"
     return await query_execute(SELECT_OP_LIST_BY_OFFSET, params={'page_num': page_num * 10})
 
 
@@ -307,9 +304,10 @@ async def get_op_images(board_shortname:str, md5s: list):
         raise NotImplementedError(md5s)
 
     image_selector=get_image_selector()
-    SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN %(md5s)s"
+    placeholders = ','.join(['%s'] * len(md5s))
+    SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN ({placeholders})"
 
-    return await query_execute(SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH, params={'md5s': tuple(md5s)})
+    return await query_execute(SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH, params=md5s)
 
 
 async def get_op_details(board_shortname:str, thread_nums: List[int]):
@@ -318,8 +316,9 @@ async def get_op_details(board_shortname:str, thread_nums: List[int]):
     
     thread_nums = [int(x) for x in thread_nums]
     placeholders = ','.join(['%s'] * len(thread_nums))
-    SELECT_OP_DETAILS_LIST_BY_THREAD_NUM = f"SELECT `nreplies`, `nimages` FROM `{board_shortname}_threads` WHERE `thread_num` IN ({placeholders}) ORDER BY FIELD(`thread_num`, {placeholders})"
-    return await query_execute(SELECT_OP_DETAILS_LIST_BY_THREAD_NUM, params=thread_nums + thread_nums)
+    SELECT_OP_DETAILS_LIST_BY_THREAD_NUM = f"SELECT `thread_num`, `nreplies`, `nimages` FROM `{board_shortname}_threads` WHERE `thread_num` IN ({placeholders})"
+    results = await query_execute(SELECT_OP_DETAILS_LIST_BY_THREAD_NUM, params=thread_nums)
+    return sorted(results, key=lambda x: x['thread_num'])
 
 
 async def get_catalog_threads(board_shortname:str, page_num: int):

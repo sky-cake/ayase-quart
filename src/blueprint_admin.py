@@ -23,8 +23,9 @@ elif CONSTS.db_aiosqlite:
 else:
     raise ValueError(CONSTS.db_aiomysql, CONSTS.db_aiosqlite)
 
+
 def get_sql_latest_ops(board_shortname):
-    return f"""select '{board_shortname}' board_shortname, TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME(timestamp + TIMESTAMPDIFF(SECOND, NOW(), UTC_TIMESTAMP())), NOW()) as elapsed_minutes, num, case when title is null then '' else title end as title, comment from {board_shortname} where op=1 order by num desc limit 5;"""
+    return f"""select '{board_shortname}' as board_shortname, timestamp, num, case when title is null then '' else title end as title, comment from {board_shortname} where op=1 order by num desc limit 5;"""
 
 
 def get_sql_latest_gallery(board_shortname, limit=100):
