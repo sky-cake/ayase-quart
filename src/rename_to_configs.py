@@ -13,6 +13,10 @@ class CONSTS(NamedTuple):
 
     TESTING = True
 
+    db_aiosqlite = False
+    db_path = make_path('/path/to/archive.db')
+
+    db_aiomysql = True
     db_host = '192.168.0.47'
     db_port = 3306
     db_database = 'hayden'
@@ -44,11 +48,10 @@ class CONSTS(NamedTuple):
 
     # If you do not have full images, set image_uri to None. Likewise for thumbnails.
     image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image" # must contain {board_shortname}
-    thumb_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
+    thumb_uri = "/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
 
     theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 
-    gallery_limit = 100
     gallery_thumbnails = True # load thumbnails instead of full images and videos?
 
     search = True
@@ -86,3 +89,5 @@ class CONSTS(NamedTuple):
         thumb_uri=thumb_uri,
         gallery_thumbnails=gallery_thumbnails,
     )
+
+    assert not (db_aiomysql and db_aiosqlite)
