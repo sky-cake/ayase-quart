@@ -49,32 +49,76 @@
 {%- endmacro -%}
 
 
-{%- macro get_image_src(board_shortname, thread, thumb_uri, image_uri, prefer='thumb') -%}
+{%- macro get_image_src(board_shortname, thread, thumb_uri, image_uri) -%}
 {%- if thumb_uri or image_uri -%}
 
-  {%- if prefer=='thumb' -%}
+  {%- set uri_thumb = thumb_uri -%}
+  {%- set fname_thumb = (thread.asagi_preview_filename|string) -%}
 
-    {%- if thumb_uri -%}
-      {%- set uri = thumb_uri -%}
-      {%- set fname = (thread.asagi_preview_filename|string) -%}
-    {%- else -%}
-      {%- set uri = image_uri -%}
-      {%- set fname = (thread.asagi_filename|string) -%}
-    {%- endif -%}
+  {%- set uri_img = image_uri -%}
+  {%- set fname_img = (thread.asagi_filename|string) -%}
+
+  {%- if thumb_uri -%}
+
+    {%- set url_first = (uri_thumb.format(board_shortname=board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
+    {%- set url_second = (uri_img.format(board_shortname=board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
+
+  {%- elif thumb_uri -%}
+
+    {%- set url_first = (uri_img.format(board_shortname=board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
+    {%- set url_second = '/static/images/nofile.png' -%}
 
   {%- else -%}
 
-    {%- if image_uri -%}
-      {%- set uri = image_uri -%}
-      {%- set fname = (thread.asagi_filename|string) -%}
-    {%- else -%}
-      {%- set uri = thumb_uri -%}
-      {%- set fname = (thread.asagi_preview_filename|string) -%}
-    {%- endif -%}
+    {%- set url_first = '/static/images/nofile.png' -%}
+    {%- set url_second = '/static/images/nofile.png' -%}
 
   {%- endif -%}
 
-  {{ (uri.format(board_shortname=board_shortname) + "/" + fname[0:4] + "/" + fname[4:6] + "/" + fname) }}
+  {%- if url_first.endswith('.webm') -%}
+  {%- endif -%}
+
+  {%- if url_second.endswith('.webm') -%}
+  {%- endif -%}
+
+  {{url_first}}
+
+{%- endif -%}
+{%- endmacro -%}
+
+{%- macro get_image_src_on_error(board_shortname, thread, thumb_uri, image_uri) -%}
+{%- if thumb_uri or image_uri -%}
+
+  {%- set uri_thumb = thumb_uri -%}
+  {%- set fname_thumb = (thread.asagi_preview_filename|string) -%}
+
+  {%- set uri_img = image_uri -%}
+  {%- set fname_img = (thread.asagi_filename|string) -%}
+
+  {%- if thumb_uri -%}
+
+    {%- set url_first = (uri_thumb.format(board_shortname=board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
+    {%- set url_second = (uri_img.format(board_shortname=board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
+
+  {%- elif thumb_uri -%}
+
+    {%- set url_first = (uri_img.format(board_shortname=board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
+    {%- set url_second = '/static/images/nofile.png' -%}
+
+  {%- else -%}
+
+    {%- set url_first = '/static/images/nofile.png' -%}
+    {%- set url_second = '/static/images/nofile.png' -%}
+
+  {%- endif -%}
+
+  {%- if url_first.endswith('.webm') -%}
+  {%- endif -%}
+
+  {%- if url_second.endswith('.webm') -%}
+  {%- endif -%}
+
+  {{"this.onerror=null;this.src='{url_second}';".format(url_second=url_second)}}
 
 {%- endif -%}
 {%- endmacro -%}
