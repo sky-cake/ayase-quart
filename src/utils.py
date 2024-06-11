@@ -54,7 +54,7 @@ def highlight_search_results(form, posts):
 
             indices = [m.start() for m in re.finditer(escaped_field.lower(), post[asagi_name].lower())]
 
-            for j in indices:
+            for j in indices[::-1]:
                 original_str = post[asagi_name][j:j+len(escaped_field)]
                 
                 highlight_str = f'<span class="search_highlight_{form_name}">{original_str}</span>'

@@ -1,4 +1,4 @@
-{% from 'macros.html' import poster_heading, capcode_author, get_image_src %}
+{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error %}
 
 <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}"
     style="max-width: 300px; max-height: 375px; overflow: hidden; text-align: center;" tabindex="0">
@@ -20,6 +20,7 @@
             width="{{ thread.tn_w }}"
             height="{{ thread.tn_h }}"
             loading="lazy"
+            onerror="{{get_image_src_on_error(thread.board_shortname, thread, thumb_uri, image_uri)}}"
         />
     </a>
     <div class="teaser">

@@ -55,6 +55,7 @@
             width="{{ thread.tn_w }}"
             height="{{ thread.tn_h }}"
             loading="lazy"
+            onerror="{{get_image_src_on_error(thread.board_shortname, thread, thumb_uri, image_uri)}}"
         />
     </a>
 
