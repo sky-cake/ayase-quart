@@ -49,21 +49,11 @@
 {%- endmacro -%}
 
 
-{%- macro get_image_src(thumb_uri, image_uri, board_shortname, post, is_video=False) -%}
-  {%- if thumb_uri or image_uri -%}
+{%- macro get_full_media_src(image_uri, post) -%}
+  {%- if image_uri -%}
 
-    {%- set fname_thumb = (post.asagi_preview_filename|string) -%}
     {%- set fname_img = (post.asagi_filename|string) -%}
-
-    {%- if thumb_uri and not is_video -%}
-
-      {%- set url = (thumb_uri.format(board_shortname=board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
-
-    {%- else -%}
-
-      {%- set url = (image_uri.format(board_shortname=board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
-
-    {%- endif -%}
+    {%- set url = (image_uri.format(board_shortname=post.board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
 
     {{url}}
 
@@ -73,29 +63,15 @@
 {%- endmacro -%}
 
 
-{%- macro get_image_src_on_error(thumb_uri, image_uri, board_shortname, post, change_media_url=True, is_video=False) -%}
-  {%- if thumb_uri or image_uri -%}
+{%- macro get_thumb_src(thumb_uri, post) -%}
+  {%- if thumb_uri -%}
 
     {%- set fname_thumb = (post.asagi_preview_filename|string) -%}
     {%- set fname_img = (post.asagi_filename|string) -%}
 
-    {%- if image_uri -%}
+    {%- set url = (thumb_uri.format(board_shortname=post.board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
 
-      {%- set url = (image_uri.format(board_shortname=board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
-
-    {%- else -%}
-
-      {%- set url = (thumb_uri.format(board_shortname=board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
-
-    {%- endif -%}
-
-    {%- if change_media_url and not is_video -%}
-      {{"this.onerror=null;this.parentElement.href='{url}';this.src='{url}';".format(url=url)}}
-    {%- elif change_media_url and is_video -%}
-      {{"this.onerror=null;this.children[0].src='{url}';this.src='{url}';".format(url=url)}}
-    {%- else -%}
-      {{"this.onerror=null;this.src='{url}';".format(url=url)}}
-    {%- endif -%}
+    {{url}}
 
   {%- else -%}
     {{''}}
@@ -103,31 +79,23 @@
 {%- endmacro -%}
 
 
-{%- macro get_image_or_video(thumb_uri, image_uri, post, change_media_url=True, classes="", video_ok=False) -%}
-    {% if post.ext == 'webm' and video_ok and image_uri %}
-        <video
-            class="{{classes}}"
-            style="max-width: 400px; max-height: 400px;"
-            controls
-            onloadstart="{{'this.parentElement.href=this.children[0].src;this.onload=null;' if change_media_url else ''}}"
-            onerror="{{get_image_src_on_error(thumb_uri, image_uri, post.board_shortname, post, change_media_url=change_media_url, is_video=True)}}">
+{%- macro get_img(thumb_uri, image_uri, post, classes="", expand_media=True) -%}
+  
+  {%- set thumb_src = get_thumb_src(thumb_uri, post) -%}
+  {%- set full_media_src = get_full_media_src(image_uri, post) -%}
 
-            <source src="{{get_image_src(thumb_uri, image_uri, post.board_shortname, post, is_video=True)}}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    {% else %}
-        {% if post.ext != 'webm' %}
-          {%- set image_uri = None -%}
-        {% endif %}
-        <img
-          src="{{get_image_src(thumb_uri, image_uri, post.board_shortname, post, is_video=False)}}"
-          class="{{classes}}"
-          data-md5="{{ post.md5 }}"
-          width="{{ post.tn_w }}"
-          height="{{ post.tn_h }}"
-          loading="lazy"
-          onerror="{{get_image_src_on_error(thumb_uri, image_uri, post.board_shortname, post, change_media_url=change_media_url, is_video=False)}}"
-          onload="{{'this.parentElement.href=this.src;this.onload=null;' if change_media_url else ''}}"
-        />
-    {% endif %}
+  <img
+    src="{{thumb_src}}"
+    class="{{classes}}"
+    data-md5="{{ post.md5 }}"
+    width="{{ post.tn_w }}"
+    height="{{ post.tn_h }}"
+    loading="lazy"
+    data-ext="{{post.ext}}"
+    data-thumb_src="{{thumb_src}}"
+    data-full_media_src="{{full_media_src}}"
+    onclick="{{'expandMedia(this)' if expand_media else 'null'}}"
+    onerror="pointToOtherMediaOnError(this)"
+    data-expanded="false"
+  />
 {%- endmacro -%}

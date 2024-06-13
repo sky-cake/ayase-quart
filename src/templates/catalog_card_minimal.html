@@ -1,4 +1,4 @@
-{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error, get_image_or_video %}
+{% from 'macros.html' import poster_heading, capcode_author, get_img %}
 
 <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}"
     style="max-width: 300px; max-height: 375px; overflow: hidden; text-align: center;" tabindex="0">
@@ -15,7 +15,7 @@
     </div>
     <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
 
-        {{get_image_or_video(thumb_uri, image_uri, thread, change_media_url=False, classes="thumb thread_image", video_ok=False)}}
+        {{get_img(thumb_uri, image_uri, thread, classes="thumb thread_image", expand_media=False)}}
 
     </a>
     <div class="teaser">

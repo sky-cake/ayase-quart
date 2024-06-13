@@ -1,4 +1,4 @@
-{% from 'macros.html' import capcode_author, thread_stats, get_image_src, get_image_src_on_error, get_image_or_video %}
+{% from 'macros.html' import capcode_author, thread_stats, get_img, get_full_media_src, get_thumb_src %}
 
 
 {% if post.resto == 0 and not search_result%}
@@ -33,16 +33,14 @@
     <div class="file" id="f{{post.no}}">
         <div class="fileText" id="fT{{post.no}}">
             File:
-            <a href="{{ get_image_src(thumb_uri, image_uri, post.board_shortname, post) }}">{{post.filename}}.{{post.ext}}</a>
+            <a href="{{ get_full_media_src(image_uri, post) }}">{{post.filename}}.{{post.ext}}</a>
             (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}}){% endif %}</span>
             {% if search_result %}
                 Replies: {{post.replies}} Files: {{post.images}} {% if post.posters %}Posters: {{post.posters}}{% endif %}
             {% endif %}
         </div>
-        <a class="fileThumb" href="{{ get_image_src(thumb_uri, image_uri, post.board_shortname, post) }}" target="{{html_link_target}}">
-
-            {{get_image_or_video(thumb_uri, image_uri, post, change_media_url=True, classes="opImg postImg spoiler" if post.spoiler else "opImg postImg", video_ok=True)}}
-
+        <a class="fileThumb">
+            {{get_img(thumb_uri, image_uri, post, classes="opImg postImg spoiler" if post.spoiler else "opImg postImg")}}
         </a>
     </div>
 {% endif %}
@@ -116,13 +114,11 @@
     <div class="file" id="f{{post.no}}">
         <div class="fileText" id="fT{{post.no}}">
             File:
-            <a href="{{ get_image_src(thumb_uri, image_uri, post.board_shortname, post) }}" target="{{html_link_target}}" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
+            <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
             (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor') }} KB, {{post.w}}x{{post.h}}){% endif %}</span>
         </div>
-        <a class="fileThumb" href="{{ get_image_src(thumb_uri, image_uri, post.board_shortname, post) }}" target="{{html_link_target}}">
-
-            {{get_image_or_video(thumb_uri, image_uri, post, change_media_url=True, classes="replyImg postImg spoiler" if post.spoiler else "replyImg postImg", video_ok=True)}}
-
+        <a class="fileThumb">
+            {{get_img(thumb_uri, image_uri, post, classes="replyImg postImg spoiler" if post.spoiler else "replyImg postImg")}}
         </a>
     </div>
 {% endif %}

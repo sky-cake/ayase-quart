@@ -1,7 +1,9 @@
-{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error, get_image_or_video %}
+{% from 'macros.html' import poster_heading, capcode_author, get_img %}
 
-<a href="/{{ post.board_shortname }}/thread/{{ post.thread_num }}#p{{post.no}}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
-
-    {{get_image_or_video(thumb_uri, image_uri, post, change_media_url=False, video_ok=True)}}
-
-</a>
+<div class="column">
+    <div class="center">
+        [<a href="/{{ post.board_shortname }}/thread/{{ post.thread_num }}#p{{post.no}}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">Post</a>]
+        <br>
+        {{get_img(thumb_uri, image_uri, post)}}
+    </div>
+</div>
