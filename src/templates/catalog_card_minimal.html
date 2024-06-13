@@ -1,10 +1,10 @@
-{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error %}
+{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error, get_image_or_video %}
 
 <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}"
     style="max-width: 300px; max-height: 375px; overflow: hidden; text-align: center;" tabindex="0">
     <div class="post_data">
         <span class="post_controls">
-            [<a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" class="btnr parent" target="_blank">View</a>]
+            [<a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" class="btnr parent" target="{{html_link_target}}">View</a>]
             [<a href="https://boards.4chan.org/{{ thread.board_shortname }}/thread/{{ thread.no }}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         <br/>
@@ -13,15 +13,10 @@
             <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
         </span>
     </div>
-    <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">  
-        <img class="thumb thread_image"
-            src="{{get_image_src(thread.board_shortname, thread, thumb_uri, image_uri)}}"
-            data-md5="{{ thread.md5 }}"
-            width="{{ thread.tn_w }}"
-            height="{{ thread.tn_h }}"
-            loading="lazy"
-            onerror="{{get_image_src_on_error(thread.board_shortname, thread, thumb_uri, image_uri)}}"
-        />
+    <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
+
+        {{get_image_or_video(thumb_uri, image_uri, thread, change_media_url=False, classes="thumb thread_image", video_ok=False)}}
+
     </a>
     <div class="teaser">
         {% if thread.sub %}

@@ -46,13 +46,13 @@ class CONSTS(NamedTuple):
         {'shortname': 'mu', 'name': 'Music'},
     ]
 
+    html_linked_target = '_self' # or '_blank' # links to 4chan will always remain '_blank'
+
     # If you do not have full images, set image_uri to None. Likewise for thumbnails.
     image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image" # must contain {board_shortname}
     thumb_uri = "/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
 
     theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
-
-    gallery_thumbnails = True # load thumbnails instead of full images and videos?
 
     search = True
     search_result_highlight = True
@@ -87,7 +87,7 @@ class CONSTS(NamedTuple):
         search=search,
         image_uri=image_uri,
         thumb_uri=thumb_uri,
-        gallery_thumbnails=gallery_thumbnails,
+        html_linked_target=html_linked_target,
     )
 
     assert not (db_aiomysql and db_aiosqlite)

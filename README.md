@@ -1,23 +1,6 @@
 # Ayase Quart
 
-## News
-
-To update to the latest main branch version (introducing sqlite3 support), you'll need to run ,
-
-```bash
-git fetch origin
-git reset --hard origin/master
-```
-
-and add the following to configs.CONSTS
-
-```python
-db_aiosqlite = False
-db_path = make_path('/path/to/archive.db')
-db_aiomysql = True
-```
-
-Refer to the `rename_to_configs.py` for guidance.
+Please refer to the [changelog](https://github.com/sky-cake/ayase-quart/blob/main/changelog.md) for news and how to update to the latest version.
 
 ## About
 
