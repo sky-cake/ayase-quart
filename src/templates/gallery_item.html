@@ -1,20 +1,7 @@
-{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error %}
+{% from 'macros.html' import poster_heading, capcode_author, get_image_src, get_image_src_on_error, get_image_or_video %}
 
-<a href="/{{ post.board_shortname }}/thread/{{ post.thread_num }}#p{{post.no}}" rel="noreferrer" target="_blank" class="thread_image_link" data-expand="true">  
+<a href="/{{ post.board_shortname }}/thread/{{ post.thread_num }}#p{{post.no}}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
 
-    {% if post.ext == 'webm' and not gallery_thumbnails %}
-        <video width="{{ post.tn_w }}" height="{{ post.tn_h }}" controls>
-            <source src="{{get_image_src(post.board_shortname, post, thumb_uri, image_uri)}}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    {% else %}
-        <img
-            src="{{get_image_src(post.board_shortname, post, thumb_uri, image_uri)}}"
-            data-md5="{{ post.md5 }}"
-            width="{{ post.tn_w }}"
-            height="{{ post.tn_h }}"
-            loading="lazy"
-            onerror="{{get_image_src_on_error(post.board_shortname, post, thumb_uri, image_uri)}}"
-        />
-    {% endif %}
+    {{get_image_or_video(thumb_uri, image_uri, post, change_media_url=False, video_ok=True)}}
+
 </a>
