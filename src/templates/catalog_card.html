@@ -49,7 +49,9 @@
     </div>
 
     <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
+
         {{get_img(thumb_uri, image_uri, thread, classes="thumb thread_image", expand_media=False)}}
+
     </a>
 
     {% if thread.sticky or thread.closed %}

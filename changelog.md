@@ -7,6 +7,7 @@
 ### 2024-06-10
 
 - [feature] sqlite3 support - to update run `git fetch origin && git reset --hard origin/master` and add the following to configs.CONSTS
+
   - db_aiosqlite = False
   - db_path = make_path('/path/to/archive.db')
   - db_aiomysql = True

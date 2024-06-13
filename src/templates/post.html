@@ -1,6 +1,5 @@
 {% from 'macros.html' import capcode_author, thread_stats, get_img, get_full_media_src, get_thumb_src %}
 
-
 {% if post.resto == 0 and not search_result%}
     {{ thread_stats(post) }}
     <div class="postContainer opContainer" id="pc{{post.no}}">
