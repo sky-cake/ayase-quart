@@ -79,7 +79,7 @@ elif CONSTS.db_aiosqlite:
         sql = re.sub(pattern, r':\1', sql)
 
         sql = sql.replace('`', '')
-        sql = sql.replace('%s', '?')
+        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ") # I know...
 
         if CONSTS.SQLALCHEMY_ECHO:
             print(sql)

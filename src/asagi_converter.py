@@ -117,7 +117,7 @@ def validate_and_generate_params(form_data):
             's': '`num` = %(num)s'
         },
         'date_before': {
-            's': '`timestamp` >= UNIX_TIMESTAMP(%(date_before)s)' if CONSTS.db_aiomysql else "`timestamp` >= strftime('%s', %(date_before)s)"
+            's': '`timestamp` >= UNIX_TIMESTAMP(%(date_before)s)' if CONSTS.db_aiomysql else "`timestamp` <= strftime('%s', %(date_before)s)"
         },
         'date_after': {
             's': '`timestamp` >= UNIX_TIMESTAMP(%(date_after)s)' if CONSTS.db_aiomysql else "`timestamp` >= strftime('%s', %(date_after)s)"
