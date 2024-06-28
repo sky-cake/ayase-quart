@@ -1,29 +1,17 @@
-import quart_flask_patch # keep this here
-
-from asagi_converter import (
-    convert_thread,
-    generate_index,
-    generate_catalog,
-    get_op_thread_count,
-    get_posts_filtered
-)
-
-from templates import (
-    template_board_index,
-    template_catalog,
-    template_index,
-    template_posts,
-    template_thread,
-    template_error_404,
-    template_search
-)
-from configs import CONSTS
-from utils import render_controller, validate_board_shortname, validate_threads, get_title
-from quart import Blueprint
+import quart_flask_patch  # keep this here
 from flask_paginate import Pagination
-from forms import SearchForm
+from quart import Blueprint
 from werkzeug.exceptions import BadRequest
-from utils import highlight_search_results
+
+from asagi_converter import (convert_thread, generate_catalog, generate_index,
+                             get_op_thread_count, get_posts_filtered)
+from configs import CONSTS
+from forms import SearchForm
+from templates import (template_board_index, template_catalog,
+                       template_error_404, template_index, template_posts,
+                       template_search, template_thread)
+from utils import (get_title, highlight_search_results, render_controller,
+                   validate_board_shortname, validate_threads)
 
 blueprint_app = Blueprint("blueprint_app", __name__, template_folder="templates")
 

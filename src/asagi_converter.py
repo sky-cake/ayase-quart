@@ -1,11 +1,13 @@
-import html
-from configs import CONSTS
-from db import query_execute
-from typing import List, Dict, Any
 import asyncio
+import html
 import re
 from textwrap import dedent
+from typing import Any, Dict, List
+
 from werkzeug.exceptions import BadRequest
+
+from configs import CONSTS
+from db import query_execute
 
 
 def get_selector(board_shortname, double_percent=True):

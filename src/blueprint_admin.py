@@ -1,9 +1,10 @@
-from templates import template_stats, template_latest
+from quart import Blueprint
+
+from asagi_converter import get_selector
 from configs import CONSTS
 from db import query_execute
-from quart import Blueprint
+from templates import template_latest, template_stats
 from utils import render_controller
-from asagi_converter import get_selector
 
 blueprint_admin = Blueprint('blueprint_admin', __name__, template_folder='templates')
 

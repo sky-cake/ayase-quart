@@ -1,11 +1,11 @@
-import sys
-import os
 import asyncio
+import os
+import sys
+
 import aiomysql
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../src'))
 from configs import CONSTS
-
 
 BOARD_PLACEHOLDER = '%%BOARD%%'
 DATABASE_PLACEHOLDER = '%%DATABASE%%'

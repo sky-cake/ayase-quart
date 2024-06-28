@@ -1,7 +1,10 @@
 from quart_wtf import QuartForm
-from wtforms.fields import StringField, TextAreaField, SubmitField, SelectMultipleField, BooleanField, DateField, RadioField, IntegerField
-from wtforms.validators import Length, Optional, NumberRange
 from wtforms import widgets
+from wtforms.fields import (BooleanField, DateField, IntegerField, RadioField,
+                            SelectMultipleField, StringField, SubmitField,
+                            TextAreaField)
+from wtforms.validators import Length, NumberRange, Optional
+
 from configs import CONSTS
 
 LENGTH_MD5_HASH = 32

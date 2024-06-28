@@ -1,6 +1,7 @@
+from textwrap import dedent
+
 import pandas as pd
 from sqlalchemy import create_engine, text
-from textwrap import dedent
 
 
 def execute_query(sql_string, db_old='', db_new='', board='', write=False, print_output=True):

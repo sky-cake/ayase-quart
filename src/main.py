@@ -1,14 +1,16 @@
-import quart_flask_patch # keep this
-
+import quart_flask_patch  # keep this
 import os
+
+from flask_bootstrap import Bootstrap5
 from quart import Quart
 from werkzeug.middleware.proxy_fix import ProxyFix
-from configs import CONSTS
+
+from blueprint_admin import blueprint_admin
 from blueprint_api import blueprint_api
 from blueprint_app import blueprint_app
-from blueprint_admin import blueprint_admin
-from db import db_pool_open, db_pool_close
-from flask_bootstrap import Bootstrap5
+from configs import CONSTS
+from db import db_pool_close, db_pool_open
+
 
 def create_app():
 

@@ -1,6 +1,6 @@
-from configs import CONSTS
 from quart import current_app
 
+from configs import CONSTS
 
 if CONSTS.db_aiomysql:
     import aiomysql
@@ -56,8 +56,9 @@ if CONSTS.db_aiomysql:
         await current_app.db_pool.wait_closed()
 
 elif CONSTS.db_aiosqlite:
-    import aiosqlite
     import re
+
+    import aiosqlite
 
 
     class dotdict(dict):

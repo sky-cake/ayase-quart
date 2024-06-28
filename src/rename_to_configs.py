@@ -1,6 +1,5 @@
-from typing import NamedTuple
-
 import os
+from typing import NamedTuple
 
 
 def make_path(*file_path):

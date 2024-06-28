@@ -1,9 +1,12 @@
-from configs import CONSTS
-from quart import render_template
-from jinja2 import Template
-from html import escape
-from werkzeug.exceptions import NotFound
 import re
+from html import escape
+
+from jinja2 import Template
+from quart import render_template
+from werkzeug.exceptions import NotFound
+
+from configs import CONSTS
+
 
 def validate_board_shortname(board_shortname: str) -> None:
     if not board_shortname in CONSTS.board_shortnames:
