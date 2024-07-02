@@ -19,6 +19,10 @@ if CONSTS.db_aiomysql:
         dict_type = AttrDict
 
     async def query_execute(sql, params=None, fetchone=False, commit=False):
+        global current_app
+        if not current_app:
+            current_app = lambda: None
+            await db_pool_open()
         async with current_app.db_pool.acquire() as connection:
             async with connection.cursor(AttrDictCursor) as cursor:
 

@@ -11,6 +11,7 @@ class CONSTS(NamedTuple):
     """Jinja2 does not like type hinting, so they are not being written here for now."""
 
     TESTING = True
+    autoreload = True
 
     db_aiosqlite = False
     db_path = make_path('/path/to/archive.db')
@@ -55,6 +56,17 @@ class CONSTS(NamedTuple):
 
     search = True
     search_result_highlight = True
+
+    # mysql, meili, manticore, typesense, lnx
+    search_provider = 'meili'
+    search_host = 'http://localhost:7700'
+    search_auth_key = ''
+    search_conf = dict(
+        headers={
+            'content-type': 'application/json',
+            # 'Authorization': f'Bearer {search_auth_key}',
+        }
+    )
 
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
     REVERSE_PROXY = False

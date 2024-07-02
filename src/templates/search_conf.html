@@ -1,0 +1,23 @@
+{% from 'bootstrap5/form.html' import render_field %}
+{% from 'macros.html' import table %}
+
+{% extends "base.html" %}
+
+{% block body %}
+
+  <h2>{{site_name}} Configure Search</h2>
+  <div>{{ msg }}</div>
+  <form action="" id="searchconfform" method="post" class="form" role="form">
+    {{ form.csrf_token() }}
+    <div class="row">
+        <div class="column">
+            {{ render_field(form.boards) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.operation) }}
+        </div>
+    </div>
+    <div>{{ render_field(form.submit) }}</div>
+  </form>
+
+{% endblock %}

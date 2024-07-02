@@ -32,3 +32,8 @@ class SearchForm(QuartForm):
     is_deleted = BooleanField('Is deleted', default=False, validators=[Optional()])
     is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
     submit = SubmitField('Search')
+
+class SearchConfForm(QuartForm):
+    boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
+    operation = RadioField('operation', choices=[('init', 'init'), ('config', 'config'), ('populate', 'populate'), ('wipe', 'wipe')], default='init')
+    submit = SubmitField('Run')

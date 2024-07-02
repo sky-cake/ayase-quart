@@ -1,0 +1,63 @@
+{% from 'bootstrap5/form.html' import render_field %}
+{% from 'macros.html' import table %}
+
+{% extends "base.html" %}
+
+{% block body %}
+
+  <h2>{{site_name}} Search</h2>
+  
+  <form action="" id="searchform" method="post" class="form" role="form">
+    {{ form.csrf_token() }}
+    <div class="row">
+        <div class="column">
+          {{ render_field(form.search_mode) }}
+          {{ render_field(form.order_by) }}
+        </div>
+        <div class="column">
+            {{ render_field(form.boards) }}
+            {{ render_field(form.result_limit) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.num) }}
+          {{ render_field(form.title) }}
+          {{ render_field(form.comment) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.media_filename) }}
+          {{ render_field(form.media_hash) }}
+          {{ render_field(form.date_after) }}
+          {{ render_field(form.date_before) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.has_file) }}
+          {{ render_field(form.has_no_file) }}
+          {{ render_field(form.is_op) }}
+          {{ render_field(form.is_not_op) }}
+          {{ render_field(form.is_deleted) }}
+          {{ render_field(form.is_not_deleted) }}
+        </div>
+    </div>
+    <div>{{ render_field(form.submit) }}</div>
+  </form>
+
+  <div>
+    {% if posts %}
+      <h3>Found <b>{{posts|length}}</b> results!</h3>
+      <div class="board">
+        {% if search_mode == 'index' %}
+			{% for post in posts %}
+				{% include 'post2.html' %}
+			{% endfor %}
+        {% else %}
+          {% include 'gallery.html' %}
+        {% endif %}
+      </div>
+    {% else %}
+      {% if searched %}
+        <h3>0 results found!</h3>
+      {% endif %}
+    {% endif %}
+  </div>
+
+{% endblock %}

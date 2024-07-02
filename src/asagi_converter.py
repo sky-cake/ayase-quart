@@ -388,6 +388,10 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
 
     GT = '&gt;'
     GTGT = "&gt;&gt;"
+    SR_START_F = "||sr_hl_cls_start||"
+    SR_END_F = "||sr_hl_cls_end||"
+    SR_START_R = '<span class="search_highlight_comment">'
+    SR_END_R = '</span>'
 
     if com is None:
         return [], ''
@@ -395,6 +399,7 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
     lines = html.escape(com).split("\n")
     for i, line in enumerate(lines):
 
+        lines[i] = lines[i].replace(SR_START_F, SR_START_R).replace(SR_END_F, SR_END_R)
         # >green text
         if GT == line[:4] and GT != line[4:8]:
             lines[i] = f"""<span class="quote">{line}</span>"""

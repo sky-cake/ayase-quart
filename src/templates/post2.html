@@ -1,0 +1,102 @@
+{% from 'macros.html' import capcode_author, thread_stats, get_img, get_full_media_src, get_thumb_src %}
+
+<div class="postContainer replyContainer" id="pc{{post.no}}">
+<div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
+
+
+<div id="p{{post.no}}" class="post reply">
+
+<div class="postInfoM mobile" id="pim{{post.no}}">
+    {% if post.sub %}
+        <span class="subject">{{post.sub}}</span>
+    {% endif %}
+    <span class="nameBlock">
+        <span class="name">{{post.name}}</span>
+        <br>
+    </span>
+    <span class="dateTime postNum" data-utc="{{post.time}}">
+        {{post.now}}
+        <a href="#{{post.num}}" title="Link to this post">No. {{post.no}}</a>
+    </span>
+</div>
+{% if post.resto == 0 and post.filename %}
+    <div class="file" id="f{{post.no}}">
+        <div class="fileText" id="fT{{post.no}}">
+            File:
+            <a href="{{ get_full_media_src(image_uri, post) }}">{{post.filename}}.{{post.ext}}</a>
+            (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}}){% endif %}</span>
+            Replies: {{post.replies}} Files: {{post.images}} {% if post.posters %}Posters: {{post.posters}}{% endif %}
+        </div>
+        <a class="fileThumb">
+            {{get_img(thumb_uri, image_uri, post, classes="opImg postImg spoiler" if post.spoiler else "opImg postImg")}}
+        </a>
+    </div>
+{% endif %}
+<div class="postInfo desktop" id="pi{{post.no}}">
+	<b>/{{post.board_shortname}}/</b>
+    {% if post.resto == 0 %}
+        <strong style="color: #4da57c;">OP</strong>
+    {% endif %}
+    {% if post.filedeleted and not post.deleted_time %}
+        <strong class="warning" title="This post was prematurely deleted.">[Deleted]</strong>
+    {% endif %}
+    {% if post.filedeleted and post.deleted_time %}
+        <strong class="warning" title="This post was deleted on {{post.deleted_time}}.">[Deleted]</strong>
+    {% endif %}
+    {% if post.sub %}
+        <span class="subject">{{post.sub}}</span>
+    {% endif %}
+    <span class="nameBlock {{ capcode_author(post.capcode) }}">
+        {% if post.email and post.email != 'noko' %}<a href="mailto:{{ post.email }}">{% endif %}<span class="name{% if post.capcode %} capcode{% endif %}"{% if post.exif %} title="Exif: {{post.exif}}"{% endif %}>{{ post.name }}</span>{% if post.trip %}<span class="postertrip">{{ post.trip }}</span>{% endif %}{% if post.email and post.email != 'noko' %}</a>{% endif %}
+
+        {% if post.capcode and post.capcode != 'A' and post.capcode != 'F' and post.capcode != 'M' and post.capcode != 'D' and post.capcode != 'G' and post.capcode != 'V' %}<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {{post.capcode}}</strong>{% endif %}{% if post.capcode == 'A' %}<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">{% endif %}{% if post.capcode == 'F' %}<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">{% endif %}{% if post.capcode == 'M' %}<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">{% endif %}{% if post.capcode == 'D' %}<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">{% endif %}{% if post.capcode == 'G' %}<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">{% endif %}{% if post.capcode == 'V' %}<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>{% endif %}
+    </span>
+    {% if post.since4pass %}<span class="n-pu" title="Pass user since {{post.since4pass}}."></span>{% endif %}
+    {% if post.poster_hash %}<span class="posteruid id_{{post.poster_hash}}">(ID: <a title="." href="#">{{post.poster_hash}}</a>) </span>{% endif %}
+    {% if post.country %}<span title="{{post.country}}{{post.country_name}}" class="flag flag-{{post.country|lower}}"></span>{% endif %}
+    {% if post.troll_country %}<span title="{{post.country_name}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
+    <span class="dateTime" data-utc="{{post.time}}">{{post.now}}</span>
+    <span class="postNum desktop">
+        {% if post.resto != 0 %}
+            <a href="/{{post.board_shortname}}/thread/{{post.resto}}#p{{post.no}}">No.{{post.no}}</a>
+        {% else %}
+            <a href="/{{post.board_shortname}}/thread/{{post.no}}#p{{post.no}}">No.{{post.no}}</a>
+        {% endif %}
+        {% if post.resto == 0 %}
+            {% if post.sticky %}
+                <img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">
+            {% endif %}
+            {% if post.closed %}
+                <img src="/static/images/closed.gif" alt="Closed" title="Closed" class="closedIcon retina">
+            {% endif %}
+        {% endif %}
+    </span>
+    <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
+    {% if post.resto != 0 %}
+        [<a href="/{{post.board_shortname}}/thread/{{post.resto}}#p{{post.no}}" target="{{html_link_target}}">View</a>]
+    {% else %}
+        [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="{{html_link_target}}">View</a>]
+    {% endif %}
+    <div id="bl_{{post.no}}" class="backlink">
+		{% for quotelink in post.replies %}
+			<span class="quotelink">
+				<a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
+			</span>
+		{% endfor %}
+    </div>
+</div>
+{% if post.resto and post.filename %}
+    <div class="file" id="f{{post.no}}">
+        <div class="fileText" id="fT{{post.no}}">
+            File:
+            <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
+            (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor') }} KB, {{post.w}}x{{post.h}}){% endif %}</span>
+        </div>
+        <a class="fileThumb">
+            {{get_img(thumb_uri, image_uri, post, classes="replyImg postImg spoiler" if post.spoiler else "replyImg postImg")}}
+        </a>
+    </div>
+{% endif %}
+<blockquote class="postMessage" id="m{{post.no}}">{{post.com|safe}}</blockquote>
+</div>
+</div>
