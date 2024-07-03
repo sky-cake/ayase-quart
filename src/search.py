@@ -5,17 +5,20 @@ from orjson import dumps
 from asagi_converter import get_text_quotelinks, get_selector
 from asyncio import sleep, run
 import logging
+from itertools import batched
 
 async def index_board(board: str, search_provider: BaseSearch):
-    wait_cycle = 5
+    wait_cycle = 1
+    post_batch_size = 1000
     logger = logging.getLogger('search-index')
     async for thread_nums in get_board_threads(board):
         logger.warning(f'processing {board} threads: {thread_nums[0]}-{thread_nums[-1]}')
         posts = await get_thread_posts(board, thread_nums)
         while not await search_provider.posts_ready():
-            logger.warning(f'wait indexing {wait_cycle}s')
+            # logger.warning(f'wait indexing {wait_cycle}s')
             await sleep(wait_cycle)
-        await search_provider.add_posts(posts)
+        for pbatch in batched(posts, post_batch_size):
+            await search_provider.add_posts(pbatch)
 
 def get_filter_selector(board: str):
     return f'''
