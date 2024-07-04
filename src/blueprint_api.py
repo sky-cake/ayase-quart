@@ -1,7 +1,11 @@
 from quart import Blueprint, jsonify
 
-from asagi_converter import (convert_post, convert_thread, generate_catalog,
-                             generate_index)
+from asagi_converter import (
+    convert_post,
+    convert_thread,
+    generate_catalog,
+    generate_index
+)
 from configs import CONSTS
 from templates import template_post
 from utils import render_controller, validate_board_shortname, validate_post

@@ -1,4 +1,5 @@
 import quart_flask_patch  # keep this
+
 import os
 
 from flask_bootstrap import Bootstrap5
@@ -8,6 +9,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from blueprint_admin import blueprint_admin
 from blueprint_api import blueprint_api
 from blueprint_app import blueprint_app
+from blueprint_search import blueprint_search
 from configs import CONSTS
 from db import db_pool_close, db_pool_open
 
@@ -30,6 +32,7 @@ def create_app():
     app.register_blueprint(blueprint_api)
     app.register_blueprint(blueprint_app)
     app.register_blueprint(blueprint_admin)
+    app.register_blueprint(blueprint_search)
 
 
     if CONSTS.REVERSE_PROXY:

@@ -1,8 +1,15 @@
 from quart_wtf import QuartForm
 from wtforms import widgets
-from wtforms.fields import (BooleanField, DateField, IntegerField, RadioField,
-                            SelectMultipleField, StringField, SubmitField,
-                            TextAreaField)
+from wtforms.fields import (
+    BooleanField,
+    DateField,
+    IntegerField,
+    RadioField,
+    SelectMultipleField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+)
 from wtforms.validators import Length, NumberRange, Optional
 
 from configs import CONSTS
@@ -33,7 +40,7 @@ class SearchForm(QuartForm):
     is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
     submit = SubmitField('Search')
 
-class SearchConfForm(QuartForm):
+class IndexSearchConfigForm(QuartForm):
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
-    operation = RadioField('operation', choices=[('init', 'init'), ('config', 'config'), ('populate', 'populate'), ('wipe', 'wipe')], default='init')
+    operation = RadioField('Operation', choices=[('init', 'init'), ('config', 'config'), ('populate', 'populate'), ('wipe', 'wipe')], default='init')
     submit = SubmitField('Run')

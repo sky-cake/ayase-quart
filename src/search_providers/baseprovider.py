@@ -5,6 +5,7 @@ from typing import Optional
 
 import httpx
 
+
 class INDEXES(StrEnum):
 	posts = 'posts'
 	# threads = 'threads'

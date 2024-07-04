@@ -32,6 +32,19 @@
                     {% endif %}
                     ]
 
+                    {% if index_search_provider %}
+                        Index Search:
+                        [
+                            <a href="/index_search">Search</a>
+                            /
+                            <a href="/index_search_config">Config</a>
+                            /
+                            <a href="{{index_search_host}}">{{index_search_provider.title()}}</a>
+                            /
+                            <a href="{{index_search_host}}/stats">Stats</a>
+                        ]
+                    {% endif %}
+
                     {% if board_objects %}
                         Boards:
                         [

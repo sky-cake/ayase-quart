@@ -1,5 +1,7 @@
-from .baseprovider import BaseSearch, SearchQuery, POST_PK
 from orjson import dumps, loads
+
+from .baseprovider import POST_PK, BaseSearch, SearchQuery
+
 
 class MeiliSearch(BaseSearch):
     def __init__(self, *arg, **kwargs):

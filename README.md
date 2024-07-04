@@ -18,7 +18,9 @@ It supports MySQL and SQLite databases.
 
 ## Set Up
 
-Assuming you have a data source set up, you can
+Please use Python3.11+.
+
+Assuming you have a data source set up, you can:
 
 0. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
 1. Create a file called `./src/configs.py` using `./rename_to_configs.py`

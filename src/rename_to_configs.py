@@ -58,10 +58,10 @@ class CONSTS(NamedTuple):
     search_result_highlight = True
 
     # mysql, meili, manticore, typesense, lnx
-    search_provider = 'meili'
-    search_host = 'http://localhost:7700'
-    search_auth_key = ''
-    search_conf = dict(
+    index_search_provider = 'meili'
+    index_search_host = 'http://localhost:7700'.strip('/')
+    index_search_auth_key = ''
+    index_search_config = dict(
         headers={
             'content-type': 'application/json',
             # 'Authorization': f'Bearer {search_auth_key}',
@@ -70,7 +70,7 @@ class CONSTS(NamedTuple):
 
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
     REVERSE_PROXY = False
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
 
     root_dir = os.path.dirname(__file__)
     chdir_to_root = True
@@ -99,6 +99,7 @@ class CONSTS(NamedTuple):
         image_uri=image_uri,
         thumb_uri=thumb_uri,
         html_linked_target=html_linked_target,
+        index_search_provider=index_search_provider,
     )
 
     assert not (db_aiomysql and db_aiosqlite)

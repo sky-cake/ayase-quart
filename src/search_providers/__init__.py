@@ -1,8 +1,10 @@
 from configs import CONSTS
+
 from .baseprovider import SearchQuery
 
+
 def get_search_provider():
-	match CONSTS.search_provider:
+	match CONSTS.index_search_provider:
 		case 'mysql':
 			from .mysql import MysqlSearch as Search_p
 		case 'meili':
@@ -16,5 +18,5 @@ def get_search_provider():
 		case _:
 			from .mysql import MysqlSearch as Search_p
 
-	search_p = Search_p(CONSTS.search_host, CONSTS.search_conf)
+	search_p = Search_p(CONSTS.index_search_host, CONSTS.index_search_config)
 	return search_p

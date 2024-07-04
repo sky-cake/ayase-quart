@@ -47,7 +47,7 @@
       <div class="board">
         {% if search_mode == 'index' %}
 			{% for post in posts %}
-				{% include 'post2.html' %}
+				{% include 'index_search_post.html' %}
 			{% endfor %}
         {% else %}
           {% include 'gallery.html' %}
