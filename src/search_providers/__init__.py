@@ -1,4 +1,5 @@
 from configs import CONSTS
+from .baseprovider import SearchQuery
 
 def get_search_provider():
 	match CONSTS.search_provider:
