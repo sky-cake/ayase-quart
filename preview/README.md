@@ -1,9 +1,5 @@
 # Ayase Quart Preview
 
-### Latest Update
-
-![update_2024_01_18](update_2024_01_18.png)
-
 ### Search
 
 ![search](search.png)
