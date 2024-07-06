@@ -10,7 +10,7 @@ class INDEXES(StrEnum):
 	posts = 'posts'
 	# threads = 'threads'
 
-POST_PK = 'doc_id'
+POST_PK = 'pk'
 
 @dataclass(slots=True)
 class SearchIndex:

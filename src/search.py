@@ -19,8 +19,8 @@ async def index_board(board: str, search_provider: BaseSearch):
         # logger.warning(f'processing {board} threads: {thread_nums[0]}-{thread_nums[-1]}')
         posts = await get_thread_posts(board, thread_nums)
 
-        while not await search_provider.posts_ready():
-            await sleep(wait_cycle)
+        # while not await search_provider.posts_ready():
+        #     await sleep(wait_cycle)
 
         for pbatch in batched(posts, post_batch_size):
             await search_provider.add_posts(pbatch)
@@ -66,6 +66,8 @@ async def get_thread_posts(board: str, thread_nums: list[int]):
         f_row['data'] = dumps(p_row).decode()
         f_row['op'] = bool(f_row['op'])
         f_row['deleted'] = bool(f_row['deleted'])
+        f_row['pk'] = f'{board}-{f_row["doc_id"]}'
+        del f_row['doc_id']
         del f_row['media']
         del f_row['preview_reply']
         del f_row['preview_op']
