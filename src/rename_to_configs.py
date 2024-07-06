@@ -56,6 +56,7 @@ class CONSTS(NamedTuple):
 
     search = True
     search_result_highlight = True
+    default_result_limit = 100
 
     # mysql, meili, manticore, typesense, lnx
     index_search_provider = 'meili'
@@ -73,7 +74,7 @@ class CONSTS(NamedTuple):
     SQLALCHEMY_ECHO = False
 
     root_dir = os.path.dirname(__file__)
-    chdir_to_root = True
+    chdir_to_root = False
     static_dir = os.path.join(root_dir, "static")
 
     ## Do not touch the below code. Thank you. ##

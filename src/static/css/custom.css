@@ -77,7 +77,7 @@ form {
     padding: 1em;
     margin: 1em;
     background-color: #222222;
-    max-width: 1100px;
+    max-width: max-content;
     border-radius: 1em;
 }
 
@@ -91,7 +91,6 @@ form {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    width: 95%;
 }
 
 .column {
@@ -102,6 +101,22 @@ form {
 
 ul#boards {
     column-count: 2;
+}
+
+.form_button {
+    width: 6ch;
+    padding: 2px;
+    margin-bottom: 1em;
+    background-color: #282a2e;
+    border: 1px solid #666666;
+    margin: 2px;
+    color: #c5c8c6;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+hr {
+    color: #666666;
 }
 
 input[type=submit],

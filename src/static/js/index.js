@@ -195,3 +195,17 @@ function pointToOtherMediaOnError(e) {
 
     e.onerror = null;
 }
+
+
+function checkAllBoards() {
+    document.querySelectorAll('#boards input[type="checkbox"]').forEach(function(checkbox) {
+        checkbox.checked = true;
+    });
+}
+
+function uncheckAllBoards() {
+    document.querySelectorAll('#boards input[type="checkbox"]').forEach(function(checkbox) {
+        checkbox.checked = false;
+    });
+}
+

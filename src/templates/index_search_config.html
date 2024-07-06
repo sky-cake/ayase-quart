@@ -1,23 +1,37 @@
 {% from 'bootstrap5/form.html' import render_field %}
-{% from 'macros.html' import table %}
 
 {% extends "base.html" %}
 
 {% block body %}
 
   <h2>{{site_name}} - Index Search Configuration</h2>
-  <div>{{ msg }}</div>
   <form action="" id="index_search_config_form" method="post" class="form" role="form">
     {{ form.csrf_token() }}
     <div class="row">
-        <div class="column">
-            {{ render_field(form.boards) }}
-        </div>
-        <div class="column">
-          {{ render_field(form.operation) }}
-        </div>
+
+      <div class="column">
+        {{ render_field(form.boards) }}
+        {% include 'board_buttons.html' %}
+      </div>
+
+      <div class="column">
+        {{ render_field(form.operation)}}
+      </div>
     </div>
     <div>{{ render_field(form.submit) }}</div>
-  </form>
 
+    <div class="row">
+      <div class="column">
+        <div><b>{{ msg }}</b></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="column">
+        <div>The message above will change when an action is completed. Don't refresh this page until then.</div>
+      </div>
+    </div>
+
+  </form>
+  
 {% endblock %}

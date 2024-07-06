@@ -24,7 +24,7 @@ class SearchForm(QuartForm):
     search_mode = RadioField('Search Mode', choices=[('index', 'index'), ('gallery', 'gallery')], default='index')
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
-    result_limit = IntegerField('Result Limit', default=100, validators=[NumberRange(1, 10_000)], description='Per board')
+    result_limit = IntegerField('Result Limit', default=CONSTS.default_result_limit, validators=[NumberRange(1, 10_000)], description='Per board')
     title = StringField("Title", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     num = StringField("Post Number", validators=[Optional(), Length(2, 20)])
@@ -42,5 +42,5 @@ class SearchForm(QuartForm):
 
 class IndexSearchConfigForm(QuartForm):
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
-    operation = RadioField('Operation', choices=[('init', 'init'), ('config', 'config'), ('populate', 'populate'), ('wipe', 'wipe')], default='init')
+    operation = RadioField('Operation', choices=[('init', 'Initialize a search index. This is board agnostic.'), ('populate', 'Populate the search index with data from selected board(s).'), ('wipe', 'Wipe all data from search index.')], default='init')
     submit = SubmitField('Run')

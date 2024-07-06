@@ -47,7 +47,7 @@ class MeiliSearch(BaseSearch):
             'attributesToCrop':["data:1"],
             'filter': filters,
             # 'sort': ['board:desc', 'timestamp:desc'],
-            'limit': 10000,
+            'limit': q.result_limit,
             "attributesToHighlight": ["title", 'comment'],
             "highlightPreTag": "||sr_hl_cls_start||",
             "highlightPostTag": "||sr_hl_cls_end||",

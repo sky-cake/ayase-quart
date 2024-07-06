@@ -31,6 +31,7 @@ class SearchQuery:
 	file: Optional[bool] = None
 	deleted: Optional[bool] = None
 	op: Optional[bool] = None
+	result_limit: Optional[int] = None
 
 class BaseSearch(ABC):
 	host: str

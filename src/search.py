@@ -1,5 +1,4 @@
-import logging
-from asyncio import run, sleep
+from asyncio import run
 from collections import defaultdict
 from itertools import batched
 from tqdm.asyncio import tqdm
@@ -11,19 +10,13 @@ from search_providers.baseprovider import BaseSearch
 
 
 async def index_board(board: str, search_provider: BaseSearch):
-    wait_cycle = 0.1
     post_batch_size = 50_000
-    logger = logging.getLogger('search-index')
 
     async for thread_nums in tqdm(get_board_threads(board)):
-        # logger.warning(f'processing {board} threads: {thread_nums[0]}-{thread_nums[-1]}')
         posts = await get_thread_posts(board, thread_nums)
 
-        # while not await search_provider.posts_ready():
-        #     await sleep(wait_cycle)
-
-        for pbatch in batched(posts, post_batch_size):
-            await search_provider.add_posts(pbatch)
+        for post_batch in batched(posts, post_batch_size):
+            await search_provider.add_posts(post_batch)
 
 
 def get_filter_selector(board: str):
@@ -118,7 +111,7 @@ async def main(args):
     from configs import CONSTS
     for a in args:
         if not a in CONSTS.board_shortnames:
-            print(f'invalid board {a}')
+            print(f'Invalid board: {a}')
             sys.exit()
 
     from search_providers import get_search_provider

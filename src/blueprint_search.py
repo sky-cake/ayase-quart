@@ -42,25 +42,23 @@ async def index_search_config():
         match form.operation.data:
             case 'init':
                 await search_p.init_indexes()
-                msg = 'init done'
-            case 'config':
                 await search_p.config_posts()
-                msg = 'config done'
+                msg = 'Index initialized.'
             case 'populate':
                 boards = form.boards.data
                 if not boards:
-                    msg = 'missing boards'
+                    msg = 'No board(s) selected.'
                 else:
                     for board in boards:
                         await index_board(board, search_p)
-                    msg = 'populate done'
+                    msg = f'Index populated with data from [{", ".join(boards)}]'
             case 'wipe':
                 await search_p.posts_wipe()
-                msg = 'wiping posts'
+                msg = 'Index data wiped.'
             case _:
-                msg = 'unknown operation'
+                msg = 'Unknown operation.'
     else:
-        msg = 'Select board(s). Then separately run each operation, 1. init 2. config 3. populate, to initialize the search index.'
+        msg = 'Choose an action to run.'
 
     return await render_controller(
         template_index_search_config,
@@ -134,6 +132,8 @@ async def v_index_search():
         )
         if params['num']:
             q.num = int(params['num'])
+        if params['result_limit']:
+            q.result_limit = int(params['result_limit'])
         if params['media_filename']:
             q.media_file = params['media_filename']
         if params['media_hash']:
@@ -175,10 +175,6 @@ async def v_index_search():
             posts.append(post)
 
         posts.sort(key=lambda x: x['time'], reverse=form.order_by.data == 'desc')
-
-        # Using meili's result highlighter
-        # if CONSTS.search_result_highlight:
-        #     posts = highlight_search_results(form, posts)
             
         searched = True
         
