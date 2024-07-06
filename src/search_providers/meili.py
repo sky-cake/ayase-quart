@@ -41,7 +41,6 @@ class MeiliSearch(BaseSearch):
         url = self._get_index_url(index) + '/search'
         filters = self._filter_builder(q)
         payload = {
-            'q': q.terms,
             'matchingStrategy': 'all',
             'attributesToRetrieve': ['_formatted', 'data'],
             'attributesToCrop':["data:1"],
@@ -54,6 +53,10 @@ class MeiliSearch(BaseSearch):
             # "highlightPreTag": "<span class=\"search_highlight_comment\">",
             # "highlightPostTag": "</span>",
         }
+
+        if q.terms:
+            payload.update({'q': q.terms})
+
         resp = await self.client.post(url, data=dumps(payload))
         data = loads(resp.read())
         return data.get('hits', [])
