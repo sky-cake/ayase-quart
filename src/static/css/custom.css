@@ -91,16 +91,13 @@ form {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    margin-bottom: 1em;
 }
 
 .column {
     margin: 1em;
     display: flex;
     flex-direction: column;
-}
-
-ul#boards {
-    column-count: 2;
 }
 
 .form_button {
@@ -116,7 +113,9 @@ ul#boards {
 }
 
 hr {
-    color: #666666;
+    background-color: #666666;
+    height: 1px;
+    border: none;
 }
 
 input[type=submit],
@@ -154,9 +153,33 @@ textarea {
     border-radius: 1em;
 }
 
-li input[type=checkbox] {
-    min-width: 4ch;
-    text-align: right;
+ul#boards {
+    column-count: 15;
+}
+@media (max-width: 1100px) {
+    ul#boards {
+        column-count: 8;
+    }
+}
+@media (max-width: 600px) {
+    ul#boards {
+        column-count: 4;
+    }
+}
+
+ul#home_boards {
+    column-count: 3;
+    max-width: fit-content;
+}
+@media (max-width: 1200px) {
+    ul#home_boards {
+        column-count: 2;
+    }
+}
+@media (max-width: 600px) {
+    ul#home_boards {
+        column-count: 1;
+    }
 }
 
 input[type=submit] {

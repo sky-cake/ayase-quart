@@ -31,7 +31,7 @@
                         / <a href="/search">Search</a>
                     {% endif %}
                     ]
-
+                    <br>
                     {% if index_search_provider %}
                         Index Search:
                         [
@@ -44,7 +44,7 @@
                             <a href="{{index_search_host}}/stats">Stats</a>
                         ]
                     {% endif %}
-
+                    <br>
                     {% if board_objects %}
                         Boards:
                         [
@@ -53,6 +53,7 @@
                         {% endfor %}
                         ]
                     {% endif %}
+                    <br>
                     Admin: [
                     <a href="/stats">Stats</a>
                     /
@@ -76,6 +77,7 @@
                 {% endif %}
                 
                 {% if request.path != '/' %}
+                    <br>
                     <span id="top">[<a href="#bottom">Bottom</a>]</span>
                 {% endif %}
 

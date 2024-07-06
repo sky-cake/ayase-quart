@@ -2,10 +2,10 @@
 {% block body %}
 
     <div id="index" style="margin: 30px;">
-        <h2>Home</h2>
+        <h1>{{site_name}}</h1>
         {% if board_objects %}
             <h2>Boards</h2>
-            <ul style="list-style: none;">
+            <ul id="home_boards" style="list-style: none;">
                 <li>
                     {% for board_object in board_objects %}
                         <h3>

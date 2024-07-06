@@ -6,10 +6,6 @@
             {{ render_field(form.order_by) }}
         </div>
         <div class="column">
-            {{ render_field(form.boards) }}
-            {% include 'board_buttons.html' %}
-        </div>
-        <div class="column">
             {{ render_field(form.num) }}
             {{ render_field(form.title) }}
             {{ render_field(form.comment) }}
@@ -30,6 +26,12 @@
         </div>
         <div class="column">
             {{ render_field(form.result_limit) }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            {{ render_field(form.boards) }}
+            {% include 'board_buttons.html' %}
         </div>
     </div>
     <div>{{ render_field(form.submit) }}</div>
