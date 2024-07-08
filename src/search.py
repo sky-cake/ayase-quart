@@ -122,21 +122,14 @@ async def main(args):
             print(f'Invalid board: {a}')
             sys.exit()
 
-    from quart import Quart
-    from db import get_database_instance
     from search_providers import get_search_provider
+    async def index_boards():
+        sp = get_search_provider()
+        for board in args:
+            await index_board(board, sp)
 
-    app = Quart(__name__)
-    app.db = get_database_instance()
-
-    async with app.app_context():
-        try:
-            await app.db.connect()
-            sp = get_search_provider()
-            for board in args:
-                await index_board(board, sp)
-        finally:
-            await app.db.disconnect()
+    from operate_within_app_context import operate_within_app_context
+    await operate_within_app_context(index_boards)
 
 
 if __name__ == "__main__":
