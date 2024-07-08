@@ -8,7 +8,7 @@ from wtforms.fields import (
     SelectMultipleField,
     StringField,
     SubmitField,
-    TextAreaField,
+    TextAreaField
 )
 from wtforms.validators import Length, NumberRange, Optional
 

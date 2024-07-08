@@ -4,14 +4,14 @@ import re
 from textwrap import dedent
 from typing import Any, Dict, List
 
+from quart import current_app
 from werkzeug.exceptions import BadRequest
 
-from configs import CONSTS
-from db import query_execute
+from configs import CONSTS, DbType
 
 
 def get_selector(board_shortname, double_percent=True):
-    if CONSTS.db_aiomysql:
+    if CONSTS.db_type == DbType.mysql:
         SELECTOR = """
         SELECT
         `{board_shortname}`.`thread_num`,
@@ -47,7 +47,7 @@ def get_selector(board_shortname, double_percent=True):
         """
         if double_percent:
             SELECTOR = SELECTOR.replace('%', '%%')
-    elif CONSTS.db_aiosqlite:
+    elif CONSTS.db_type == DbType.sqlite:
         SELECTOR = """
         SELECT
         {board_shortname}.thread_num,
@@ -82,7 +82,7 @@ def get_selector(board_shortname, double_percent=True):
         comment AS com
         """
     else:
-        raise ValueError(CONSTS.db_aiomysql, CONSTS.db_aiosqlite)
+        raise ValueError(CONSTS.db_type)
 
     SELECTOR = dedent(SELECTOR).format(board_shortname=board_shortname)
     return SELECTOR
@@ -91,6 +91,27 @@ def get_selector(board_shortname, double_percent=True):
 def get_image_selector():
     MD5_IMAGE_SELECTOR = "`media_hash`,`media`,`preview_reply`,`preview_op`"
     return MD5_IMAGE_SELECTOR
+
+
+def construct_date_filter(param_name):
+    if CONSTS.db_type == DbType.mysql:
+        if param_name == 'date_before':
+            return f"`timestamp` <= UNIX_TIMESTAMP(%({param_name})s)"
+        elif param_name == 'date_after':
+            return f"`timestamp` >= UNIX_TIMESTAMP(%({param_name})s)"
+        else:
+            raise ValueError(f"Unsupported operator: {param_name}")
+
+    elif CONSTS.db_type == DbType.sqlite:
+        if param_name == 'date_before':
+            return f"`timestamp` <= strftime('%s', %({param_name})s)"
+        elif param_name == 'date_after':
+            return f"`timestamp` >= strftime('%s', %({param_name})s)"
+        else:
+            raise ValueError(f"Unsupported operator: {param_name}")
+
+    else:
+        raise ValueError("Unsupported database type")
 
 
 def validate_and_generate_params(form_data):
@@ -119,10 +140,10 @@ def validate_and_generate_params(form_data):
             's': '`num` = %(num)s'
         },
         'date_before': {
-            's': '`timestamp` >= UNIX_TIMESTAMP(%(date_before)s)' if CONSTS.db_aiomysql else "`timestamp` <= strftime('%s', %(date_before)s)"
+            's': construct_date_filter('date_before')
         },
         'date_after': {
-            's': '`timestamp` >= UNIX_TIMESTAMP(%(date_after)s)' if CONSTS.db_aiomysql else "`timestamp` >= strftime('%s', %(date_after)s)"
+            's': construct_date_filter('date_after')
         },
         'has_no_file': {
             's': '`media_filename` is null'
@@ -201,7 +222,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order
     sql +=  f' \n ORDER BY time {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
     
-    posts = await query_execute(sql, params=param_values)
+    posts = await current_app.db.query_execute(sql, params=param_values)
 
     images = []
     for p in posts:
@@ -252,53 +273,53 @@ async def convert_standalone_posts(posts, medias, return_quotelinks=True):
 async def get_post_replies(board_shortname, thread_num, post_num):
     comment = f'%>>{int(post_num)}%'
     SELECT_POST_REPLIES = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `comment` LIKE %(comment)s AND `thread_num` = %(thread_num)s;"
-    return await query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
+    return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
 async def get_post(board_shortname:str, post_num: int):
     SELECT_POST = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `num`=%(post_num)s"
-    return await query_execute(SELECT_POST, params={'post_num': post_num}, fetchone=True)
+    return await current_app.db.query_execute(SELECT_POST, params={'post_num': post_num}, fetchone=True)
 
 
 async def get_post_images(board_shortname:str, post_num: int):
     image_selector=get_image_selector()
     SELECT_POST_IMAGES = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `num`=%(post_num)s)"
 
-    return await query_execute(SELECT_POST_IMAGES, params={'post_num': post_num}, fetchone=True)
+    return await current_app.db.query_execute(SELECT_POST_IMAGES, params={'post_num': post_num}, fetchone=True)
 
 
 async def get_thread(board_shortname:str, thread_num: int):
     SELECT_THREAD = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s ORDER BY `num`"
-    return await query_execute(SELECT_THREAD, params={'thread_num': thread_num})
+    return await current_app.db.query_execute(SELECT_THREAD, params={'thread_num': thread_num})
 
 
 async def get_thread_images(board_shortname:str, thread_num: int):
     image_selector=get_image_selector()
     SELECT_THREAD_IMAGES = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s)"
 
-    return await query_execute(SELECT_THREAD_IMAGES, params={'thread_num': thread_num})
+    return await current_app.db.query_execute(SELECT_THREAD_IMAGES, params={'thread_num': thread_num})
 
 
 async def get_thread_details(board_shortname:str, thread_num: int):
     SELECT_THREAD_DETAILS = f"SELECT `nreplies`, `nimages` FROM `{board_shortname}_threads` WHERE `thread_num`=%(thread_num)s"
-    return await query_execute(SELECT_THREAD_DETAILS, params={'thread_num': thread_num}, fetchone=True)
+    return await current_app.db.query_execute(SELECT_THREAD_DETAILS, params={'thread_num': thread_num}, fetchone=True)
 
 
 async def get_thread_preview(board_shortname:str, thread_num: int):
     SELECT_THREAD_PREVIEW = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s ORDER BY `num` DESC LIMIT 5" 
-    return await query_execute(SELECT_THREAD_PREVIEW, params={'thread_num': thread_num})
+    return await current_app.db.query_execute(SELECT_THREAD_PREVIEW, params={'thread_num': thread_num})
 
 
 async def get_thread_preview_images(board_shortname:str, thread_num: int):
     image_selector=get_image_selector()
     SELECT_THREAD_PREVIEW_IMAGES = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s ORDER BY `num`)"  
 
-    return await query_execute(SELECT_THREAD_PREVIEW_IMAGES, params={'thread_num': thread_num})
+    return await current_app.db.query_execute(SELECT_THREAD_PREVIEW_IMAGES, params={'thread_num': thread_num})
 
 
 async def get_op_list(board_shortname:str, page_num: int):
     SELECT_OP_LIST_BY_OFFSET = get_selector(board_shortname) + f"FROM {board_shortname} INNER JOIN {board_shortname}_threads ON `{board_shortname}_threads`.`thread_num` = `{board_shortname}`.`thread_num` WHERE OP=1 ORDER BY `time_bump` DESC LIMIT 10 OFFSET %(page_num)s;"
-    return await query_execute(SELECT_OP_LIST_BY_OFFSET, params={'page_num': page_num * 10})
+    return await current_app.db.query_execute(SELECT_OP_LIST_BY_OFFSET, params={'page_num': page_num * 10})
 
 
 async def get_op_images(board_shortname:str, md5s: list):
@@ -309,7 +330,7 @@ async def get_op_images(board_shortname:str, md5s: list):
     placeholders = ','.join(['%s'] * len(md5s))
     SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN ({placeholders})"
 
-    return await query_execute(SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH, params=md5s)
+    return await current_app.db.query_execute(SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH, params=md5s)
 
 
 async def get_op_details(board_shortname:str, thread_nums: List[int]):
@@ -319,23 +340,23 @@ async def get_op_details(board_shortname:str, thread_nums: List[int]):
     thread_nums = [int(x) for x in thread_nums]
     placeholders = ','.join(['%s'] * len(thread_nums))
     SELECT_OP_DETAILS_LIST_BY_THREAD_NUM = f"SELECT `thread_num`, `nreplies`, `nimages` FROM `{board_shortname}_threads` WHERE `thread_num` IN ({placeholders})"
-    results = await query_execute(SELECT_OP_DETAILS_LIST_BY_THREAD_NUM, params=thread_nums)
+    results = await current_app.db.query_execute(SELECT_OP_DETAILS_LIST_BY_THREAD_NUM, params=thread_nums)
     return sorted(results, key=lambda x: x['thread_num'])
 
 
 async def get_catalog_threads(board_shortname:str, page_num: int):
     SELECT_GALLERY_THREADS_BY_OFFSET = get_selector(board_shortname) + f"FROM `{board_shortname}` INNER JOIN `{board_shortname}_threads` ON `{board_shortname}`.`thread_num` = `{board_shortname}_threads`.`thread_num` WHERE OP=1 ORDER BY `{board_shortname}_threads`.`time_bump` DESC LIMIT 150 OFFSET %(page_num)s;"
-    return await query_execute(SELECT_GALLERY_THREADS_BY_OFFSET, params={'page_num': page_num * 150})
+    return await current_app.db.query_execute(SELECT_GALLERY_THREADS_BY_OFFSET, params={'page_num': page_num * 150})
 
 
 async def get_catalog_images(board_shortname:str, page_num: int):
     SELECT_GALLERY_THREAD_IMAGES_MD5 = f"SELECT `{board_shortname}`.media_hash, `{board_shortname}_images`.`media`, `{board_shortname}_images`.`preview_reply`, `{board_shortname}_images`.`preview_op` FROM ((`{board_shortname}` INNER JOIN `{board_shortname}_threads` ON `{board_shortname}`.`thread_num` = `{board_shortname}_threads`.`thread_num`) INNER JOIN `{board_shortname}_images` ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`) WHERE OP=1 ORDER BY `{board_shortname}_threads`.`time_bump` DESC LIMIT 150 OFFSET %(page_num)s;"
-    return await query_execute(SELECT_GALLERY_THREAD_IMAGES_MD5, params={'page_num': page_num})
+    return await current_app.db.query_execute(SELECT_GALLERY_THREAD_IMAGES_MD5, params={'page_num': page_num})
 
 
 async def get_catalog_details(board_shortname:str, page_num: int):
     SELECT_GALLERY_THREAD_DETAILS = f"SELECT `nreplies`, `nimages` FROM `{board_shortname}_threads` ORDER BY `time_bump` DESC LIMIT 150 OFFSET %(page_num)s"
-    return await query_execute(SELECT_GALLERY_THREAD_DETAILS, params={'page_num': page_num})
+    return await current_app.db.query_execute(SELECT_GALLERY_THREAD_DETAILS, params={'page_num': page_num})
 
 
 def get_text_quotelinks(text: str):
@@ -472,7 +493,7 @@ async def generate_index(board_shortname: str, page_num: int, html=True):
 
 
 async def get_op_thread_count(board_shortname) -> int:
-    return (await query_execute(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
+    return (await current_app.db.query_execute(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
 
 
 async def generate_catalog(board_shortname: str, page_num: int):

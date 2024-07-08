@@ -1,5 +1,11 @@
 import os
+from enum import Enum
 from typing import NamedTuple
+
+
+class DbType(Enum):
+    mysql = 1
+    sqlite = 2
 
 
 def make_path(*file_path):
@@ -13,11 +19,11 @@ class CONSTS(NamedTuple):
     TESTING = True
     autoreload = True
 
-    db_aiosqlite = False
-    db_path = make_path('/path/to/archive.db')
+    db_type = DbType.mysql # DbType.mysql, DbType.sqlite
 
-    db_aiomysql = True
-    db_host = '192.168.0.47'
+    db_path = make_path('/path/to/archive.db') # DbType.sqlite
+
+    db_host = '192.168.0.47' # DbType.mysql
     db_port = 3306
     db_database = 'hayden'
     db_user = 'username'
@@ -102,5 +108,3 @@ class CONSTS(NamedTuple):
         html_linked_target=html_linked_target,
         index_search_provider=index_search_provider,
     )
-
-    assert not (db_aiomysql and db_aiosqlite)

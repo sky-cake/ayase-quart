@@ -1,4 +1,4 @@
-import quart_flask_patch  # keep this
+import quart_flask_patch  # isort: skip
 
 import os
 
@@ -11,7 +11,7 @@ from blueprint_api import blueprint_api
 from blueprint_app import blueprint_app
 from blueprint_search import blueprint_search
 from configs import CONSTS
-from db import db_pool_close, db_pool_open
+from db import get_database_instance
 
 
 def create_app():
@@ -38,9 +38,11 @@ def create_app():
     if CONSTS.REVERSE_PROXY:
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+    app.db = get_database_instance()
+
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
-    app.before_serving(db_pool_open)
-    app.after_serving(db_pool_close)
+    app.before_serving(app.db.connect)
+    app.after_serving(app.db.disconnect)
 
     return app
 

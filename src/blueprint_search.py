@@ -1,4 +1,4 @@
-import quart_flask_patch  # keep this here
+import quart_flask_patch  # isort: skip
 
 from datetime import datetime
 from logging import getLogger
@@ -16,9 +16,9 @@ from search_providers import SearchQuery, get_search_provider
 from templates import (
     template_error_404,
     template_index,
-    template_search,
     template_index_search,
-    template_index_search_config
+    template_index_search_config,
+    template_search
 )
 from utils import (
     highlight_search_results,

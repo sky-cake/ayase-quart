@@ -1,4 +1,4 @@
-import quart_flask_patch  # keep this here
+import quart_flask_patch  # isort: skip
 
 from flask_paginate import Pagination
 from quart import Blueprint

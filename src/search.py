@@ -1,11 +1,12 @@
 from asyncio import run
 from collections import defaultdict
 from itertools import batched
-from tqdm.asyncio import tqdm
+
 from orjson import dumps
+from quart import current_app
+from tqdm.asyncio import tqdm
 
 from asagi_converter import get_selector, get_text_quotelinks
-from db import db_pool_close, query_execute
 from search_providers.baseprovider import BaseSearch
 
 
@@ -21,7 +22,7 @@ async def index_board(board: str, search_provider: BaseSearch):
 
 def get_filter_selector(board: str):
     return f"""
-    select
+    SELECT
         doc_id,
         num,
         '{board}' as board,
@@ -38,18 +39,23 @@ def get_filter_selector(board: str):
 
 async def get_thread_posts(board: str, thread_nums: list[int]):
     thread_nums = tuple(set(thread_nums))
-    
-    filter_q = f"""
-    {get_filter_selector(board)}, `media`,`preview_reply`,`preview_op`
+    placeholders = ','.join(['%s'] * len(thread_nums)) # we do this because, "sqlite3.ProgrammingError: Error binding parameter 1: type 'tuple' is not supported"
+
+    filter_q = f"""{get_filter_selector(board)}, `media`, `preview_reply`, `preview_op`
     FROM `{board}`
-        left join `{board}_images` using (media_hash)
-    where thread_num in %s
-    order by num asc
+        LEFT JOIN `{board}_images` using (media_hash)
+    WHERE thread_num IN ({placeholders})
+    ORDER BY num ASC
     ;"""
 
-    post_q = f"""{get_selector(board)} from `{board}` where thread_num in %s order by num asc;"""
-    post_rows = await query_execute(post_q, params=(thread_nums,))
-    filter_rows = await query_execute(filter_q, params=(thread_nums,))
+    post_q = f"""{get_selector(board)}
+    FROM `{board}`
+    WHERE thread_num IN ({placeholders})
+    ORDER BY num ASC
+    ;"""
+
+    post_rows = await current_app.db.query_execute(post_q, params=thread_nums)
+    filter_rows = await current_app.db.query_execute(filter_q, params=thread_nums)
     reply_lookup = get_reply_lookup(post_rows)
     posts = []
     for p_row, f_row in zip(post_rows, filter_rows):
@@ -93,7 +99,7 @@ async def get_board_threads(board: str):
     after = 0
     while True:
         q = f"SELECT thread_num FROM {board}_threads where {next_batch(after)} order by thread_num asc limit {batch_threads};"
-        rows = await query_execute(q, )
+        rows = await current_app.db.query_execute(q, )
         if not rows:
             break
         yield [row.thread_num for row in rows]
@@ -104,6 +110,8 @@ async def get_board_threads(board: str):
 
 
 async def main(args):
+    """Demonstrates how to do an ad-hoc query against the context dependent db."""
+
     if len(args) < 1:
         print('python3 -m search board1 [board2 [board3 [...]]]')
         sys.exit()
@@ -114,12 +122,21 @@ async def main(args):
             print(f'Invalid board: {a}')
             sys.exit()
 
+    from quart import Quart
+    from db import get_database_instance
     from search_providers import get_search_provider
-    sp = get_search_provider()
-    for board in args:
-        await index_board(board, sp)
 
-    await db_pool_close()
+    app = Quart(__name__)
+    app.db = get_database_instance()
+
+    async with app.app_context():
+        try:
+            await app.db.connect()
+            sp = get_search_provider()
+            for board in args:
+                await index_board(board, sp)
+        finally:
+            await app.db.disconnect()
 
 
 if __name__ == "__main__":

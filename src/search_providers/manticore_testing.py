@@ -1,15 +1,15 @@
+import decimal
+import json
 import time
 
 import manticoresearch
 import mysql.connector
-import json
 import requests
 from manticoresearch.api import search_api
 from manticoresearch.model import SortOrder
 from manticoresearch.model.search_request import SearchRequest
 
 from configs import CONSTS
-import decimal
 
 config = manticoresearch.Configuration(host="http://127.0.0.1:9308")
 client = manticoresearch.ApiClient(config)
