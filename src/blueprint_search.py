@@ -34,6 +34,14 @@ search_log = getLogger('search')
 
 blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
 
+def total_pages(total: int, per_page: int) -> int:
+    # -(-total // q.result_limit) # https://stackoverflow.com/a/35125872
+    if not total:
+        return 0
+    d, m = divmod(total, per_page)
+    if m > 0:
+        return d + 1
+    return d
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
@@ -42,7 +50,6 @@ async def index_search_config():
         match form.operation.data:
             case 'init':
                 await search_p.init_indexes()
-                await search_p.config_posts()
                 msg = 'Index initialized.'
             case 'populate':
                 boards = form.boards.data
@@ -105,6 +112,9 @@ async def v_index_search():
     form = await SearchForm.create_form()
     search_mode = 'index'
     searched = False
+    cur_page = None
+    pages = None
+    total_hits = None
 
     posts = []
     quotelinks = []
@@ -133,7 +143,7 @@ async def v_index_search():
         if params['num']:
             q.num = int(params['num'])
         if params['result_limit']:
-            q.result_limit = int(params['result_limit'])
+            q.result_limit = min(int(params['result_limit']), CONSTS.max_result_limit)
         if params['media_filename']:
             q.media_file = params['media_filename']
         if params['media_hash']:
@@ -156,25 +166,25 @@ async def v_index_search():
         if params['date_before']:
             dt = datetime.combine(params['date_before'], datetime.min.time())
             q.before = int(dt.timestamp())
+        if params['order_by'] in ('asc', 'desc'):
+            q.sort = params['order_by']
 
         parsed_query = perf_counter() - start
         search_log.warning(f'{parsed_query=:.4f}')
 
-        results = await search_p.search_posts(q)
+        results, total_hits = await search_p.search_posts(q)
+        pages = total_pages(total_hits, q.result_limit)
+        cur_page = q.page
 
         got_search = perf_counter() - start
         search_log.warning(f'{got_search=:.4f}')
 
         posts = []
-        for result in results:
-            post = loads(result['data'])
-            formatted = result['_formatted']
+        for post in results:
             op_num = post['no'] if post['resto'] == 0 else post['resto']
-            if formatted['comment']:
-                _, post['com'] = restore_comment(op_num, formatted['comment'], post['board_shortname'])
+            if post['comment']:
+                _, post['com'] = restore_comment(op_num, post['comment'], post['board_shortname'])
             posts.append(post)
-
-        posts.sort(key=lambda x: x['time'], reverse=form.order_by.data == 'desc')
             
         searched = True
         
@@ -193,6 +203,9 @@ async def v_index_search():
         quotelinks=quotelinks,
         search_result=True,
         tab_title=CONSTS.site_name,
+        cur_page=cur_page,
+        pages=pages,
+        total_hits=total_hits,
         **CONSTS.render_constants
     )
 

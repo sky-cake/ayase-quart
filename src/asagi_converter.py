@@ -8,6 +8,7 @@ from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS, DbType
+from search_providers import hl_pre, hl_post
 
 
 def get_selector(board_shortname, double_percent=True):
@@ -376,16 +377,18 @@ def get_text_quotelinks(text: str):
 
     return quotelinks # quotelinks = ['20074095', '20074101']
 
-
+square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
+spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL) # with re.DOTALL, the dot matches any character, including newline characters.
+spoiler_sub = r'<span class="spoiler">\1</span>'
+pattern_re = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL) # ? makes the (.*) non-greedy
+pattern_sub = r'<code><pre>\1</pre></code>'
+banned_re = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
+banned_sub = r'<span class="banned">\1</span>'
 def substitute_square_brackets(text):
-    if re.fullmatch(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*', text):
-        pattern_spoiler = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL) # with re.DOTALL, the dot matches any character, including newline characters.
-        pattern_code = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL) # ? makes the (.*) non-greedy
-        pattern_banned = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
-
-        text = re.sub(pattern_spoiler, r'<span class="spoiler">\1</span>', text)
-        text = re.sub(pattern_code, r'<code><pre>\1</pre></code>', text)
-        text = re.sub(pattern_banned, r'<span class="banned">\1</span>', text)
+    if square_re.fullmatch(text):
+        text = spoiler_re.sub(spoiler_sub, text)
+        text = pattern_re.sub(pattern_sub, text)
+        text = banned_re.sub(banned_sub, text)
     return text
 
 
@@ -409,8 +412,6 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
 
     GT = '&gt;'
     GTGT = "&gt;&gt;"
-    SR_START_F = "||sr_hl_cls_start||"
-    SR_END_F = "||sr_hl_cls_end||"
     SR_START_R = '<span class="search_highlight_comment">'
     SR_END_R = '</span>'
 
@@ -420,7 +421,8 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
     lines = html.escape(com).split("\n")
     for i, line in enumerate(lines):
 
-        lines[i] = lines[i].replace(SR_START_F, SR_START_R).replace(SR_END_F, SR_END_R)
+        lines[i] = lines[i].replace(hl_pre, SR_START_R).replace(hl_post, SR_END_R)
+        line = lines[i]
         # >green text
         if GT == line[:4] and GT != line[4:8]:
             lines[i] = f"""<span class="quote">{line}</span>"""

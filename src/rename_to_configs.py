@@ -63,6 +63,7 @@ class CONSTS(NamedTuple):
     search = True
     search_result_highlight = True
     default_result_limit = 100
+    max_result_limit = 100
 
     # mysql, meili, manticore, typesense, lnx
     index_search_provider = 'meili'
@@ -107,4 +108,5 @@ class CONSTS(NamedTuple):
         thumb_uri=thumb_uri,
         html_linked_target=html_linked_target,
         index_search_provider=index_search_provider,
+        index_search_host=index_search_host,
     )

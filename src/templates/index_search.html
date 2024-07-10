@@ -10,7 +10,7 @@
 
   <div>
     {% if posts %}
-      <h3>Found <b>{{posts|length}}</b> results!</h3>
+      <h3>Showing <b>{{posts|length}}</b> / {{total_hits}} results</h3>
       <div class="board">
         {% if search_mode == 'index' %}
 			{% for post in posts %}
@@ -25,6 +25,15 @@
         <h3>0 results found!</h3>
       {% endif %}
     {% endif %}
+	{% if pages and cur_page %}
+	  	<div class="paginate"><ul>
+			{% for page in range(1, pages) %}
+				<li class="{{ 'active' if page == cur_page }}">
+					<a href="#">{{ page }}</a>
+				</li>
+			{% endfor %}
+		</ul></div>
+	{% endif %}
   </div>
 
 {% endblock %}
