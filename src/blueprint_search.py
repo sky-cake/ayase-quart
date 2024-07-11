@@ -26,13 +26,10 @@ from utils import (
     validate_board_shortname
 )
 
-blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
-
-
 search_p = get_search_provider()
 search_log = getLogger('search')
 
-blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
+blueprint_search = Blueprint("blueprint_search", __name__)
 
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])

@@ -5,6 +5,10 @@ from configs import make_path
 env = Environment(
     loader=FileSystemLoader(make_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
+    enable_async=True,
+    trim_blocks=True,
+    lstrip_blocks=True,
+    keep_trailing_newline=False,
 )
 
 # Cache templates

@@ -1,4 +1,4 @@
-{% from 'macros.html' import capcode_author, thread_stats, get_img, get_full_media_src, get_thumb_src %}
+{% from 'macros.html' import capcode_author, get_img, get_full_media_src %}
 
 <div class="postContainer replyContainer" id="pc{{post.no}}">
 <div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
@@ -33,7 +33,7 @@
     </div>
 {% endif %}
 <div class="postInfo desktop" id="pi{{post.no}}">
-	<b>/{{post.board_shortname}}/</b>
+    <b>/{{post.board_shortname}}/</b>
     {% if post.resto == 0 %}
         <strong style="color: #4da57c;">OP</strong>
     {% endif %}
@@ -78,11 +78,11 @@
         [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="{{html_link_target}}">View</a>]
     {% endif %}
     <div id="bl_{{post.no}}" class="backlink">
-		{% for quotelink in post.replies %}
-			<span class="quotelink">
-				<a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
-			</span>
-		{% endfor %}
+        {% for quotelink in post.replies %}
+            <span class="quotelink">
+                <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
+            </span>
+        {% endfor %}
     </div>
 </div>
 {% if post.resto and post.filename %}

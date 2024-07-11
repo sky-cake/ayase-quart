@@ -23,7 +23,7 @@ from utils import (
     validate_threads
 )
 
-blueprint_app = Blueprint("blueprint_app", __name__, template_folder="templates")
+blueprint_app = Blueprint("blueprint_app", __name__)
 
 
 async def make_pagination_board_index(board_shortname, index, page_num):

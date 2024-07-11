@@ -13,9 +13,9 @@
       <h3>Found <b>{{posts|length}}</b> results!</h3>
       <div class="board">
         {% if search_mode == 'index' %}
-			{% for post in posts %}
-				{% include 'index_search_post.html' %}
-			{% endfor %}
+          {% for post in posts %}
+            {% include 'index_search_post.html' %}
+          {% endfor %}
         {% else %}
           {% include 'gallery.html' %}
         {% endif %}
