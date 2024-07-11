@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 from zlib import compress, decompress
-from base64 import b64decode, b64encode
+from base64 import b85decode, b85encode
 
 from orjson import dumps, loads
 
@@ -57,6 +57,8 @@ search_index_fields = [
 ]
 
 def get_search_provider():
+	if hasattr(get_search_provider, 'search_p'):
+		return get_search_provider.search_p
 	match CONSTS.index_search_provider:
 		case 'mysql':
 			from .mysql import MysqlSearch as Search_p
@@ -72,11 +74,12 @@ def get_search_provider():
 			from .mysql import MysqlSearch as Search_p
 
 	search_p = Search_p(CONSTS.index_search_host, CONSTS.index_search_config)
+	get_search_provider.search_p = search_p
 	return search_p
 
 # https://www.meilisearch.com/docs/guides/performance/indexing_best_practices#optimize-document-size
 def compress_data(data: dict):
-	return b64encode(compress(dumps(data), level=9, wbits=-15)).decode()
+	return b85encode(compress(dumps(data), level=9, wbits=-15)).decode()
 
 def decompress_data(data: str):
-	return loads(decompress(b64decode(data), wbits=-15, bufsize=2048))
+	return loads(decompress(b85decode(data), wbits=-15, bufsize=2048))

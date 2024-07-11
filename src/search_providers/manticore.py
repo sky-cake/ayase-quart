@@ -19,31 +19,35 @@ class ManticoreSearch(BaseSearch):
 
 	def __init__(self, *arg, **kwargs):
 		super().__init__(*arg, **kwargs)
-		conf = kwargs['config']
-		self.pool = aiomysql.create_pool(
-			host=self.host,
-			autocommit=True,
-			**conf,
-		)
+
+	async def _get_pool(self):
+		if not hasattr(self, 'pool'):
+			self.pool = await aiomysql.create_pool(
+				host='localhost',
+				autocommit=True,
+				port=9306,
+			)
+		return self.pool
 
 	async def _execute_query(self, query: str, params: tuple[any]=None):
-		async with self.pool.acquire() as connection:
+		pool = await self._get_pool()
+		async with pool.acquire() as connection:
 			async with connection.cursor() as cursor:
 				await cursor.execute(query, params)
 				results = []
 				results.append(await cursor.fetchall())
-				while not await cursor.nextset():
+				while await cursor.nextset():
 					results.append(await cursor.fetchall())
 				if len(results) == 1:
 					return results[0]
 				return results
 
 	async def _create_index(self, index: str):
-		columns = ', '.join(f'{f.field} {_get_field_type(f)}' for f in search_index_fields)
+		columns = ', '.join(f'`{f.field}` {_get_field_type(f)}' for f in search_index_fields)
 		table_opts = [
 			"engine='columnar'",
 		]
-		q = f"create table {index} ({columns}) {' '.join(table_opts)};"
+		q = f"create table {index} ({columns}) {' '.join(table_opts)}"
 		return await self._execute_query(q)
 
 	async def _index_clear(self, index: str):
@@ -51,7 +55,7 @@ class ManticoreSearch(BaseSearch):
 		return await self._execute_query(q)
 
 	async def _index_delete(self, index: str):
-		q = f'DROP TABLE IF EXISTS {index};'
+		q = f'DROP TABLE IF EXISTS {index}'
 		return await self._execute_query(q)
 
 	async def _index_ready(self, index: str):
@@ -60,7 +64,7 @@ class ManticoreSearch(BaseSearch):
 	async def _add_docs(self, index: str, docs: list[any]):
 		columns = [f.field for f in search_index_fields]
 		vals = [tuple(d[c] for c in columns) for d in docs]
-		q = f'insert into {index}({",".join(columns)}) values {",".join("%s" for _ in docs)};'
+		q = f'insert into {index}({",".join(f"`{c}`" for c in columns)}) values {",".join("%s" for _ in vals)}'
 		return await self._execute_query(q, (*vals,))
 
 	async def _remove_docs(self, index: str, pk_ids: list[str]):
@@ -107,11 +111,11 @@ class ManticoreSearch(BaseSearch):
 def _get_field_type(field: SearchIndexField):
 	if field.searchable:
 		return 'text'
-	elif field.type is str:
+	elif field.field_type is str:
 		return 'string'
-	elif field.type is int:
+	elif field.field_type is int:
 		return 'int'
-	elif field.type is float:
+	elif field.field_type is float:
 		return 'float'
-	elif field.type is bool:
+	elif field.field_type is bool:
 		return 'bool'

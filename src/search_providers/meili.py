@@ -68,7 +68,7 @@ class MeiliSearch(BaseSearch):
             url,
             data=dumps(payload),
         )
-        return loads(resp.read())
+        return loads(await resp.read())
 
     async def _configure_index(self, index: str, pk: str, search_attrs: list[str], filter_attrs: list[str], sort_attrs: list[str]):
         b_url = self._get_index_url(index)
@@ -90,7 +90,7 @@ class MeiliSearch(BaseSearch):
             ),
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))
-        return loads(resp.read())
+        return loads(await resp.read())
 
     async def _config_posts(self):
         search_attrs = [f.field for f in search_index_fields if f.searchable]
@@ -122,7 +122,7 @@ class MeiliSearch(BaseSearch):
             })
 
         resp = await self.client.post(url, data=dumps(payload))
-        data = loads(resp.read())
+        data = loads(await resp.read())
         hits = [_restore_hit(h) for h in data.get('hits', [])]
         total = data.get('totalHits', 0)
         return hits, total

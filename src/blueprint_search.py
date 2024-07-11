@@ -29,7 +29,6 @@ from utils import (
 blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
 
 
-search_p = get_search_provider()
 search_log = getLogger('search')
 
 blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
@@ -45,6 +44,7 @@ def total_pages(total: int, per_page: int) -> int:
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
+    search_p = get_search_provider()
     form = await IndexSearchConfigForm.create_form()
     if await form.validate_on_submit():
         match form.operation.data:
@@ -119,6 +119,7 @@ async def v_index_search():
     posts = []
     quotelinks = []
     start = perf_counter()
+    search_p = get_search_provider()
     if await form.validate_on_submit():
         
         if not form.boards.data: raise BadRequest('select a board')

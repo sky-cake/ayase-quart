@@ -1,8 +1,10 @@
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
+import asyncio
 
-import httpx
+# import httpx
+from aiohttp import ClientSession, TCPConnector
 
 from . import SearchQuery
 
@@ -19,12 +21,18 @@ class SearchIndex:
 
 class BaseSearch(ABC):
 	host: str
-	client: httpx.AsyncClient
+	# client: httpx.AsyncClient
+	client: ClientSession
 
 	def __init__(self, host: str, config: dict=None):
 		self.host = host
-		self.client = httpx.AsyncClient(headers=config.get('headers', None), timeout=900)
-
+		# self.client = httpx.AsyncClient(headers=config.get('headers', None), timeout=900)
+		self.client = ClientSession(
+			connector=TCPConnector(keepalive_timeout=900),
+			headers=config.get('headers', None),
+			# timeout=None
+		)
+		
 	async def close(self):
 		await self.client.close()
 

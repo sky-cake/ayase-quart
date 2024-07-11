@@ -27,17 +27,17 @@ class TypesenseSearch(BaseSearch):
 			'default_sorting_field': 'timestamp',
 		}
 		resp = await self.client.post(url, data=dumps(payload))
-		return loads(resp.read())
+		return loads(await resp.read())
 
 	async def _index_clear(self, index: str):
 		url = self._get_index_url(index) + '/documents'
 		resp = await self.client.delete(url, params={'filter_by': f'num > 0'})
-		return loads(resp.read())
+		return loads(await resp.read())
 
 	async def _index_delete(self, index: str):
 		url = self._get_index_url(index)
 		resp = await self.client.delete(url)
-		return loads(resp.read())
+		return loads(await resp.read())
 
 	async def _index_ready(self, index: str):
 		return True
@@ -47,13 +47,13 @@ class TypesenseSearch(BaseSearch):
 		data = b'\n'.join(dumps(doc) for doc in docs)
 		params = {'action': 'create'}
 		resp = await self.client.post(url, params=params, data=data)
-		return [loads(line) for line in resp.read().splitlines()]
+		return [loads(line) for line in await resp.read().splitlines()]
 
 	async def _remove_docs(self, index: str, pk_ids: list[str]):
 		url = self._get_index_url(index) + '/documents'
 		params = {'filter_by': f'{pk}: [{",".join(pk_ids)}]'}
 		resp = await self.client.delete(url, params=params)
-		return loads(resp.read())
+		return loads(await resp.read())
 
 	async def _search_index(self, index: str, q: SearchQuery):
 		url = self._get_index_url(index) + '/documents/search'
@@ -83,7 +83,7 @@ class TypesenseSearch(BaseSearch):
 				highlight_end_tag=hl_post,
 			))
 		resp = await self.client.get(url, params=params)
-		data = loads(resp.read())
+		data = loads(await resp.read())
 		hits = [_restore_result(h) for h in data.get('hits', [])]
 		total = data.get('found')
 		return hits, total
