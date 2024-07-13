@@ -76,7 +76,7 @@
                     </div>
                 {% endif %}
                 
-                {% if request.path != '/' %}
+                {% if request and request.path != '/' %}
                     <br>
                     <span id="top">[<a href="#bottom">Bottom</a>]</span>
                 {% endif %}
@@ -85,7 +85,7 @@
                 {% endblock %}
             </div>
 
-        {% if request.path != '/' %}
+        {% if request and request.path != '/' %}
         <script type="text/javascript" src="/static/js/index.js"></script>
         <span id="bottom">[<a href="#top">Top</a>]</span>
         {% endif %}
