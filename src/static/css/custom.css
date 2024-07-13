@@ -87,6 +87,10 @@ form {
     margin-bottom: 1em;
 }
 
+ul {
+    list-style: none;
+}
+
 .row {
     display: flex;
     flex-direction: row;
