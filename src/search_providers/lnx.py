@@ -6,8 +6,6 @@ from . import (
 	SearchIndexField,
 	POST_PK,
 	search_index_fields,
-	hl_pre,
-	hl_post,
 	MAX_RESULTS,
 )
 
@@ -44,16 +42,15 @@ class LnxSearch(BaseSearch):
 				"max_concurrency": 4,
 				"writer_buffer": 144000000,
 				"writer_threads": 4,
-				"set_conjunction_by_default": False,
-				"use_fast_fuzzy": False,
-				"strip_stop_words": False,
+				"set_conjunction_by_default": True, # default AND instead of OR for queries
+				"use_fast_fuzzy": False, # only exact match
+				"strip_stop_words": False, # keep words like 'the' 'with'
 				"auto_commit": 1
 			}
 		}
-		print(payload)
 		resp = await self.client.post(url, data=dumps(payload))
 		resp = loads(await resp.read())
-		print(resp)
+		# print(resp)
 		await self._commit_write(index)
 		# return loads(await resp.read())
 
@@ -69,10 +66,16 @@ class LnxSearch(BaseSearch):
 		# return loads(await resp.read())
 
 	async def _index_ready(self, index: str):
-		raise NotImplementedError
+		return True
+
+	async def _index_stats(self, index: str):
+		url = self._get_index_url(index) + '/stats'
+		resp = await self.client.get(url)
+		return loads(await resp.read())
 
 	async def _add_docs(self, index: str, docs: list[any]):
 		url = self._get_index_url(index) + '/documents'
+		docs = [{k: [str(v)] for k,v in d.items()} for d in docs]
 		resp = await self.client.post(url, data=dumps(docs))
 		await self._commit_write(index)
 		# return loads(await resp.read())
@@ -92,42 +95,110 @@ class LnxSearch(BaseSearch):
 	async def _search_index(self, index: str, q: SearchQuery):
 		url = self._get_index_url(index) + '/search'
 		payload = {
-			'query': q.terms,
-			# 'limit': q.result_limit,
-			# 'offset': 0 if q.page == 1 else (q.page-1) * q.result_limit,
-			# 'order_by': q.sort_by,
-			# 'sort': q.sort,
+			'query': self._query_builder(q),
+			# 'query': [{
+			# 	'occur': 'must',
+			# 	'term': {
+			# 		'ctx': q.terms,
+			# 		'fields': ['comment', 'title']
+			# 	}
+			# }],
+			'limit': q.result_limit,
+			'offset': 0 if q.page == 1 else (q.page-1) * q.result_limit,
+			'order_by': q.sort_by,
+			'sort': q.sort,
 		}
-		# if q.page > 1:
-		# 	payload['offset'] = q.page * q.result_limit
 		resp = await self.client.post(url, data=dumps(payload))
-		parsed = loads(await resp.read())
-		print(parsed)
-		# hits = parsed.get('data', {}).get('hits', [])
-		# total = parsed.get('data', {}).get('total', 0)
-		return [], 0
+		parsed = loads(await resp.read())['data']
+		if 'count' not in parsed:
+			print(parsed)
+			return [], 0
+		# print(parsed.get('count', 0))
+		# print(parsed)
+		total = parsed.get('count', 0)
+		hits = [_restore_result(r['doc']) for r in parsed['hits']]
 		return hits, total
 
-	def _filter_builder(self, q: SearchQuery):
-		filters = []
-		filters.append(f'board IN [{", ".join(q.boards)}]')
-		if q.num is not None:
-			filters.append(f'num = {q.num}')
-		if q.media_file is not None:
-			filters.append(f'media_filename = {q.media_file}')
-		if q.media_hash is not None:
-			filters.append(f'media_hash = {q.media_hash}')
-		if q.op is not None:
-			filters.append(f'op = {str(q.op).lower()}')
-		if q.deleted is not None:
-			filters.append(f'deleted = {str(q.deleted).lower()}')
-		if q.file is not None:
-			filters.append(f'{"NOT" if q.file else ""} media_filename IS NULL')
+	def _query_builder(self, q: SearchQuery):
+		query = []
+		if q.terms:
+			query.append({
+				'occur': 'must',
+				'term': {
+					'ctx': q.terms,
+					'fields': ['comment', 'title']
+				}
+			})
+		if q.boards:
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'{" OR ".join(f"board:{b}" for b in q.boards)}',
+					# 'ctx': f'({" ".join(f"{b}" for b in q.boards)})',
+					# 'ctx': f" OR ".join(q.boards),
+					# 'ctx': f'board: IN [{" ".join(q.boards)}]',
+				}
+			})
 		if q.before is not None:
-			filters.append(f'timestamp < {q.before}')
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'timestamp:<{q.before}',
+				}
+			})
 		if q.after is not None:
-			filters.append(f'timestamp > {q.after}')
-		return filters
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'timestamp:>{q.after}',
+				}
+			})
+		if q.num is not None:
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'num:{q.num}',
+				}
+			})
+		if q.op is not None:
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'op:{str(q.op)}',
+				}
+			})
+		if q.deleted is not None:
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'deleted:{str(q.deleted)}',
+				}
+			})
+		if q.file is not None:
+			query.append({
+				# 'occur': 'must',
+				'occur': 'mustnot' if q.file else 'must',
+				'normal': {
+					'ctx': f'media_filename:None',
+					# 'ctx': f'{"" if q.file else "-"}(media_filename:None)',
+				}
+			})
+		if q.media_hash is not None:
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'media_hash:{q.media_hash}',
+				}
+			})
+		if q.media_file is not None:
+			query.append({
+				'occur': 'must',
+				'normal': {
+					'ctx': f'media_filename:{q.media_file}',
+				}
+			})
+		# print(query)
+		return query
 
 def get_lnx_field(field: SearchIndexField):
 	ftype = _get_field_type(field)
@@ -140,6 +211,8 @@ def get_lnx_field(field: SearchIndexField):
 	if not_text and filt_sort:
 		lnx_field['indexed'] = True
 		lnx_field['fast'] = False
+	if field.sortable:
+		lnx_field['fast'] = True
 	return lnx_field
 
 def _get_field_type(field: SearchIndexField):
@@ -153,3 +226,9 @@ def _get_field_type(field: SearchIndexField):
 		return 'f64'
 	elif field.field_type is bool:
 		return 'string'
+
+def _restore_result(doc: dict):
+	if doc['comment'] == 'None':
+		doc['comment'] = None
+	return {'comment':doc['comment'], **loads(doc['data'])}
+	
