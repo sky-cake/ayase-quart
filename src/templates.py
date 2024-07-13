@@ -1,11 +1,13 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from configs import make_path
+from configs import make_path, CONSTS
 
 env = Environment(
     loader=FileSystemLoader(make_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
+	auto_reload=False,
 )
+env.globals.update(CONSTS.render_constants)
 
 # Cache templates
 template_index = env.get_template("index.html")
@@ -20,3 +22,13 @@ template_search = env.get_template("search.html")
 template_latest = env.get_template('latest.html')
 template_index_search_config = env.get_template('index_search_config.html')
 template_index_search = env.get_template('index_search.html')
+
+safe_env = Environment(
+	loader=FileSystemLoader(make_path('templates')),
+	auto_reload=False,
+	trim_blocks=True,
+	lstrip_blocks=True,
+	keep_trailing_newline=True,
+	autoescape=False,
+)
+template_index_post = safe_env.get_template('index_search_post2.html')
