@@ -1,5 +1,3 @@
-{% from 'bootstrap5/form.html' import render_field %}
-
 {% extends "base.html" %}
 
 {% block body %}
@@ -9,14 +7,13 @@
   {% include 'form_search.html' %}
 
   <div>
-    {% if posts %}
-      <h3>Showing <b>{{posts|length}}</b> / {{total_hits}} results</h3>
+    {% if res_count %}
+      <h3>Showing <b>{{res_count}}</b> / {{total_hits}} results</h3>
       <div class="board">
         {% if search_mode == 'index' %}
-			{% for post in posts %}
-				{% include 'index_search_post.html' %}
-			{% endfor %}
+			{{ posts_t|safe }}
         {% else %}
+			{# TODO: gallery is broken now that we've switched to external templating #}
           {% include 'gallery.html' %}
         {% endif %}
       </div>
