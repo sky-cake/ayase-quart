@@ -31,7 +31,7 @@ from utils import (
 
 search_log = getLogger('search')
 
-blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
+blueprint_search = Blueprint("blueprint_search", __name__)
 
 def total_pages(total: int, per_page: int) -> int:
     # -(-total // q.result_limit) # https://stackoverflow.com/a/35125872

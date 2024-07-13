@@ -10,7 +10,7 @@ from configs import CONSTS
 from templates import template_post
 from utils import render_controller, validate_board_shortname, validate_post
 
-blueprint_api = Blueprint("blueprint_api", __name__, template_folder="templates")
+blueprint_api = Blueprint("blueprint_api", __name__)
 
 
 @blueprint_api.get("/<string:board_shortname>/catalog.json")

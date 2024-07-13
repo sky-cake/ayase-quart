@@ -5,7 +5,7 @@ from configs import make_path, CONSTS
 env = Environment(
     loader=FileSystemLoader(make_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
-	auto_reload=False,
+	  auto_reload=False,
 )
 env.globals.update(CONSTS.render_constants)
 

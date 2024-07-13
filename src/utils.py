@@ -35,7 +35,7 @@ async def render_controller(template: str | Template, **kwargs):
         return await render_template(template.name, **kwargs)
     
     if isinstance(template, Template):
-        return template.render(**kwargs)
+        return await template.render_async(**kwargs)
     
     raise ValueError(CONSTS.TESTING, type(template), template)
 

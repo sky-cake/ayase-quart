@@ -11,7 +11,8 @@
       <h3>Showing <b>{{res_count}}</b> / {{total_hits}} results</h3>
       <div class="board">
         {% if search_mode == 'index' %}
-			{{ posts_t|safe }}
+			     {{ posts_t|safe }}
+
         {% else %}
 			{# TODO: gallery is broken now that we've switched to external templating #}
           {% include 'gallery.html' %}

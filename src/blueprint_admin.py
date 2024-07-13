@@ -5,7 +5,7 @@ from configs import CONSTS, DbType
 from templates import template_latest, template_stats
 from utils import render_controller
 
-blueprint_admin = Blueprint('blueprint_admin', __name__, template_folder='templates')
+blueprint_admin = Blueprint('blueprint_admin', __name__)
 
 # COLUMN_LIST = "doc_id, media_id, poster_ip, num, subnum, thread_num, op, timestamp, timestamp_expired, preview_orig, preview_w, preview_h, media_filename, media_w, media_h, media_size, media_hash, media_orig, spoiler, deleted, capcode, email, name, trip, title, comment, delpass, sticky, locked, poster_hash, poster_country, exif"
 # INSERT_THREAD_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE thread_num=:thread_num;"
