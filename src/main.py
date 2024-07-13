@@ -28,6 +28,7 @@ def create_app():
     app.config.from_object(CONSTS)
 
     Bootstrap5(app)
+    app.jinja_env.auto_reload = False
 
     app.register_blueprint(blueprint_api)
     app.register_blueprint(blueprint_app)
