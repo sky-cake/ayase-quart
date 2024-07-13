@@ -7,8 +7,6 @@ from . import (
 	SearchIndexField,
 	POST_PK,
 	search_index_fields,
-	hl_pre,
-	hl_post,
 	MAX_RESULTS,
 )
 

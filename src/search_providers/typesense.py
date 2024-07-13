@@ -5,11 +5,9 @@ from . import (
 	SearchIndexField,
 	POST_PK,
 	search_index_fields,
-	hl_pre,
-	hl_post,
 	MAX_RESULTS,
 )
-
+from highlighting import mark_pre, mark_post
 pk = POST_PK
 
 class TypesenseSearch(BaseSearch):
@@ -41,6 +39,11 @@ class TypesenseSearch(BaseSearch):
 
 	async def _index_ready(self, index: str):
 		return True
+
+	async def _index_stats(self, index: str):
+		url = self._get_index_url(index)
+		resp = await self.client.get(url)
+		return loads(await resp.read())
 
 	async def _add_docs(self, index: str, docs: list[any]):
 		url = self._get_index_url(index) + '/documents/import'
@@ -79,12 +82,14 @@ class TypesenseSearch(BaseSearch):
 			params.update(dict(
 				highlight_fields='comment',
 				highlight_full_fields='comment',
-				highlight_start_tag=hl_pre,
-				highlight_end_tag=hl_post,
+				highlight_start_tag=mark_pre,
+				highlight_end_tag=mark_post,
 			))
+		else:
+			params['highlight_fields'] = 'none'
 		resp = await self.client.get(url, params=params)
 		data = loads(await resp.read())
-		hits = [_restore_result(h) for h in data.get('hits', [])]
+		hits = [_restore_result(h, q.highlight) for h in data.get('hits', [])]
 		total = data.get('found')
 		return hits, total
 
@@ -103,8 +108,8 @@ def _build_filter(q: SearchQuery):
 		filters.append(f'deleted := {str(q.deleted).lower()}')
 	# typesense doesn't have null filtering yet
 	# https://github.com/typesense/typesense/issues/790
-	# if q.file is not None:
-	# 	filters.append(f'media_filename :{"!" if q.file else ""}= NULL')
+	if q.file is not None:
+		filters.append(f'media_filename :{"!" if q.file else ""}= `None`')
 	if q.before is not None:
 		filters.append(f'timestamp :< {q.before}')
 	if q.after is not None:
@@ -131,10 +136,15 @@ def _get_field_type(field: SearchIndexField):
 	elif field.field_type is bool:
 		return 'bool'
 
-def _restore_result(result: dict):
+def _restore_result(result: dict, hl: bool):
 	doc = result['document']
-	if result['highlights']:
-		hl_comment = result['highlights'][0]['snippet']
+	if doc['comment'] == 'None':
+		doc['comment'] = None
+	if not hl:
+		comment = doc.get('comment')
 	else:
-		hl_comment = None
-	return {'comment':hl_comment, **loads(doc['data'])}
+		if result['highlights']:
+			comment = result['highlights'][0]['snippet']
+		else:
+			comment = None
+	return {'comment': comment, **loads(doc['data'])}

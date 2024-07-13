@@ -1,9 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
-import asyncio
 
-# import httpx
 from aiohttp import ClientSession, TCPConnector
 
 from . import SearchQuery
@@ -21,7 +19,6 @@ class SearchIndex:
 
 class BaseSearch(ABC):
 	host: str
-	# client: httpx.AsyncClient
 	client: ClientSession
 
 	def __init__(self, host: str, config: dict=None):
@@ -46,6 +43,9 @@ class BaseSearch(ABC):
 		raise NotImplementedError
 
 	async def _index_ready(self, index: str):
+		raise NotImplementedError
+
+	async def _index_stats(self, index: str):
 		raise NotImplementedError
 
 	async def _add_docs(self, index: str, docs: list[any]):
@@ -79,3 +79,6 @@ class BaseSearch(ABC):
 
 	async def init_indexes(self):
 		await self._create_index(INDEXES.posts)
+
+	async def post_stats(self):
+		return await self._index_stats(INDEXES.posts)

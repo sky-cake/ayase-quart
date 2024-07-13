@@ -4,10 +4,9 @@ from .baseprovider import BaseSearch
 from . import (
     SearchQuery,
     POST_PK,
-    hl_pre,
-    hl_post,
     search_index_fields,
 )
+from highlighting import mark_pre, mark_post
 
 pk = POST_PK
 
@@ -45,6 +44,11 @@ class MeiliSearch(BaseSearch):
         if not (index := resp['indexes'].get(index)):
             raise KeyError('Invalid Index')
         return not index['isIndexing']
+
+    async def _index_stats(self, index: str):
+        url = self.host + '/stats'
+        resp = await self.client.get(url)
+        return loads(await resp.read())
 
     async def _add_docs(self, index: str, docs: list[any]):
         url = self._get_index_url(index) + '/documents'
@@ -117,8 +121,8 @@ class MeiliSearch(BaseSearch):
         if q.highlight:
             payload.update({
                 "attributesToHighlight": ["title", 'comment'],
-                "highlightPreTag": hl_pre,
-                "highlightPostTag": hl_post,
+                "highlightPreTag": mark_pre,
+                "highlightPostTag": mark_post,
             })
 
         resp = await self.client.post(url, data=dumps(payload))

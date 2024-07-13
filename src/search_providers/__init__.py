@@ -7,9 +7,6 @@ from orjson import dumps, loads
 
 from configs import CONSTS
 
-hl_pre = '||sr_hl_cls_start||'
-hl_post = '||sr_hl_cls_end||'
-
 POST_PK = 'pk'
 MAX_RESULTS = CONSTS.max_result_limit
 
@@ -30,7 +27,7 @@ class SearchQuery:
 	sort: str = 'asc'
 	sort_by: Optional[str] = 'timestamp'
 	spoiler: Optional[bool] = None
-	highlight: bool = True
+	highlight: bool = False
 
 @dataclass(slots=True)
 class SearchIndexField:
