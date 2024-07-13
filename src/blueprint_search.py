@@ -4,7 +4,6 @@ from datetime import datetime
 from logging import getLogger
 from time import perf_counter
 
-from orjson import loads
 from quart import Blueprint
 from werkzeug.exceptions import BadRequest
 
@@ -13,20 +12,21 @@ from configs import CONSTS
 from forms import IndexSearchConfigForm, SearchForm
 from search import index_board
 from search_providers import SearchQuery, get_search_provider
+from highlighting import mark_highlight, get_term_re
 from templates import (
     template_error_404,
     template_index,
     template_index_search,
+    template_index_post,
     template_index_search_config,
     template_search
 )
+from posts.template_optimizer import wrap_post_t
 from utils import (
     highlight_search_results,
     render_controller,
     validate_board_shortname
 )
-
-blueprint_search = Blueprint("blueprint_search", __name__, template_folder="templates")
 
 
 search_log = getLogger('search')
@@ -75,6 +75,11 @@ async def index_search_config():
         msg=msg,
     )
 
+@blueprint_search.route("/index_stats", methods=['GET'])
+async def index_search_stats():
+    search_p = get_search_provider()
+    return await search_p.post_stats()
+
 @blueprint_search.errorhandler(404)
 async def error_not_found(e):
     return await render_controller(
@@ -117,6 +122,8 @@ async def v_index_search():
     total_hits = None
 
     posts = []
+    posts_t = []
+    res_count = 0
     quotelinks = []
     start = perf_counter()
     search_p = get_search_provider()
@@ -180,26 +187,37 @@ async def v_index_search():
         got_search = perf_counter() - start
         search_log.warning(f'{got_search=:.4f}')
 
-        posts = []
+        hl_re = get_term_re(q.terms) if q.terms else None
         for post in results:
+            # post['op'] = post['resto'] == 0
             op_num = post['no'] if post['resto'] == 0 else post['resto']
             if post['comment']:
-                _, post['com'] = restore_comment(op_num, post['comment'], post['board_shortname'])
-            posts.append(post)
+                if hl_re:
+                    post['comment'] = mark_highlight(hl_re, post['comment'])
+                _, post['comment'] = restore_comment(op_num, post['comment'], post['board_shortname'])
+            # posts.append(post)
+            posts_t.append(wrap_post_t(post))
+            # posts_t.append(post)
+        
+        patched_posts = perf_counter() - start
+        search_log.warning(f'{patched_posts=:.4f}')
+        
+        res_count = len(results)
+        posts_t = ''.join(template_index_post.render(**p) for p in posts_t)
             
         searched = True
         
         if form.search_mode.data == 'gallery':
             search_mode = 'gallery'
 
-    patched_posts = perf_counter() - start
-    search_log.warning(f'{patched_posts=:.4f}')
+    rend_posts = perf_counter() - start
+    search_log.warning(f'{rend_posts=:.4f}')
 
-    rend = await render_controller(
-        template_index_search,
+    rend = template_index_search.render(
         search_mode=search_mode,
         form=form,
-        posts=posts,
+        posts_t=posts_t,
+        res_count=res_count,
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
@@ -207,11 +225,11 @@ async def v_index_search():
         cur_page=cur_page,
         pages=pages,
         total_hits=total_hits,
-        **CONSTS.render_constants
+        # **CONSTS.render_constants
     )
 
-    rendered = perf_counter() - start
-    search_log.warning(f'{rendered=:.4f}')
+    rend_page = perf_counter() - start# - patched_posts
+    search_log.warning(f'{rend_page=:.4f}')
 
     return rend
 
