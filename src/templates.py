@@ -5,7 +5,7 @@ from configs import make_path, CONSTS
 env = Environment(
     loader=FileSystemLoader(make_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
-	  auto_reload=False,
+	auto_reload=CONSTS.autoreload,
 )
 env.globals.update(CONSTS.render_constants)
 
@@ -25,7 +25,7 @@ template_index_search = env.get_template('index_search.html')
 
 safe_env = Environment(
 	loader=FileSystemLoader(make_path('templates')),
-	auto_reload=False,
+	auto_reload=CONSTS.autoreload,
 	trim_blocks=True,
 	lstrip_blocks=True,
 	keep_trailing_newline=True,
