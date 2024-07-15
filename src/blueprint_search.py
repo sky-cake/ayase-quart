@@ -1,6 +1,5 @@
 import quart_flask_patch  # isort: skip
 
-from datetime import datetime
 from logging import getLogger
 from time import perf_counter
 
@@ -10,9 +9,11 @@ from werkzeug.exceptions import BadRequest
 from asagi_converter import get_posts_filtered, restore_comment
 from configs import CONSTS
 from forms import IndexSearchConfigForm, SearchForm
-from search import index_board
-from search_providers import SearchQuery, get_search_provider
-from highlighting import mark_highlight, get_term_re
+from search.loader import index_board
+from search.providers import get_search_provider
+from search.query import get_search_query
+from search.highlighting import mark_highlight, get_term_re
+from search.pagination import total_pages
 from templates import (
     template_error_404,
     template_index,
@@ -32,15 +33,6 @@ from utils import (
 search_log = getLogger('search')
 
 blueprint_search = Blueprint("blueprint_search", __name__)
-
-def total_pages(total: int, per_page: int) -> int:
-    # -(-total // q.result_limit) # https://stackoverflow.com/a/35125872
-    if not total:
-        return 0
-    d, m = divmod(total, per_page)
-    if m > 0:
-        return d + 1
-    return d
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
@@ -121,7 +113,7 @@ async def v_index_search():
     pages = None
     total_hits = None
 
-    posts = []
+    # posts = []
     posts_t = []
     res_count = 0
     quotelinks = []
@@ -142,40 +134,8 @@ async def v_index_search():
         if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise BadRequest('the dates are contradicted')
 
         params = form.data
-        terms = params['title'] or params['comment']
 
-        q = SearchQuery(
-            terms=terms,
-            boards=params['boards']
-        )
-        if params['num']:
-            q.num = int(params['num'])
-        if params['result_limit']:
-            q.result_limit = min(int(params['result_limit']), CONSTS.max_result_limit)
-        if params['media_filename']:
-            q.media_file = params['media_filename']
-        if params['media_hash']:
-            q.media_hash = params['media_hash']
-        if params['has_file']:
-            q.file = True
-        if params['has_no_file']:
-            q.file = False
-        if params['is_op']:
-            q.op = True
-        if params['is_not_op']:
-            q.op = False
-        if params['is_deleted']:
-            q.deleted = True
-        if params['is_not_deleted']:
-            q.deleted = False
-        if params['date_after']:
-            dt = datetime.combine(params['date_after'], datetime.min.time())
-            q.after = int(dt.timestamp())
-        if params['date_before']:
-            dt = datetime.combine(params['date_before'], datetime.min.time())
-            q.before = int(dt.timestamp())
-        if params['order_by'] in ('asc', 'desc'):
-            q.sort = params['order_by']
+        q = get_search_query(params)
 
         parsed_query = perf_counter() - start
         search_log.warning(f'{parsed_query=:.4f}')

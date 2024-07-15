@@ -57,6 +57,7 @@ class CONSTS(NamedTuple):
     # If you do not have full images, set image_uri to None. Likewise for thumbnails.
     image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image" # must contain {board_shortname}
     thumb_uri = "/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
+    media_root = '/static/neo'
 
     theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 

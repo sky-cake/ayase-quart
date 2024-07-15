@@ -1,33 +1,14 @@
 from dataclasses import dataclass
-from typing import Optional
 from zlib import compress, decompress
 from base64 import b85decode, b85encode
 
 from orjson import dumps, loads
 
 from configs import CONSTS
+from ..query import SearchQuery # re-export
 
 POST_PK = 'pk'
 MAX_RESULTS = CONSTS.max_result_limit
-
-@dataclass(slots=True)
-class SearchQuery:
-	terms: str
-	boards: list[str]
-	num: Optional[int] = None
-	media_file: Optional[str] = None
-	media_hash: Optional[str] = None
-	before: Optional[int] = None
-	after: Optional[int] = None
-	file: Optional[bool] = None
-	deleted: Optional[bool] = None
-	op: Optional[bool] = None
-	result_limit: int = CONSTS.default_result_limit
-	page: Optional[int] = 1
-	sort: str = 'asc'
-	sort_by: Optional[str] = 'timestamp'
-	spoiler: Optional[bool] = None
-	highlight: bool = False
 
 @dataclass(slots=True)
 class SearchIndexField:

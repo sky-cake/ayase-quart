@@ -8,7 +8,7 @@ from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS, DbType
-from highlighting import html_highlight
+from search.highlighting import html_highlight
 
 
 def get_selector(board_shortname, double_percent=True):

@@ -1,4 +1,4 @@
-from asyncio import run
+import sys
 from collections import defaultdict
 from itertools import batched
 
@@ -7,7 +7,7 @@ from quart import current_app
 from tqdm.asyncio import tqdm
 
 from asagi_converter import get_selector, get_text_quotelinks
-from search_providers.baseprovider import BaseSearch
+from .providers.baseprovider import BaseSearch
 
 
 async def index_board(board: str, search_provider: BaseSearch):
@@ -60,7 +60,7 @@ async def get_thread_posts(board: str, thread_nums: list[int]):
     posts = []
     for p_row, f_row in zip(post_rows, filter_rows):
         set_image(p_row, f_row)
-        p_row['replies'] = reply_lookup.get(p_row.num, [])
+        p_row['replies'] = reply_lookup.get(p_row.no, [])
         del p_row['com']
         f_row['data'] = dumps(p_row).decode()
         f_row['op'] = bool(f_row['op'])
@@ -77,10 +77,10 @@ async def get_thread_posts(board: str, thread_nums: list[int]):
 def get_reply_lookup(rows):
     replies = defaultdict(list)
     for row in rows:
-        if not row.comment:
+        if not row.com:
             continue
-        for quotelink in get_text_quotelinks(row.comment):
-            replies[int(quotelink)].append(row.doc_id)
+        for quotelink in get_text_quotelinks(row.com):
+            replies[int(quotelink)].append(row.no)
     return replies
 
 
@@ -122,16 +122,12 @@ async def main(args):
             print(f'Invalid board: {a}')
             sys.exit()
 
-    from search_providers import get_search_provider
+    from .providers import get_search_provider
     async def index_boards():
         sp = get_search_provider()
         for board in args:
             await index_board(board, sp)
+        await sp.close()
 
     from operate_within_app_context import operate_within_app_context
     await operate_within_app_context(index_boards)
-
-
-if __name__ == "__main__":
-    import sys
-    run(main(sys.argv[1:]))

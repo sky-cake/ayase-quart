@@ -1,11 +1,13 @@
 from enum import StrEnum
 from html import escape
 
+from configs import CONSTS
+
 class MediaVer(StrEnum):
 	full = 'image'
 	thumb = 'thumb'
 
-media_root = '/static/neo'
+media_root = CONSTS.media_root
 
 def pre_html_comment(post: str):
 	pass
@@ -41,7 +43,7 @@ def wrap_post_t(post: dict):
 		t_since4pass=get_since4pass_t(post),
 		t_filedeleted=get_filedeleted_t(post),
 		t_header=get_header_t(post),
-		# t_backlink=get_backlink_t(post),
+		t_backlink=get_backlink_t(post),
 	))
 	# post = {k:v for k,v in post.items() if k.startswith('t_') or k in needed_keys}
 	# for k in list(post.keys()):
@@ -212,10 +214,11 @@ def get_header_t(post: dict):
 	'''
 
 def get_backlink_t(post: dict):
+	if not (replies:=post['replies']): return ''
 	board = post['board_shortname']
 	replies = ' '.join(
 		f'<span class="quotelink"><a href="#p{ bl }" class="quotelink" data-board_shortname="{board}">&gt;&gt;{ bl }</a></span>'
-		for bl in post['replies']
+		for bl in replies
 	)
 	return f'<div id="bl_{post["no"]}" class="backlink">{replies}</div>'
 
@@ -230,7 +233,7 @@ def esc_user_data(post: dict):
 
 def get_name_t(post: dict):
 	name_t =  f'''
-	<span class="name {post.get('capcode', '')}" {get_exif_title}>{post['name']}</span>
+	<span class="name {post.get('capcode', '')}" {get_exif_title(post)}>{post['name']}</span>
 	'''
 	return email_wrap(post, name_t)
 
