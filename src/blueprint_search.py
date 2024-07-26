@@ -155,8 +155,7 @@ async def v_index_search():
 
             case IndexSearchType.meili:
                 # https://www.meilisearch.com/docs/reference/api/search#query-q
-                # Errors when given non alphanumerics. Docs dont explain this
-                # terms = re.sub('[^a-zA-Z0-9]', '', terms)
+                # seems ok with any chars, did testing
                 chars_to_escape = []
 
             case IndexSearchType.lnx:
