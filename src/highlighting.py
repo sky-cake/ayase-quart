@@ -22,4 +22,11 @@ def html_highlight(value: str):
 	return hl_mark_re.sub(hl_html_sub, value)
 
 def get_term_re(terms: str):
-	return re.compile(f"({'|'.join(terms.split())})", re.IGNORECASE)
+	if not terms:
+		return None
+
+	tokens = [re.escape(t) for t in terms.split()]
+	if len(tokens) > 1:
+		return re.compile(f"({'|'.join(tokens)})", re.IGNORECASE)
+
+	return re.compile(f"({tokens[0]})", re.IGNORECASE)

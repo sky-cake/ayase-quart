@@ -9,3 +9,4 @@ venv
 secret.txt
 neo/
 meili_data/
+data/

@@ -6,9 +6,10 @@ from aiohttp import ClientSession, TCPConnector
 
 from . import SearchQuery
 
+
 class INDEXES(StrEnum):
 	posts = 'posts'
-	# threads = 'threads'
+
 
 @dataclass(slots=True)
 class SearchIndex:
@@ -16,6 +17,7 @@ class SearchIndex:
 	pk: str
 	fields: list[str]
 	search_fields: list[str]
+
 
 class BaseSearch(ABC):
 	host: str
@@ -27,7 +29,6 @@ class BaseSearch(ABC):
 		self.client = ClientSession(
 			connector=TCPConnector(keepalive_timeout=900),
 			headers=config.get('headers', None),
-			# timeout=None
 		)
 		
 	async def close(self):
@@ -60,7 +61,8 @@ class BaseSearch(ABC):
 	async def index_ready(self, index: str):
 		return (await self._index_ready(index)) == 'ready'
 
-	# returns search results + num hits. upstream calculates pages from cur_page + limits
+	# returns search results + num hits
+    # upstream calculates pages from cur_page + limits
 	async def search_posts(self, q: SearchQuery) -> tuple[list[dict], int]:
 		results, total_hits =  await self._search_index(INDEXES.posts, q)
 		return results, total_hits

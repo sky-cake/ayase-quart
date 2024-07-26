@@ -1,0 +1,11 @@
+services:
+    lnx:
+      image: chillfish8/lnx:latest
+      ports:
+        - "8000:8000"
+      volumes:
+        - ./data:/etc/lnx/index
+      environment:
+        - AUTHORIZATION_KEY=hello
+        - LOG_LEVEL=info
+      restart: unless-stopped

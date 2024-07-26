@@ -1,12 +1,9 @@
 from orjson import dumps, loads
 
+from highlighting import mark_post, mark_pre
+
+from . import POST_PK, SearchQuery, search_index_fields
 from .baseprovider import BaseSearch
-from . import (
-    SearchQuery,
-    POST_PK,
-    search_index_fields,
-)
-from highlighting import mark_pre, mark_post
 
 pk = POST_PK
 
@@ -85,12 +82,12 @@ class MeiliSearch(BaseSearch):
             # nonSeparatorTokens=[], # remove default sep tokens
             separatorTokens=['.', '/', '"', "'", '-'], # add sep tokens
             rankingRules=['sort'], # remove default ranking rules
-            searchCutoffMs=20000, # time before search gives up
+            searchCutoffMs=20_000, # time before search gives up
             typoTolerance= dict(
                 enabled=False # disable typo
             ),
             pagination=dict(
-                maxTotalHits=10000 # increase max hits
+                maxTotalHits=10_000 # increase max hits
             ),
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))
@@ -107,7 +104,7 @@ class MeiliSearch(BaseSearch):
         filters = self._filter_builder(q)
         payload = {
             'matchingStrategy': 'all',
-            'attributesToRetrieve': ['_formatted', 'data'],
+            'attributesToRetrieve': ['data', 'comment'],
             'attributesToCrop':["data:1"],
             'filter': filters,
             'sort': [f'timestamp:{q.sort}'],
@@ -154,5 +151,5 @@ class MeiliSearch(BaseSearch):
 
 def _restore_hit(hit: dict):
     post = loads(hit['data'])
-    post['comment'] = hit['_formatted']['comment']
+    post['comment'] = hit['comment']
     return post

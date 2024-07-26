@@ -1,6 +1,6 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from configs import make_path, CONSTS
+from configs import CONSTS, make_path
 
 env = Environment(
     loader=FileSystemLoader(make_path('templates')),

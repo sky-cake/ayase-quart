@@ -1,7 +1,7 @@
+from base64 import b85decode, b85encode
 from dataclasses import dataclass
 from typing import Optional
 from zlib import compress, decompress
-from base64 import b85decode, b85encode
 
 from orjson import dumps, loads
 

@@ -1,13 +1,13 @@
 from orjson import dumps, loads
 
-from .baseprovider import BaseSearch
 from . import (
-	SearchQuery,
-	SearchIndexField,
-	POST_PK,
-	search_index_fields,
-	MAX_RESULTS,
+    MAX_RESULTS,
+    POST_PK,
+    SearchIndexField,
+    SearchQuery,
+    search_index_fields
 )
+from .baseprovider import BaseSearch
 
 pk = POST_PK
 
@@ -96,13 +96,6 @@ class LnxSearch(BaseSearch):
 		url = self._get_index_url(index) + '/search'
 		payload = {
 			'query': self._query_builder(q),
-			# 'query': [{
-			# 	'occur': 'must',
-			# 	'term': {
-			# 		'ctx': q.terms,
-			# 		'fields': ['comment', 'title']
-			# 	}
-			# }],
 			'limit': q.result_limit,
 			'offset': 0 if q.page == 1 else (q.page-1) * q.result_limit,
 			'order_by': q.sort_by,
@@ -113,8 +106,7 @@ class LnxSearch(BaseSearch):
 		if 'count' not in parsed:
 			print(parsed)
 			return [], 0
-		# print(parsed.get('count', 0))
-		# print(parsed)
+
 		total = parsed.get('count', 0)
 		hits = [_restore_result(r['doc']) for r in parsed['hits']]
 		return hits, total
@@ -176,7 +168,6 @@ class LnxSearch(BaseSearch):
 			})
 		if q.file is not None:
 			query.append({
-				# 'occur': 'must',
 				'occur': 'mustnot' if q.file else 'must',
 				'normal': {
 					'ctx': f'media_filename:None',

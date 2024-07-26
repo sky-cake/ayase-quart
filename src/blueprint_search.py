@@ -3,31 +3,31 @@ import quart_flask_patch  # isort: skip
 from datetime import datetime
 from logging import getLogger
 from time import perf_counter
+import re
 
 from quart import Blueprint
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
-from configs import CONSTS
+from configs import CONSTS, IndexSearchType
 from forms import IndexSearchConfigForm, SearchForm
+from highlighting import get_term_re, mark_highlight
+from posts.template_optimizer import wrap_post_t
 from search import index_board
 from search_providers import SearchQuery, get_search_provider
-from highlighting import mark_highlight, get_term_re
 from templates import (
     template_error_404,
     template_index,
-    template_index_search,
     template_index_post,
+    template_index_search,
     template_index_search_config,
     template_search
 )
-from posts.template_optimizer import wrap_post_t
 from utils import (
     highlight_search_results,
     render_controller,
     validate_board_shortname
 )
-
 
 search_log = getLogger('search')
 
@@ -41,6 +41,7 @@ def total_pages(total: int, per_page: int) -> int:
     if m > 0:
         return d + 1
     return d
+
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
@@ -75,10 +76,12 @@ async def index_search_config():
         msg=msg,
     )
 
+
 @blueprint_search.route("/index_stats", methods=['GET'])
 async def index_search_stats():
     search_p = get_search_provider()
     return await search_p.post_stats()
+
 
 @blueprint_search.errorhandler(404)
 async def error_not_found(e):
@@ -121,7 +124,6 @@ async def v_index_search():
     pages = None
     total_hits = None
 
-    posts = []
     posts_t = []
     res_count = 0
     quotelinks = []
@@ -143,6 +145,37 @@ async def v_index_search():
 
         params = form.data
         terms = params['title'] or params['comment']
+
+        # this needs time to sort out and test
+        # should consider using search engine apis so we dont need to worry about security
+        match CONSTS.index_search_provider:
+            case IndexSearchType.manticore:
+                # https://manual.manticoresearch.com/Searching/Full_text_matching/Escaping#Escaping-characters-in-query-string
+                chars_to_escape = ['\\', '!', '"', '$', "'", '(', ')', '-', '/', '<', '@', '^', '|', '~']
+
+            case IndexSearchType.meili:
+                # https://www.meilisearch.com/docs/reference/api/search#query-q
+                # Errors when given non alphanumerics. Docs dont explain this
+                # terms = re.sub('[^a-zA-Z0-9]', '', terms)
+                chars_to_escape = []
+
+            case IndexSearchType.lnx:
+                # https://docs.lnx.rs/#tag/Run-searches/operation/Search_Index_indexes__index__search_post
+                # seems ok with any chars, needs testing
+                chars_to_escape = []
+
+            case IndexSearchType.typesense:
+                # https://typesense.org/docs/26.0/api/search.html#search-parameters
+                # seems ok with any chars, needs testing
+                chars_to_escape = []
+                if not terms:
+                    terms = '*' # return all
+            
+            case _:
+                chars_to_escape = []
+
+        for char in chars_to_escape:
+            terms = terms.replace(char, '\\' + char) # e.g. @ becomes \@
 
         q = SearchQuery(
             terms=terms,
@@ -195,9 +228,7 @@ async def v_index_search():
                 if hl_re:
                     post['comment'] = mark_highlight(hl_re, post['comment'])
                 _, post['comment'] = restore_comment(op_num, post['comment'], post['board_shortname'])
-            # posts.append(post)
             posts_t.append(wrap_post_t(post))
-            # posts_t.append(post)
         
         patched_posts = perf_counter() - start
         search_log.warning(f'{patched_posts=:.4f}')

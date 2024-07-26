@@ -1,5 +1,5 @@
-from .baseprovider import BaseSearch
 from . import SearchQuery
+from .baseprovider import BaseSearch
 
 
 class MysqlSearch(BaseSearch):
@@ -18,6 +18,9 @@ class MysqlSearch(BaseSearch):
 
 	async def _index_ready(self, index: str):
 		return True
+	
+	async def _index_stats(self, index: str):
+		return {'Error': 'Stats page not implemented yet.'}
 
 	async def _add_docs(self, index: str, pk: str, docs: list[any]):
 		pass

@@ -1,6 +1,7 @@
 from enum import StrEnum
 from html import escape
 
+
 class MediaVer(StrEnum):
 	full = 'image'
 	thumb = 'thumb'

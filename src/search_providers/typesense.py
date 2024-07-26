@@ -1,13 +1,16 @@
 from orjson import dumps, loads
-from .baseprovider import BaseSearch
+
+from highlighting import mark_post, mark_pre
+
 from . import (
-	SearchQuery,
-	SearchIndexField,
-	POST_PK,
-	search_index_fields,
-	MAX_RESULTS,
+    MAX_RESULTS,
+    POST_PK,
+    SearchIndexField,
+    SearchQuery,
+    search_index_fields
 )
-from highlighting import mark_pre, mark_post
+from .baseprovider import BaseSearch
+
 pk = POST_PK
 
 class TypesenseSearch(BaseSearch):
@@ -69,7 +72,7 @@ class TypesenseSearch(BaseSearch):
 			page=q.page,
 			per_page=q.result_limit,
 			limit_hits=MAX_RESULTS,
-			search_cutoff_ms=2000,
+			search_cutoff_ms=2_000,
 			num_typos=0,
 			split_join_tokens='off',
 			# infix='always', # only 1 word...

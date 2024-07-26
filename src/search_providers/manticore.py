@@ -1,14 +1,14 @@
 import aiomysql
 from orjson import loads
 
-from .baseprovider import BaseSearch
 from . import (
-	SearchQuery,
-	SearchIndexField,
-	POST_PK,
-	search_index_fields,
-	MAX_RESULTS,
+    MAX_RESULTS,
+    POST_PK,
+    SearchIndexField,
+    SearchQuery,
+    search_index_fields
 )
+from .baseprovider import BaseSearch
 
 pk = POST_PK
 
@@ -58,6 +58,9 @@ class ManticoreSearch(BaseSearch):
 
 	async def _index_ready(self, index: str):
 		return True
+	
+	async def _index_stats(self, index: str):
+		return {'Error': 'Stats page not implemented yet.'}
 
 	async def _add_docs(self, index: str, docs: list[any]):
 		columns = [f.field for f in search_index_fields]
