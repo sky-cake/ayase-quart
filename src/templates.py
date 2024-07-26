@@ -31,4 +31,4 @@ safe_env = Environment(
 	keep_trailing_newline=True,
 	autoescape=False,
 )
-template_index_post = safe_env.get_template('index_search_post2.html')
+template_index_search_post_t = safe_env.get_template('index_search_post_t.html')

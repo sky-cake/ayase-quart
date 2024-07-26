@@ -18,7 +18,7 @@ from search_providers import SearchQuery, get_search_provider
 from templates import (
     template_error_404,
     template_index,
-    template_index_post,
+    template_index_search_post_t,
     template_index_search,
     template_index_search_config,
     template_search
@@ -233,7 +233,7 @@ async def v_index_search():
         search_log.warning(f'{patched_posts=:.4f}')
         
         res_count = len(results)
-        posts_t = ''.join(template_index_post.render(**p) for p in posts_t)
+        posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
             
         searched = True
         
