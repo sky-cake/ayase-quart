@@ -141,8 +141,10 @@ class MeiliSearch(BaseSearch):
             filters.append(f'op = {str(q.op).lower()}')
         if q.deleted is not None:
             filters.append(f'deleted = {str(q.deleted).lower()}')
-        if q.file is not None:
-            filters.append(f'{"NOT" if q.file else ""} media_filename IS NULL')
+        if q.has_file:
+            filters.append(f'media_filename IS NOT EMPTY')
+        if q.has_no_file:
+            filters.append(f'media_filename IS EMPTY')
         if q.before is not None:
             filters.append(f'timestamp < {q.before}')
         if q.after is not None:

@@ -22,6 +22,10 @@
 
     <body>
         <div id="body">
+            <span id="top">[<a href="#bottom">Bottom</a>]</span>
+            <br>
+            <br>
+
             {% if not index %}
                 <div class="letters">
                     {{site_name}}:
@@ -76,19 +80,12 @@
                     </div>
                 {% endif %}
 
-                {% if request and request.path != '/' %}
-                    <br>
-                    <span id="top">[<a href="#bottom">Bottom</a>]</span>
-                {% endif %}
-
                 {% block body %}
                 {% endblock %}
             </div>
 
-            {% if request and request.path != '/' %}
-                <script type="text/javascript" src="/static/js/index.js"></script>
-                <span id="bottom">[<a href="#top">Top</a>]</span>
-            {% endif %}
+            <script type="text/javascript" src="/static/js/index.js"></script>
+            <span id="bottom">[<a href="#top">Top</a>]</span>
 
         </div>
         <footer id="footer">

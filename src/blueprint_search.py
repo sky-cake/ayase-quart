@@ -3,7 +3,6 @@ import quart_flask_patch  # isort: skip
 from datetime import datetime
 from logging import getLogger
 from time import perf_counter
-import re
 
 from quart import Blueprint
 from werkzeug.exceptions import BadRequest
@@ -12,13 +11,14 @@ from asagi_converter import get_posts_filtered, restore_comment
 from configs import CONSTS, IndexSearchType
 from forms import IndexSearchConfigForm, SearchForm
 from highlighting import get_term_re, mark_highlight
-from posts.template_optimizer import wrap_post_t
+from posts.template_optimizer import wrap_post_t, get_gallery_media_t
 from search import index_board
 from search_providers import SearchQuery, get_search_provider
 from templates import (
     template_error_404,
     template_index,
     template_index_search_post_t,
+    template_index_search_gallery_post_t,
     template_index_search,
     template_index_search_config,
     template_search
@@ -125,11 +125,12 @@ async def v_index_search():
     total_hits = None
 
     posts_t = []
-    res_count = 0
+    results = []
     quotelinks = []
     start = perf_counter()
     search_p = get_search_provider()
     if await form.validate_on_submit():
+        searched = True
         
         if not form.boards.data: raise BadRequest('select a board')
         for board in form.boards.data:
@@ -142,6 +143,9 @@ async def v_index_search():
         if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
         if form.has_file.data and form.has_no_file.data: raise BadRequest('has_file is contradicted')
         if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise BadRequest('the dates are contradicted')
+
+        if form.search_mode.data == 'gallery':
+            search_mode = 'gallery'
 
         params = form.data
         terms = params['title'] or params['comment']
@@ -189,9 +193,9 @@ async def v_index_search():
         if params['media_hash']:
             q.media_hash = params['media_hash']
         if params['has_file']:
-            q.file = True
+            q.has_file = True
         if params['has_no_file']:
-            q.file = False
+            q.has_no_file = True
         if params['is_op']:
             q.op = True
         if params['is_not_op']:
@@ -210,56 +214,54 @@ async def v_index_search():
             q.sort = params['order_by']
 
         parsed_query = perf_counter() - start
-        search_log.warning(f'{parsed_query=:.4f}')
+        search_log.warning(f'  {parsed_query=:.4f} +{parsed_query:.4f}')
 
         results, total_hits = await search_p.search_posts(q)
         pages = total_pages(total_hits, q.result_limit)
         cur_page = q.page
 
-        got_search = perf_counter() - start
-        search_log.warning(f'{got_search=:.4f}')
+        done_search = perf_counter() - start
+        search_log.warning(f'   {done_search=:.4f} +{done_search-parsed_query:.4f}')
 
-        hl_re = get_term_re(q.terms) if q.terms else None
-        for post in results:
-            # post['op'] = post['resto'] == 0
-            op_num = post['no'] if post['resto'] == 0 else post['resto']
-            if post['comment']:
-                if hl_re:
-                    post['comment'] = mark_highlight(hl_re, post['comment'])
-                _, post['comment'] = restore_comment(op_num, post['comment'], post['board_shortname'])
-            posts_t.append(wrap_post_t(post))
-        
+        if search_mode == 'index':
+            hl_re = get_term_re(q.terms) if q.terms else None
+            for post in results:
+                op_num = post['no'] if post['resto'] == 0 else post['resto']
+                if post['comment']:
+                    if hl_re:
+                        post['comment'] = mark_highlight(hl_re, post['comment'])
+                    _, post['comment'] = restore_comment(op_num, post['comment'], post['board_shortname'])
+
+                posts_t.append(wrap_post_t(post))
+
         patched_posts = perf_counter() - start
-        search_log.warning(f'{patched_posts=:.4f}')
-        
-        res_count = len(results)
-        posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
-            
-        searched = True
-        
-        if form.search_mode.data == 'gallery':
-            search_mode = 'gallery'
+        search_log.warning(f' {patched_posts=:.4f} +{patched_posts-done_search:.4f}')
 
-    rend_posts = perf_counter() - start
-    search_log.warning(f'{rend_posts=:.4f}')
+        if search_mode == 'index':
+            posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+        else:
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
+
+        rendered_posts = perf_counter() - start
+        search_log.warning(f'{rendered_posts=:.4f} +{rendered_posts-patched_posts:.4f}')
 
     rend = template_index_search.render(
         search_mode=search_mode,
         form=form,
         posts_t=posts_t,
-        res_count=res_count,
+        res_count=len(results),
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
         tab_title=CONSTS.site_name,
         cur_page=cur_page,
         pages=pages,
-        total_hits=total_hits,
-        # **CONSTS.render_constants
+        total_hits=total_hits
     )
 
-    rend_page = perf_counter() - start# - patched_posts
-    search_log.warning(f'{rend_page=:.4f}')
+    if searched:
+        rendered_page = perf_counter() - start
+        search_log.warning(f' {rendered_page=:.4f} +{rendered_page-rendered_posts:.4f}')
 
     return rend
 

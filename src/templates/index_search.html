@@ -13,7 +13,9 @@
         {% if search_mode == 'index' %}
           {{ posts_t|safe }}
         {% else %}
-          {% include 'gallery.html' %}
+          <div class="row">
+            {{ posts_t|safe }}
+          </div>
         {% endif %}
       </div>
     {% else %}

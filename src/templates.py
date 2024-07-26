@@ -32,3 +32,4 @@ safe_env = Environment(
 	autoescape=False,
 )
 template_index_search_post_t = safe_env.get_template('index_search_post_t.html')
+template_index_search_gallery_post_t = safe_env.get_template('index_search_gallery_post_t.html')

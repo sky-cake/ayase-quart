@@ -19,7 +19,8 @@ class SearchQuery:
 	media_hash: Optional[str] = None
 	before: Optional[int] = None
 	after: Optional[int] = None
-	file: Optional[bool] = None
+	has_file: Optional[bool] = None
+	has_no_file: Optional[bool] = None
 	deleted: Optional[bool] = None
 	op: Optional[bool] = None
 	result_limit: int = CONSTS.default_result_limit

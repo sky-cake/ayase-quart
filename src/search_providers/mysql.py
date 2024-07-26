@@ -29,11 +29,11 @@ class MysqlSearch(BaseSearch):
 		pass
 
 	async def _search_index(self, index: str, q: SearchQuery):
-		q = f'''
+		q = f"""
 		select from
 		where
 			match(comment, title) against (%s in natural language mode)
 		order by
 		limit
-		;'''
+		;"""
 		

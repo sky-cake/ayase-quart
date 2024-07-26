@@ -1,12 +1,11 @@
 from enum import StrEnum
 from html import escape
+from configs import CONSTS
 
 
-class MediaVer(StrEnum):
-	full = 'image'
+class MediaType(StrEnum):
+	image = 'image'
 	thumb = 'thumb'
-
-media_root = '/static/neo'
 
 def pre_html_comment(post: str):
 	pass
@@ -42,12 +41,7 @@ def wrap_post_t(post: dict):
 		t_since4pass=get_since4pass_t(post),
 		t_filedeleted=get_filedeleted_t(post),
 		t_header=get_header_t(post),
-		# t_backlink=get_backlink_t(post),
 	))
-	# post = {k:v for k,v in post.items() if k.startswith('t_') or k in needed_keys}
-	# for k in list(post.keys()):
-	# 	if not (k.startswith('t_') or k in needed_keys):
-	# 		post.pop(k)
 	return post
 
 def get_sub_t(post: dict):
@@ -101,8 +95,46 @@ def media_metadata_t(fsize: int, w: int, h: int):
 		return f'{fsize / mb_d :.2f} MB, {w}x{h}'
 	return f'{fsize / kb_d :.1f} KB, {w}x{h}'
 
-def get_media_path(filename: str, board: str, version: MediaVer):
-	return f'{media_root}/{board}/{version}/{filename[0:4]}/{filename[4:6]}/{filename}'
+
+def get_media_path(filename: str, board: str, media_type: MediaType) -> str:
+	uri = CONSTS.thumb_uri
+
+	if media_type == MediaType.image:
+		uri = CONSTS.image_uri
+
+	return f'{uri.format(board_shortname=board).strip('/')}/{filename[0:4]}/{filename[4:6]}/{filename}'
+
+
+def get_gallery_media_t(post: dict):
+	if not post['filename']:
+		return ''
+	ext = post['ext']
+	asagi_filename = post['asagi_filename']
+	asagi_preview_filename = post['asagi_preview_filename']
+	md5h = post['md5']
+	board = post['board_shortname']
+	full_src = get_media_path(asagi_filename, board, MediaType.image)
+	thumb_src = get_media_path(asagi_preview_filename, board, MediaType.thumb)
+	classes = ['replyImg', 'postImg']
+	if post['spoiler']:
+		classes.append('spoiler')
+	return f"""
+		<img
+			src="{thumb_src}"
+			class="{" ".join(classes)}"
+			data-md5="{ md5h }"
+			width="{ post['tn_w'] }"
+			height="{ post['tn_h'] }"
+			loading="lazy"
+			data-ext="{ext}"
+			data-thumb_src="{thumb_src}"
+			data-full_media_src="{full_src}"
+			onclick="expandMedia(this)"
+			onerror="pointToOtherMediaOnError(this)"
+			data-expanded="false"
+		/>
+	"""
+
 
 def get_media_t(post: dict):
 	if not (filename:=post['filename']): return ''
@@ -113,12 +145,12 @@ def get_media_t(post: dict):
 	md5h = post['md5']
 	board = post['board_shortname']
 	spoiler = 'Spoiler,' if post['spoiler'] else ''
-	full_src = get_media_path(asagi_filename, board, MediaVer.full)
-	thumb_src = get_media_path(asagi_preview_filename, board, MediaVer.thumb)
+	full_src = get_media_path(asagi_filename, board, MediaType.image)
+	thumb_src = get_media_path(asagi_preview_filename, board, MediaType.thumb)
 	classes = ['replyImg', 'postImg']
 	if post['spoiler']:
 		classes.append('spoiler')
-	return f'''
+	return f"""
 	<div class="file" id="f{no}">
         <div class="fileText" id="fT{no}">
             File:
@@ -145,7 +177,7 @@ def get_media_t(post: dict):
 			/>
         </a>
     </div>
-	'''
+	"""
 
 def set_links(post: dict):
 	board = post['board_shortname']
@@ -175,7 +207,7 @@ def get_trip_t(post: dict):
 	return f'<span class="postertrip">{trip}</span>'
 
 def get_mobile_t(post: dict):
-	return f'''
+	return f"""
 	<span class="nameBlock">
         <span class="name">{post['name']}</span>
         <br>
@@ -184,7 +216,7 @@ def get_mobile_t(post: dict):
         {post['now']}
         <a href="#{post['no']}" title="Link to this post">No. {post['no']}</a>
     </span>
-	'''
+	"""
 
 def get_exif_title(post: dict):
 	if not (exif:=post.get('exif')): return ''
@@ -199,18 +231,18 @@ def get_since4pass_t(post: dict):
 	return f'<span class="n-pu" title="Pass user since {since4pass}."></span>'
 
 def get_filedeleted_t(post: dict):
-	if not post.get('fileleted'): return ''
+	if not post.get('filedeleted'): return ''
 	msg = f'deleted on {del_time}' if (del_time:=post.get('deleted_time')) else 'prematurely deleted.'
 	return f'<strong class="warning" title="This post was {msg}.">[Deleted]</strong>'
 
 def get_header_t(post: dict):
 	no = post['no']
-	return f'''
+	return f"""
 	<div class="postContainer replyContainer" id="pc{no}">
 	<div class="sideArrows" id="sa{no}">&gt;&gt;</div>
 
 	<div id="p{no}" class="post reply">
-	'''
+	"""
 
 def get_backlink_t(post: dict):
 	board = post['board_shortname']
@@ -230,9 +262,9 @@ def esc_user_data(post: dict):
 			post[user_key] = escape(val)
 
 def get_name_t(post: dict):
-	name_t =  f'''
+	name_t =  f"""
 	<span class="name {post.get('capcode', '')}" {get_exif_title}>{post['name']}</span>
-	'''
+	"""
 	return email_wrap(post, name_t)
 
 def email_wrap(post: dict, val: str):
