@@ -1,7 +1,5 @@
 # Ayase Quart
 
-Please refer to the [changelog](https://github.com/sky-cake/ayase-quart/blob/main/changelog.md) for news and how to update to the latest version.
-
 ## About
 
 Ayase Quart is a simple, read-only frontend for 4chan archives using the asagi schema. Please see a preview [here](preview/README.md).
@@ -22,19 +20,18 @@ Please use Python3.11+.
 
 Assuming you have a data source set up, you can:
 
-0. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
-1. Create a file called `./src/configs.py` using `./rename_to_configs.py`
+1. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
+2. Create a file called `./src/configs.py` using `./src/rename_to_configs.py`
     - If you do not have a data source to point to, set up [Neofuuka](https://github.com/bibanon/neofuuka-scraper) or [Hayden](https://github.com/bbepis/Hayden) with MySQL. See below for their details.
-2. Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
-3. Create a virtualenv and install dependencies,
-    - `python3 -m venv venv`
+3. Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
+4. Create a virtualenv and install dependencies,
+    - `python3.12 -m venv venv`
     - `source venv/bin/activate`
-    - `python3 -m pip install -r requirements.txt`
+    - `python3.12 -m pip install -r requirements.txt`
     - `sudo apt-get install python3-dev default-libmysqlclient-dev build-essential`
-4. `python3 main.py`
-5. Visit `https://127.0.0.1:9001` or `https://<IP_ADDRESS>:9001`, depending on whether you're using SSL certs.
-6. Submit pull requests with fixes and new features.
-
+5. `python3.12 main.py`
+6. Visit `https://127.0.0.1:9001` or `https://<IP_ADDRESS>:9001`, depending on whether you're using SSL certs.
+7. Submit pull requests with fixes and new features.
 
 ## Certificates
 
@@ -97,6 +94,8 @@ DROP User 'myuser'@'%';
 CREATE USER 'myuser'@'%' IDENTIFIED BY 'mypassword';
 GRANT ALL PRIVILEGES ON * . * TO 'myuser'@'%';
 ```
+
+Restart MySQL Server, `sudo systemctl restart mysql`. Check the status `sudo systemctl status mysql`.
 
 
 ## Neofuuka
