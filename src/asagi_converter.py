@@ -147,10 +147,10 @@ def validate_and_generate_params(form_data):
             's': construct_date_filter('date_after')
         },
         'has_no_file': {
-            's': '`media_filename` is null'
+            's': '`media_filename` is null or `media_filename` = ""'
         },
         'has_file': {
-            's': '`media_filename` is not null'
+            's': '`media_filename` is not null and `media_filename` != ""'
         },
         'is_op': {
             's': '`op` = 1'
@@ -222,14 +222,18 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order
     
     sql +=  f' \n ORDER BY time {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
-    
-    posts = await current_app.db.query_execute(sql, params=param_values)
 
-    images = []
+    posts = await current_app.db.query_execute(sql, params=param_values)
+    images = await get_post_images(board_shortname, [p['no'] for p in posts])
+
+    num_to_image = {i['num']: i for i in images}
+
+    images_sorted = []
     for p in posts:
-        i = await get_post_images(board_shortname, p['no'])
-        images.append(i)
-    return await convert_standalone_posts(posts, images)
+        images_sorted.append(num_to_image.get(p['no'], None))
+
+    return_quotelinks = form_data['search_mode'] == 'index'
+    return await convert_standalone_posts(posts, images_sorted, return_quotelinks=return_quotelinks)
 
 
 async def convert_standalone_posts(posts, medias, return_quotelinks=True):
@@ -282,11 +286,14 @@ async def get_post(board_shortname:str, post_num: int):
     return await current_app.db.query_execute(SELECT_POST, params={'post_num': post_num}, fetchone=True)
 
 
-async def get_post_images(board_shortname:str, post_num: int):
+async def get_post_images(board_shortname:str, post_nums: List[int]):
     image_selector=get_image_selector()
-    SELECT_POST_IMAGES = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `num`=%(post_num)s)"
 
-    return await current_app.db.query_execute(SELECT_POST_IMAGES, params={'post_num': post_num}, fetchone=True)
+    placeholders = ','.join(['%s'] * len(post_nums))
+
+    SELECT_POST_IMAGES = f"SELECT `num`, {image_selector} FROM `{board_shortname}_images` i INNER JOIN `{board_shortname}` USING (media_hash) WHERE `num` IN ({placeholders});"
+
+    return await current_app.db.query_execute(SELECT_POST_IMAGES, params=post_nums)
 
 
 async def get_thread(board_shortname:str, thread_num: int):
@@ -525,7 +532,7 @@ async def convert_post(board_shortname: str, post_id: int):
 
     post, images = await asyncio.gather(
         get_post(board_shortname, post_id),
-        get_post_images(board_shortname, post_id)
+        get_post_images(board_shortname, [post_id])
     )
     
     post = [post]
