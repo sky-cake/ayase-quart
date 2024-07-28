@@ -6,13 +6,11 @@
         {% if board_objects %}
             <h2>Boards</h2>
             <ul id="home_boards" style="list-style: none;">
-                <li>
-                    {% for board_object in board_objects %}
-                        <h3>
-                            <a href="/{{ board_object.shortname }}/catalog">/{{ board_object.shortname }}/ - {{ board_object.name }}</a>
-                        </h3>
-                    {% endfor %}
-                </li>
+                {% for board_object in board_objects %}
+                    <li>
+                        <a href="/{{ board_object.shortname }}/catalog">/{{ board_object.shortname }}/ - {{ board_object.name }}</a>
+                    </li>
+                {% endfor %}
             </ul>
         {% endif %}
     </div>

@@ -1,11 +1,20 @@
+import asyncio
 import os
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import NamedTuple
 
 
 class DbType(Enum):
     mysql = 1
     sqlite = 2
+
+
+class IndexSearchType(StrEnum):
+    meili = 'meili'
+    manticore = 'manticore'
+    mysql = 'mysql'
+    lnx = 'lnx'
+    typesense = 'typesense'
 
 
 def make_path(*file_path):
@@ -47,10 +56,14 @@ class CONSTS(NamedTuple):
 
     site_name= 'Ayase Quart'
 
-    board_objects = [
-        {'shortname': 'ck', 'name': 'Food & Cooking'},
-        {'shortname': 'mu', 'name': 'Music'},
-    ]
+    # see src/meta.py for a list of all 4chan boards
+    boards = {
+        'ck': 'Food & Cooking',
+        'g': 'Technology',
+        't': 'Torrent',
+        'mu': 'Music',
+        'unknown': 'Unknown', # this board will not show up since its not a 4chan board
+    }
 
     html_linked_target = '_self' # or '_blank' # links to 4chan will always remain '_blank'
 
@@ -63,9 +76,9 @@ class CONSTS(NamedTuple):
     search = True
     search_result_highlight = True
     default_result_limit = 100
+    max_result_limit = 100
 
-    # mysql, meili, manticore, typesense, lnx
-    index_search_provider = 'meili'
+    index_search_provider = IndexSearchType.meili
     index_search_host = 'http://localhost:7700'.strip('/')
     index_search_auth_key = ''
     index_search_config = dict(
@@ -86,16 +99,13 @@ class CONSTS(NamedTuple):
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
+
+    board_objects = [{'shortname': k, 'name': v} for k, v in boards.items()]
+    board_objects = sorted(board_objects, key=lambda x: x['shortname'])
 
     board_shortname_to_name = {o['shortname']: o['name'] for o in board_objects}
-
     board_shortnames = [board_object['shortname'] for board_object in board_objects]
+    boards_in_database = [] # to be populated later
 
     render_constants = dict(
         theme=theme,
@@ -106,4 +116,37 @@ class CONSTS(NamedTuple):
         thumb_uri=thumb_uri,
         html_linked_target=html_linked_target,
         index_search_provider=index_search_provider,
+        index_search_host=index_search_host,
     )
+
+
+## Do not touch the below code. Thank you. ##
+## Do not touch the below code. Thank you. ##
+## Do not touch the below code. Thank you. ##
+## Do not touch the below code. Thank you. ##
+
+from db.api import get_boards_in_database
+
+
+def remove_boards_from_configs_if_not_in_database():
+    removals = []
+    for board in CONSTS.boards:
+        if board not in CONSTS.boards_in_database:
+            print(f'ATTENTION! {board=} not found in database. It will be removed from configs.')
+            removals.append(board)
+    
+    for b in removals:
+        del CONSTS.boards[b]
+    
+    if not CONSTS.boards:
+        raise ValueError(f'No boards to show! Configure one of {CONSTS.boards_in_database}')
+
+    # recompute these configs
+    CONSTS.board_objects = [{'shortname': b, 'name': CONSTS.boards[b]} for b in CONSTS.boards]
+    CONSTS.board_shortname_to_name = {b: CONSTS.boards[b] for b in CONSTS.boards}
+    CONSTS.board_shortnames = [b for b in CONSTS.boards]
+    CONSTS.render_constants['board_objects'] = CONSTS.board_objects
+
+
+CONSTS.boards_in_database = asyncio.run(get_boards_in_database())
+remove_boards_from_configs_if_not_in_database()

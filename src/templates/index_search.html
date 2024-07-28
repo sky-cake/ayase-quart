@@ -1,29 +1,36 @@
-{% from 'bootstrap5/form.html' import render_field %}
-
 {% extends "base.html" %}
 
 {% block body %}
 
   <h2>{{site_name}} Search</h2>
-  
+
   {% include 'form_search.html' %}
 
   <div>
-    {% if posts %}
-      <h3>Found <b>{{posts|length}}</b> results!</h3>
+    {% if res_count %}
+      <h3>Showing <b>{{res_count}}</b> / {{total_hits}} results</h3>
       <div class="board">
         {% if search_mode == 'index' %}
-          {% for post in posts %}
-            {% include 'index_search_post.html' %}
-          {% endfor %}
+          {{ posts_t|safe }}
         {% else %}
-          {% include 'gallery.html' %}
+          <div class="row">
+            {{ posts_t|safe }}
+          </div>
         {% endif %}
       </div>
     {% else %}
       {% if searched %}
         <h3>0 results found!</h3>
       {% endif %}
+    {% endif %}
+    {% if pages and cur_page %}
+      <div class="paginate"><ul>
+        {% for page in range(1, pages) %}
+          <li class="{{ 'active' if page == cur_page }}">
+            <a href="#">{{ page }}</a>
+          </li>
+        {% endfor %}
+      </ul></div>
     {% endif %}
   </div>
 

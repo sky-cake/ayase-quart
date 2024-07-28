@@ -1,10 +1,10 @@
 import quart_flask_patch  # isort: skip
 
+import asyncio
 import os
 
 from flask_bootstrap import Bootstrap5
 from quart import Quart
-from werkzeug.middleware.proxy_fix import ProxyFix
 
 from blueprint_admin import blueprint_admin
 from blueprint_api import blueprint_api
@@ -14,7 +14,7 @@ from configs import CONSTS
 from db import get_database_instance
 
 
-def create_app():
+async def create_app():
 
     if CONSTS.chdir_to_root:
         os.chdir(CONSTS.root_dir)
@@ -24,6 +24,7 @@ def create_app():
     app.config.from_object(CONSTS)
 
     Bootstrap5(app)
+    app.jinja_env.auto_reload = False
 
     app.register_blueprint(blueprint_api)
     app.register_blueprint(blueprint_app)
@@ -39,7 +40,7 @@ def create_app():
     return app
 
 
-app = create_app()
+app = asyncio.run(create_app())
 
 if __name__=='__main__':
     app.run(CONSTS.site_host, port=CONSTS.site_port, debug=CONSTS.TESTING, certfile=CONSTS.cert_file, keyfile=CONSTS.key_file, use_reloader=CONSTS.TESTING and CONSTS.autoreload)

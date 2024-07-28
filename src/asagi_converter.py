@@ -8,6 +8,7 @@ from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS, DbType
+from highlighting import html_highlight
 
 
 def get_selector(board_shortname, double_percent=True):
@@ -146,10 +147,10 @@ def validate_and_generate_params(form_data):
             's': construct_date_filter('date_after')
         },
         'has_no_file': {
-            's': '`media_filename` is null'
+            's': '`media_filename` is null or `media_filename` = ""'
         },
         'has_file': {
-            's': '`media_filename` is not null'
+            's': '`media_filename` is not null and `media_filename` != ""'
         },
         'is_op': {
             's': '`op` = 1'
@@ -221,14 +222,18 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order
     
     sql +=  f' \n ORDER BY time {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
-    
-    posts = await current_app.db.query_execute(sql, params=param_values)
 
-    images = []
+    posts = await current_app.db.query_execute(sql, params=param_values)
+    images = await get_post_images(board_shortname, [p['no'] for p in posts])
+
+    num_to_image = {i['num']: i for i in images}
+
+    images_sorted = []
     for p in posts:
-        i = await get_post_images(board_shortname, p['no'])
-        images.append(i)
-    return await convert_standalone_posts(posts, images)
+        images_sorted.append(num_to_image.get(p['no'], None))
+
+    return_quotelinks = form_data['search_mode'] == 'index'
+    return await convert_standalone_posts(posts, images_sorted, return_quotelinks=return_quotelinks)
 
 
 async def convert_standalone_posts(posts, medias, return_quotelinks=True):
@@ -281,11 +286,14 @@ async def get_post(board_shortname:str, post_num: int):
     return await current_app.db.query_execute(SELECT_POST, params={'post_num': post_num}, fetchone=True)
 
 
-async def get_post_images(board_shortname:str, post_num: int):
+async def get_post_images(board_shortname:str, post_nums: List[int]):
     image_selector=get_image_selector()
-    SELECT_POST_IMAGES = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `num`=%(post_num)s)"
 
-    return await current_app.db.query_execute(SELECT_POST_IMAGES, params={'post_num': post_num}, fetchone=True)
+    placeholders = ','.join(['%s'] * len(post_nums))
+
+    SELECT_POST_IMAGES = f"SELECT `num`, {image_selector} FROM `{board_shortname}_images` i INNER JOIN `{board_shortname}` USING (media_hash) WHERE `num` IN ({placeholders});"
+
+    return await current_app.db.query_execute(SELECT_POST_IMAGES, params=post_nums)
 
 
 async def get_thread(board_shortname:str, thread_num: int):
@@ -376,16 +384,18 @@ def get_text_quotelinks(text: str):
 
     return quotelinks # quotelinks = ['20074095', '20074101']
 
-
+square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
+spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL) # with re.DOTALL, the dot matches any character, including newline characters.
+spoiler_sub = r'<span class="spoiler">\1</span>'
+code_re = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL) # ? makes the (.*) non-greedy
+code_sub = r'<code><pre>\1</pre></code>'
+banned_re = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
+banned_sub = r'<span class="banned">\1</span>'
 def substitute_square_brackets(text):
-    if re.fullmatch(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*', text):
-        pattern_spoiler = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL) # with re.DOTALL, the dot matches any character, including newline characters.
-        pattern_code = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL) # ? makes the (.*) non-greedy
-        pattern_banned = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
-
-        text = re.sub(pattern_spoiler, r'<span class="spoiler">\1</span>', text)
-        text = re.sub(pattern_code, r'<code><pre>\1</pre></code>', text)
-        text = re.sub(pattern_banned, r'<span class="banned">\1</span>', text)
+    if square_re.fullmatch(text):
+        text = spoiler_re.sub(spoiler_sub, text)
+        text = code_re.sub(code_sub, text)
+        text = banned_re.sub(banned_sub, text)
     return text
 
 
@@ -409,18 +419,12 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
 
     GT = '&gt;'
     GTGT = "&gt;&gt;"
-    SR_START_F = "||sr_hl_cls_start||"
-    SR_END_F = "||sr_hl_cls_end||"
-    SR_START_R = '<span class="search_highlight_comment">'
-    SR_END_R = '</span>'
 
     if com is None:
         return [], ''
 
-    lines = html.escape(com).split("\n")
-    for i, line in enumerate(lines):
-
-        lines[i] = lines[i].replace(SR_START_F, SR_START_R).replace(SR_END_F, SR_END_R)
+    lines = html_highlight(html.escape(com)).split("\n")
+    for i, line in enumerate(lines):		
         # >green text
         if GT == line[:4] and GT != line[4:8]:
             lines[i] = f"""<span class="quote">{line}</span>"""
@@ -528,7 +532,7 @@ async def convert_post(board_shortname: str, post_id: int):
 
     post, images = await asyncio.gather(
         get_post(board_shortname, post_id),
-        get_post_images(board_shortname, post_id)
+        get_post_images(board_shortname, [post_id])
     )
     
     post = [post]

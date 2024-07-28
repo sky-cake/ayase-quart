@@ -1,7 +1,7 @@
 {% from 'macros.html' import poster_heading, capcode_author, get_img %}
 
 <div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}"
-    style="max-width: 300px; max-height: 375px; overflow: hidden; text-align: center;" tabindex="0">
+     style="max-width: 300px; max-height: 375px; overflow: hidden; text-align: center;" tabindex="0">
     <div class="post_data">
         <span class="post_controls">
             [<a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" class="btnr parent" target="{{html_link_target}}">View</a>]
@@ -13,7 +13,7 @@
             <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
         </span>
     </div>
-    <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
+    <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">
 
         {{get_img(thumb_uri, image_uri, thread, classes="thumb thread_image", expand_media=False)}}
 

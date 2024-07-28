@@ -13,15 +13,19 @@
         <link href="/static/css/flags.css" rel="stylesheet" type="text/css">
         <link href="/static/css/polflags.css" rel="stylesheet" type="text/css">
         <link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
-        
+
         <link href="/static/css/custom.css" rel="stylesheet" type="text/css">
-        
+
         <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
 
     </head>
 
     <body>
         <div id="body">
+            <span id="top">[<a href="#bottom">Bottom</a>]</span>
+            <br>
+            <br>
+
             {% if not index %}
                 <div class="letters">
                     {{site_name}}:
@@ -35,13 +39,13 @@
                     {% if index_search_provider %}
                         Index Search:
                         [
-                            <a href="/index_search">Search</a>
-                            /
-                            <a href="/index_search_config">Config</a>
-                            /
-                            <a href="{{index_search_host}}">{{index_search_provider.title()}}</a>
-                            /
-                            <a href="{{index_search_host}}/stats">Stats</a>
+                        <a href="/index_search">Search</a>
+                        /
+                        <a href="/index_search_config">Config</a>
+                        /
+                        <a href="{{index_search_host}}">{{index_search_provider.title()}}</a>
+                        /
+                        <a href="/index_stats">Stats</a>
                         ]
                     {% endif %}
                     <br>
@@ -75,20 +79,13 @@
                         {% endif %}
                     </div>
                 {% endif %}
-                
-                {% if request.path != '/' %}
-                    <br>
-                    <span id="top">[<a href="#bottom">Bottom</a>]</span>
-                {% endif %}
 
                 {% block body %}
                 {% endblock %}
             </div>
 
-        {% if request.path != '/' %}
-        <script type="text/javascript" src="/static/js/index.js"></script>
-        <span id="bottom">[<a href="#top">Top</a>]</span>
-        {% endif %}
+            <script type="text/javascript" src="/static/js/index.js"></script>
+            <span id="bottom">[<a href="#top">Top</a>]</span>
 
         </div>
         <footer id="footer">

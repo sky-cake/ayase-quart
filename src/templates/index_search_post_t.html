@@ -1,0 +1,47 @@
+{{ t_header }}
+<div class="postInfoM mobile" id="pim{{no}}">
+    {{ t_sub }}
+    {{ t_mobile }}
+</div>
+{% if resto == 0 %}
+    {{t_media}}
+{% endif %}
+<div class="postInfo desktop" id="pi{{no}}">
+    <b>/{{board_shortname}}/</b>
+    {% if resto == 0 %}
+        <strong style="color: #4da57c;">OP</strong>
+    {% endif %}
+    {{ t_filedeleted }}
+    {{ t_sub }}
+    <span class="nameBlock {{ t_cc_class }}">
+        {{t_name}}
+        {{t_cc}}
+    </span>
+    {{ t_poster_hash }}dhj
+    {{ t_since4pass }}
+    {{ t_country }}
+    {{ t_troll_country }}
+    <span class="dateTime" data-utc="{{time}}">{{now}}</span>
+    <span class="postNum desktop">
+        <a href="{{t_post_link}}">No.{{no}}</a>
+        {% if resto == 0 %}
+            {{ t_sticky }}
+            {{ t_closed }}
+        {% endif %}
+    </span>
+    <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
+    [<a href="{{t_post_link if resto else t_thread_link}}">View</a>]
+    <div id="bl_{{no}}" class="backlink">
+        {% for quotelink in replies %}
+            <span class="quotelink">
+                <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{board_shortname}}">&gt;&gt;{{ quotelink }}</a>
+            </span>
+        {% endfor %}
+    </div>
+</div>
+{% if resto %}
+    {{t_media}}
+{% endif %}
+<blockquote class="postMessage" id="m{{no}}">{{comment or ''}}</blockquote>
+</div>
+</div>

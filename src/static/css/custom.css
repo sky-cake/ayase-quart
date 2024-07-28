@@ -84,20 +84,26 @@ form {
 .form-control {
     list-style: none;
     padding: 3px;
-    margin-bottom: 1em;
+}
+
+ul {
+    list-style: none;
 }
 
 .row {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    margin-bottom: 1em;
 }
 
 .column {
-    margin: 1em;
+    margin-left: 1em;
     display: flex;
     flex-direction: column;
+}
+
+#submit {
+    margin-top: 1em;
 }
 
 .form_button {
@@ -169,18 +175,22 @@ ul#boards {
 
 ul#home_boards {
     column-count: 3;
-    max-width: fit-content;
+    font-size: larger;
+    max-width: 700px;
 }
 @media (max-width: 1200px) {
     ul#home_boards {
         column-count: 2;
+        font-size: larger;
     }
 }
 @media (max-width: 600px) {
     ul#home_boards {
         column-count: 1;
+        font-size: larger;
     }
 }
+
 
 input[type=submit] {
     background-color: #4b2748;

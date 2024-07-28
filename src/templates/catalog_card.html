@@ -38,48 +38,48 @@
         {% if thread.capcode == 'V' %}
             <strong class="capcode id_verified">## Verified</strong>
         {% endif %}
-        </span>
-        <span class="poster_hash"></span>
-        <br/>
-        <time datetime="{{ thread.time }}">{{ thread.now }}</time>
-        <span class="post_number">
-            <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
-        </span>
+    </span>
+    <span class="poster_hash"></span>
+    <br/>
+    <time datetime="{{ thread.time }}">{{ thread.now }}</time>
+    <span class="post_number">
+        <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
+    </span>
 
-    </div>
+</div>
 
-    <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">  
+<a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">
 
-        {{get_img(thumb_uri, image_uri, thread, classes="thumb thread_image", expand_media=False)}}
+    {{get_img(thumb_uri, image_uri, thread, classes="thumb thread_image", expand_media=False)}}
 
-    </a>
+</a>
 
-    {% if thread.sticky or thread.closed %}
-        <div class="threadIcons">
-            {% if thread.sticky %}
+{% if thread.sticky or thread.closed %}
+    <div class="threadIcons">
+        {% if thread.sticky %}
             <span title="Sticky" class="threadIcon stickyIconCatalog"></span>
-            {% endif %}
-            {% if thread.closed %}
-            <span title="Closed" class="threadIcon closedIconCatalog"></span>
-            {% endif %}
-        </div>
-    {% endif %}
-
-    <div class="meta">
-        Replies: <b>{{ thread.replies }}</b> / Images: <b>{{ thread.images }}</b> / Posters: <b>
-            {% if thread.posters %}
-                {{thread.posters}}
-            {% else %}
-                ?
-            {% endif %}
-        </b>
-    </div>
-
-    <div class="teaser">
-        {% if thread.sub %}
-            <span class="post_title">{{thread.sub}}</span>:
         {% endif %}
-        {{thread.com}}
+        {% if thread.closed %}
+            <span title="Closed" class="threadIcon closedIconCatalog"></span>
+        {% endif %}
     </div>
+{% endif %}
+
+<div class="meta">
+    Replies: <b>{{ thread.replies }}</b> / Images: <b>{{ thread.images }}</b> / Posters: <b>
+        {% if thread.posters %}
+            {{thread.posters}}
+        {% else %}
+            ?
+        {% endif %}
+    </b>
+</div>
+
+<div class="teaser">
+    {% if thread.sub %}
+        <span class="post_title">{{thread.sub}}</span>:
+    {% endif %}
+    {{thread.com}}
+</div>
 
 </div>
