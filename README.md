@@ -32,10 +32,10 @@ Assuming you have a data source set up, you can:
 5. `python3.12 main.py`
 6. Visit `https://127.0.0.1:9001` or `https://<IP_ADDRESS>:9001`, depending on whether you're using SSL certs.
 7. (Optional) Set up a full text search (FTS) database for index searching.
-   - Choose a search engine and run its docker container with `docker compose up`. Ayase Quart supports the following engines which are ordered from most recommended to least recommended. If you need help deciding, consult our [search engine notes](./index_search/README.md).
-     - Meili [[Docs](https://www.meilisearch.com/docs/learn/getting_started/installation) | [GitHub](https://github.com/meilisearch/meilisearch)]
+   - Choose a search engine and run its docker container with `docker compose up`. Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing for your discretion.
+     - Meili [[Docs](https://www.meilisearch.com/docs/learn/getting_started/installation) | [GitHub](https://github.com/meilisearch/meilisearch)] (recommended)
      - Manticore [[Docs](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [GitHub](https://github.com/manticoresoftware/manticoresearch)]
-     - MySQL 8.x [[Docs](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [GitHub](https://github.com/mysql/mysql-server)]
+     - MySQL 8.x [[Docs](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [GitHub](https://github.com/mysql/mysql-server)] (not supported yet)
      - LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
      - TypeSense [[Docs](https://typesense.org/docs/guide/install-typesense.html) | [GitHub](https://github.com/typesense/typesense)]
     - Remember to check that your config port matches the docker container port.
