@@ -10,7 +10,7 @@
     {% if res_count %}
       <h3>Showing <b>{{res_count}}</b> / {{total_hits}} results</h3>
       <div class="board">
-        {% if search_mode == 'index' %}
+        {% if search_mode == SearchMode.index %}
           {{ posts_t|safe }}
         {% else %}
           <div class="row">

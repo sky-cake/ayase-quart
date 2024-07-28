@@ -54,6 +54,10 @@ def get_search_query(params: dict) -> SearchQuery:
             if not terms:
                 terms = '*' # return all
 
+        case IndexSearchType.quickwit:
+            # needs testing
+            chars_to_escape = []
+
     for char in chars_to_escape:
         terms = terms.replace(char, '\\' + char) # e.g. @ becomes \@
 

@@ -50,6 +50,8 @@ def get_search_provider():
 			from .manticore import ManticoreSearch as Search_p
 		case IndexSearchType.lnx:
 			from .lnx import LnxSearch as Search_p
+		case IndexSearchType.quickwit:
+			from .quickwit import QuickwitSearch as Search_p
 		case _:
 			from .mysql import MysqlSearch as Search_p
 

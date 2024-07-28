@@ -9,12 +9,18 @@ class DbType(Enum):
     sqlite = 2
 
 
+class SearchMode(StrEnum):
+    index = 'index'
+    gallery = 'gallery'
+
+
 class IndexSearchType(StrEnum):
     meili = 'meili'
     manticore = 'manticore'
     mysql = 'mysql'
     lnx = 'lnx'
     typesense = 'typesense'
+    quickwit = 'quickwit'
 
 
 def make_path(*file_path):

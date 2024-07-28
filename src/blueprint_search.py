@@ -7,7 +7,7 @@ from quart import Blueprint
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
-from configs import CONSTS
+from configs import CONSTS, SearchMode
 from forms import IndexSearchConfigForm, SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from search.highlighting import get_term_re, mark_highlight
@@ -110,7 +110,7 @@ async def v_index_search():
         raise BadRequest('search is disabled')
     
     form = await SearchForm.create_form()
-    search_mode = 'index'
+    search_mode = SearchMode.index
     searched = False
     cur_page = None
     pages = None
@@ -128,16 +128,16 @@ async def v_index_search():
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.search_mode.data == 'gallery' and form.has_no_file.data: raise BadRequest("search mode 'gallery' only shows files")
-        if form.search_mode.data not in ['index', 'gallery']: raise BadRequest('search_mode is unknown')
+        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data: raise BadRequest("search mode SearchMode.gallery only shows files")
+        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]: raise BadRequest('search_mode is unknown')
         if form.order_by.data not in ['asc', 'desc']: raise BadRequest('order_by is unknown')
         if form.is_op.data and form.is_not_op.data: raise BadRequest('is_op is contradicted')
         if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
         if form.has_file.data and form.has_no_file.data: raise BadRequest('has_file is contradicted')
         if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise BadRequest('the dates are contradicted')
 
-        if form.search_mode.data == 'gallery':
-            search_mode = 'gallery'
+        if form.search_mode.data == SearchMode.gallery:
+            search_mode = SearchMode.gallery
 
         q = get_search_query(form.data)
 
@@ -151,7 +151,7 @@ async def v_index_search():
         done_search = perf_counter() - start
         search_log.warning(f'   {done_search=:.4f} +{done_search-parsed_query:.4f}')
 
-        if search_mode == 'index':
+        if search_mode == SearchMode.index:
             hl_re = get_term_re(q.terms) if q.terms else None
             for post in results:
                 op_num = post['no'] if post['resto'] == 0 else post['resto']
@@ -165,7 +165,7 @@ async def v_index_search():
         patched_posts = perf_counter() - start
         search_log.warning(f' {patched_posts=:.4f} +{patched_posts-done_search:.4f}')
 
-        if search_mode == 'index':
+        if search_mode == SearchMode.index:
             posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
         else:
             posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
@@ -199,7 +199,7 @@ async def v_search():
         raise BadRequest('search is disabled')
     
     form = await SearchForm.create_form()
-    search_mode = 'index'
+    search_mode = SearchMode.index
     searched = False
 
     posts = []
@@ -210,8 +210,8 @@ async def v_search():
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.search_mode.data == 'gallery' and form.has_no_file.data: raise BadRequest("search mode 'gallery' only shows files")
-        if form.search_mode.data not in ['index', 'gallery']: raise BadRequest('search_mode is unknown')
+        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data: raise BadRequest("search mode SearchMode.gallery only shows files")
+        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]: raise BadRequest('search_mode is unknown')
         if form.order_by.data not in ['asc', 'desc']: raise BadRequest('order_by is unknown')
         if form.is_op.data and form.is_not_op.data: raise BadRequest('is_op is contradicted')
         if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
@@ -228,8 +228,8 @@ async def v_search():
         posts = posts['posts']
         searched = True
         
-        if form.search_mode.data == 'gallery':
-            search_mode = 'gallery'
+        if form.search_mode.data == SearchMode.gallery:
+            search_mode = SearchMode.gallery
 
     return await render_controller(
         template_search,

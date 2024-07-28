@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 from quart import current_app
 from werkzeug.exceptions import BadRequest
 
-from configs import CONSTS, DbType
+from configs import CONSTS, DbType, SearchMode
 from search.highlighting import html_highlight
 
 
@@ -232,7 +232,7 @@ async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order
     for p in posts:
         images_sorted.append(num_to_image.get(p['no'], None))
 
-    return_quotelinks = form_data['search_mode'] == 'index'
+    return_quotelinks = form_data['search_mode'] == SearchMode.index
     return await convert_standalone_posts(posts, images_sorted, return_quotelinks=return_quotelinks)
 
 

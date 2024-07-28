@@ -12,7 +12,7 @@ from wtforms.fields import (
 )
 from wtforms.validators import Length, NumberRange, Optional
 
-from configs import CONSTS
+from configs import CONSTS, SearchMode
 
 LENGTH_MD5_HASH = 32
 
@@ -21,7 +21,7 @@ class MultiCheckboxField(SelectMultipleField):
     option_widget = widgets.CheckboxInput()
 
 class SearchForm(QuartForm):
-    search_mode = RadioField('Search Mode', choices=[('index', 'index'), ('gallery', 'gallery')], default='index')
+    search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
     result_limit = IntegerField('Result Limit', default=CONSTS.default_result_limit, validators=[NumberRange(1, 10_000)], description='Per board')

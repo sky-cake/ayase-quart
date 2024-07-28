@@ -13,7 +13,7 @@
     {% if posts %}
       <h3>Found <b>{{posts|length}}</b> results!</h3>
       <div class="board">
-        {% if search_mode == 'index' %}
+        {% if search_mode == SearchMode.index %}
           {% include 'posts.html' %}
         {% else %}
           {% include 'gallery.html' %}
