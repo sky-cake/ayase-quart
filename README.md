@@ -38,6 +38,7 @@ Assuming you have a data source set up, you can:
      - MySQL 8.x [[Docs](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [GitHub](https://github.com/mysql/mysql-server)] (not supported yet)
      - LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
      - TypeSense [[Docs](https://typesense.org/docs/guide/install-typesense.html) | [GitHub](https://github.com/typesense/typesense)]
+     - QuickWit [[Docs](https://quickwit.io/docs/get-started/quickstart) | [GitHub](https://github.com/quickwit-oss/quickwit)]
     - Remember to check that your config port matches the docker container port.
     - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) and follow the instructions.
       - Initialize, run.
