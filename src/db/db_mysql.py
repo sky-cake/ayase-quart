@@ -30,7 +30,7 @@ class MySQLDatabaseAppContext(DatabaseInterface):
             db=CONSTS.db_database,
             minsize=CONSTS.db_min_connections,
             maxsize=CONSTS.db_max_connections,
-            pool_recycle=30 # renew pool connections every N seconds so data does not get stale
+            pool_recycle=30,  # renew pool connections every N seconds so data does not get stale
         )
         print('Creating database pool, completed.')
 
@@ -49,9 +49,9 @@ class MySQLDatabaseAppContext(DatabaseInterface):
 
                 if fetchone:
                     return await cursor.fetchone()
-                
+
                 return await cursor.fetchall()
-    
+
     async def disconnect(self):
         current_app.pool.close()
         await current_app.pool.wait_closed()
@@ -70,7 +70,7 @@ class MySQLDatabase(DatabaseInterface):
             db=CONSTS.db_database,
             minsize=CONSTS.db_min_connections,
             maxsize=CONSTS.db_max_connections,
-            pool_recycle=30 # renew pool connections every N seconds so data does not get stale
+            pool_recycle=30,  # renew pool connections every N seconds so data does not get stale
         )
         print('Creating database pool, completed.')
 
@@ -89,9 +89,9 @@ class MySQLDatabase(DatabaseInterface):
 
                 if fetchone:
                     return await cursor.fetchone()
-                
+
                 return await cursor.fetchall()
-    
+
     async def disconnect(self):
         self.pool.close()
         await self.pool.wait_closed()

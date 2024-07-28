@@ -7,23 +7,23 @@ from configs import CONSTS, IndexSearchType
 
 @dataclass(slots=True)
 class SearchQuery:
-	terms: str
-	boards: list[str]
-	num: Optional[int] = None
-	media_file: Optional[str] = None
-	media_hash: Optional[str] = None
-	before: Optional[int] = None
-	after: Optional[int] = None
-	has_file: Optional[bool] = None
-	has_no_file: Optional[bool] = None
-	deleted: Optional[bool] = None
-	op: Optional[bool] = None
-	result_limit: int = CONSTS.default_result_limit
-	page: Optional[int] = 1
-	sort: str = 'asc'
-	sort_by: Optional[str] = 'timestamp'
-	spoiler: Optional[bool] = None
-	highlight: bool = False
+    terms: str
+    boards: list[str]
+    num: Optional[int] = None
+    media_file: Optional[str] = None
+    media_hash: Optional[str] = None
+    before: Optional[int] = None
+    after: Optional[int] = None
+    has_file: Optional[bool] = None
+    has_no_file: Optional[bool] = None
+    deleted: Optional[bool] = None
+    op: Optional[bool] = None
+    result_limit: int = CONSTS.default_result_limit
+    page: Optional[int] = 1
+    sort: str = 'asc'
+    sort_by: Optional[str] = 'timestamp'
+    spoiler: Optional[bool] = None
+    highlight: bool = False
 
 
 def get_search_query(params: dict) -> SearchQuery:
@@ -52,14 +52,14 @@ def get_search_query(params: dict) -> SearchQuery:
             # seems ok with any chars, needs testing
             chars_to_escape = []
             if not terms:
-                terms = '*' # return all
+                terms = '*'  # return all
 
         case IndexSearchType.quickwit:
             # needs testing
             chars_to_escape = []
 
     for char in chars_to_escape:
-        terms = terms.replace(char, '\\' + char) # e.g. @ becomes \@
+        terms = terms.replace(char, '\\' + char)  # e.g. @ becomes \@
 
     q = SearchQuery(
         terms=terms,

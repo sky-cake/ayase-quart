@@ -39,14 +39,14 @@ async def make_pagination_board_index(board_shortname, index, page_num):
         search=False,
         record_name='threads',
         href=f'/{board_shortname}/page/' + '{0}',
-        show_single_page=True
+        show_single_page=True,
     )
 
 
 @blueprint_app.get("/<string:board_shortname>")
 async def v_board_index(board_shortname: str):
     validate_board_shortname(board_shortname)
-    
+
     index = await generate_index(board_shortname, 1)
 
     validate_threads(index['threads'])
@@ -54,7 +54,7 @@ async def v_board_index(board_shortname: str):
     pagination = await make_pagination_board_index(board_shortname, index, 0)
 
     return await render_controller(
-        template_board_index, 
+        template_board_index,
         **CONSTS.render_constants,
         board_index_page=True,
         tab_title=f'/{board_shortname}/ Index',
@@ -62,7 +62,7 @@ async def v_board_index(board_shortname: str):
         threads=index["threads"],
         quotelinks=[],
         board=board_shortname,
-        title=get_title(board_shortname)
+        title=get_title(board_shortname),
     )
 
 
@@ -77,20 +77,20 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     pagination = await make_pagination_board_index(board_shortname, index, page_num)
 
     return await render_controller(
-        template_board_index, 
+        template_board_index,
         **CONSTS.render_constants,
-        pagination = pagination,
+        pagination=pagination,
         threads=index["threads"],
         quotelinks=[],
         board=board_shortname,
         title=get_title(board_shortname),
-        tab_title=get_title(board_shortname)
+        tab_title=get_title(board_shortname),
     )
 
 
 async def make_pagination_catalog(board_shortname, catalog, page_num):
     op_thread_count = await get_op_thread_count(board_shortname)
-    catalog_pages = int(op_thread_count / 15) + 1 # we grab 150 threads per catalog page
+    catalog_pages = int(op_thread_count / 15) + 1  # we grab 150 threads per catalog page
 
     catalog_page_thread_count = 0
     for c in catalog:
@@ -104,7 +104,7 @@ async def make_pagination_catalog(board_shortname, catalog, page_num):
         search=False,
         record_name='threads',
         href=f'/{board_shortname}/catalog/' + '{0}',
-        show_single_page=True
+        show_single_page=True,
     )
 
 
@@ -117,13 +117,13 @@ async def v_catalog(board_shortname: str):
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
 
     return await render_controller(
-        template_catalog, 
+        template_catalog,
         **CONSTS.render_constants,
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
         title=get_title(board_shortname),
-        tab_title=f"/{board_shortname}/ Catalog"
+        tab_title=f"/{board_shortname}/ Catalog",
     )
 
 
@@ -132,24 +132,24 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     validate_board_shortname(board_shortname)
 
     catalog = await generate_catalog(board_shortname, page_num)
-    
+
     pagination = await make_pagination_catalog(board_shortname, catalog, page_num)
-    
+
     return await render_controller(
-        template_catalog, 
+        template_catalog,
         **CONSTS.render_constants,
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
         title=get_title(board_shortname),
-        tab_title=f"/{board_shortname}/ Catalog"
+        tab_title=f"/{board_shortname}/ Catalog",
     )
 
 
 @blueprint_app.get("/<string:board_shortname>/thread/<int:thread_id>")
 async def v_thread(board_shortname: str, thread_id: int):
     validate_board_shortname(board_shortname)
-    
+
     # use the existing json app function to grab the data
     thread_dict, quotelinks = await convert_thread(board_shortname, thread_id)
     validate_threads(thread_dict['posts'])
@@ -157,7 +157,7 @@ async def v_thread(board_shortname: str, thread_id: int):
     title = f"/{board_shortname}/ #{thread_id}"
 
     return await render_controller(
-        template_thread, 
+        template_thread,
         **CONSTS.render_constants,
         posts=thread_dict["posts"],
         quotelinks=quotelinks,
@@ -180,7 +180,7 @@ async def v_posts(board_shortname: str, thread_id: int):
     del thread_dict["posts"][0]
 
     return await render_controller(
-        template_posts, 
+        template_posts,
         **CONSTS.render_constants,
         posts=thread_dict["posts"],
         quotelinks=quotelinks,

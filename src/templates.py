@@ -5,7 +5,7 @@ from configs import CONSTS, make_path
 env = Environment(
     loader=FileSystemLoader(make_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
-	auto_reload=CONSTS.autoreload,
+    auto_reload=CONSTS.autoreload,
 )
 env.globals.update(CONSTS.render_constants)
 
@@ -24,12 +24,12 @@ template_index_search_config = env.get_template('index_search_config.html')
 template_index_search = env.get_template('index_search.html')
 
 safe_env = Environment(
-	loader=FileSystemLoader(make_path('templates')),
-	auto_reload=CONSTS.autoreload,
-	trim_blocks=True,
-	lstrip_blocks=True,
-	keep_trailing_newline=True,
-	autoescape=False,
+    loader=FileSystemLoader(make_path('templates')),
+    auto_reload=CONSTS.autoreload,
+    trim_blocks=True,
+    lstrip_blocks=True,
+    keep_trailing_newline=True,
+    autoescape=False,
 )
 template_index_search_post_t = safe_env.get_template('index_search_post_t.html')
 template_index_search_gallery_post_t = safe_env.get_template('index_search_gallery_post_t.html')

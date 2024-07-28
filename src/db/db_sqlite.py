@@ -8,13 +8,13 @@ from configs import CONSTS
 from .db_interface import DatabaseInterface, row_factory
 
 
-class SQLiteDatabaseAppContext(DatabaseInterface):    
+class SQLiteDatabaseAppContext(DatabaseInterface):
     async def connect(self):
         print('Creating database pool, started.')
         current_app.pool = await aiosqlite.connect(CONSTS.db_path)
         current_app.pool.row_factory = row_factory
         print('Creating database pool, completed.')
-    
+
     async def disconnect(self):
         await current_app.pool.close()
 
@@ -24,7 +24,7 @@ class SQLiteDatabaseAppContext(DatabaseInterface):
         sql = re.sub(pattern, r':\1', sql)
 
         sql = sql.replace('`', '')
-        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ") # I know...
+        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")  # I know...
 
         if CONSTS.SQLALCHEMY_ECHO:
             print(sql)
@@ -38,7 +38,7 @@ class SQLiteDatabaseAppContext(DatabaseInterface):
 
             if fetchone:
                 return await cursor.fetchone()
-            
+
             return await cursor.fetchall()
 
 
@@ -51,7 +51,7 @@ class SQLiteDatabase(DatabaseInterface):
         self.pool = await aiosqlite.connect(CONSTS.db_path)
         self.pool.row_factory = row_factory
         print('Creating database pool, completed.')
-    
+
     async def disconnect(self):
         await self.pool.close()
 
@@ -61,7 +61,7 @@ class SQLiteDatabase(DatabaseInterface):
         sql = re.sub(pattern, r':\1', sql)
 
         sql = sql.replace('`', '')
-        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ") # I know...
+        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")  # I know...
 
         if CONSTS.SQLALCHEMY_ECHO:
             print(sql)
@@ -75,5 +75,5 @@ class SQLiteDatabase(DatabaseInterface):
 
             if fetchone:
                 return await cursor.fetchone()
-            
+
             return await cursor.fetchall()

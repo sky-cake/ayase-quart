@@ -16,7 +16,7 @@ def make_path(*path):
     return os.path.join(os.path.dirname(__file__), *path)
 
 
-async def execute_sql(connection, cursor, board, filename):    
+async def execute_sql(connection, cursor, board, filename):
     with open(make_path(filename), encoding='utf-8') as f:
         print(filename)
         sql_string = f.read().replace(BOARD_PLACEHOLDER, board).replace(DATABASE_PLACEHOLDER, CONSTS.db_database)
@@ -48,7 +48,7 @@ async def main(loop):
     await pool.wait_closed()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(loop))
     print('Done.')

@@ -16,9 +16,11 @@ from configs import CONSTS, SearchMode
 
 LENGTH_MD5_HASH = 32
 
+
 class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
+
 
 class SearchForm(QuartForm):
     search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
@@ -40,7 +42,16 @@ class SearchForm(QuartForm):
     is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
     submit = SubmitField('Search')
 
+
 class IndexSearchConfigForm(QuartForm):
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
-    operation = RadioField('Operation', choices=[('init', 'Initialize a search index. This is board agnostic.'), ('populate', 'Populate the search index with data from selected board(s).'), ('wipe', 'Wipe all data from search index.')], default='init')
+    operation = RadioField(
+        'Operation',
+        choices=[
+            ('init', 'Initialize a search index. This is board agnostic.'),
+            ('populate', 'Populate the search index with data from selected board(s).'),
+            ('wipe', 'Wipe all data from search index.'),
+        ],
+        default='init',
+    )
     submit = SubmitField('Run')

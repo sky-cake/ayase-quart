@@ -33,7 +33,7 @@ async def thread(board_shortname: str, thread_id: int):
 
 @blueprint_api.get("/<string:board_shortname>/<int:page_num>.json")
 async def board_index(board_shortname: str, page_num: int):
-    
+
     validate_board_shortname(board_shortname)
 
     res = await generate_index(board_shortname, page_num, html=False)
@@ -47,15 +47,9 @@ async def v_post(board_shortname: str, post_id: int):
 
     validate_board_shortname(board_shortname)
 
-    post, quotelinks = await convert_post(board_shortname, post_id)    
+    post, quotelinks = await convert_post(board_shortname, post_id)
     post = post[0]
     validate_post(post)
 
-    html_content = await render_controller(
-        template_post, 
-        **CONSTS.render_constants,
-        post=post,
-        board=board_shortname,
-        quotelink=quotelinks
-    )
+    html_content = await render_controller(template_post, **CONSTS.render_constants, post=post, board=board_shortname, quotelink=quotelinks)
     return jsonify(html_content=html_content)

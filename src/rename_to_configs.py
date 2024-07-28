@@ -34,11 +34,11 @@ class CONSTS(NamedTuple):
     TESTING = True
     autoreload = True
 
-    db_type = DbType.mysql # DbType.mysql, DbType.sqlite
+    db_type = DbType.mysql  # DbType.mysql, DbType.sqlite
 
-    db_path = make_path('/path/to/archive.db') # DbType.sqlite
+    db_path = make_path('/path/to/archive.db')  # DbType.sqlite
 
-    db_host = '192.168.0.47' # DbType.mysql
+    db_host = '192.168.0.47'  # DbType.mysql
     db_port = 3306
     db_database = 'hayden'
     db_user = 'username'
@@ -57,10 +57,10 @@ class CONSTS(NamedTuple):
         site_port = 9001
         site_url = f"http://{site_host}:{site_port}"
 
-    key_file = None # 'key.pem'
-    cert_file = None # 'cert.pem'
+    key_file = None  # 'key.pem'
+    cert_file = None  # 'cert.pem'
 
-    site_name= 'Ayase Quart'
+    site_name = 'Ayase Quart'
 
     # see src/meta.py for a list of all 4chan boards
     boards = {
@@ -68,16 +68,16 @@ class CONSTS(NamedTuple):
         'g': 'Technology',
         't': 'Torrent',
         'mu': 'Music',
-        'unknown': 'Unknown', # this board will not show up since its not a 4chan board
+        'unknown': 'Unknown',  # this board will not show up since its not a 4chan board
     }
 
-    html_linked_target = '_self' # or '_blank' # links to 4chan will always remain '_blank'
+    html_linked_target = '_self'  # or '_blank' # links to 4chan will always remain '_blank'
 
     # If you do not have full images, set image_uri to None. Likewise for thumbnails.
-    image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image" # must contain {board_shortname}
-    thumb_uri = "/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
+    image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image"  # must contain {board_shortname}
+    thumb_uri = "/static/neo/{board_shortname}/thumb"  # must contain {board_shortname}
 
-    theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+    theme = 'tomorrow'  # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 
     search = True
     search_result_highlight = True
@@ -111,7 +111,7 @@ class CONSTS(NamedTuple):
 
     board_shortname_to_name = {o['shortname']: o['name'] for o in board_objects}
     board_shortnames = [board_object['shortname'] for board_object in board_objects]
-    boards_in_database = [] # to be populated later
+    boards_in_database = []  # to be populated later
 
     render_constants = dict(
         theme=theme,
@@ -140,10 +140,10 @@ def remove_boards_from_configs_if_not_in_database():
         if board not in CONSTS.boards_in_database:
             print(f'ATTENTION! {board=} not found in database. It will be removed from configs.')
             removals.append(board)
-    
+
     for b in removals:
         del CONSTS.boards[b]
-    
+
     if not CONSTS.boards:
         raise ValueError(f'No boards to show! Configure one of {CONSTS.boards_in_database}')
 

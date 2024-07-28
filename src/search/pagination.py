@@ -19,6 +19,7 @@ def total_pages(total: int, per_page: int) -> int:
         return d + 1
     return d
 
+
 def template_pagination_links(total_pages: int, cur_page: int, params: dict):
     """
     TODO: template paging links

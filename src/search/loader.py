@@ -40,7 +40,7 @@ def get_filter_selector(board: str):
 
 async def get_thread_posts(board: str, thread_nums: list[int]):
     thread_nums = tuple(set(thread_nums))
-    placeholders = ','.join(['%s'] * len(thread_nums)) # we do this because, "sqlite3.ProgrammingError: Error binding parameter 1: type 'tuple' is not supported"
+    placeholders = ','.join(['%s'] * len(thread_nums))  # we do this because, "sqlite3.ProgrammingError: Error binding parameter 1: type 'tuple' is not supported"
 
     filter_q = f"""{get_filter_selector(board)}, `media`, `preview_reply`, `preview_op`
     FROM `{board}`
@@ -73,7 +73,7 @@ async def get_thread_posts(board: str, thread_nums: list[int]):
         del f_row['preview_op']
         posts.append(f_row)
     return posts
-    
+
 
 def get_reply_lookup(rows):
     replies = defaultdict(list)
@@ -86,7 +86,7 @@ def get_reply_lookup(rows):
 
 
 def set_image(p_row, f_row):
-    if(p_row["resto"] == 0):
+    if p_row["resto"] == 0:
         p_row["asagi_preview_filename"] = f_row["preview_op"]
     else:
         p_row["asagi_preview_filename"] = f_row["preview_reply"]
@@ -100,7 +100,9 @@ async def get_board_threads(board: str):
     after = 0
     while True:
         q = f"SELECT thread_num FROM {board}_threads where {next_batch(after)} order by thread_num asc limit {batch_threads};"
-        rows = await current_app.db.query_execute(q, )
+        rows = await current_app.db.query_execute(
+            q,
+        )
         if not rows:
             break
         yield [row.thread_num for row in rows]
@@ -118,12 +120,14 @@ async def main(args):
         sys.exit()
 
     from configs import CONSTS
+
     for a in args:
         if not a in CONSTS.board_shortnames:
             print(f'Invalid board: {a}')
             sys.exit()
 
     from .providers import get_search_provider
+
     async def index_boards():
         sp = get_search_provider()
         for board in args:
@@ -131,4 +135,5 @@ async def main(args):
         await sp.close()
 
     from operate_within_app_context import operate_within_app_context
+
     await operate_within_app_context(index_boards)

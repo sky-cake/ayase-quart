@@ -77,38 +77,26 @@ async def index_search_stats():
 
 @blueprint_search.errorhandler(404)
 async def error_not_found(e):
-    return await render_controller(
-        template_error_404,
-        message='404 Not Found',
-        **CONSTS.render_constants,
-        tab_title=f'Error'
-    )
+    return await render_controller(template_error_404, message='404 Not Found', **CONSTS.render_constants, tab_title=f'Error')
 
 
 @blueprint_search.errorhandler(400)
 async def error_invalid(e):
     return await render_controller(
-        template_error_404,
-        e=e.description,
-        message='The search parameters will result in 0 records.',
-        **CONSTS.render_constants,
-        tab_title=f'Invalid search'
+        template_error_404, e=e.description, message='The search parameters will result in 0 records.', **CONSTS.render_constants, tab_title=f'Invalid search'
     )
 
 
 @blueprint_search.get("/")
 async def v_index():
-    return await render_controller(
-        template_index,
-        **CONSTS.render_constants,
-        tab_title=CONSTS.site_name
-    )
+    return await render_controller(template_index, **CONSTS.render_constants, tab_title=CONSTS.site_name)
+
 
 @blueprint_search.route("/index_search", methods=['GET', 'POST'])
 async def v_index_search():
     if not CONSTS.search:
         raise BadRequest('search is disabled')
-    
+
     form = await SearchForm.create_form()
     search_mode = SearchMode.index
     searched = False
@@ -123,18 +111,26 @@ async def v_index_search():
     search_p = get_search_provider()
     if await form.validate_on_submit():
         searched = True
-        
-        if not form.boards.data: raise BadRequest('select a board')
+
+        if not form.boards.data:
+            raise BadRequest('select a board')
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data: raise BadRequest("search mode SearchMode.gallery only shows files")
-        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]: raise BadRequest('search_mode is unknown')
-        if form.order_by.data not in ['asc', 'desc']: raise BadRequest('order_by is unknown')
-        if form.is_op.data and form.is_not_op.data: raise BadRequest('is_op is contradicted')
-        if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
-        if form.has_file.data and form.has_no_file.data: raise BadRequest('has_file is contradicted')
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise BadRequest('the dates are contradicted')
+        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
+            raise BadRequest("search mode SearchMode.gallery only shows files")
+        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
+            raise BadRequest('search_mode is unknown')
+        if form.order_by.data not in ['asc', 'desc']:
+            raise BadRequest('order_by is unknown')
+        if form.is_op.data and form.is_not_op.data:
+            raise BadRequest('is_op is contradicted')
+        if form.is_deleted.data and form.is_not_deleted.data:
+            raise BadRequest('is_deleted is contradicted')
+        if form.has_file.data and form.has_no_file.data:
+            raise BadRequest('has_file is contradicted')
+        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
+            raise BadRequest('the dates are contradicted')
 
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
@@ -184,7 +180,7 @@ async def v_index_search():
         tab_title=CONSTS.site_name,
         cur_page=cur_page,
         pages=pages,
-        total_hits=total_hits
+        total_hits=total_hits,
     )
 
     if searched:
@@ -193,11 +189,12 @@ async def v_index_search():
 
     return rend
 
+
 @blueprint_search.route("/search", methods=['GET', 'POST'])
 async def v_search():
     if not CONSTS.search:
         raise BadRequest('search is disabled')
-    
+
     form = await SearchForm.create_form()
     search_mode = SearchMode.index
     searched = False
@@ -205,29 +202,37 @@ async def v_search():
     posts = []
     quotelinks = []
     if await form.validate_on_submit():
-        
-        if not form.boards.data: raise BadRequest('select a board')
+
+        if not form.boards.data:
+            raise BadRequest('select a board')
         for board in form.boards.data:
             validate_board_shortname(board)
 
-        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data: raise BadRequest("search mode SearchMode.gallery only shows files")
-        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]: raise BadRequest('search_mode is unknown')
-        if form.order_by.data not in ['asc', 'desc']: raise BadRequest('order_by is unknown')
-        if form.is_op.data and form.is_not_op.data: raise BadRequest('is_op is contradicted')
-        if form.is_deleted.data and form.is_not_deleted.data: raise BadRequest('is_deleted is contradicted')
-        if form.has_file.data and form.has_no_file.data: raise BadRequest('has_file is contradicted')
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data): raise BadRequest('the dates are contradicted')
+        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
+            raise BadRequest("search mode SearchMode.gallery only shows files")
+        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
+            raise BadRequest('search_mode is unknown')
+        if form.order_by.data not in ['asc', 'desc']:
+            raise BadRequest('order_by is unknown')
+        if form.is_op.data and form.is_not_op.data:
+            raise BadRequest('is_op is contradicted')
+        if form.is_deleted.data and form.is_not_deleted.data:
+            raise BadRequest('is_deleted is contradicted')
+        if form.has_file.data and form.has_no_file.data:
+            raise BadRequest('has_file is contradicted')
+        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
+            raise BadRequest('the dates are contradicted')
 
         params = form.data
-        
-        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data) # posts = {'posts': [{...}, {...}, ...]}
+
+        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data)  # posts = {'posts': [{...}, {...}, ...]}
 
         if CONSTS.search_result_highlight:
             posts = highlight_search_results(form, posts)
-            
+
         posts = posts['posts']
         searched = True
-        
+
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
 
@@ -240,5 +245,5 @@ async def v_search():
         quotelinks=quotelinks,
         search_result=True,
         tab_title=CONSTS.site_name,
-        **CONSTS.render_constants
+        **CONSTS.render_constants,
     )

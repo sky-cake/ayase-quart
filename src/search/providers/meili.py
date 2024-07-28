@@ -7,6 +7,7 @@ from .baseprovider import BaseSearch
 
 pk = POST_PK
 
+
 class MeiliSearch(BaseSearch):
     def __init__(self, *arg, **kwargs):
 
@@ -14,7 +15,7 @@ class MeiliSearch(BaseSearch):
 
     def _get_index_url(self, index: str):
         return f'{self.host}/indexes/{index}'
-    
+
     async def _create_index(self, index: str):
         url = self.host + '/indexes'
         payload = {
@@ -49,9 +50,7 @@ class MeiliSearch(BaseSearch):
 
     async def _add_docs(self, index: str, docs: list[any]):
         url = self._get_index_url(index) + '/documents'
-        params = {
-            'primaryKey': pk
-        }
+        params = {'primaryKey': pk}
         await self.client.post(
             url,
             params=params,
@@ -74,21 +73,17 @@ class MeiliSearch(BaseSearch):
     async def _configure_index(self, index: str, pk: str, search_attrs: list[str], filter_attrs: list[str], sort_attrs: list[str]):
         b_url = self._get_index_url(index)
         conf = dict(
-            displayedAttributes=['*'], # return all fields
-            distinctAttribute=pk, # not sure what this is
-            searchableAttributes=search_attrs, # only index the data_field
-            filterableAttributes=filter_attrs, # only index the data_field
+            displayedAttributes=['*'],  # return all fields
+            distinctAttribute=pk,  # not sure what this is
+            searchableAttributes=search_attrs,  # only index the data_field
+            filterableAttributes=filter_attrs,  # only index the data_field
             sortableAttributes=sort_attrs,
             # nonSeparatorTokens=[], # remove default sep tokens
-            separatorTokens=['.', '/', '"', "'", '-'], # add sep tokens
-            rankingRules=['sort'], # remove default ranking rules
-            searchCutoffMs=20_000, # time before search gives up
-            typoTolerance= dict(
-                enabled=False # disable typo
-            ),
-            pagination=dict(
-                maxTotalHits=10_000 # increase max hits
-            ),
+            separatorTokens=['.', '/', '"', "'", '-'],  # add sep tokens
+            rankingRules=['sort'],  # remove default ranking rules
+            searchCutoffMs=20_000,  # time before search gives up
+            typoTolerance=dict(enabled=False),  # disable typo
+            pagination=dict(maxTotalHits=10_000),  # increase max hits
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))
         return loads(await resp.read())
@@ -105,7 +100,7 @@ class MeiliSearch(BaseSearch):
         payload = {
             'matchingStrategy': 'all',
             'attributesToRetrieve': ['data', 'comment'],
-            'attributesToCrop':["data:1"],
+            'attributesToCrop': ["data:1"],
             'filter': filters,
             'sort': [f'timestamp:{q.sort}'],
             'hitsPerPage': q.result_limit,
@@ -116,11 +111,13 @@ class MeiliSearch(BaseSearch):
             payload['q'] = q.terms
 
         if q.highlight:
-            payload.update({
-                "attributesToHighlight": ["title", 'comment'],
-                "highlightPreTag": mark_pre,
-                "highlightPostTag": mark_post,
-            })
+            payload.update(
+                {
+                    "attributesToHighlight": ["title", 'comment'],
+                    "highlightPreTag": mark_pre,
+                    "highlightPostTag": mark_post,
+                }
+            )
 
         resp = await self.client.post(url, data=dumps(payload))
         data = loads(await resp.read())
@@ -150,6 +147,7 @@ class MeiliSearch(BaseSearch):
         if q.after is not None:
             filters.append(f'timestamp > {q.after}')
         return filters
+
 
 def _restore_hit(hit: dict):
     post = loads(hit['data'])

@@ -12,17 +12,21 @@ def validate_board_shortname(board_shortname: str) -> None:
     if not board_shortname in CONSTS.board_shortnames:
         raise NotFound(board_shortname, CONSTS.board_shortnames)
 
+
 def validate_threads(threads):
     if len(threads) < 1:
         raise NotFound(threads)
-    
+
+
 def validate_post(post):
     if not post:
         raise NotFound(post)
-    
+
+
 def get_title(board_shortname):
     title = f"/{board_shortname}/ - {CONSTS.board_shortname_to_name[board_shortname]}"
     return title
+
 
 async def render_controller(template: str | Template, **kwargs):
     """
@@ -33,10 +37,10 @@ async def render_controller(template: str | Template, **kwargs):
 
     if CONSTS.TESTING:
         return await render_template(template.name, **kwargs)
-    
+
     if isinstance(template, Template):
         return await template.render_async(**kwargs)
-    
+
     raise ValueError(CONSTS.TESTING, type(template), template)
 
 
@@ -44,8 +48,10 @@ def highlight_search_results(form, posts):
     """`posts = {'posts': [{...}, {...}, ...]}`"""
 
     form_to_asagi_field_names = []
-    if form.comment.data: form_to_asagi_field_names.append({'form_name': 'comment', 'asagi_name': 'com'})
-    if form.title.data: form_to_asagi_field_names.append({'form_name': 'title', 'asagi_name': 'sub'})
+    if form.comment.data:
+        form_to_asagi_field_names.append({'form_name': 'comment', 'asagi_name': 'com'})
+    if form.title.data:
+        form_to_asagi_field_names.append({'form_name': 'title', 'asagi_name': 'sub'})
 
     for i, post in enumerate(posts['posts']):
 
@@ -58,10 +64,10 @@ def highlight_search_results(form, posts):
             indices = [m.start() for m in re.finditer(escaped_field.lower(), post[asagi_name].lower())]
 
             for j in indices[::-1]:
-                original_str = post[asagi_name][j:j+len(escaped_field)]
-                
+                original_str = post[asagi_name][j : j + len(escaped_field)]
+
                 highlight_str = f'<span class="search_highlight_{form_name}">{original_str}</span>'
 
-                posts['posts'][i][asagi_name] = post[asagi_name][:j] + highlight_str + post[asagi_name][j + len(escaped_field):]
+                posts['posts'][i][asagi_name] = post[asagi_name][:j] + highlight_str + post[asagi_name][j + len(escaped_field) :]
 
     return posts
