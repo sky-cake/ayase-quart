@@ -1,6 +1,6 @@
 from orjson import dumps, loads
 
-from highlighting import mark_post, mark_pre
+from search.highlighting import mark_post, mark_pre
 
 from . import POST_PK, SearchQuery, search_index_fields
 from .baseprovider import BaseSearch

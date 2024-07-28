@@ -31,13 +31,7 @@
     </span>
     <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
     [<a href="{{t_post_link if resto else t_thread_link}}">View</a>]
-    <div id="bl_{{no}}" class="backlink">
-        {% for quotelink in replies %}
-            <span class="quotelink">
-                <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{board_shortname}}">&gt;&gt;{{ quotelink }}</a>
-            </span>
-        {% endfor %}
-    </div>
+    {{ t_backlink }}
 </div>
 {% if resto %}
     {{t_media}}

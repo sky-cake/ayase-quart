@@ -1,6 +1,5 @@
-from orjson import dumps, loads
-
 from highlighting import mark_post, mark_pre
+from orjson import dumps, loads
 
 from . import (
     MAX_RESULTS,

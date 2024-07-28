@@ -1,6 +1,5 @@
 import quart_flask_patch  # isort: skip
 
-from datetime import datetime
 from logging import getLogger
 from time import perf_counter
 
@@ -8,19 +7,21 @@ from quart import Blueprint
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
-from configs import CONSTS, IndexSearchType
+from configs import CONSTS
 from forms import IndexSearchConfigForm, SearchForm
-from highlighting import get_term_re, mark_highlight
-from posts.template_optimizer import wrap_post_t, get_gallery_media_t
-from search import index_board
-from search_providers import SearchQuery, get_search_provider
+from posts.template_optimizer import get_gallery_media_t, wrap_post_t
+from search.highlighting import get_term_re, mark_highlight
+from search.loader import index_board
+from search.pagination import total_pages
+from search.providers import get_search_provider
+from search.query import get_search_query
 from templates import (
     template_error_404,
     template_index,
-    template_index_search_post_t,
-    template_index_search_gallery_post_t,
     template_index_search,
     template_index_search_config,
+    template_index_search_gallery_post_t,
+    template_index_search_post_t,
     template_search
 )
 from utils import (
@@ -32,15 +33,6 @@ from utils import (
 search_log = getLogger('search')
 
 blueprint_search = Blueprint("blueprint_search", __name__)
-
-def total_pages(total: int, per_page: int) -> int:
-    # -(-total // q.result_limit) # https://stackoverflow.com/a/35125872
-    if not total:
-        return 0
-    d, m = divmod(total, per_page)
-    if m > 0:
-        return d + 1
-    return d
 
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
@@ -147,71 +139,7 @@ async def v_index_search():
         if form.search_mode.data == 'gallery':
             search_mode = 'gallery'
 
-        params = form.data
-        terms = params['title'] or params['comment']
-
-        # this needs time to sort out and test
-        # should consider using search engine apis so we dont need to worry about security
-        match CONSTS.index_search_provider:
-            case IndexSearchType.manticore:
-                # https://manual.manticoresearch.com/Searching/Full_text_matching/Escaping#Escaping-characters-in-query-string
-                chars_to_escape = ['\\', '!', '"', '$', "'", '(', ')', '-', '/', '<', '@', '^', '|', '~']
-
-            case IndexSearchType.meili:
-                # https://www.meilisearch.com/docs/reference/api/search#query-q
-                # seems ok with any chars, did testing
-                chars_to_escape = []
-
-            case IndexSearchType.lnx:
-                # https://docs.lnx.rs/#tag/Run-searches/operation/Search_Index_indexes__index__search_post
-                # seems ok with any chars, needs testing
-                chars_to_escape = []
-
-            case IndexSearchType.typesense:
-                # https://typesense.org/docs/26.0/api/search.html#search-parameters
-                # seems ok with any chars, needs testing
-                chars_to_escape = []
-                if not terms:
-                    terms = '*' # return all
-            
-            case _:
-                chars_to_escape = []
-
-        for char in chars_to_escape:
-            terms = terms.replace(char, '\\' + char) # e.g. @ becomes \@
-
-        q = SearchQuery(
-            terms=terms,
-            boards=params['boards']
-        )
-        if params['num']:
-            q.num = int(params['num'])
-        if params['result_limit']:
-            q.result_limit = min(int(params['result_limit']), CONSTS.max_result_limit)
-        if params['media_filename']:
-            q.media_file = params['media_filename']
-        if params['media_hash']:
-            q.media_hash = params['media_hash']
-        if params['has_file']:
-            q.has_file = True
-        if params['has_no_file']:
-            q.has_no_file = True
-        if params['is_op']:
-            q.op = True
-        if params['is_not_op']:
-            q.op = False
-        if params['is_deleted']:
-            q.deleted = True
-        if params['is_not_deleted']:
-            q.deleted = False
-        if params['date_after']:
-            dt = datetime.combine(params['date_after'], datetime.min.time())
-            q.after = int(dt.timestamp())
-        if params['date_before']:
-            dt = datetime.combine(params['date_before'], datetime.min.time())
-            q.before = int(dt.timestamp())
-        if params['order_by'] in ('asc', 'desc'):
-            q.sort = params['order_by']
+        q = get_search_query(form.data)
 
         parsed_query = perf_counter() - start
         search_log.warning(f'  {parsed_query=:.4f} +{parsed_query:.4f}')
