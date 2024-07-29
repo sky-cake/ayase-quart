@@ -14,7 +14,7 @@ This project is a descendent of [Ayase](https://github.com/bibanon/ayase). I cho
 
 It supports MySQL and SQLite databases.
 
-## Set Up
+## Set Up - Without Docker
 
 Please use Python 3.11 or 3.12.
 
@@ -46,6 +46,13 @@ Assuming you have a data source set up, you can:
       - Wipe data, if desired, run.
 8. (Optional) Submit pull requests with fixes and new features.
 
+
+## Set Up - With Docker
+
+1. Create a file called `./src/configs.py` using `./src/rename_to_configs.py` and set the variables.
+2. Create certificates, if needed. See the next section for this.
+3. Run `sudo docker compose up --build` after looking over `Dockerfile`, and `docker-compose.yml` so see if it's configured to your liking.
+   - To run these containers in the background do `sudo docker compose up -d` after building the image.
 
 ## Certificates
 
