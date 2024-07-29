@@ -57,8 +57,8 @@ class CONSTS(NamedTuple):
         site_port = 9001
         site_url = f"http://{site_host}:{site_port}"
 
-    key_file = None  # 'key.pem'
-    cert_file = None  # 'cert.pem'
+    key_file = None # make_path('key.pem')
+    cert_file = None # make_path('cert.pem')
 
     site_name = 'Ayase Quart'
 
@@ -85,7 +85,9 @@ class CONSTS(NamedTuple):
     max_result_limit = 100
 
     index_search_provider = IndexSearchType.meili
-    index_search_host = 'http://localhost:7700'.strip('/')
+    # Needs to be the docker IP address, if applicable
+    # Get it with `sudo docker inspect $(sudo docker compose ps -q ayase_quart) | grep IPAddress`
+    index_search_host = 'http://172.19.0.3:7700'.strip('/')
     index_search_auth_key = ''
     index_search_config = dict(
         headers={

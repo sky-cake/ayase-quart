@@ -22,7 +22,7 @@ class ManticoreSearch(BaseSearch):
     async def _get_pool(self):
         if not hasattr(self, 'pool'):
             self.pool = await aiomysql.create_pool(
-                host='localhost',
+                host='localhost', # TODO: fix
                 autocommit=True,
                 port=9306,
             )

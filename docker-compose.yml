@@ -1,0 +1,32 @@
+services:
+
+  ayase_quart:
+    build: . # tells docker to follow steps in Dockerfile
+    depends_on:
+      - search_engine
+    networks:
+      - ayase_network
+
+  # drop in your search engine's docker compose block here
+  # see ./index_search/ for some templates
+  search_engine:
+    image: getmeili/meilisearch:latest
+    ports:
+      - "7700:7700"
+    environment:
+      # MEILI_MASTER_KEY: 'hereisalongproductionkey'
+      MEILI_NO_ANALYTICS: ""
+      MEILI_LOG_LEVEL: 'WARN'
+      MEILI_ENV: 'development'
+    volumes:
+      - ./index_search/meili/data:/meili_data # point to your volume
+    restart: unless-stopped
+    networks:
+      - ayase_network
+    tty: true
+    stdin_open: true
+    cpuset: '0-2'
+    command: "meilisearch --no-analytics"
+
+networks:
+  ayase_network:
