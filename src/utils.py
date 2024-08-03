@@ -39,7 +39,8 @@ async def render_controller(template: str | Template, **kwargs):
         return await render_template(template.name, **kwargs)
 
     if isinstance(template, Template):
-        return await template.render_async(**kwargs)
+        return template.render(**kwargs)
+        # return await template.render_async(**kwargs) # not sure why quart's jinja2 env is setup like this...
 
     raise ValueError(CONSTS.TESTING, type(template), template)
 
