@@ -7,7 +7,7 @@ from . import (
     SearchQuery,
     search_index_fields
 )
-from .baseprovider import BaseSearch
+from .baseprovider import BaseSearch, get_doc_pks
 
 pk = POST_PK
 
@@ -75,6 +75,7 @@ class LnxSearch(BaseSearch):
         return loads(await resp.read())
 
     async def _add_docs(self, index: str, docs: list[any]):
+        await self._remove_docs(index, get_doc_pks(docs))
         url = self._get_index_url(index) + '/documents'
         docs = [{k: [str(v)] for k, v in d.items()} for d in docs]
         resp = await self.client.post(url, data=dumps(docs))
@@ -82,11 +83,12 @@ class LnxSearch(BaseSearch):
         # return loads(await resp.read())
 
     async def _remove_docs(self, index: str, pk_ids: list[str]):
-        if not pk_ids:
-            return
+        if not pk_ids: return
         url = self._get_index_url(index) + '/documents'
         resp = await self.client.delete(url, data=dumps({pk: pk_ids}))
-        return loads(await resp.read())
+        resp = loads(await resp.read())
+        await self._commit_write(index)
+        return resp
 
     async def _commit_write(self, index: str):
         url = self._get_index_url(index) + '/commit'
