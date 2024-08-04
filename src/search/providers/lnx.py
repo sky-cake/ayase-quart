@@ -29,13 +29,13 @@ class LnxSearch(BaseSearch):
                 'fields': {f.field: get_lnx_field(f) for f in search_index_fields},
                 # https://github.com/miyachan/torako/blob/master/src/storage/search_lnx/posts.json
                 # "fields": {
-                # 	"property1": {
-                # 		"type": "f64",
-                # 		"stored": True,
-                # 		"indexed": True,
-                # 		"multi": False,
-                # 		"fast": False
-                # 	}
+                #     "property1": {
+                #         "type": "f64",
+                #         "stored": True,
+                #         "indexed": True,
+                #         "multi": False,
+                #         "fast": False
+                #     }
                 # },
                 'search_fields': ['title', 'comment'],
                 "boost_fields": {},
@@ -175,13 +175,13 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.file is not None:
+        if q.has_file is not None or q.has_no_file is not None:
             query.append(
                 {
-                    'occur': 'mustnot' if q.file else 'must',
+                    'occur': 'mustnot' if q.has_file or q.has_no_file == False else 'must',
                     'normal': {
                         'ctx': f'media_filename:None',
-                        # 'ctx': f'{"" if q.file else "-"}(media_filename:None)',
+                        # 'ctx': f'{"" if q.has_file else "-"}(media_filename:None)',
                     },
                 }
             )
