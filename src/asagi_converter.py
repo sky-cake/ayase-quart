@@ -243,6 +243,8 @@ async def convert_standalone_posts(posts, medias, return_quotelinks=True):
                     quotelink_map[quotelink].append(reply["no"])
 
         _, post['com'] = restore_comment(op_num, post['com'], post['board_shortname'])
+        if post['sub']:
+            post['sub'] = html.escape(post['sub'])
         result['posts'].append(post)
     return result, quotelink_map
 

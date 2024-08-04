@@ -17,7 +17,7 @@
 
 <div class="postInfoM mobile" id="pim{{post.no}}">
     {% if post.sub %}
-        <span class="subject">{{post.sub}}</span>
+        <span class="subject">{{post.sub|safe}}</span>
     {% endif %}
     <span class="nameBlock">
         <span class="name">{{post.name}}</span>
@@ -57,7 +57,7 @@
         <strong class="warning" title="This post was deleted on {{post.deleted_time}}.">[Deleted]</strong>
     {% endif %}
     {% if post.sub %}
-        <span class="subject">{{post.sub}}</span>
+        <span class="subject">{{post.sub|safe}}</span>
     {% endif %}
     <span class="nameBlock {{ capcode_author(post.capcode) }}">
         {% if post.email and post.email != 'noko' %}<a href="mailto:{{ post.email }}">{% endif %}<span class="name{% if post.capcode %} capcode{% endif %}"{% if post.exif %} title="Exif: {{post.exif}}"{% endif %}>{{ post.name }}</span>{% if post.trip %}<span class="postertrip">{{ post.trip }}</span>{% endif %}{% if post.email and post.email != 'noko' %}</a>{% endif %}
