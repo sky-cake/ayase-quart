@@ -115,6 +115,9 @@ def media_metadata_t(fsize: int, w: int, h: int):
 
 
 def get_media_path(filename: str, board: str, media_type: MediaType) -> str:
+    if not filename:
+        return ''
+
     uri = CONSTS.thumb_uri
 
     if media_type == MediaType.image:
