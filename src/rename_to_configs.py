@@ -2,6 +2,7 @@ import asyncio
 import os
 from enum import Enum, StrEnum
 from typing import NamedTuple
+from meta import all_4chan_boards
 
 
 class DbType(Enum):
@@ -62,19 +63,21 @@ class CONSTS(NamedTuple):
 
     site_name = 'Ayase Quart'
 
-    # see src/meta.py for a list of all 4chan boards
-    boards = {
-        'ck': 'Food & Cooking',
-        'g': 'Technology',
-        't': 'Torrent',
-        'mu': 'Music',
-        'unknown': 'Unknown',  # this board will not show up since its not a 4chan board
-    }
+    # You can set boards equal to a subset of all boards here
+    # If you set this to `all_4chan_boards`, all boards in your DB will be available in AQ
+    # boards = {
+    #     'ck': 'Food & Cooking',
+    #     'g': 'Technology',
+    #     't': 'Torrent',
+    #     'mu': 'Music',
+    #     'unknown': 'Unknown',  # this board will not show up since its not a 4chan board
+    # }
+    boards = all_4chan_boards
 
     html_linked_target = '_self'  # or '_blank' # links to 4chan will always remain '_blank'
 
     # If you do not have full images, set image_uri to None. Likewise for thumbnails.
-    image_uri = "https://192.168.1.99:9003/static/neo/{board_shortname}/image"  # must contain {board_shortname}
+    image_uri = "https://192.168.0.47:9003/static/neo/{board_shortname}/image"  # must contain {board_shortname}
     thumb_uri = "/static/neo/{board_shortname}/thumb"  # must contain {board_shortname}
 
     theme = 'tomorrow'  # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
@@ -85,14 +88,14 @@ class CONSTS(NamedTuple):
     max_result_limit = 100
 
     index_search_provider = IndexSearchType.meili
-    # Needs to be the docker IP address, if applicable
+    # If AQ and Meili, for example, run in docker containers, you might have to change this to the container IP address.
     # Get it with `sudo docker inspect $(sudo docker compose ps -q ayase_quart) | grep IPAddress`
-    index_search_host = 'http://172.19.0.3:7700'.strip('/')
+    index_search_host = 'http://192.168.0.47:7700'
     index_search_auth_key = ''
     index_search_config = dict(
         headers={
             'content-type': 'application/json',
-            # 'Authorization': f'Bearer {search_auth_key}',
+            # 'Authorization': f'Bearer {index_search_auth_key}',
         }
     )
 
@@ -124,7 +127,7 @@ class CONSTS(NamedTuple):
         thumb_uri=thumb_uri,
         html_linked_target=html_linked_target,
         index_search_provider=index_search_provider,
-        index_search_host=index_search_host,
+        index_search_host=index_search_host.strip('/'),
     )
 
 
@@ -158,3 +161,5 @@ def remove_boards_from_configs_if_not_in_database():
 
 CONSTS.boards_in_database = asyncio.run(get_boards_in_database())
 remove_boards_from_configs_if_not_in_database()
+
+CONSTS.index_search_host = CONSTS.index_search_host.strip('/')
