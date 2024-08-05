@@ -84,3 +84,12 @@ class BaseSearch(ABC):
 
     async def post_stats(self):
         return await self._index_stats(INDEXES.posts)
+
+
+"""
+for deleting entries in indexes before adding them
+in engines that don't support unique primary keys
+TODO: Perhaps we need a utils.py file for all the providers...
+"""
+def get_doc_pks(docs: list[any]):
+    return [d['pk'] for d in docs]
