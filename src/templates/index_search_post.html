@@ -53,8 +53,8 @@
             </span>
             {% if post.since4pass %}<span class="n-pu" title="Pass user since {{post.since4pass}}."></span>{% endif %}
             {% if post.poster_hash %}<span class="posteruid id_{{post.poster_hash}}">(ID: <a title="." href="#">{{post.poster_hash}}</a>) </span>{% endif %}
-            {% if post.country %}<span title="{{post.country}}{{post.country_name}}" class="flag flag-{{post.country|lower}}"></span>{% endif %}
-            {% if post.troll_country %}<span title="{{post.country_name}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
+            {% if post.country %}<span title="{{post.country}}" class="flag flag-{{post.country|lower}}"></span>{% endif %}
+            {% if post.troll_country %}<span title="{{post.country}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
             <span class="dateTime" data-utc="{{post.time}}">{{post.now}}</span>
             <span class="postNum desktop">
                 {% if post.resto != 0 %}

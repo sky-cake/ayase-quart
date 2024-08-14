@@ -29,38 +29,6 @@ class SearchQuery:
 def get_search_query(params: dict) -> SearchQuery:
     terms = params['title'] or params['comment']
 
-    # this needs time to sort out and test
-    # should consider using search engine apis so we dont need to worry about security
-    chars_to_escape = []
-    match CONSTS.index_search_provider:
-        case IndexSearchType.manticore:
-            # https://manual.manticoresearch.com/Searching/Full_text_matching/Escaping#Escaping-characters-in-query-string
-            chars_to_escape = ['\\', '!', '"', '$', "'", '(', ')', '-', '/', '<', '@', '^', '|', '~']
-
-        case IndexSearchType.meili:
-            # https://www.meilisearch.com/docs/reference/api/search#query-q
-            # seems ok with any chars, did testing
-            chars_to_escape = []
-
-        case IndexSearchType.lnx:
-            # https://docs.lnx.rs/#tag/Run-searches/operation/Search_Index_indexes__index__search_post
-            # seems ok with any chars, needs testing
-            chars_to_escape = []
-
-        case IndexSearchType.typesense:
-            # https://typesense.org/docs/26.0/api/search.html#search-parameters
-            # seems ok with any chars, needs testing
-            chars_to_escape = []
-            if not terms:
-                terms = '*'  # return all
-
-        case IndexSearchType.quickwit:
-            # needs testing
-            chars_to_escape = []
-
-    for char in chars_to_escape:
-        terms = terms.replace(char, '\\' + char)  # e.g. @ becomes \@
-
     q = SearchQuery(
         terms=terms,
         boards=params['boards'],

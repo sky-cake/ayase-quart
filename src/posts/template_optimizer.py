@@ -227,13 +227,13 @@ def get_closed_t(post: dict):
 def get_country_t(post: dict):
     if not (country := post['country']):
         return ''
-    return f'<span title="{country}{post["country_name"]}" class="flag flag-{country.lower()}"></span>'
+    return f'<span title="{country}" class="flag flag-{country.lower()}"></span>'
 
 
 def get_troll_country_t(post: dict):
     if not (troll_country := post.get('troll_country')):
         return ''
-    return f'<span title="{post["country_name"]}" class="flag-pol2 flag-{troll_country.lower()}"></span>'
+    return f'<span title="{post["country"]}" class="flag-pol2 flag-{troll_country.lower()}"></span>'
 
 
 def get_trip_t(post: dict):
