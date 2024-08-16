@@ -13,7 +13,6 @@
     </div>
 {% endmacro %}
 <form action="" id="searchform" method="post" class="form" role="form">
-    {{ form.csrf_token() }}
     <div class="row">
         <div class="column">
             {{ render_field(form.search_mode) }}

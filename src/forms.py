@@ -40,6 +40,7 @@ class SearchForm(QuartForm):
     is_not_op = BooleanField('Is not opening post (OP)', default=False, validators=[Optional()])
     is_deleted = BooleanField('Is deleted', default=False, validators=[Optional()])
     is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
+    page = IntegerField(default=1, validators=[Optional()])
     submit = SubmitField('Search')
 
 

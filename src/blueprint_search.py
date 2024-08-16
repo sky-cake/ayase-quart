@@ -3,7 +3,7 @@ import quart_flask_patch  # isort: skip
 from logging import getLogger
 from time import perf_counter
 
-from quart import Blueprint
+from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
@@ -12,7 +12,7 @@ from forms import IndexSearchConfigForm, SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from search.highlighting import get_term_re, mark_highlight
 from search.loader import index_board
-from search.pagination import total_pages
+from search.pagination import total_pages, template_pagination_links
 from search.providers import get_search_provider
 from search.query import get_search_query
 from templates import (
@@ -97,7 +97,6 @@ async def v_index_search():
     if not CONSTS.search:
         raise BadRequest('search is disabled')
 
-    form = await SearchForm.create_form()
     search_mode = SearchMode.index
     searched = False
     cur_page = None
@@ -107,9 +106,21 @@ async def v_index_search():
     posts_t = []
     results = []
     quotelinks = []
+    page_links = ''
     start = perf_counter()
     search_p = get_search_provider()
-    if await form.validate_on_submit():
+
+    if request.method == 'POST':
+        form = await SearchForm.create_form(meta={'csrf': False})
+    else:
+        boards = request.args.getlist('boards')
+        params = {**request.args}
+        params['boards'] = boards
+        form = await SearchForm.create_form(meta={'csrf': False}, **params)
+    
+    valid = await form.validate()
+    
+    if valid and form.boards.data:
         searched = True
 
         if not form.boards.data:
@@ -143,6 +154,7 @@ async def v_index_search():
         results, total_hits = await search_p.search_posts(q)
         pages = total_pages(total_hits, q.result_limit)
         cur_page = q.page
+        page_links = template_pagination_links('/index_search', form.data, pages, cur_page)
 
         done_search = perf_counter() - start
         search_log.warning(f'   {done_search=:.4f} +{done_search-parsed_query:.4f}')
@@ -173,6 +185,7 @@ async def v_index_search():
         search_mode=search_mode,
         form=form,
         posts_t=posts_t,
+        page_links=page_links,
         res_count=len(results),
         searched=searched,
         quotelinks=quotelinks,
