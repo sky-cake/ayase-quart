@@ -14,6 +14,7 @@ from .providers.baseprovider import BaseSearch
 async def index_board(board: str, search_provider: BaseSearch):
     post_batch_size = 50_000
 
+    print(f'Indexing {board}...')
     async for thread_nums in tqdm(get_board_threads(board)):
         posts = await get_thread_posts(board, thread_nums)
 

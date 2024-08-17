@@ -26,7 +26,7 @@ class BaseSearch(ABC):
     def __init__(self, host: str, config: dict = None):
         self.host = host
         self.client = ClientSession(
-            connector=TCPConnector(keepalive_timeout=60*60*2),
+            connector=TCPConnector(keepalive_timeout=600),
             headers=config.get('headers', None),
         )
 
