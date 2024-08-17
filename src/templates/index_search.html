@@ -23,7 +23,11 @@
         <h3>0 results found!</h3>
       {% endif %}
     {% endif %}
-    {{ page_links|safe }}
+
+    {% if page_links %}
+      <div class="mt">Result Pages</div>
+      {{ page_links|safe }}
+    {% endif %}
   </div>
 
 {% endblock %}

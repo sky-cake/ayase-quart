@@ -111,12 +111,12 @@ async def v_index_search():
     search_p = get_search_provider()
 
     if request.method == 'POST':
-        form = await SearchForm.create_form(meta={'csrf': False})
+        form = await SearchForm.create_form()
     else:
         boards = request.args.getlist('boards')
         params = {**request.args}
         params['boards'] = boards
-        form = await SearchForm.create_form(meta={'csrf': False}, **params)
+        form = await SearchForm.create_form(**params)
     
     valid = await form.validate()
     

@@ -53,7 +53,9 @@ def template_pagination_links(path: str, params: dict, total_pages: int, cur_pag
             <li><a href="/index_search?terms=hello+there&boards=g&page=4">Last</a></li>
         </ul>
     </div>
-    First Previous 1 2 3 4 Next Last
+    First Previous
+        1 2 3 4
+    Next Last
     """
 
     # no results or only 1 page of results
@@ -80,19 +82,20 @@ def template_pagination_links(path: str, params: dict, total_pages: int, cur_pag
     base_link = f'{path}?{enc_params}'
 
     links = []
-    la = links.append
 
     if cur_page > 1: # not first page
-        la(get_page_link(base_link, 1, text='First'))
-        la(get_page_link(base_link, cur_page - 1, text='Previous'))
+        links.append(get_page_link(base_link, 1, text='First'))
+        links.append(get_page_link(base_link, cur_page - 1, text='Previous'))
+        links.append('<br>')
 
     for page in range(1, total_pages + 1): # numbered links
         active = page == cur_page
-        la(get_page_link(base_link, page, active=active))
+        links.append(get_page_link(base_link, page, active=active))
 
     if cur_page < total_pages: # not last page
-        la(get_page_link(base_link, cur_page + 1, text='Next'))
-        la(get_page_link(base_link, total_pages, text='Last'))
+        links.append('<br>')
+        links.append(get_page_link(base_link, cur_page + 1, text='Next'))
+        links.append(get_page_link(base_link, total_pages, text='Last'))
     
     links = ''.join(links)
     return f'<div class="paginate"><ul>{links}</ul></div>'
