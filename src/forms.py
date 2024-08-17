@@ -26,7 +26,7 @@ class SearchForm(QuartForm):
     search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
-    result_limit = IntegerField('Result Limit', default=CONSTS.default_result_limit, validators=[NumberRange(1, 10_000)], description='Per board')
+    result_limit = IntegerField('Result Limit', default=CONSTS.default_result_limit, validators=[NumberRange(1, CONSTS.max_result_limit)], description='Per board')
     title = StringField("Title", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     num = StringField("Post Number", validators=[Optional(), Length(2, 20)])
@@ -40,6 +40,7 @@ class SearchForm(QuartForm):
     is_not_op = BooleanField('Is not opening post (OP)', default=False, validators=[Optional()])
     is_deleted = BooleanField('Is deleted', default=False, validators=[Optional()])
     is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
+    page = IntegerField(default=1, validators=[Optional()])
     submit = SubmitField('Search')
 
 

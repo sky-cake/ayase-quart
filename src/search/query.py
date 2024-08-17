@@ -62,5 +62,7 @@ def get_search_query(params: dict) -> SearchQuery:
         q.before = int(dt.timestamp())
     if params['order_by'] in ('asc', 'desc'):
         q.sort = params['order_by']
-
+    if page := params.get('page'):
+        if type(page) in (int, float):
+            q.page = min(max(abs(int(page)), 1), 100)
     return q

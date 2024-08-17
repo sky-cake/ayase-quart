@@ -5,6 +5,8 @@ from search.highlighting import mark_post, mark_pre
 from . import POST_PK, SearchQuery, search_index_fields
 from .baseprovider import BaseSearch
 
+from configs import CONSTS
+
 pk = POST_PK
 
 
@@ -83,9 +85,12 @@ class MeiliSearch(BaseSearch):
             rankingRules=['sort'],  # remove default ranking rules
             searchCutoffMs=20_000,  # time before search gives up
             typoTolerance=dict(enabled=False),  # disable typo
-            pagination=dict(maxTotalHits=10_000),  # increase max hits
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))
+
+        conf = dict(maxTotalHits=CONSTS.max_result_limit,)
+        resp = await self.client.patch(f'{b_url}/settings/pagination', data=dumps(conf))
+
         return loads(await resp.read())
 
     async def _config_posts(self):
