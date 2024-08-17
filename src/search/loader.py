@@ -116,7 +116,7 @@ async def main(args):
     """Demonstrates how to do an ad-hoc query against the context dependent db."""
 
     if len(args) < 1:
-        print('python3 -m search board1 [board2 [board3 [...]]]')
+        print('python3.12 -m search board1 [board2 [board3 [...]]]')
         sys.exit()
 
     from configs import CONSTS

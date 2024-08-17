@@ -25,9 +25,8 @@ class BaseSearch(ABC):
 
     def __init__(self, host: str, config: dict = None):
         self.host = host
-        # self.client = httpx.AsyncClient(headers=config.get('headers', None), timeout=900)
         self.client = ClientSession(
-            connector=TCPConnector(keepalive_timeout=900),
+            connector=TCPConnector(keepalive_timeout=60*60*2),
             headers=config.get('headers', None),
         )
 
