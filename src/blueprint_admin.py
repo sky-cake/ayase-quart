@@ -13,11 +13,13 @@ blueprint_admin = Blueprint('blueprint_admin', __name__)
 # INSERT_POST_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE num=:num;"
 # DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
 
+placeholders = ','.join(['%s'] * len(CONSTS.boards_in_database))
+
 if CONSTS.db_type == DbType.mysql:
-    DATABASE_TABLE_STORAGE_SIZES = """select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %(db)s group by table_name;"""
-    DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB"  from information_schema.tables where table_schema = %(db)s group by table_schema;"""
+    DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""
+    DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB" from information_schema.tables where table_schema = %(db)s group by table_schema;"""
 elif CONSTS.db_type == DbType.sqlite:
-    DATABASE_TABLE_STORAGE_SIZES = f"""SELECT name as "Table Name", ROUND(SUM("pgsize") / (1024. * 1024), 2) as "Size in MB" FROM "dbstat" GROUP BY name;"""
+    DATABASE_TABLE_STORAGE_SIZES = f"""SELECT name as "Table Name", ROUND(SUM("pgsize") / (1024. * 1024), 2) as "Size in MB" FROM "dbstat" where name in ({placeholders}) GROUP BY name;"""
     DATABASE_STORAGE_SIZE = """SELECT ROUND((page_count * page_size) / (1024.0 * 1024.0), 1) as "Size in MB" FROM pragma_page_count(), pragma_page_size();"""
 else:
     raise ValueError(CONSTS.db_type)
@@ -34,7 +36,14 @@ def get_sql_latest_gallery(board_shortname, limit=100):
 @blueprint_admin.route("/stats")
 async def stats():
     database_storage_size = await current_app.db.query_execute(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
-    database_table_storage_sizes = await current_app.db.query_execute(DATABASE_TABLE_STORAGE_SIZES, params={'db': CONSTS.db_database})
+
+    if CONSTS.db_type == DbType.mysql:
+        params = [CONSTS.db_database, *CONSTS.boards_in_database]
+    elif CONSTS.db_type == DbType.sqlite:
+        params = [*CONSTS.boards_in_database]
+
+    database_table_storage_sizes = await current_app.db.query_execute(DATABASE_TABLE_STORAGE_SIZES, params=params)
+
     return await render_controller(
         template_stats,
         database_storage_size=database_storage_size,

@@ -66,6 +66,7 @@ async def index_search_config():
         tab_title=CONSTS.site_name,
         form=form,
         msg=msg,
+        board_list=' '.join(CONSTS.boards_in_database),
     )
 
 
