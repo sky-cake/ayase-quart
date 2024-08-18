@@ -25,5 +25,5 @@ class DatabaseInterface(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def query_execute(self, query, params=None):
+    async def query_execute(self, query, params=None, fetchone=False, commit=False):
         pass

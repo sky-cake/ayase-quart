@@ -98,3 +98,18 @@
     data-expanded="false"
   />
 {%- endmacro -%}
+
+{% macro render_field(field) %}
+  <div class="form-control">
+    {% if field.name not in ['submit', 'captcha_id'] %}
+      {{ field.label }}
+    {% endif %}
+
+    {{ field(**kwargs)|safe }}
+    {% if field.errors %}
+      {% for error in field.errors %}
+        {{ error }}
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endmacro %}

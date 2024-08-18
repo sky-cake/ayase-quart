@@ -3,16 +3,19 @@ from wtforms import widgets
 from wtforms.fields import (
     BooleanField,
     DateField,
+    HiddenField,
     IntegerField,
+    PasswordField,
     RadioField,
     SelectMultipleField,
     StringField,
     SubmitField,
     TextAreaField
 )
-from wtforms.validators import Length, NumberRange, Optional
+from wtforms.validators import InputRequired, Length, NumberRange, Optional
 
-from configs import CONSTS, SearchMode
+from configs import CONSTS
+from e_nums import SearchMode
 
 LENGTH_MD5_HASH = 32
 
@@ -56,3 +59,13 @@ class IndexSearchConfigForm(QuartForm):
         default='init',
     )
     submit = SubmitField('Run')
+
+
+class LoginForm(QuartForm):
+    username = StringField(validators=[InputRequired(), Length(min=2, max=128)])
+    password = PasswordField(validators=[InputRequired(), Length(min=2, max=128)])
+
+    captcha_id = HiddenField(validators=[InputRequired()])
+    captcha_answer = IntegerField("", validators=[InputRequired()])
+
+    submit = SubmitField("Submit")

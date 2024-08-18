@@ -59,9 +59,15 @@
                     {% endif %}
                     <br>
                     Admin: [
-                    <a href="/stats">Stats</a>
+                    <a href="{{ url_for('blueprint_admin.reports') }}">Reports</a>
                     /
-                    <a href="/latest">Latest OPs</a>
+                    <a href="{{ url_for('blueprint_admin.stats') }}">Stats</a>
+                    /
+                    <a href="{{ url_for('blueprint_admin.latest') }}">Latest OPs</a>
+                    ]
+                    <br>
+                    Profile: [
+                    <a href="{{ url_for('blueprint_auth.logout') }}">Logout</a>
                     ]
                 </div>
             {% endif %}
@@ -79,6 +85,8 @@
                         {% endif %}
                     </div>
                 {% endif %}
+
+                {% include 'flash.html' %}
 
                 {% block body %}
                 {% endblock %}

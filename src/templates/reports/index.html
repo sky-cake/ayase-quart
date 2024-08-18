@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+    <h1>Reports</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Post No</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+        {% for report in reports %}
+            <tr>
+                <td>{{ report.report_id }}</td>
+                <td>{{ report.post_no }}</td>
+                <td>{{ report.reason }}</td>
+                <td>{{ report.status }}</td>
+                <td>{{ report.created_datetime }}</td>
+                <td>
+                    <a href="{{ url_for('reports_view', report_id=report.report_id) }}">View</a> |
+                    <a href="{{ url_for('reports_edit', report_id=report.report_id) }}">Edit</a> |
+                    <a href="{{ url_for('reports_delete', report_id=report.report_id) }}">Delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

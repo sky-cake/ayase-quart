@@ -1,17 +1,14 @@
-from quart import Blueprint, current_app
+from quart import Blueprint, current_app, flash, redirect, url_for
 
 from asagi_converter import get_selector
+from blueprint_auth import admin_required, auth
 from configs import CONSTS, DbType
+from e_nums import AuthActions
 from templates import template_latest, template_stats
 from utils import render_controller
 
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
-# COLUMN_LIST = "doc_id, media_id, poster_ip, num, subnum, thread_num, op, timestamp, timestamp_expired, preview_orig, preview_w, preview_h, media_filename, media_w, media_h, media_size, media_hash, media_orig, spoiler, deleted, capcode, email, name, trip, title, comment, delpass, sticky, locked, poster_hash, poster_country, exif"
-# INSERT_THREAD_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE thread_num=:thread_num;"
-# DELETE_THREAD = "DELETE FROM {board} WHERE thread_num=:thread_num;"
-# INSERT_POST_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE num=:num;"
-# DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
 
 placeholders = ','.join(['%s'] * len(CONSTS.boards_in_database))
 
@@ -34,6 +31,7 @@ def get_sql_latest_gallery(board_shortname, limit=100):
 
 
 @blueprint_admin.route("/stats")
+@admin_required
 async def stats():
     database_storage_size = await current_app.db.query_execute(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
 
@@ -55,6 +53,7 @@ async def stats():
 
 
 @blueprint_admin.route("/latest")
+@admin_required
 async def latest():
     threads = []
     for board_shortname in CONSTS.board_shortnames:

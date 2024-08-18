@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+    <h1>Edit Report</h1>
+    <form action="{{ url_for('reports_edit', report_id=report.report_id) }}" method="post">
+        <p><label>Post No: <input type="number" name="post_no" value="{{ report.post_no }}" required></label></p>
+        <p><label>Reason: <textarea name="reason" required>{{ report.reason }}</textarea></label></p>
+        <p><label>Status: <input type="text" name="status" value="{{ report.status }}" required></label></p>
+        <button type="submit">Save Changes</button>
+    </form>
+    <a href="{{ url_for('reports_index') }}">Back to Reports</a>
+
+{% endblock %}

@@ -1,4 +1,5 @@
-from configs import CONSTS, DbType
+from configs import CONSTS
+from e_nums import DbType
 
 from .db_interface import DatabaseInterface
 

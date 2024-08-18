@@ -7,17 +7,17 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
-from configs import CONSTS, SearchMode
+from configs import CONSTS
+from e_nums import SearchMode
 from forms import IndexSearchConfigForm, SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from search.highlighting import get_term_re, mark_highlight
 from search.loader import index_board
-from search.pagination import total_pages, template_pagination_links
+from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
 from templates import (
     template_error_404,
-    template_index,
     template_index_search,
     template_index_search_config,
     template_index_search_gallery_post_t,
@@ -86,11 +86,6 @@ async def error_invalid(e):
     return await render_controller(
         template_error_404, e=e.description, message='The search parameters will result in 0 records.', **CONSTS.render_constants, tab_title=f'Invalid search'
     )
-
-
-@blueprint_search.get("/")
-async def v_index():
-    return await render_controller(template_index, **CONSTS.render_constants, tab_title=CONSTS.site_name)
 
 
 @blueprint_search.route("/index_search", methods=['GET', 'POST'])

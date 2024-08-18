@@ -4,14 +4,18 @@ import asyncio
 import os
 
 from flask_bootstrap import Bootstrap5
+from hypercorn.middleware import ProxyFixMiddleware
 from quart import Quart
 
 from blueprint_admin import blueprint_admin
 from blueprint_api import blueprint_api
 from blueprint_app import blueprint_app
+from blueprint_auth import blueprint_auth
 from blueprint_search import blueprint_search
 from configs import CONSTS
 from db import get_database_instance
+from limiter import limiter
+from blueprint_moderation import init_moderation_db, blueprint_moderation
 
 
 async def create_app():
@@ -23,15 +27,28 @@ async def create_app():
 
     app.config.from_object(CONSTS)
 
+    if CONSTS.using_proxy:
+        # https://hypercorn.readthedocs.io/en/latest/how_to_guides/proxy_fix.html
+        app.asgi_app = ProxyFixMiddleware(app.asgi_app, mode="legacy", trusted_hops=1)
+
+    if CONSTS.redis_url:
+        limiter.init_app(app)
+
+    app.config['MATH_CAPTCHA_FONT'] = os.path.join(os.path.dirname(__file__), "fonts/tly.ttf")
+
     Bootstrap5(app)
     app.jinja_env.auto_reload = False
 
     app.register_blueprint(blueprint_api)
     app.register_blueprint(blueprint_app)
     app.register_blueprint(blueprint_admin)
+    app.register_blueprint(blueprint_auth)
     app.register_blueprint(blueprint_search)
+    app.register_blueprint(blueprint_moderation)
 
     app.db = get_database_instance()
+
+    init_moderation_db(app.db)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(app.db.connect)

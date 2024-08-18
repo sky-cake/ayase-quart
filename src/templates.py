@@ -22,6 +22,19 @@ template_search = env.get_template("search.html")
 template_latest = env.get_template('latest.html')
 template_index_search_config = env.get_template('index_search_config.html')
 template_index_search = env.get_template('index_search.html')
+template_login = env.get_template('login.html')
+
+template_users_index = env.get_template('users/index.html')
+template_users_view = env.get_template('users/view.html')
+template_users_edit = env.get_template('users/edit.html')
+template_users_delete = env.get_template('users/delete.html')
+template_users_create = env.get_template('users/create.html')
+
+template_reports_index = env.get_template('reports/index.html')
+template_reports_view = env.get_template('reports/view.html')
+template_reports_edit = env.get_template('reports/edit.html')
+template_reports_delete = env.get_template('reports/delete.html')
+
 
 safe_env = Environment(
     loader=FileSystemLoader(make_path('templates')),

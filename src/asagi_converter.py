@@ -7,7 +7,8 @@ from typing import Any, Dict, List
 from quart import current_app
 from werkzeug.exceptions import BadRequest
 
-from configs import CONSTS, DbType, SearchMode
+from configs import CONSTS
+from e_nums import DbType, SearchMode
 from search.highlighting import html_highlight
 
 

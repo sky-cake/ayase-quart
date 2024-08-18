@@ -44,7 +44,17 @@ Assuming you have a data source set up, you can:
       - Initialize, run.
       - Choose boards, populate, run.
       - Wipe data, if desired, run.
-8. (Optional) Submit pull requests with fixes and new features.
+8. (Optional) Set up redis for rate limiting auth endpoints.
+
+    ```
+    sudo apt update
+    sudo apt install redis-server
+    sudo nano /etc/redis/redis.conf # set line `supervised no` to `supervised systemd`
+    sudo systemctl restart redis
+    sudo systemctl status redis
+    ```
+
+9.  (Optional) Submit pull requests with fixes and new features.
 
 
 ## Set Up - With Docker

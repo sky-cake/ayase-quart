@@ -1,5 +1,6 @@
-from orjson import dumps, loads
 from itertools import batched
+
+from orjson import dumps, loads
 
 from . import (
     MAX_RESULTS,

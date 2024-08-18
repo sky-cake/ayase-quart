@@ -13,6 +13,7 @@ from configs import CONSTS
 from templates import (
     template_board_index,
     template_catalog,
+    template_index,
     template_posts,
     template_thread
 )
@@ -41,6 +42,10 @@ async def make_pagination_board_index(board_shortname, index, page_num):
         href=f'/{board_shortname}/page/' + '{0}',
         show_single_page=True,
     )
+
+@blueprint_app.get("/")
+async def v_index():
+    return await render_controller(template_index, **CONSTS.render_constants, tab_title=CONSTS.site_name)
 
 
 @blueprint_app.get("/<string:board_shortname>")

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+    <h1>Users</h1>
+    <a href="{{ url_for('users_create') }}">Create New User</a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Active</th>
+            <th>Actions</th>
+        </tr>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.user_id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ 'Yes' if user.active else 'No' }}</td>
+                <td>
+                    <a href="{{ url_for('users_view', user_id=user.user_id) }}">View</a> |
+                    <a href="{{ url_for('users_edit', user_id=user.user_id) }}">Edit</a> |
+                    <a href="{{ url_for('users_delete', user_id=user.user_id) }}">Delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

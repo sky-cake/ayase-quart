@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 
+
 def total_pages(total: int, per_page: int) -> int:
     """
     Given

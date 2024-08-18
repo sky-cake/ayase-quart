@@ -1,27 +1,9 @@
 import asyncio
 import os
-from enum import Enum, StrEnum
 from typing import NamedTuple
+
+from e_nums import DbType, IndexSearchType
 from meta import all_4chan_boards
-
-
-class DbType(Enum):
-    mysql = 1
-    sqlite = 2
-
-
-class SearchMode(StrEnum):
-    index = 'index'
-    gallery = 'gallery'
-
-
-class IndexSearchType(StrEnum):
-    meili = 'meili'
-    manticore = 'manticore'
-    mysql = 'mysql'
-    lnx = 'lnx'
-    typesense = 'typesense'
-    quickwit = 'quickwit'
 
 
 def make_path(*file_path):
@@ -34,6 +16,7 @@ class CONSTS(NamedTuple):
 
     TESTING = True
     autoreload = True
+    moderation_db_path = make_path('moderation.db')
 
     db_type = DbType.mysql  # DbType.mysql, DbType.sqlite
 
@@ -81,6 +64,9 @@ class CONSTS(NamedTuple):
     thumb_uri = "/static/neo/{board_shortname}/thumb"  # must contain {board_shortname}
 
     theme = 'tomorrow'  # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+
+    redis_url = '' # Optional. The redis URL for rate limiting. The default is usually 'redis://localhost:6379'
+    using_proxy = False # are you using nginx in front of hypercorn?
 
     search = True
     search_result_highlight = True

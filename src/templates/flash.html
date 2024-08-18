@@ -1,0 +1,18 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      {% set font_color = 'white' %}
+      {% if category in ['warning', 'danger'] %}
+        {% set font_color = 'black' %}
+      {% endif %}
+      {% if not category or category == 'message' %}
+        {% set category = 'dark' %}
+      {% endif %}
+      <div id="flash" class="mt-2">
+        <div class="p-2 rounded bg-{{category}} text-{{font_color}}">
+          <div>{{ message }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
