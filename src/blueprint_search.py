@@ -112,12 +112,12 @@ async def v_index_search():
     search_p = get_search_provider()
 
     if request.method == 'POST':
-        form = await SearchForm.create_form()
+        form = await SearchForm.create_form(meta={'csrf': False})
     else:
         boards = request.args.getlist('boards')
         params = {**request.args}
         params['boards'] = boards
-        form = await SearchForm.create_form(**params)
+        form = await SearchForm.create_form(meta={'csrf': False}, **params)
     
     valid = await form.validate()
     
@@ -209,7 +209,7 @@ async def v_search():
     if not CONSTS.search:
         raise BadRequest('search is disabled')
 
-    form = await SearchForm.create_form()
+    form = await SearchForm.create_form(meta={'csrf': False})
     search_mode = SearchMode.index
     searched = False
 
