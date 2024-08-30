@@ -4,7 +4,7 @@
 
 {% block body %}
 
-  {% if not is_admin %}
+  {% if not is_admin and not is_moderator and not is_logged_in %}
     <div class="mt-2 card">
       <h3>
         Administrator Login
@@ -28,9 +28,6 @@
       </div>
   {% else %}
     <p>User currently logged in.</p>
-    <form action="{{ url_for('blueprint_auth.logout') }}">
-      <button class="btn btn-primary" type="submit">Log out</button>
-    </form>
   {% endif %}
 
 {% endblock %}

@@ -9,8 +9,8 @@
     <p><strong>Created At:</strong> {{ user.created_datetime }}</p>
     <p><strong>Last Login:</strong> {{ user.last_login_datetime }}</p>
     <p><strong>Preferences:</strong> {{ user.preferences }}</p>
-    <a href="{{ url_for('users_edit', user_id=user.user_id) }}">Edit</a> |
-    <a href="{{ url_for('users_delete', user_id=user.user_id) }}">Delete</a> |
-    <a href="{{ url_for('users_index') }}">Back to Users</a>
+    <a href="{{ url_for('blueprint_admin.users_edit', user_id=user.user_id) }}">Edit</a> |
+    <a href="{{ url_for('blueprint_admin.users_delete', user_id=user.user_id) }}">Delete</a> |
+    <a href="{{ url_for('blueprint_admin.users_index') }}">Back to Users</a>
 
 {% endblock %}

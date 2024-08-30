@@ -5,7 +5,7 @@ from werkzeug.security import check_password_hash
 
 from captcha import MathCaptcha
 from configs import CONSTS
-from db.api import is_user_admin, is_user_moderator
+from db.api import is_user_admin, is_user_moderator, get_user_with_username
 from e_nums import AuthActions
 from forms import LoginForm
 from templates import template_login
@@ -30,7 +30,7 @@ async def auth(action: AuthActions, user_id=None):
         if action == AuthActions.log_in and user_id:
             session["user_id"] = user_id
             return
-
+            
         if action == AuthActions.log_out:
             session.clear()
             return
@@ -45,7 +45,7 @@ async def auth(action: AuthActions, user_id=None):
                 if is_admin:
                     return True
             return False
-        
+
         if action == AuthActions.is_moderator:
             user_id = session.get("user_id", None)
             if user_id:
@@ -57,53 +57,53 @@ async def auth(action: AuthActions, user_id=None):
     raise ValueError(action, user_id)
 
 
-def login_required(fn):
-    @wraps(fn)
+def login_required(WRAPPED_FUNC):
+    @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if not await auth(AuthActions.is_logged_in):
+        if not (await auth(AuthActions.is_logged_in)):
             await flash("Login required", "danger")
             return redirect(url_for("blueprint_auth.login"))
-        return fn(*args, **kwargs)
+        return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
 
 
-def logout_required(fn):
-    @wraps(fn)
+def logout_required(WRAPPED_FUNC):
+    @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if await auth(AuthActions.is_admin) or await auth(AuthActions.is_logged_in):
+        if (await auth(AuthActions.is_admin)) or (await auth(AuthActions.is_logged_in)):
             await flash("Logout required", "danger")
             return redirect(url_for("blueprint_auth.logout"))
-        return fn(*args, **kwargs)
+        return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
 
 
-def admin_required(fn):
-    @wraps(fn)
+def admin_required(WRAPPED_FUNC):
+    @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if not await auth(AuthActions.is_admin):
+        if not (await auth(AuthActions.is_admin)):
             await flash("Admin permission required", "danger")
             return redirect(url_for("blueprint_app.v_index"))
-        return fn(*args, **kwargs)
+        return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
 
 
-def moderator_required(fn):
-    @wraps(fn)
+def moderator_required(WRAPPED_FUNC):
+    @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if not await auth(AuthActions.is_moderator):
-            await flash("Moderator permission required", "danger")
+        if (not (await auth(AuthActions.is_moderator))) and (not (await auth(AuthActions.is_admin))):
+            await flash("Moderator or Admin permission required", "danger")
             return redirect(url_for("blueprint_app.v_index"))
-        return fn(*args, **kwargs)
+        return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
 
 
 @blueprint_auth.route("/login", methods=["GET", "POST"])
 async def login():
-    form = await LoginForm.create_form()
+    form: LoginForm = await LoginForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
     if await form.validate_on_submit():
@@ -111,14 +111,13 @@ async def login():
             username = form.username.data
             password_candidate = form.password.data
 
-            sql_string = """select * from user where username = %s;"""
-            user = await current_app.db.query_execute(sql_string, params=(username,))
+            user = get_user_with_username(username)
             if user:
                 if check_password_hash(user.password, password_candidate):
-                    await auth(AuthActions.log_in, user_id=user.id)
+                    await auth(AuthActions.log_in, user_id=user.user_id)
 
                     await flash("Login successful.", "success")
-                    return redirect(url_for("blueprint_admin.reports"))
+                    return redirect(url_for("blueprint_moderation.reports_index"))
 
             await flash("Incorrect username or password.", "danger")
         await flash("Wrong math captcha answer", "danger")
@@ -133,4 +132,4 @@ async def login():
 async def logout():
     await auth(AuthActions.log_out)
     await flash("Logout successful.", "success")
-    return await redirect(url_for("blueprint_auth.login"))
+    return redirect(url_for("blueprint_auth.login"))

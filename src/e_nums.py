@@ -40,3 +40,8 @@ class ReportStatus(StrEnum):
     open = "open"
     pending = "pending"
     closed = "closed"
+
+class ReportCategory(StrEnum):
+    doxxing = "doxxing"
+    low_quality_content = "low_quality_content"
+    illegal_content = "illegal_content"

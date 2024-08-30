@@ -35,8 +35,8 @@
                         / <a href="/search">Search</a>
                     {% endif %}
                     ]
-                    <br>
                     {% if index_search_provider %}
+                    <br>
                         Index Search:
                         [
                         <a href="/index_search">Search</a>
@@ -48,8 +48,8 @@
                         <a href="/index_stats">Stats</a>
                         ]
                     {% endif %}
-                    <br>
                     {% if board_objects %}
+                    <br>
                         Boards:
                         [
                         {% for board_object in board_objects %}
@@ -57,17 +57,31 @@
                         {% endfor %}
                         ]
                     {% endif %}
+
+                    {% if is_admin or is_moderator %}
                     <br>
                     Admin: [
-                    <a href="{{ url_for('blueprint_admin.reports') }}">Reports</a>
-                    /
-                    <a href="{{ url_for('blueprint_admin.stats') }}">Stats</a>
-                    /
-                    <a href="{{ url_for('blueprint_admin.latest') }}">Latest OPs</a>
+
+                        {% if is_admin %}
+                            <a href="{{ url_for('blueprint_admin.users_index') }}">Users</a>
+                            /
+                        {% endif %}
+
+                        <a href="{{ url_for('blueprint_moderation.reports_index') }}">Reports</a>
+                        /
+                        <a href="{{ url_for('blueprint_admin.stats') }}">Stats</a>
+                        /
+                        <a href="{{ url_for('blueprint_admin.latest') }}">Latest OPs</a>
                     ]
+                    {% endif %}
+
                     <br>
                     Profile: [
-                    <a href="{{ url_for('blueprint_auth.logout') }}">Logout</a>
+                        {% if is_admin or is_moderator or is_logged_in %}
+                            <a href="{{ url_for('blueprint_auth.logout') }}">Logout</a>
+                        {% else %}
+                            <a href="{{ url_for('blueprint_auth.login') }}">Login</a>
+                        {% endif %}
                     ]
                 </div>
             {% endif %}

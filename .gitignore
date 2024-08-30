@@ -10,3 +10,5 @@ secret.txt
 neo/
 meili_data/
 data/
+*.db
+launch.json

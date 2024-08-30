@@ -18,6 +18,9 @@ class CONSTS(NamedTuple):
     autoreload = True
     moderation_db_path = make_path('moderation.db')
 
+    admin_username = 'admin'
+    admin_password = 'admin'
+
     db_type = DbType.mysql  # DbType.mysql, DbType.sqlite
 
     db_path = make_path('/path/to/archive.db')  # DbType.sqlite

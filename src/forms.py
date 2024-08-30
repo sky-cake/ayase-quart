@@ -1,3 +1,4 @@
+from quart import flash, session
 from quart_wtf import QuartForm
 from wtforms import widgets
 from wtforms.fields import (
@@ -12,10 +13,18 @@ from wtforms.fields import (
     SubmitField,
     TextAreaField
 )
-from wtforms.validators import InputRequired, Length, NumberRange, Optional
+from wtforms.validators import (
+    DataRequired,
+    InputRequired,
+    Length,
+    NumberRange,
+    Optional,
+    ValidationError
+)
 
 from configs import CONSTS
-from e_nums import SearchMode
+from db.api import get_user_with_username, is_correct_password
+from e_nums import ReportCategory, ReportStatus, SearchMode, UserRole
 
 LENGTH_MD5_HASH = 32
 
@@ -69,3 +78,51 @@ class LoginForm(QuartForm):
     captcha_answer = IntegerField("", validators=[InputRequired()])
 
     submit = SubmitField("Submit")
+
+
+async def validate_username_is_provided(form, field):
+    username = form.username.data
+
+    if username:
+        form.username.data = username.strip()
+
+    if not username:
+        await flash('Please provide a username.', 'warning')
+        raise ValidationError()
+
+
+async def validate_login_user(form, field):
+    '''Login user should already exist.'''
+
+    username = form.username.data
+    password_candidate = form.password.data
+
+    user_record = get_user_with_username(username)
+
+    if not user_record or not is_correct_password(user_record, password_candidate):
+        await flash('Incorrect username or password.', 'warning')
+        raise ValidationError()
+
+    await flash('User logged in.', 'success')
+    session['user_id'] = user_record['user_id']
+
+
+class UserForm(QuartForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=1, max=512), validate_username_is_provided], render_kw={'placeholder': 'Username'})
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=1, max=512), validate_login_user], render_kw={'placeholder': 'Password'})
+    active = BooleanField('Active', validators=[InputRequired()])
+    role = RadioField('Role', validators=[DataRequired()], choices=((r, r) for r in UserRole))
+    notes = TextAreaField('Notes', validators=[DataRequired()])
+    # created_datetime
+    # last_login_datetime
+    submit = SubmitField('Submit')
+
+
+class ReportForm(QuartForm):
+    post_no = IntegerField('Post No.', validators=[NumberRange(min=0)])
+    category = RadioField('Report Category', choices=((c, c) for c in ReportCategory))
+    details = TextAreaField('Details', validators=[Optional()])
+    status = RadioField('Status', choices=((s, s) for s in ReportStatus))
+    # created_datetime
+    # last_updated_datetime
+    submit = SubmitField('Submit')

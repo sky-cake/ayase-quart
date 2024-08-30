@@ -3,7 +3,7 @@
 {% block body %}
 
     <h1>Edit User</h1>
-    <form action="{{ url_for('users_edit', user_id=user.user_id) }}" method="post">
+    <form action="{{ url_for('blueprint_admin.users_edit', user_id=user.user_id) }}" method="post">
         <p><label>Username: <input type="text" name="username" value="{{ user.username }}" required></label></p>
         <p><label>Password: <input type="password" name="password"></label></p>
         <p><label>Role: <input type="text" name="role" value="{{ user.role }}" required></label></p>
@@ -11,6 +11,6 @@
         <p><label>Preferences: <textarea name="preferences">{{ user.preferences }}</textarea></label></p>
         <button type="submit">Save Changes</button>
     </form>
-    <a href="{{ url_for('users_index') }}">Back to Users</a>
+    <a href="{{ url_for('blueprint_admin.users_index') }}">Back to Users</a>
 
 {% endblock %}

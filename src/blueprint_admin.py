@@ -1,10 +1,29 @@
-from quart import Blueprint, current_app, flash, redirect, url_for
+from quart import (
+    Blueprint,
+    current_app,
+    redirect,
+    request,
+    url_for
+)
 
 from asagi_converter import get_selector
-from blueprint_auth import admin_required, auth
+from blueprint_auth import admin_required
 from configs import CONSTS, DbType
-from e_nums import AuthActions
-from templates import template_latest, template_stats
+from db.api import (
+    create_user,
+    delete_user,
+    edit_user,
+    get_all_users,
+    get_user_with_id
+)
+from forms import UserForm
+from templates import (
+    template_latest,
+    template_stats,
+    template_users_create,
+    template_users_delete,
+    template_users_edit
+)
 from utils import render_controller
 
 blueprint_admin = Blueprint('blueprint_admin', __name__)
@@ -67,4 +86,80 @@ async def latest():
         **CONSTS.render_constants,
         title='Latest',
         tab_title="Latest",
+    )
+
+
+@blueprint_admin.route('/users')
+@admin_required
+async def users_index():
+    users = get_all_users()
+    return await render_controller('users/index.html', users=users)
+
+
+@blueprint_admin.route('/users/<int:user_id>')
+@admin_required
+async def users_view(user_id):
+    user = get_user_with_id(user_id)
+    return await render_controller('users/view.html', user=user)
+
+
+@blueprint_admin.route('/users/create', methods=['GET', 'POST'])
+@admin_required
+async def users_create():
+    form: UserForm = await UserForm.create_form()
+
+    if await form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        role = form.role.data
+        notes = form.notes.data
+        await create_user(username, password, role, notes)
+        return redirect(url_for('blueprint_admin.users_index'))
+
+    return await render_controller(
+        template_users_create,
+        **CONSTS.render_constants,
+        title='Admin',
+        tab_title='Admin',
+    )
+
+
+@blueprint_admin.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+async def users_edit(user_id):
+    form: UserForm = await UserForm.create_form()
+
+    if await form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        role = form.role.data
+        active = form.active.data
+        notes = form.notes.data
+        await edit_user(username, password, role, active, notes)
+
+        return redirect(url_for('blueprint_admin.users_edit', user_id=user_id))
+
+    user = get_user_with_id(user_id)
+    return await render_controller(
+        template_users_edit,
+        user=user,
+        **CONSTS.render_constants,
+        title='Admin',
+        tab_title='Admin',
+    )
+
+
+@blueprint_admin.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
+@admin_required
+async def users_delete(user_id):
+    if request.method == 'POST':
+        await delete_user(user_id)
+        return redirect(url_for('blueprint_admin.users_index'))
+
+    return await render_controller(
+        template_users_delete,
+        user_id=user_id,
+        **CONSTS.render_constants,
+        title='Admin',
+        tab_title='Admin',
     )
