@@ -10,7 +10,7 @@ from werkzeug.exceptions import BadRequest
 from configs import CONSTS
 from e_nums import DbType, SearchMode
 from search.highlighting import html_highlight
-
+from time import perf_counter
 
 def get_selector(board_shortname, double_percent=True):
     if CONSTS.db_type == DbType.mysql:
@@ -332,22 +332,36 @@ async def get_op_details(board_shortname: str, thread_nums: List[int]):
     return sorted(results, key=lambda x: x['thread_num'])
 
 
-async def get_catalog_threads(board_shortname: str, page_num: int):
-    SELECT_GALLERY_THREADS_BY_OFFSET = (
-        get_selector(board_shortname)
-        + f"FROM `{board_shortname}` INNER JOIN `{board_shortname}_threads` ON `{board_shortname}`.`thread_num` = `{board_shortname}_threads`.`thread_num` WHERE OP=1 ORDER BY `{board_shortname}_threads`.`time_bump` DESC LIMIT 150 OFFSET %(page_num)s;"
-    )
-    return await current_app.db.query_execute(SELECT_GALLERY_THREADS_BY_OFFSET, params={'page_num': page_num * 150})
+async def get_catalog(board_shortname: str, page_num: int):
+    SELECT_CATALOG = f"""
+    {get_selector(board_shortname)},
 
+        threads.nreplies AS replies,
+        threads.nimages AS images,
 
-async def get_catalog_images(board_shortname: str, page_num: int):
-    SELECT_GALLERY_THREAD_IMAGES_MD5 = f"SELECT `{board_shortname}`.media_hash, `{board_shortname}_images`.`media`, `{board_shortname}_images`.`preview_reply`, `{board_shortname}_images`.`preview_op` FROM ((`{board_shortname}` INNER JOIN `{board_shortname}_threads` ON `{board_shortname}`.`thread_num` = `{board_shortname}_threads`.`thread_num`) INNER JOIN `{board_shortname}_images` ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`) WHERE OP=1 ORDER BY `{board_shortname}_threads`.`time_bump` DESC LIMIT 150 OFFSET %(page_num)s;"
-    return await current_app.db.query_execute(SELECT_GALLERY_THREAD_IMAGES_MD5, params={'page_num': page_num})
+        `{board_shortname}`.media_hash,
+        `{board_shortname}_images`.`media` AS asagi_filename,
+        `{board_shortname}_images`.`preview_op` AS asagi_preview_filename
 
+    FROM `{board_shortname}`
+        INNER JOIN `{board_shortname}_threads` AS threads
+            ON `{board_shortname}`.`thread_num` = threads.`thread_num`
+        LEFT JOIN `{board_shortname}_images`
+            ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`
+    WHERE OP=1
+    ORDER BY threads.`time_bump` DESC
+    LIMIT 150
+    OFFSET %(page_num)s
+    ;
+    """
+    rows = await current_app.db.query_execute(SELECT_CATALOG, params={'page_num': page_num})
 
-async def get_catalog_details(board_shortname: str, page_num: int):
-    SELECT_GALLERY_THREAD_DETAILS = f"SELECT `nreplies`, `nimages` FROM `{board_shortname}_threads` ORDER BY `time_bump` DESC LIMIT 150 OFFSET %(page_num)s"
-    return await current_app.db.query_execute(SELECT_GALLERY_THREAD_DETAILS, params={'page_num': page_num})
+    posts = []
+    for i in range(len(rows)):
+        if not rows or not rows[i]:
+            continue
+        posts.append(dict(rows[i]))  # The record object doesn't support assignment so we convert it to a normal dict
+    return posts
 
 
 def get_text_quotelinks(text: str):
@@ -488,22 +502,20 @@ async def generate_catalog(board_shortname: str, page_num: int):
 
     page_num -= 1  # start page number at 1
 
-    thread_list, details, images = await asyncio.gather(
-        get_catalog_threads(board_shortname, page_num), get_catalog_details(board_shortname, page_num), get_catalog_images(board_shortname, page_num)
-    )
+    time_init = perf_counter()
+    catalog_list = await get_catalog(board_shortname, page_num)
 
-    catalog_list = convert(thread_list, details, images, is_catalog=True)
+    time_queries = perf_counter()
+    print(f'time_queries: {time_queries - time_init:.4f}')
 
-    result = []
-    page_threads = {"page": 0, "threads": []}
-    for i in range(len(thread_list)):
-        # new page every 15 threads
-        if i % 15 == 0 and i != 0:
-            result.append(page_threads)
-            page_threads = {"page": (i // 14) + 1, "threads": []}
-        page_threads["threads"].append(catalog_list[i])
-    # add the last page threads
-    result.append(page_threads)
+    result = [
+        {"page": i // 15, "threads": catalog_list[i:i + 15]}
+        for i in range(0, len(catalog_list), 15)
+    ]
+
+    time_paged = perf_counter()
+    print(f'time_paged: {time_paged - time_queries:.4f}')
+
     return result
 
 
