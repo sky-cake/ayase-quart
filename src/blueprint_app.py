@@ -116,19 +116,16 @@ async def make_pagination_catalog(board_shortname, catalog, page_num):
 
 @blueprint_app.get("/<string:board_shortname>/catalog")
 async def v_catalog(board_shortname: str):
-    time_enter = perf_counter()
     validate_board_shortname(board_shortname)
-    time_validate = perf_counter()
-    print(f'time_validate: {time_validate - time_enter:.4f}')
 
     catalog = await generate_catalog(board_shortname, 1)
-    time_generate = perf_counter()
 
+    time_init = perf_counter()
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
     time_paginate = perf_counter()
-    print(f'time_paginate: {time_paginate - time_generate:.4f}')
+    print(f'time_paginate: {time_paginate - time_init:.4f}')
 
-    render =  await render_controller(
+    render = await render_controller(
         template_catalog,
         **CONSTS.render_constants,
         catalog=catalog,

@@ -333,6 +333,23 @@ async def get_op_details(board_shortname: str, thread_nums: List[int]):
 
 
 async def get_catalog(board_shortname: str, page_num: int):
+    SELECT_NUMS = f"""
+    SELECT num
+    FROM `{board_shortname}`
+        INNER JOIN `{board_shortname}_threads` AS threads
+            ON `{board_shortname}`.`thread_num` = threads.`thread_num`
+        LEFT JOIN `{board_shortname}_images`
+            ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`
+    WHERE OP=1
+    ORDER BY threads.`time_bump` DESC
+    LIMIT 150
+    OFFSET %(page_num)s
+    """
+    rows = await current_app.db.query_execute(SELECT_NUMS, params={'page_num': page_num})
+    nums = [row.num for row in rows]
+
+    placeholders = ','.join(['%s'] * len(nums))
+
     SELECT_CATALOG = f"""
     {get_selector(board_shortname)},
 
@@ -348,13 +365,10 @@ async def get_catalog(board_shortname: str, page_num: int):
             ON `{board_shortname}`.`thread_num` = threads.`thread_num`
         LEFT JOIN `{board_shortname}_images`
             ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`
-    WHERE OP=1
-    ORDER BY threads.`time_bump` DESC
-    LIMIT 150
-    OFFSET %(page_num)s
+    WHERE num in ({placeholders})
     ;
     """
-    rows = await current_app.db.query_execute(SELECT_CATALOG, params={'page_num': page_num})
+    rows = await current_app.db.query_execute(SELECT_CATALOG, params=nums)
 
     posts = []
     for i in range(len(rows)):
@@ -504,7 +518,6 @@ async def generate_catalog(board_shortname: str, page_num: int):
 
     time_init = perf_counter()
     catalog_list = await get_catalog(board_shortname, page_num)
-
     time_queries = perf_counter()
     print(f'time_queries: {time_queries - time_init:.4f}')
 
@@ -512,9 +525,6 @@ async def generate_catalog(board_shortname: str, page_num: int):
         {"page": i // 15, "threads": catalog_list[i:i + 15]}
         for i in range(0, len(catalog_list), 15)
     ]
-
-    time_paged = perf_counter()
-    print(f'time_paged: {time_paged - time_queries:.4f}')
 
     return result
 
