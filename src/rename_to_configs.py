@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 from e_nums import DbType, IndexSearchType
 from meta import all_4chan_boards
-
+from quart import url_for, get_flashed_messages
 
 def make_path(*file_path):
     """Make a file path as though this file's directory is a root directory."""
@@ -117,6 +117,8 @@ class CONSTS(NamedTuple):
         html_linked_target=html_linked_target,
         index_search_provider=index_search_provider,
         index_search_host=index_search_host.strip('/'),
+        url_for=url_for,
+        get_flashed_messages=get_flashed_messages,
     )
 
 
