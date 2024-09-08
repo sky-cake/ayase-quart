@@ -23,6 +23,7 @@ from utils import (
     validate_board_shortname,
     validate_threads
 )
+from time import perf_counter
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 
@@ -119,9 +120,12 @@ async def v_catalog(board_shortname: str):
 
     catalog = await generate_catalog(board_shortname, 1)
 
+    time_init = perf_counter()
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
+    time_paginate = perf_counter()
+    print(f'time_paginate: {time_paginate - time_init:.4f}')
 
-    return await render_controller(
+    render = await render_controller(
         template_catalog,
         **CONSTS.render_constants,
         catalog=catalog,
@@ -130,6 +134,10 @@ async def v_catalog(board_shortname: str):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
+    time_render = perf_counter()
+    print(f'time_render: {time_render - time_paginate:.4f}')
+
+    return render
 
 
 @blueprint_app.get("/<string:board_shortname>/catalog/<int:page_num>")

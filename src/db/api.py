@@ -154,7 +154,7 @@ async def init_moderation_db():
 
         user_count = query_db(CONSTS.moderation_db_path, 'select count(*) user_count from users;', one=True).user_count
         if not user_count:
-            create_user(CONSTS.admin_username, CONSTS.admin_password, UserRole.admin, True, 'Remember to change your default password.')
+            await create_user(CONSTS.admin_username, CONSTS.admin_password, UserRole.admin, True, 'Remember to change your default password.')
             conn.commit()
             await flash('Initial admin user created.')
 
