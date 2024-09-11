@@ -7,12 +7,12 @@ from .providers import get_search_provider
 help_text = """
 usage: python -m search COMMAND [args]
 commands:
-	create board1 [board2 [board3 ...]]
-		create indexes for the search provider
+	create
+		create search indexes
 	load board1 [board2 [board3 ...]]
-		index boards in the search provider indexes
+		index boards (ensure indexes have been created)
 	delete
-		delete the indexes of the search provider
+		delete search indexes
 """
 
 
