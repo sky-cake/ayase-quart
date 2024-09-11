@@ -137,9 +137,6 @@ def remove_boards_from_configs_if_not_in_database():
         for b in removals:
             del CONSTS.boards[b]
 
-    for b in removals:
-        del CONSTS.boards[b]
-
     if not CONSTS.boards:
         raise ValueError(f'No boards to show! Configure one of {CONSTS.boards_in_database}')
 
