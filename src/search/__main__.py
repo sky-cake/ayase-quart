@@ -40,7 +40,11 @@ def main(args):
         sys.exit()
     match args[0]:
         case 'load':
-            asyncio.run(load(args[1:]))
+            if not (boards := args[1:]):
+                print("missing boards")
+                print_help()
+                sys.exit()
+            asyncio.run(load(boards))
         case 'create':
             asyncio.run(create_index())
         case 'delete':

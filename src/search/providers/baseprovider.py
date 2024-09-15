@@ -1,10 +1,13 @@
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Generator, Callable
 
 from aiohttp import ClientSession, TCPConnector
+from orjson import dumps
 
 from . import SearchQuery
+from search.post_metadata import unpack_metadata
 
 
 class INDEXES(StrEnum):
@@ -31,7 +34,8 @@ class BaseSearch(ABC):
         )
 
     async def close(self):
-        await self.client.close()
+        if not self.client.closed:
+            await self.client.close()
 
     async def _create_index(self, index: str):
         raise NotImplementedError
@@ -51,11 +55,20 @@ class BaseSearch(ABC):
     async def _add_docs(self, index: str, docs: list[any]):
         raise NotImplementedError
 
+    async def _add_docs_bytes(self, index: str, docs: bytes):
+        raise NotImplementedError
+
     async def _remove_docs(self, index: str, pk_ids: list[str]):
         raise NotImplementedError
 
-    async def _search_index(self, index: str, q: SearchQuery) -> tuple[list[any], int]:
+    async def _search_index(self, index: str, q: SearchQuery) -> tuple[Generator[any, None, None], int]:
         raise NotImplementedError
+
+    def _get_post_pack_fn(self) -> Callable[[dict], dict]:
+        return lambda post: post
+
+    def _get_batch_pack_fn(self) -> Callable[[dict], bytes]:
+        return dumps
 
     async def index_ready(self, index: str):
         return (await self._index_ready(index)) == 'ready'
@@ -64,10 +77,21 @@ class BaseSearch(ABC):
     # upstream calculates pages from cur_page + limits
     async def search_posts(self, q: SearchQuery) -> tuple[list[dict], int]:
         results, total_hits = await self._search_index(INDEXES.posts, q)
+        # results = [{'comment':r['comment'], **unpack_metadata(r['data'])} for r in results]
+        results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
 
     async def add_posts(self, posts: list[dict]):
         await self._add_docs(INDEXES.posts, posts)
+
+    def get_post_pack_fn(self):
+        return self._get_post_pack_fn()
+
+    def get_batch_pack_fn(self):
+        return self._get_batch_pack_fn()
+
+    async def add_posts_bytes(self, posts: bytes):
+        await self._add_docs_bytes(INDEXES.posts, posts)
 
     async def remove_posts(self, doc_ids: list[int]):
         await self._remove_docs(INDEXES.posts, doc_ids)
