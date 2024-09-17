@@ -3,6 +3,7 @@ import html
 import re
 from textwrap import dedent
 from typing import Any, Dict, List
+from functools import lru_cache
 
 from quart import current_app
 from werkzeug.exceptions import BadRequest
@@ -12,6 +13,7 @@ from e_nums import DbType, SearchMode
 from search.highlighting import html_highlight
 from time import perf_counter
 
+@lru_cache
 def get_selector(board_shortname, double_percent=True):
     if CONSTS.db_type == DbType.mysql:
         SELECTOR = """

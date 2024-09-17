@@ -11,7 +11,8 @@ from wtforms.fields import (
     SelectMultipleField,
     StringField,
     SubmitField,
-    TextAreaField
+    TextAreaField,
+    SelectField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -25,6 +26,7 @@ from wtforms.validators import (
 from configs import CONSTS
 from db.api import get_user_with_username, is_correct_password
 from e_nums import ReportCategory, ReportStatus, SearchMode, UserRole
+from posts.capcodes import Capcode
 
 LENGTH_MD5_HASH = 32
 
@@ -52,7 +54,12 @@ class SearchForm(QuartForm):
     is_not_op = BooleanField('Is not opening post (OP)', default=False, validators=[Optional()])
     is_deleted = BooleanField('Is deleted', default=False, validators=[Optional()])
     is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
+    is_sticky = BooleanField('Is sticky', default=False, validators=[Optional()])
+    is_not_sticky = BooleanField('Is not sticky', default=False, validators=[Optional()])
     page = IntegerField(default=1, validators=[Optional()])
+    width = IntegerField('Width', default=0, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution width')
+    height = IntegerField('Height', default=0, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution height')
+    user = SelectField('User', default='any', choices=[('any', 'any')]+[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
 
 

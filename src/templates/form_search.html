@@ -24,8 +24,13 @@
             {{ render_field(form.is_not_op) }}
             {{ render_field(form.is_deleted) }}
             {{ render_field(form.is_not_deleted) }}
+            {{ render_field(form.is_sticky) }}
+            {{ render_field(form.is_not_sticky) }}
         </div>
         <div class="column">
+			{{ render_field(form.width) }}
+			{{ render_field(form.height) }}
+            {{ render_field(form.user) }}
             {{ render_field(form.result_limit) }}
         </div>
     </div>

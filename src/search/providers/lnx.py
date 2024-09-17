@@ -40,13 +40,13 @@ class LnxSearch(BaseSearch):
                 'search_fields': ['title', 'comment'],
                 "boost_fields": {},
                 "reader_threads": 16,
-                "max_concurrency": 4,
-                "writer_buffer": 144000000,
-                "writer_threads": 4,
+                "max_concurrency": 16,
+                "writer_buffer": 2_144_000_000,
+                "writer_threads": 16,
                 "set_conjunction_by_default": True,  # default AND instead of OR for queries
                 "use_fast_fuzzy": False,  # only exact match
                 "strip_stop_words": False,  # keep words like 'the' 'with'
-                "auto_commit": 1,
+                "auto_commit": 0,
             },
         }
         resp = await self.client.post(url, data=dumps(payload))
@@ -75,12 +75,19 @@ class LnxSearch(BaseSearch):
         return loads(await resp.read())
 
     async def _add_docs(self, index: str, docs: list[any]):
-        await self._remove_docs(index, get_doc_pks(docs))
+        # await self._remove_docs(index, get_doc_pks(docs))
         url = self._get_index_url(index) + '/documents'
-        docs = [{k: [str(v)] for k, v in d.items()} for d in docs]
+        docs = [
+            {k: [str(v)] for k, v in downcast_fields(doc).items()}
+            for doc in docs
+        ]
         resp = await self.client.post(url, data=dumps(docs))
-        await self._commit_write(index)
+        # await self._commit_write(index)
         # return loads(await resp.read())
+
+    async def _add_docs_bytes(self, index: str, docs: bytes):
+        url = self._get_index_url(index) + '/documents'
+        resp = await self.client.post(url, data=docs)
 
     async def _remove_docs(self, index: str, pk_ids: list[str]):
         if not pk_ids: return
@@ -94,6 +101,9 @@ class LnxSearch(BaseSearch):
         url = self._get_index_url(index) + '/commit'
         resp = await self.client.post(url)
         return loads(await resp.read())
+
+    def _get_post_pack_fn(self):
+        return pack_post
 
     async def _search_index(self, index: str, q: SearchQuery):
         url = self._get_index_url(index) + '/search'
@@ -111,13 +121,13 @@ class LnxSearch(BaseSearch):
             return [], 0
 
         total = parsed.get('count', 0)
-        hits = [_restore_result(r['doc']) for r in parsed['hits']]
+        hits = (_restore_result(r['doc']) for r in parsed['hits'])
         return hits, total
 
     def _query_builder(self, q: SearchQuery):
         query = []
         if q.terms:
-            query.append({'occur': 'must', 'term': {'ctx': q.terms, 'fields': ['comment', 'title']}})
+            query.append({'occur': 'must', 'term': {'ctx': q.terms.lower(), 'fields': ['comment', 'title']}}) # bug, Titlecase terms won't match anything
         if q.boards:
             query.append(
                 {
@@ -162,7 +172,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'op:{str(q.op)}',
+                        'ctx': f'op:{int(q.op)}',
                     },
                 }
             )
@@ -171,7 +181,25 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'deleted:{str(q.deleted)}',
+                        'ctx': f'deleted:{int(q.deleted)}',
+                    },
+                }
+            )
+        if q.sticky is not None:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'sticky:{int(q.sticky)}',
+                    },
+                }
+            )
+        if q.capcode is not None:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'capcode:{q.capcode}',
                     },
                 }
             )
@@ -200,6 +228,24 @@ class LnxSearch(BaseSearch):
                     'occur': 'must',
                     'normal': {
                         'ctx': f'media_filename:{q.media_file}',
+                    },
+                }
+            )
+        if q.width: # anything not 0
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'width:{q.width}',
+                    },
+                }
+            )
+        if q.height: # anything not 0
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'height:{q.height}',
                     },
                 }
             )
@@ -233,10 +279,26 @@ def _get_field_type(field: SearchIndexField):
     elif field.field_type is float:
         return 'f64'
     elif field.field_type is bool:
-        return 'string'
-
+        return 'u64'
 
 def _restore_result(doc: dict):
-    if doc['comment'] == 'None':
+    if doc['comment'] == '':
         doc['comment'] = None
-    return {'comment': doc['comment'], **loads(doc['data'])}
+    return doc
+    # return {'comment': doc['comment'], **loads(doc['data'])}
+
+def pack_post(post: dict) -> dict:
+    post = downcast_fields(post)
+    return {k: [str(v)] for k, v in post.items()}
+
+# bool_fields = ('op', 'deleted', 'sticky')
+bool_fields = tuple(f.field for f in search_index_fields if f.field_type is bool)
+# str_fields = ('comment', 'title', 'media_filename', 'media_hash')
+str_fields = tuple(f.field for f in search_index_fields if f.field_type is str)
+def downcast_fields(post: dict):
+    for field in bool_fields:
+        post[field] = int(bool(post[field]))
+    for field in str_fields:
+        if post[field] == None and field != 'media_filename':
+            post[field] = ''
+    return post

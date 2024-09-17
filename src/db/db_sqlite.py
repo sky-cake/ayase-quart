@@ -77,3 +77,41 @@ class SQLiteDatabase(DatabaseInterface):
                 return await cursor.fetchone()
 
             return await cursor.fetchall()
+
+
+async def _get_pool():
+    if not hasattr(_get_pool, 'pool'):
+        _get_pool.pool = await aiosqlite.connect(
+            CONSTS.db_path,
+            autocommit=True,
+        )
+    return _get_pool.pool
+
+async def _run_query_fast(query: str, params: tuple=None):
+    wait_pool = _get_pool()
+
+    # patch query while waiting for the pool to connect on first connection
+    query = patch_query(query)
+
+    pool = await wait_pool
+    async with pool.execute(query, params) as cursor:
+        res = [await cursor.fetchall()]
+        while await cursor.nextset():
+            res.append(await cursor.fetchall())
+        if len(res) == 1:
+            return res[0]
+        return res
+
+async def _close_pool():
+    if not hasattr(_get_pool, 'pool'):
+        return
+    await _get_pool.pool.close()
+    delattr(_get_pool, 'pool')
+
+re_colon = re.compile(r'%\((\w+)\)s')
+def patch_query(query: str):
+    return re_colon.sub(r':\1', query).replace('`', '').replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
+
+
+Database = SQLiteDatabase
+DatabaseAppContext = SQLiteDatabaseAppContext
