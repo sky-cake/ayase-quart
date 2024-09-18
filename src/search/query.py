@@ -3,9 +3,11 @@ from datetime import datetime
 from typing import Optional
 
 from configs import CONSTS
-from .post_metadata import board_2_int
 from posts.capcodes import capcode_2_id
 from utils.validation import positive_int
+
+from .post_metadata import board_2_int
+
 
 @dataclass(slots=True)
 class SearchQuery:

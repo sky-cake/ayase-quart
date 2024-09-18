@@ -1,5 +1,6 @@
-from search.highlighting import mark_post, mark_pre
 from orjson import dumps, loads
+
+from search.highlighting import mark_post, mark_pre
 
 from . import (
     MAX_RESULTS,

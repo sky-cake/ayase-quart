@@ -27,6 +27,7 @@ async def create_index():
     await sp.close()
     print('Indexes created')
 
+
 async def delete_index():
     if input('Wipe index? (y/n): ').strip().lower() != 'y': return
     sp = get_search_provider()
@@ -34,14 +35,16 @@ async def delete_index():
     await sp.close()
     print('Index data wiped')
 
+
 def main(args):
     if not args:
         print_help()
         sys.exit()
+
     match args[0]:
         case 'load':
             if not (boards := args[1:]):
-                print("missing boards")
+                print("Missing boards.")
                 print_help()
                 sys.exit()
             asyncio.run(load(boards))

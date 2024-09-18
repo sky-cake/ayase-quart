@@ -97,7 +97,12 @@ class MySQLDatabase(DatabaseInterface):
             self.pool.close()
             await self.pool.wait_closed()
 
+
+# Functions below are for doing Tuple queries, which are faster fetching Dict results
+
+
 async def _get_pool():
+    # we apply an attribute on this function to avoid polluting the module's namespace
     if not hasattr(_get_pool, 'pool'):
         _get_pool.pool = await aiomysql.create_pool(
             host=CONSTS.db_host,
@@ -109,6 +114,7 @@ async def _get_pool():
             autocommit=True,
         )
     return _get_pool.pool
+
 
 async def _run_query_fast(query: str, params: tuple=None):
     pool = await _get_pool()
@@ -122,12 +128,14 @@ async def _run_query_fast(query: str, params: tuple=None):
                 return res[0]
             return res
 
+
 async def _close_pool():
     if not hasattr(_get_pool, 'pool'):
         return
     _get_pool.pool.close()
     await _get_pool.pool.wait_closed()
     delattr(_get_pool, 'pool')
+
 
 Database = MySQLDatabase
 DatabaseAppContext = MySQLDatabaseAppContext

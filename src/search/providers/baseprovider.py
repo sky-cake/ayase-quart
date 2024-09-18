@@ -1,13 +1,14 @@
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Generator, Callable
+from typing import Callable, Generator
 
 from aiohttp import ClientSession, TCPConnector
 from orjson import dumps
 
-from . import SearchQuery
 from search.post_metadata import unpack_metadata
+
+from . import SearchQuery
 
 
 class INDEXES(StrEnum):
@@ -73,9 +74,10 @@ class BaseSearch(ABC):
     async def index_ready(self, index: str):
         return (await self._index_ready(index)) == 'ready'
 
-    # returns search results + num hits
-    # upstream calculates pages from cur_page + limits
     async def search_posts(self, q: SearchQuery) -> tuple[list[dict], int]:
+        """Returns search results and num hits.
+        Upstream calculates pages from cur_page and limits.
+        """
         results, total_hits = await self._search_index(INDEXES.posts, q)
         # results = [{'comment':r['comment'], **unpack_metadata(r['data'])} for r in results]
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
@@ -110,7 +112,7 @@ class BaseSearch(ABC):
 
 
 """
-for deleting entries in indexes before adding them
+For deleting entries in indexes before adding them
 in engines that don't support unique primary keys
 TODO: Perhaps we need a utils.py file for all the providers...
 """

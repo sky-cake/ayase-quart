@@ -4,7 +4,7 @@ from configs import CONSTS
 from search.highlighting import mark_post, mark_pre
 
 from . import POST_PK, SearchQuery, search_index_fields
-from .baseprovider import BaseSearch, INDEXES
+from .baseprovider import INDEXES, BaseSearch
 
 pk = POST_PK
 

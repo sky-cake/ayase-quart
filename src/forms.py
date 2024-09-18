@@ -8,11 +8,11 @@ from wtforms.fields import (
     IntegerField,
     PasswordField,
     RadioField,
+    SelectField,
     SelectMultipleField,
     StringField,
     SubmitField,
-    TextAreaField,
-    SelectField,
+    TextAreaField
 )
 from wtforms.validators import (
     DataRequired,
@@ -99,7 +99,7 @@ async def validate_username_is_provided(form, field):
 
 
 async def validate_login_user(form, field):
-    '''Login user should already exist.'''
+    """Login user should already exist."""
 
     username = form.username.data
     password_candidate = form.password.data

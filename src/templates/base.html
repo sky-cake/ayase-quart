@@ -36,7 +36,7 @@
                     {% endif %}
                     ]
                     {% if index_search_provider %}
-                    <br>
+                        <br>
                         Index Search:
                         [
                         <a href="/index_search">Search</a>
@@ -49,7 +49,7 @@
                         ]
                     {% endif %}
                     {% if board_objects %}
-                    <br>
+                        <br>
                         Boards:
                         [
                         {% for board_object in board_objects %}
@@ -59,8 +59,8 @@
                     {% endif %}
 
                     {% if is_admin or is_moderator %}
-                    <br>
-                    Admin: [
+                        <br>
+                        Admin: [
 
                         {% if is_admin %}
                             <a href="{{ url_for('blueprint_admin.users_index') }}">Users</a>
@@ -72,16 +72,16 @@
                         <a href="{{ url_for('blueprint_admin.stats') }}">Stats</a>
                         /
                         <a href="{{ url_for('blueprint_admin.latest') }}">Latest OPs</a>
-                    ]
+                        ]
                     {% endif %}
 
                     <br>
                     Profile: [
-                        {% if is_admin or is_moderator or is_logged_in %}
-                            <a href="{{ url_for('blueprint_auth.logout') }}">Logout</a>
-                        {% else %}
-                            <a href="{{ url_for('blueprint_auth.login') }}">Login</a>
-                        {% endif %}
+                    {% if is_admin or is_moderator %}
+                        <a href="{{ url_for('blueprint_auth.logout') }}">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('blueprint_auth.login') }}">Login</a>
+                    {% endif %}
                     ]
                 </div>
             {% endif %}

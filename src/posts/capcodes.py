@@ -1,9 +1,11 @@
-from enum import StrEnum
+"""
+Mostly for working with post capcodes in the search.
+This is probably not the final home for module.
+"""
 
-'''
-mostly for working with post capcodes in the search
-this is probably not the final home for module
-'''
+from enum import StrEnum
+from typing import Dict
+
 
 class Capcode(StrEnum):
 	user = ''
@@ -25,14 +27,15 @@ capcode_ints = {
 }
 
 # 0 reserved for any
-def capcode_2_id(capcode: str|None):
+def capcode_2_id(capcode: str|None) -> int:
 	if capcode is None:
 		return 0
 	capcode = capcode.strip().upper()
 	return capcode_ints.get(capcode, 0)
 
-int_capcodes = {v:k for k,v in capcode_ints.items()}
-def id_2_capcode(capcode_id: int|None):
-    if not capcode_id or capcode_id > 6:
+
+int_capcodes: Dict[int: str] = {v:k for k,v in capcode_ints.items()}
+def id_2_capcode(capcode_id: int|None) -> str:
+    if capcode_id not in int_capcodes:
         return None
     return int_capcodes.get(capcode_id, Capcode.user)

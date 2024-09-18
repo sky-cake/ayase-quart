@@ -1,13 +1,12 @@
 from orjson import dumps, loads
 
 from . import (
-    MAX_RESULTS,
     POST_PK,
     SearchIndexField,
     SearchQuery,
     search_index_fields
 )
-from .baseprovider import BaseSearch, get_doc_pks
+from .baseprovider import BaseSearch
 
 pk = POST_PK
 
@@ -41,11 +40,11 @@ class LnxSearch(BaseSearch):
                 "boost_fields": {},
                 "reader_threads": 16,
                 "max_concurrency": 16,
-                "writer_buffer": 2_144_000_000,
+                "writer_buffer": 2_144_000_000, # 2GB
                 "writer_threads": 16,
                 "set_conjunction_by_default": True,  # default AND instead of OR for queries
                 "use_fast_fuzzy": False,  # only exact match
-                "strip_stop_words": False,  # keep words like 'the' 'with'
+                "strip_stop_words": False,  # keep words like 'the' and 'with'
                 "auto_commit": 0,
             },
         }
@@ -203,10 +202,10 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.has_file is not None or q.has_no_file is not None:
+        if (q.has_file is not None) or (q.has_no_file is not None):
             query.append(
                 {
-                    'occur': 'mustnot' if q.has_file or q.has_no_file == False else 'must',
+                    'occur': 'mustnot' if q.has_file or (q.has_no_file == False) else 'must',
                     'normal': {
                         'ctx': f'media_filename:None',
                         # 'ctx': f'{"" if q.has_file else "-"}(media_filename:None)',
@@ -281,15 +280,18 @@ def _get_field_type(field: SearchIndexField):
     elif field.field_type is bool:
         return 'u64'
 
+
 def _restore_result(doc: dict):
     if doc['comment'] == '':
         doc['comment'] = None
     return doc
     # return {'comment': doc['comment'], **loads(doc['data'])}
 
+
 def pack_post(post: dict) -> dict:
     post = downcast_fields(post)
     return {k: [str(v)] for k, v in post.items()}
+
 
 # bool_fields = ('op', 'deleted', 'sticky')
 bool_fields = tuple(f.field for f in search_index_fields if f.field_type is bool)

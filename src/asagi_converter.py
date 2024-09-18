@@ -1,9 +1,10 @@
 import asyncio
 import html
 import re
+from functools import cache
 from textwrap import dedent
+from time import perf_counter
 from typing import Any, Dict, List
-from functools import lru_cache
 
 from quart import current_app
 from werkzeug.exceptions import BadRequest
@@ -11,9 +12,9 @@ from werkzeug.exceptions import BadRequest
 from configs import CONSTS
 from e_nums import DbType, SearchMode
 from search.highlighting import html_highlight
-from time import perf_counter
 
-@lru_cache
+
+@cache
 def get_selector(board_shortname, double_percent=True):
     if CONSTS.db_type == DbType.mysql:
         SELECTOR = """

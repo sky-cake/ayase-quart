@@ -5,7 +5,7 @@ from werkzeug.security import check_password_hash
 
 from captcha import MathCaptcha
 from configs import CONSTS
-from db.api import is_user_admin, is_user_moderator, get_user_with_username
+from db.api import get_user_with_username, is_user_admin, is_user_moderator
 from e_nums import AuthActions
 from forms import LoginForm
 from templates import template_login

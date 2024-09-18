@@ -1,5 +1,7 @@
 import quart_flask_patch  # isort: skip
 
+from time import perf_counter
+
 from flask_paginate import Pagination
 from quart import Blueprint
 
@@ -23,7 +25,6 @@ from utils import (
     validate_board_shortname,
     validate_threads
 )
-from time import perf_counter
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 

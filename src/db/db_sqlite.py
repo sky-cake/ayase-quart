@@ -19,12 +19,7 @@ class SQLiteDatabaseAppContext(DatabaseInterface):
         await current_app.pool.close()
 
     async def query_execute(self, sql, params=None, fetchone=False, commit=False):
-        pattern = r'%\((\w+)\)s'
-        # replace %(name)s with :name
-        sql = re.sub(pattern, r':\1', sql)
-
-        sql = sql.replace('`', '')
-        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")  # I know...
+        sql = patch_query(sql)
 
         if CONSTS.SQLALCHEMY_ECHO:
             print(sql)
@@ -56,12 +51,7 @@ class SQLiteDatabase(DatabaseInterface):
         await self.pool.close()
 
     async def query_execute(self, sql, params=None, fetchone=False, commit=False):
-        pattern = r'%\((\w+)\)s'
-        # replace %(name)s with :name
-        sql = re.sub(pattern, r':\1', sql)
-
-        sql = sql.replace('`', '')
-        sql = sql.replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")  # I know...
+        sql = patch_query(sql)
 
         if CONSTS.SQLALCHEMY_ECHO:
             print(sql)
@@ -79,13 +69,18 @@ class SQLiteDatabase(DatabaseInterface):
             return await cursor.fetchall()
 
 
+# Functions below are for doing Tuple queries, which are faster fetching Dict results
+
+
 async def _get_pool():
+    # we apply an attribute on this function to avoid polluting the module's namespace
     if not hasattr(_get_pool, 'pool'):
         _get_pool.pool = await aiosqlite.connect(
             CONSTS.db_path,
             autocommit=True,
         )
     return _get_pool.pool
+
 
 async def _run_query_fast(query: str, params: tuple=None):
     wait_pool = _get_pool()
@@ -102,15 +97,18 @@ async def _run_query_fast(query: str, params: tuple=None):
             return res[0]
         return res
 
+
 async def _close_pool():
     if not hasattr(_get_pool, 'pool'):
         return
     await _get_pool.pool.close()
     delattr(_get_pool, 'pool')
 
-re_colon = re.compile(r'%\((\w+)\)s')
-def patch_query(query: str):
-    return re_colon.sub(r':\1', query).replace('`', '').replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
+
+re_mysql_bind_to_sqlite_bind = re.compile(r'%\((\w+)\)s')
+def patch_query(query: str) -> str:
+    """We write queries against MYSQL initially, then apply SQLITE patches with this function."""
+    return re_mysql_bind_to_sqlite_bind.sub(r':\1', query).replace('`', '').replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
 
 
 Database = SQLiteDatabase
