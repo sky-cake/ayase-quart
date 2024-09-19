@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 from quart import get_flashed_messages, url_for
 
-from e_nums import DbType, IndexSearchType
+from enums import DbType, IndexSearchType
 from meta import all_4chan_boards
 
 

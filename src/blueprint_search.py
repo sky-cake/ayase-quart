@@ -8,7 +8,7 @@ from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
 from configs import CONSTS
-from e_nums import SearchMode
+from enums import SearchMode
 from forms import IndexSearchConfigForm, SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from search.highlighting import get_term_re, mark_highlight

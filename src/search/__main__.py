@@ -9,8 +9,9 @@ usage: python -m search COMMAND [args]
 commands:
 	create
 		create search indexes
-	load board1 [board2 [board3 ...]]
+	load [--reset] board1 [board2 [board3 ...]]
 		index boards (ensure indexes have been created)
+        passing --reset causes a delete and recreate of the index before loading
 	delete
 		delete search indexes
 """
@@ -43,11 +44,17 @@ def main(args):
 
     match args[0]:
         case 'load':
-            if not (boards := args[1:]):
+            if not (args := args[1:]):
                 print("Missing boards.")
                 print_help()
                 sys.exit()
-            asyncio.run(load(boards))
+            if args[0] == '--reset':
+                reset = True
+                boards = args[1:]
+            else:
+                reset = False
+                boards = args
+            asyncio.run(load(boards, reset))
         case 'create':
             asyncio.run(create_index())
         case 'delete':

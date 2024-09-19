@@ -74,7 +74,6 @@ class BoardLoaderPipeline:
             raise e
         finally:
             wait_http_sql = gather(
-                self.search_provider.close(),
                 close_db_pool(),
             )
             self.close()
@@ -335,13 +334,17 @@ async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerat
         after_thread_num = rows[-1][0] # thread_num
 
 
-async def main(boards):
+async def main(boards: list[str], reset: bool=False):
     from .providers import get_search_provider
 
     sp = get_search_provider()
     try:
+        if reset:
+            await sp.posts_wipe()
+            await sp.init_indexes()
         for board in boards:
             await index_board(board, sp)
+        await sp.finalize()
     except Exception as e:
         print(e)
     finally:
