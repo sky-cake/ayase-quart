@@ -25,7 +25,7 @@ from wtforms.validators import (
 
 from configs import CONSTS
 from db.api import get_user_with_username, is_correct_password
-from e_nums import ReportCategory, ReportStatus, SearchMode, UserRole
+from enums import ReportCategory, ReportStatus, SearchMode, UserRole
 from posts.capcodes import Capcode
 
 LENGTH_MD5_HASH = 32

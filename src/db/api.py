@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from configs import CONSTS, DbType
 from db import get_database_instance
-from e_nums import DbType, UserRole
+from enums import DbType, UserRole
 from meta import all_4chan_boards
 
 

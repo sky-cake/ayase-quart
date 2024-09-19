@@ -1,7 +1,7 @@
 from typing import Callable
 
 from configs import CONSTS
-from e_nums import DbType
+from enums import DbType
 
 from . import db_mysql, db_sqlite
 from .db_interface import DatabaseInterface
