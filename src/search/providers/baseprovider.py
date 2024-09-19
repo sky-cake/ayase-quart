@@ -70,6 +70,9 @@ class BaseSearch(ABC):
 
     def _get_batch_pack_fn(self) -> Callable[[dict], bytes]:
         return dumps
+    
+    def _finalize(self, index: str):
+        pass
 
     async def index_ready(self, index: str):
         return (await self._index_ready(index)) == 'ready'
@@ -109,6 +112,9 @@ class BaseSearch(ABC):
 
     async def post_stats(self):
         return await self._index_stats(INDEXES.posts)
+    
+    async def finalize(self):
+        await self._finalize(INDEXES.posts)
 
 
 """

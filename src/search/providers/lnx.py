@@ -101,6 +101,9 @@ class LnxSearch(BaseSearch):
         resp = await self.client.post(url)
         return loads(await resp.read())
 
+    async def _finalize(self, index: str):
+        await self._commit_write(index)
+
     def _get_post_pack_fn(self):
         return pack_post
 

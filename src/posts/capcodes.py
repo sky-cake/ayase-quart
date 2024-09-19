@@ -34,7 +34,7 @@ def capcode_2_id(capcode: str|None) -> int:
 	return capcode_ints.get(capcode, 0)
 
 
-int_capcodes: Dict[int: str] = {v:k for k,v in capcode_ints.items()}
+int_capcodes: Dict[int, str] = {v:k for k,v in capcode_ints.items()}
 def id_2_capcode(capcode_id: int|None) -> str:
     if capcode_id not in int_capcodes:
         return None
