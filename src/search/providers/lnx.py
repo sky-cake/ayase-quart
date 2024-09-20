@@ -50,9 +50,12 @@ class LnxSearch(BaseSearch):
         }
         resp = await self.client.post(url, data=dumps(payload))
         resp = loads(await resp.read())
-        # print(resp)
+
+        if resp['status'] != 200:
+            raise ValueError(resp)
+
         await self._commit_write(index)
-        # return loads(await resp.read())
+
 
     async def _index_clear(self, index: str):
         url = self._get_index_url(index) + '/documents/clear'
@@ -117,7 +120,16 @@ class LnxSearch(BaseSearch):
             'sort': q.sort,
         }
         resp = await self.client.post(url, data=dumps(payload))
-        parsed = loads(await resp.read())['data']
+        parsed = loads(await resp.read())
+
+        if parsed['status'] != 200:
+            raise ValueError(parsed)
+
+        parsed = parsed['data']
+
+        if parsed == 'index does not exist':
+            raise ValueError(f'{parsed=}, {index=}')
+
         if 'count' not in parsed:
             print(parsed)
             return [], 0

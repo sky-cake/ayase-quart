@@ -46,7 +46,7 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['num']:
         q.num = int(params['num'])
     if params['result_limit']:
-        q.result_limit = positive_int(params['result_limit'], below=CONSTS.max_result_limit)
+        q.result_limit = positive_int(params['result_limit'], upper=CONSTS.max_result_limit)
     if params['media_filename']:
         q.media_file = params['media_filename']
     if params['media_hash']:

@@ -105,7 +105,7 @@ class MeiliSearch(BaseSearch):
         search_attrs = [f.field for f in search_index_fields if f.searchable]
         filter_attrs = [f.field for f in search_index_fields if f.filterable]
         sort_attrs = [f.field for f in search_index_fields if f.sortable]
-        return await self._configure_index(INDEXES.posts, pk, search_attrs, filter_attrs, sort_attrs)
+        return await self._configure_index(INDEXES.posts.value, pk, search_attrs, filter_attrs, sort_attrs)
 
     async def _search_index(self, index: str, q: SearchQuery):
         url = self._get_index_url(index) + '/search'

@@ -81,13 +81,13 @@ class BaseSearch(ABC):
         """Returns search results and num hits.
         Upstream calculates pages from cur_page and limits.
         """
-        results, total_hits = await self._search_index(INDEXES.posts, q)
+        results, total_hits = await self._search_index(INDEXES.posts.value, q)
         # results = [{'comment':r['comment'], **unpack_metadata(r['data'])} for r in results]
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
 
     async def add_posts(self, posts: list[dict]):
-        await self._add_docs(INDEXES.posts, posts)
+        await self._add_docs(INDEXES.posts.value, posts)
 
     def get_post_pack_fn(self):
         return self._get_post_pack_fn()
@@ -96,25 +96,25 @@ class BaseSearch(ABC):
         return self._get_batch_pack_fn()
 
     async def add_posts_bytes(self, posts: bytes):
-        await self._add_docs_bytes(INDEXES.posts, posts)
+        await self._add_docs_bytes(INDEXES.posts.value, posts)
 
     async def remove_posts(self, doc_ids: list[int]):
-        await self._remove_docs(INDEXES.posts, doc_ids)
+        await self._remove_docs(INDEXES.posts.value, doc_ids)
 
     async def posts_ready(self):
-        return await self._index_ready(INDEXES.posts)
+        return await self._index_ready(INDEXES.posts.value)
 
     async def posts_wipe(self):
-        return await self._index_delete(INDEXES.posts)
+        return await self._index_delete(INDEXES.posts.value)
 
     async def init_indexes(self):
-        await self._create_index(INDEXES.posts)
+        await self._create_index(INDEXES.posts.value)
 
     async def post_stats(self):
-        return await self._index_stats(INDEXES.posts)
+        return await self._index_stats(INDEXES.posts.value)
     
     async def finalize(self):
-        await self._finalize(INDEXES.posts)
+        await self._finalize(INDEXES.posts.value)
 
 
 """
