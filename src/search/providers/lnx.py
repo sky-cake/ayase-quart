@@ -102,7 +102,10 @@ class LnxSearch(BaseSearch):
     async def _commit_write(self, index: str):
         url = self._get_index_url(index) + '/commit'
         resp = await self.client.post(url)
-        return loads(await resp.read())
+        resp = loads(await resp.read())
+        if resp['status'] != 200:
+            raise ValueError(resp)
+        return resp
 
     async def _finalize(self, index: str):
         await self._commit_write(index)
