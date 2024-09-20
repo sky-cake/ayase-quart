@@ -77,8 +77,18 @@ def posix_ts_2_formatted(ts: int) -> str:
     return datetime.fromtimestamp(ts).strftime(now_fmt)
 
 
-def formatted_2_posix_ts(now: str) -> int:
-    return int(datetime.strptime(now, now_fmt).timestamp())
+def formatted_2_posix_ts(datetime_str: str) -> int:
+    formats = [
+        '%m/%d/%y (%a) %H:%M:%S', # '10/29/15 (Thu) 22:33:37'
+        '%Y-%m-%d %H:%M:%S', # '2024-09-18 14:30:00'
+    ]
+
+    for fmt in formats:
+        try:
+            return int(datetime.strptime(datetime_str, fmt).timestamp())
+        except ValueError:
+            pass
+    raise ValueError(f"Date format not recognized for: {datetime_str}")
 
 
 msg_packer: Packer = Packer()
@@ -88,7 +98,10 @@ def pack_metadata(row: dict) -> str:
         row['name'] = None
     if del_time := row['deleted_time']:
         # something wrong with the dumps
-        row['deleted_time'] = 0 if del_time.startswith('12/31/69') else formatted_2_posix_ts(del_time)
+        if del_time.startswith('12/31/69'):
+            row['deleted_time'] = 0
+        else:
+            row['deleted_time'] = formatted_2_posix_ts(del_time)
     return b64encode(compress(msg_packer.pack([row.get(f) for f in fields]), level=9, wbits=-15)).decode()
 
 
