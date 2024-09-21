@@ -1,11 +1,11 @@
 services:
-    lnx:
-      image: chillfish8/lnx:latest
-      ports:
-        - "8000:8000"
-      volumes:
-        - ./data:/etc/lnx/index
-      environment:
-        - AUTHORIZATION_KEY=hello
-        - LOG_LEVEL=info
-      restart: unless-stopped
+  lnx:
+    image: chillfish8/lnx:0.9.0
+    # image: chillfish8/lnx:latest
+    network_mode: 'host'
+    stdin_open: true
+    environment:
+      - AUTHORIZATION_KEY=hello
+      - LOG_LEVEL=info
+    volumes:
+      - "./data:/etc/lnx/index"

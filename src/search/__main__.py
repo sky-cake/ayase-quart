@@ -5,7 +5,7 @@ from .loader import main as load
 from .providers import get_search_provider
 
 help_text = """
-usage: python -m search COMMAND [args]
+usage: python3.12 -m search COMMAND [args]
 commands:
 	create
 		create search indexes

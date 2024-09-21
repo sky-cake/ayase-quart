@@ -1,11 +1,8 @@
+from typing import Any
+
 from orjson import dumps, loads
 
-from . import (
-    POST_PK,
-    SearchIndexField,
-    SearchQuery,
-    search_index_fields
-)
+from . import POST_PK, SearchIndexField, SearchQuery, search_index_fields
 from .baseprovider import BaseSearch
 
 pk = POST_PK
@@ -52,7 +49,7 @@ class LnxSearch(BaseSearch):
         resp = loads(await resp.read())
 
         if resp['status'] != 200:
-            raise ValueError(resp)
+            print(resp)
 
         await self._commit_write(index)
 
@@ -76,7 +73,7 @@ class LnxSearch(BaseSearch):
         resp = await self.client.get(url)
         return loads(await resp.read())
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    async def _add_docs(self, index: str, docs: list[Any]):
         # await self._remove_docs(index, get_doc_pks(docs))
         url = self._get_index_url(index) + '/documents'
         docs = [
@@ -104,7 +101,7 @@ class LnxSearch(BaseSearch):
         resp = await self.client.post(url)
         resp = loads(await resp.read())
         if resp['status'] != 200:
-            raise ValueError(resp)
+            print(resp) # this can be 400 if the index does not exist yet, which is not an issue here
         return resp
 
     async def _finalize(self, index: str):
@@ -126,7 +123,7 @@ class LnxSearch(BaseSearch):
         parsed = loads(await resp.read())
 
         if parsed['status'] != 200:
-            raise ValueError(parsed)
+            print(parsed)
 
         parsed = parsed['data']
 

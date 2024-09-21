@@ -3,7 +3,7 @@
 def positive_int(value: int|float|str, lower: int=0, upper: int=None) -> int:
     """Clamps a value within the range:
 
-    lower <= abs(int(value)) <= below
+    `lower <= abs(int(value)) <= upper`
     """
     value = max(abs(int(value)), lower)
     if upper is not None:

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from configs import CONSTS
-from posts.capcodes import capcode_2_id
+from posts.capcodes import Capcode, capcode_2_id
 from utils.validation import positive_int
 
 from .post_metadata import board_2_int
@@ -59,8 +59,8 @@ def get_search_query(params: dict) -> SearchQuery:
         q.width = positive_int(params['width'])
     if params['height']:
         q.height = positive_int(params['height'])
-    if params['user'] != 'any':
-        q.capcode = capcode_2_id(params['user'])
+    if params['capcode'] != Capcode.default.value:
+        q.capcode = capcode_2_id(params['capcode'])
     if params['is_op']:
         q.op = True
     if params['is_not_op']:

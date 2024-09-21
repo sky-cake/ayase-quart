@@ -49,7 +49,7 @@ class MeiliSearch(BaseSearch):
         resp = await self.client.get(url)
         return loads(await resp.read())
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    async def _add_docs(self, index: str, docs: list[Any]):
         url = self._get_index_url(index) + '/documents'
         params = {'primaryKey': pk}
         await self.client.post(

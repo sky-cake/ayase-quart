@@ -134,6 +134,10 @@ hr {
     border: none;
 }
 
+code {
+    color: #07ca00;
+}
+
 input[type=submit],
 input[type=password],
 input[type=number],

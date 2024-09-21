@@ -59,7 +59,7 @@ class SearchForm(QuartForm):
     page = IntegerField(default=1, validators=[Optional()])
     width = IntegerField('Width', default=0, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution width')
     height = IntegerField('Height', default=0, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution height')
-    user = SelectField('User', default='any', choices=[('any', 'any')]+[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
+    capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
 
 

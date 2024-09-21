@@ -37,35 +37,10 @@ blueprint_search = Blueprint("blueprint_search", __name__)
 
 @blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
-    search_p = get_search_provider()
-    form = await IndexSearchConfigForm.create_form()
-    if await form.validate_on_submit():
-        match form.operation.data:
-            case 'init':
-                await search_p.init_indexes()
-                msg = 'Index initialized.'
-            case 'populate':
-                boards = form.boards.data
-                if not boards:
-                    msg = 'No board(s) selected.'
-                else:
-                    for board in boards:
-                        await index_board(board, search_p)
-                    msg = f'Index populated with data from [{", ".join(boards)}]'
-            case 'wipe':
-                await search_p.posts_wipe()
-                msg = 'Index data wiped.'
-            case _:
-                msg = 'Unknown operation.'
-    else:
-        msg = 'Choose an action to run.'
-
     return await render_controller(
         template_index_search_config,
         **CONSTS.render_constants,
         tab_title=CONSTS.site_name,
-        form=form,
-        msg=msg,
         board_list=' '.join(CONSTS.boards_in_database),
     )
 

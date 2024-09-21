@@ -8,6 +8,7 @@ from typing import Dict
 
 
 class Capcode(StrEnum):
+	default = 'default'
 	user = ''
 	founder = 'F'
 	dev = 'D'

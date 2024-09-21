@@ -1,3 +1,5 @@
+from typing import Any
+
 from . import SearchQuery
 from .baseprovider import BaseSearch
 
@@ -22,7 +24,7 @@ class MysqlSearch(BaseSearch):
     async def _index_stats(self, index: str):
         return {'Error': 'Stats page not implemented yet.'}
 
-    async def _add_docs(self, index: str, pk: str, docs: list[any]):
+    async def _add_docs(self, index: str, pk: str, docs: list[Any]):
         pass
 
     async def _remove_docs(self, index: str, pk: str, pk_ids: list[str]):

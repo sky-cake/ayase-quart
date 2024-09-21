@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Callable, Generator
+from typing import Any, Callable, Generator
 
 from aiohttp import ClientSession, TCPConnector
 from orjson import dumps
@@ -53,7 +53,7 @@ class BaseSearch(ABC):
     async def _index_stats(self, index: str):
         raise NotImplementedError
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    async def _add_docs(self, index: str, docs: list[Any]):
         raise NotImplementedError
 
     async def _add_docs_bytes(self, index: str, docs: bytes):
@@ -122,5 +122,5 @@ For deleting entries in indexes before adding them
 in engines that don't support unique primary keys
 TODO: Perhaps we need a utils.py file for all the providers...
 """
-def get_doc_pks(docs: list[any]):
+def get_doc_pks(docs: list[Any]):
     return [d['pk'] for d in docs]

@@ -1,3 +1,5 @@
+from typing import Any
+
 from orjson import dumps, loads
 
 from search.highlighting import mark_post, mark_pre
@@ -52,7 +54,7 @@ class TypesenseSearch(BaseSearch):
     def _get_batch_pack_fn(self):
         return lambda docs: b'\n'.join(dumps(doc) for doc in docs)
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    async def _add_docs(self, index: str, docs: list[Any]):
         url = self._get_index_url(index) + '/documents/import'
         data = b'\n'.join(dumps(doc) for doc in docs)
         params = {'action': 'create'}
