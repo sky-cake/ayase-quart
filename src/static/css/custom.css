@@ -1,3 +1,8 @@
+html, body {
+    color: #dddddd!important;
+}
+
+
 #body {
     min-height: 95vh;
 }
@@ -7,7 +12,6 @@ footer {
     padding: 10px;
     margin: 10px;
     text-align: center;
-    border-top: 1px #c5c8c6 solid;
 }
 
 .center {
@@ -26,7 +30,7 @@ footer {
 
 .post_trip {
     font-weight: 400 !important;
-    color: #c5c8c6;
+    color: inherit;
 }
 
 .paginate ul {
@@ -87,12 +91,7 @@ form {
     margin: 1em;
     background-color: #222222;
     max-width: max-content;
-    border-radius: 1em;
-}
-
-.form-control {
-    list-style: none;
-    padding: 3px;
+    border-radius: 4px;
 }
 
 ul {
@@ -107,7 +106,6 @@ ul {
 
 .column {
     margin-left: 1em;
-    display: flex;
     flex-direction: column;
 }
 
@@ -119,12 +117,11 @@ ul {
 .form_button {
     width: 6ch;
     padding: 2px;
-    margin-bottom: 1em;
     background-color: #282a2e;
     border: 1px solid #666666;
     margin: 2px;
-    color: #c5c8c6;
-    border-radius: 2px;
+    color: inherit;
+    border-radius: 4px;
     cursor: pointer;
 }
 
@@ -138,88 +135,65 @@ code {
     color: #07ca00;
 }
 
+.form-control {
+    list-style: none;
+    margin-bottom: 3px;
+    display: flex;
+    max-width: 90vw;
+}
+
+.field_label {
+    background-color: #414141;
+    color: inherit;
+    padding: 2px;
+    width: 100px;
+    border-radius: 4px;
+}
+
+form ul {
+    margin: 0;
+    padding: 2px;
+}
+
+/* overwrite theme styles */
+input
+input[type=submit],
+input[type=password],
+input[type=number],
+input[type=text],
+input[type=date],
+select,
+option,
+textarea
+{
+    filter: none;
+    margin: 0;
+    padding: 2px;
+    width: 240px;
+}
+
+select, option {
+    width: 246px;
+    padding: 3px;
+    text-align: center;
+}
+
 input[type=submit],
 input[type=password],
 input[type=number],
 input[type=text],
 input[type=date] {
-    max-width: 90vw;
     width: 240px;
-    display: block;
-    padding: 2px;
-    margin-bottom: 1em;
-    background-color: #282a2e;
-    border: 1px solid #666666;
-    margin: 2px;
-    color: #c5c8c6;
-}
-
-input[type=number] {
-    max-width: 100px;
-    margin: auto;
-    text-align: center;
-    margin-top: 0.8em;
-}
-
-
-input[type=password] {
-    text-align: left;
-}
-
-textarea {
-    margin: 2px;
-    width: 240px;
-    height: 6em;
-    max-width: 90vw;
-    max-height: 40vh;
-    min-width: 2ch;
-    min-height: 2ch;
     display: block;
     background-color: #282a2e;
     border: 1px solid #666666;
-    color: #c5c8c6;
-    border-radius: 1em;
+    color: inherit;
 }
-
-ul#boards {
-    column-count: 15;
-}
-@media (max-width: 1100px) {
-    ul#boards {
-        column-count: 8;
-    }
-}
-@media (max-width: 600px) {
-    ul#boards {
-        column-count: 4;
-    }
-}
-
-ul#home_boards {
-    column-count: 3;
-    font-size: larger;
-    max-width: 700px;
-}
-@media (max-width: 1200px) {
-    ul#home_boards {
-        column-count: 2;
-        font-size: larger;
-    }
-}
-@media (max-width: 600px) {
-    ul#home_boards {
-        column-count: 1;
-        font-size: larger;
-    }
-}
-
 
 input[type=submit] {
     background-color: #4b2748;
-    border: 1px solid #666666;
     padding: 2px;
-    color: #c5c8c6;
-    border-radius: 1em;
+    color: inherit;
 }
 
 input[type=submit]:hover {
@@ -230,6 +204,28 @@ input[type=submit]:hover {
 input[type=submit]:disabled {
     cursor: default;
     background-color: #462443;
+}
+
+input[type=password] {
+    text-align: left;
+}
+
+textarea {
+    width: 240px;
+    height: 6em;
+    max-width: 90vw;
+    max-height: 40vh;
+    min-width: 2ch;
+    min-height: 2ch;
+    display: block;
+    background-color: #282a2e;
+    border: 1px solid #666666;
+    color: inherit;
+    font: inherit!important;
+}
+
+ul#boards {
+    column-count: 4;
 }
 
 div.form-check {
@@ -324,7 +320,7 @@ input[type="number"] {
 
 #flash {
     background-color: #302ea1;
-    color: white;
+    color: inherit;
     padding: 1em;
     margin: 1em;
     border-radius: 4px;
