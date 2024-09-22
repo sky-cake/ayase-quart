@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import NamedTuple
 
-from quart import get_flashed_messages, url_for
+from quart import get_flashed_messages, url_for, request
 
 from enums import DbType, IndexSearchType
 from meta import all_4chan_boards
@@ -120,6 +120,7 @@ class CONSTS(NamedTuple):
         index_search_provider=index_search_provider,
         index_search_host=index_search_host.strip('/'),
         url_for=url_for,
+        request=request,
         get_flashed_messages=get_flashed_messages,
     )
 
