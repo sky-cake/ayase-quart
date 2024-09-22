@@ -325,3 +325,33 @@ input[type="number"] {
     margin: 1em;
     border-radius: 4px;
 }
+
+.hover_image {
+    position: fixed;
+    top: 0;
+    right: 0;
+    max-width: 50vw;
+    max-height: 70vh;
+}
+
+img {
+    cursor: pointer;
+}
+
+#top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #1d1f21;
+    padding: 4px;
+    z-index: 1000;
+}
+
+#bottom {
+    z-index: 1000;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background-color: #1d1f21;
+    padding: 4px;
+}

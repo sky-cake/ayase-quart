@@ -21,10 +21,19 @@
     </head>
 
     <body>
+        <script type="text/javascript" src="/static/js/index.js"></script>
+
+        {% if request.endpoint in ['blueprint_app.v_thread', 'blueprint_app.v_board_index', 'blueprint_search.v_search', 'blueprint_search.v_index_search'] %}
+            <script type="text/javascript" src="/static/js/thread.js"></script>
+        {% endif %}
+
         <div id="body">
-            <span id="top">[<a href="#bottom">Bottom</a>]</span>
-            <br>
-            <br>
+            {% if request.endpoint in ['blueprint_app.v_thread', 'blueprint_app.v_board_index', 'blueprint_app.v_catalog', 'blueprint_search.v_search', 'blueprint_search.v_index_search'] %}
+                <span id="top">[<a href="#top_hidden">Top</a>] [<a href="#bottom_hidden">Bottom</a>]</span>
+                <span id="top_hidden"></span>
+                <br>
+                <br>
+            {% endif %}
 
             {% if not index %}
                 <div class="letters">
@@ -99,15 +108,16 @@
                         {% endif %}
                     </div>
                 {% endif %}
-
+                
                 {% include 'flash.html' %}
-
+                
                 {% block body %}
                 {% endblock %}
             </div>
 
-            <script type="text/javascript" src="/static/js/index.js"></script>
-            <span id="bottom">[<a href="#top">Top</a>]</span>
+            {% if request.endpoint in ['blueprint_app.v_thread', 'blueprint_app.v_board_index', 'blueprint_app.v_catalog', 'blueprint_search.v_search', 'blueprint_search.v_index_search'] %}
+                <span id="bottom_hidden"></span>
+            {% endif %}
 
         </div>
         <footer id="footer">
