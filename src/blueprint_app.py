@@ -1,5 +1,7 @@
 import quart_flask_patch  # isort: skip
 
+from time import perf_counter
+
 from flask_paginate import Pagination
 from quart import Blueprint
 

@@ -1,17 +1,21 @@
 import asyncio
 import html
 import re
+from functools import cache
 from textwrap import dedent
+from time import perf_counter
 from typing import Any, Dict, List
 
 from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS
-from e_nums import DbType, SearchMode
+from enums import DbType, SearchMode
+from posts.capcodes import Capcode
 from search.highlighting import html_highlight
 from time import perf_counter
 
+@cache
 def get_selector(board_shortname, double_percent=True):
     if CONSTS.db_type == DbType.mysql:
         SELECTOR = """
@@ -20,30 +24,30 @@ def get_selector(board_shortname, double_percent=True):
         `num` AS `no`,
         '{board_shortname}' AS `board_shortname`,
         DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `now`,
-        DATE_FORMAT(FROM_UNIXTIME(`timestamp_expired`), "%m/%d/%y (%a) %H:%i:%S") AS `deleted_time`,
+        COALESCE(DATE_FORMAT(FROM_UNIXTIME(`timestamp_expired`), "%m/%d/%y (%a) %H:%i:%S"), 0) AS `deleted_time`,
         `name`,
-        `{board_shortname}`.`sticky`,
+        COALESCE(`{board_shortname}`.`sticky`, 0) as sticky,
         (CASE WHEN `title` IS NULL THEN '' ELSE `title` END) AS `sub`,
-        `media_w` AS `w`,
-        `media_h` AS `h`,
-        `preview_w` AS `tn_w`,
-        `preview_h` AS `tn_h`,
+        COALESCE(`media_w`, 0) AS `w`,
+        COALESCE(`media_h`, 0) AS `h`,
+        COALESCE(`preview_w`, 0) AS `tn_w`,
+        COALESCE(`preview_h`, 0) AS `tn_h`,
         `timestamp` AS `time`,
         `preview_orig` AS `asagi_preview_filename`,
         `media_orig` AS `asagi_filename`,
         (CASE WHEN `media_orig` IS NULL THEN timestamp * 1000 ELSE SUBSTRING_INDEX(media_orig, '.', 1) END) AS `tim`,
         `{board_shortname}`.`media_hash` AS `md5`,
-        `media_size` AS `fsize`,
+        COALESCE(`media_size`, 0) AS `fsize`,
         (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `filename`,
         (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS `ext`,
         (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE `{board_shortname}`.`thread_num` END) AS `resto`,
         (CASE WHEN capcode='N' THEN NULL ELSE `capcode` END) AS `capcode`,
         `trip`,
-        `spoiler`,
+        COALESCE(`spoiler`, 0) as spoiler,
         `poster_country` AS `country`,
         `poster_hash`,
-        `{board_shortname}`.`locked` AS `closed`,
-        `deleted` AS `filedeleted`,
+        COALESCE(`{board_shortname}`.`locked`, 0) AS `closed`,
+        COALESCE(`deleted`, 0) AS `filedeleted`,
         `exif`,
         `comment` AS `com`
         """
@@ -56,30 +60,30 @@ def get_selector(board_shortname, double_percent=True):
         num AS no,
         '{board_shortname}' AS board_shortname,
         datetime(timestamp, 'unixepoch') AS now,
-        datetime(timestamp_expired, 'unixepoch') AS deleted_time,
+        COALESCE(datetime(timestamp_expired, 'unixepoch'), 0) AS deleted_time,
         name,
-        {board_shortname}.sticky,
+        COALESCE({board_shortname}.sticky, 0) as sticky,
         CASE WHEN title IS NULL THEN '' ELSE title END AS sub,
-        media_w AS w,
-        media_h AS h,
-        preview_w AS tn_w,
-        preview_h AS tn_h,
+        COALESCE(media_w, 0) AS w,
+        COALESCE(media_h, 0) AS h,
+        COALESCE(preview_w, 0) AS tn_w,
+        COALESCE(preview_h, 0) AS tn_h,
         timestamp AS time,
         preview_orig AS asagi_preview_filename,
         media_orig AS asagi_filename,
         CASE WHEN media_orig IS NULL THEN timestamp * 1000 ELSE substr(media_orig, 1, instr(media_orig, '.') - 1) END AS tim,
         {board_shortname}.media_hash AS md5,
-        media_size AS fsize,
+        COALESCE(media_size, 0) AS fsize,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS filename,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, instr(media_filename, '.') + 1) END AS ext,
         CASE WHEN op=1 THEN CAST(0 AS INTEGER) ELSE {board_shortname}.thread_num END AS resto,
         CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
         trip,
-        spoiler,
+        COALESCE(spoiler, 0) as spoiler,
         poster_country AS country,
         poster_hash,
-        {board_shortname}.locked AS closed,
-        deleted AS filedeleted,
+        COALESCE({board_shortname}.locked, 0) AS closed,
+        COALESCE(deleted, 0) AS filedeleted,
         exif,
         comment AS com
         """
@@ -121,7 +125,6 @@ def validate_and_generate_params(form_data):
     Removes inauthentic/non-form data (malicious POST fields, CSRF tags, etc.)
     Specifies the filters for each valid field.
     """
-
     param_filters = {
         'title': {'like': True, 's': '`title` LIKE %(title)s'},
         'comment': {'like': True, 's': '`comment` LIKE %(comment)s'},
@@ -136,6 +139,17 @@ def validate_and_generate_params(form_data):
         'is_not_op': {'s': '`op` != 1'},
         'is_deleted': {'s': '`deleted` = 1'},
         'is_not_deleted': {'s': '`deleted` != 1'},
+        'is_sticky': {'s': '`sticky` = 1'},
+        'is_not_sticky': {'s': '`sticky` != 1'},
+        'width': {'s': '`media_w` = %(width)s'},
+        'height': {'s': '`media_h` = %(height)s'},
+        'capcode': {'s': '`capcode` = %(capcode)s'},
+    }
+
+    defaults_to_ignore = {
+        'width': 0,
+        'height': 0,
+        'capcode': Capcode.default.value,
     }
 
     param_values = {}
@@ -146,15 +160,18 @@ def validate_and_generate_params(form_data):
             param_values[field] = f'%{form_data[field]}%'
 
         elif form_data[field]:
-            param_values[field] = form_data[field]
+            if (field in defaults_to_ignore) and (form_data[field] != defaults_to_ignore[field]):
+                param_values[field] = form_data[field]
+            elif field not in defaults_to_ignore:
+                param_values[field] = form_data[field]
 
     return param_values, param_filters
 
 
 async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order_by: str):
-    """Params e.g.
+    """form_data e.g.
     ```
-        params = dict(
+        form_data = dict(
             boards=['ck', 'mu'],
             title=None,
             comment='skill issue',

@@ -1,13 +1,9 @@
+from typing import Any
+
 from orjson import dumps, loads
 
-from . import (
-    MAX_RESULTS,
-    POST_PK,
-    SearchIndexField,
-    SearchQuery,
-    search_index_fields
-)
-from .baseprovider import BaseSearch, get_doc_pks
+from . import POST_PK, SearchIndexField, SearchQuery, search_index_fields
+from .baseprovider import BaseSearch
 
 pk = POST_PK
 
@@ -40,20 +36,23 @@ class LnxSearch(BaseSearch):
                 'search_fields': ['title', 'comment'],
                 "boost_fields": {},
                 "reader_threads": 16,
-                "max_concurrency": 4,
-                "writer_buffer": 144000000,
-                "writer_threads": 4,
+                "max_concurrency": 16,
+                "writer_buffer": 2_144_000_000, # 2GB
+                "writer_threads": 16,
                 "set_conjunction_by_default": True,  # default AND instead of OR for queries
                 "use_fast_fuzzy": False,  # only exact match
-                "strip_stop_words": False,  # keep words like 'the' 'with'
-                "auto_commit": 1,
+                "strip_stop_words": False,  # keep words like 'the' and 'with'
+                "auto_commit": 0,
             },
         }
         resp = await self.client.post(url, data=dumps(payload))
         resp = loads(await resp.read())
-        # print(resp)
+
+        if resp['status'] != 200:
+            print(resp)
+
         await self._commit_write(index)
-        # return loads(await resp.read())
+
 
     async def _index_clear(self, index: str):
         url = self._get_index_url(index) + '/documents/clear'
@@ -74,13 +73,20 @@ class LnxSearch(BaseSearch):
         resp = await self.client.get(url)
         return loads(await resp.read())
 
-    async def _add_docs(self, index: str, docs: list[any]):
-        await self._remove_docs(index, get_doc_pks(docs))
+    async def _add_docs(self, index: str, docs: list[Any]):
+        # await self._remove_docs(index, get_doc_pks(docs))
         url = self._get_index_url(index) + '/documents'
-        docs = [{k: [str(v)] for k, v in d.items()} for d in docs]
+        docs = [
+            {k: [str(v)] for k, v in downcast_fields(doc).items()}
+            for doc in docs
+        ]
         resp = await self.client.post(url, data=dumps(docs))
-        await self._commit_write(index)
+        # await self._commit_write(index)
         # return loads(await resp.read())
+
+    async def _add_docs_bytes(self, index: str, docs: bytes):
+        url = self._get_index_url(index) + '/documents'
+        resp = await self.client.post(url, data=docs)
 
     async def _remove_docs(self, index: str, pk_ids: list[str]):
         if not pk_ids: return
@@ -93,7 +99,16 @@ class LnxSearch(BaseSearch):
     async def _commit_write(self, index: str):
         url = self._get_index_url(index) + '/commit'
         resp = await self.client.post(url)
-        return loads(await resp.read())
+        resp = loads(await resp.read())
+        if resp['status'] != 200:
+            print(resp) # this can be 400 if the index does not exist yet, which is not an issue here
+        return resp
+
+    async def _finalize(self, index: str):
+        await self._commit_write(index)
+
+    def _get_post_pack_fn(self):
+        return pack_post
 
     async def _search_index(self, index: str, q: SearchQuery):
         url = self._get_index_url(index) + '/search'
@@ -105,19 +120,28 @@ class LnxSearch(BaseSearch):
             'sort': q.sort,
         }
         resp = await self.client.post(url, data=dumps(payload))
-        parsed = loads(await resp.read())['data']
+        parsed = loads(await resp.read())
+
+        if parsed['status'] != 200:
+            print(parsed)
+
+        parsed = parsed['data']
+
+        if parsed == 'index does not exist':
+            raise ValueError(f'{parsed=}, {index=}')
+
         if 'count' not in parsed:
             print(parsed)
             return [], 0
 
         total = parsed.get('count', 0)
-        hits = [_restore_result(r['doc']) for r in parsed['hits']]
+        hits = (_restore_result(r['doc']) for r in parsed['hits'])
         return hits, total
 
     def _query_builder(self, q: SearchQuery):
         query = []
         if q.terms:
-            query.append({'occur': 'must', 'term': {'ctx': q.terms, 'fields': ['comment', 'title']}})
+            query.append({'occur': 'must', 'term': {'ctx': q.terms.lower(), 'fields': ['comment', 'title']}}) # bug, Titlecase terms won't match anything
         if q.boards:
             query.append(
                 {
@@ -162,7 +186,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'op:{str(q.op)}',
+                        'ctx': f'op:{int(q.op)}',
                     },
                 }
             )
@@ -171,14 +195,32 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'deleted:{str(q.deleted)}',
+                        'ctx': f'deleted:{int(q.deleted)}',
                     },
                 }
             )
-        if q.has_file is not None or q.has_no_file is not None:
+        if q.sticky is not None:
             query.append(
                 {
-                    'occur': 'mustnot' if q.has_file or q.has_no_file == False else 'must',
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'sticky:{int(q.sticky)}',
+                    },
+                }
+            )
+        if q.capcode is not None:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'capcode:{q.capcode}',
+                    },
+                }
+            )
+        if (q.has_file is not None) or (q.has_no_file is not None):
+            query.append(
+                {
+                    'occur': 'mustnot' if q.has_file or (q.has_no_file == False) else 'must',
                     'normal': {
                         'ctx': f'media_filename:None',
                         # 'ctx': f'{"" if q.has_file else "-"}(media_filename:None)',
@@ -200,6 +242,24 @@ class LnxSearch(BaseSearch):
                     'occur': 'must',
                     'normal': {
                         'ctx': f'media_filename:{q.media_file}',
+                    },
+                }
+            )
+        if q.width: # anything not 0
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'width:{q.width}',
+                    },
+                }
+            )
+        if q.height: # anything not 0
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'height:{q.height}',
                     },
                 }
             )
@@ -233,10 +293,29 @@ def _get_field_type(field: SearchIndexField):
     elif field.field_type is float:
         return 'f64'
     elif field.field_type is bool:
-        return 'string'
+        return 'u64'
 
 
 def _restore_result(doc: dict):
-    if doc['comment'] == 'None':
+    if doc['comment'] == '':
         doc['comment'] = None
-    return {'comment': doc['comment'], **loads(doc['data'])}
+    return doc
+    # return {'comment': doc['comment'], **loads(doc['data'])}
+
+
+def pack_post(post: dict) -> dict:
+    post = downcast_fields(post)
+    return {k: [str(v)] for k, v in post.items()}
+
+
+# bool_fields = ('op', 'deleted', 'sticky')
+bool_fields = tuple(f.field for f in search_index_fields if f.field_type is bool)
+# str_fields = ('comment', 'title', 'media_filename', 'media_hash')
+str_fields = tuple(f.field for f in search_index_fields if f.field_type is str)
+def downcast_fields(post: dict):
+    for field in bool_fields:
+        post[field] = int(bool(post[field]))
+    for field in str_fields:
+        if post[field] == None and field != 'media_filename':
+            post[field] = ''
+    return post

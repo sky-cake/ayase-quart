@@ -18,7 +18,6 @@ from db import get_database_instance
 from db.api import init_moderation_db
 from limiter import limiter
 
-
 if CONSTS.TESTING:
     import tracemalloc
     tracemalloc.start()

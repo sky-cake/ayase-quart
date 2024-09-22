@@ -8,6 +8,7 @@ from wtforms.fields import (
     IntegerField,
     PasswordField,
     RadioField,
+    SelectField,
     SelectMultipleField,
     StringField,
     SubmitField,
@@ -24,7 +25,8 @@ from wtforms.validators import (
 
 from configs import CONSTS
 from db.api import get_user_with_username, is_correct_password
-from e_nums import ReportCategory, ReportStatus, SearchMode, UserRole
+from enums import ReportCategory, ReportStatus, SearchMode, UserRole
+from posts.capcodes import Capcode
 
 LENGTH_MD5_HASH = 32
 
@@ -39,20 +41,25 @@ class SearchForm(QuartForm):
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
     result_limit = IntegerField('Result Limit', default=CONSTS.default_result_limit, validators=[NumberRange(1, CONSTS.max_result_limit)], description='Per board')
-    title = StringField("Title", validators=[Optional(), Length(2, 256)])
+    title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     num = StringField("Post Number", validators=[Optional(), Length(2, 20)])
     media_filename = StringField("Filename", validators=[Optional(), Length(2, 256)])
     media_hash = StringField("File Hash", validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
     date_after = DateField('Date after', validators=[Optional()], format='%Y-%m-%d')
     date_before = DateField('Date before', validators=[Optional()], format='%Y-%m-%d')
-    has_file = BooleanField('Post contains a file', default=False, validators=[Optional()])
-    has_no_file = BooleanField('Post contains no file', default=False, validators=[Optional()])
-    is_op = BooleanField('Is opening post (OP)', default=False, validators=[Optional()])
-    is_not_op = BooleanField('Is not opening post (OP)', default=False, validators=[Optional()])
-    is_deleted = BooleanField('Is deleted', default=False, validators=[Optional()])
-    is_not_deleted = BooleanField('Is not deleted', default=False, validators=[Optional()])
+    has_file = BooleanField('Has File', default=False, validators=[Optional()])
+    has_no_file = BooleanField('No file', default=False, validators=[Optional()])
+    is_op = BooleanField('OP', default=False, validators=[Optional()])
+    is_not_op = BooleanField('Not OP', default=False, validators=[Optional()])
+    is_deleted = BooleanField('Deleted', default=False, validators=[Optional()])
+    is_not_deleted = BooleanField('Not deleted', default=False, validators=[Optional()])
+    is_sticky = BooleanField('Sticky', default=False, validators=[Optional()])
+    is_not_sticky = BooleanField('Not sticky', default=False, validators=[Optional()])
     page = IntegerField(default=1, validators=[Optional()])
+    width = IntegerField('Width', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution width')
+    height = IntegerField('Height', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution height')
+    capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
 
 
@@ -92,7 +99,7 @@ async def validate_username_is_provided(form, field):
 
 
 async def validate_login_user(form, field):
-    '''Login user should already exist.'''
+    """Login user should already exist."""
 
     username = form.username.data
     password_candidate = form.password.data

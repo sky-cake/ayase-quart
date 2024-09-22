@@ -1,10 +1,4 @@
-from quart import (
-    Blueprint,
-    current_app,
-    redirect,
-    request,
-    url_for
-)
+from quart import Blueprint, current_app, redirect, request, url_for
 
 from asagi_converter import get_selector
 from blueprint_auth import admin_required

@@ -2,7 +2,9 @@ import asyncio
 import os
 from typing import NamedTuple
 
-from e_nums import DbType, IndexSearchType
+from quart import get_flashed_messages, url_for
+
+from enums import DbType, IndexSearchType
 from meta import all_4chan_boards
 
 
@@ -37,7 +39,7 @@ class CONSTS(NamedTuple):
         SECRET_KEY = f.read().strip()
 
     site_name = "Ayase Quart"
-    site_url = "https://127.0.0.1:9001"
+    site_url = "http://127.0.0.1:9001"
 
     if TESTING:
         site_host = "127.0.0.1"
@@ -117,6 +119,8 @@ class CONSTS(NamedTuple):
         html_linked_target=html_linked_target,
         index_search_provider=index_search_provider,
         index_search_host=index_search_host.strip('/'),
+        url_for=url_for,
+        get_flashed_messages=get_flashed_messages,
     )
 
 
@@ -129,14 +133,11 @@ from db.api import get_boards_in_database
 
 
 def remove_boards_from_configs_if_not_in_database():
-    removals = []
-    for board in CONSTS.boards:
-        if board not in CONSTS.boards_in_database:
-            print(f'ATTENTION! {board=} not found in database. It will be removed from configs.')
-            removals.append(board)
-
-    for b in removals:
-        del CONSTS.boards[b]
+    removals = [board for board in CONSTS.boards if board not in CONSTS.boards_in_database]
+    if removals:
+        print(f'ATTENTION! Boards not found in database:\n\t[{", ".join(removals)}]\nThey will be ignored.')
+        for b in removals:
+            del CONSTS.boards[b]
 
     if not CONSTS.boards:
         raise ValueError(f'No boards to show! Configure one of {CONSTS.boards_in_database}')

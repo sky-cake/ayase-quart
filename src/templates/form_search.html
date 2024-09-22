@@ -1,32 +1,52 @@
 {% from 'macros.html' import render_field %}
 
 <form action="" id="searchform" method="post" class="form" role="form">
+    <div class="column">
+        <div class="row">
+            {{ render_field(form.search_mode, title='Select "gallery" for a mosaic of images.') }}
+        </div>
+    </div>
+
     <div class="row">
         <div class="column">
-            {{ render_field(form.search_mode) }}
-            {{ render_field(form.order_by) }}
+            {{ render_field(form.num, placeholder='Post Number') }}
+            {{ render_field(form.title, placeholder='Post Subject') }}
+            {{ render_field(form.comment, placeholder='Post Comment') }}
         </div>
-        <div class="column">
-            {{ render_field(form.num) }}
-            {{ render_field(form.title) }}
-            {{ render_field(form.comment) }}
-        </div>
-        <div class="column">
-            {{ render_field(form.media_filename) }}
-            {{ render_field(form.media_hash) }}
-            {{ render_field(form.date_after) }}
-            {{ render_field(form.date_before) }}
-        </div>
+    </div>
+
+    <div class="row">
         <div class="column">
             {{ render_field(form.has_file) }}
             {{ render_field(form.has_no_file) }}
+        </div>
+        <div class="column">
             {{ render_field(form.is_op) }}
             {{ render_field(form.is_not_op) }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
             {{ render_field(form.is_deleted) }}
             {{ render_field(form.is_not_deleted) }}
         </div>
         <div class="column">
+            {{ render_field(form.is_sticky) }}
+            {{ render_field(form.is_not_sticky) }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="column">
+            {{ render_field(form.capcode) }}
+            {{ render_field(form.width, placeholder='Image Width') }}
+            {{ render_field(form.height, placeholder='Image Height') }}
             {{ render_field(form.result_limit) }}
+            {{ render_field(form.media_filename, placeholder='Filename') }}
+            {{ render_field(form.media_hash, placeholder='MD5 Hash') }}
+            {{ render_field(form.date_after) }}
+            {{ render_field(form.date_before) }}
+            {{ render_field(form.order_by) }}
         </div>
     </div>
     <div class="row">

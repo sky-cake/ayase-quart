@@ -1,17 +1,13 @@
 services:
-  meilisearch:
-    image: getmeili/meilisearch:latest
-    ports:
-      - "7700:7700"
+  meili:
+    image: getmeili/meilisearch:v1.8
+    network_mode: 'host'
+    stdin_open: true
     environment:
-      MEILI_MASTER_KEY: 'any master keys goes here'
-      MEILI_NO_ANALYTICS: ""
+      MEILI_ENV: development # for the gui
+        # MEILI_MASTER_KEY: 'hereisalongproductionkey'
+      MEILI_NO_ANALYTICS: 'no' # not sure this does anything
       MEILI_LOG_LEVEL: 'WARN'
-      MEILI_ENV: 'development'
+    command: "meilisearch --no-analytics"
     volumes:
       - ./data:/meili_data
-    restart: unless-stopped
-    tty: true
-    stdin_open: true
-    cpuset: '0-2'
-    command: "meilisearch --no-analytics"

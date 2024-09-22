@@ -2,7 +2,13 @@ from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import moderator_required
 from configs import CONSTS
-from db.api import get_report_with_id, get_open_reports, edit_report, delete_report
+from db.api import (
+    delete_report,
+    edit_report,
+    get_open_reports,
+    get_report_with_id
+)
+from forms import ReportForm
 from templates import (
     template_reports_delete,
     template_reports_edit,
@@ -10,7 +16,6 @@ from templates import (
     template_reports_view
 )
 from utils import render_controller
-from forms import ReportForm
 
 blueprint_moderation = Blueprint('blueprint_moderation', __name__)
 

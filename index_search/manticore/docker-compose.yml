@@ -1,12 +1,10 @@
 services:
   manticore:
-    container_name: manticore
     image: manticoresearch/manticore
+    network_mode: 'host'
+    stdin_open: true
     environment:
       - EXTRA=1
-    ports:
-      - 127.0.0.1:9306:9306
-      - 127.0.0.1:9308:9308
     ulimits:
       nproc: 65535
       nofile:
@@ -17,4 +15,3 @@ services:
         hard: -1
     volumes:
       - ./data:/var/lib/manticore
-    restart: unless-stopped

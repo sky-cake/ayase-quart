@@ -1,5 +1,8 @@
-from highlighting import mark_post, mark_pre
+from typing import Any
+
 from orjson import dumps, loads
+
+from search.highlighting import mark_post, mark_pre
 
 from . import (
     MAX_RESULTS,
@@ -48,12 +51,20 @@ class TypesenseSearch(BaseSearch):
         resp = await self.client.get(url)
         return loads(await resp.read())
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    def _get_batch_pack_fn(self):
+        return lambda docs: b'\n'.join(dumps(doc) for doc in docs)
+
+    async def _add_docs(self, index: str, docs: list[Any]):
         url = self._get_index_url(index) + '/documents/import'
         data = b'\n'.join(dumps(doc) for doc in docs)
         params = {'action': 'create'}
         resp = await self.client.post(url, params=params, data=data)
         return [loads(line) for line in await resp.read().splitlines()]
+
+    async def _add_docs_bytes(self, index: str, docs: bytes):
+        url = self._get_index_url(index) + '/documents/import'
+        params = {'action': 'create'}
+        await self.client.post(url, params=params, data=docs)
 
     async def _remove_docs(self, index: str, pk_ids: list[str]):
         url = self._get_index_url(index) + '/documents'
@@ -109,13 +120,21 @@ def _build_filter(q: SearchQuery):
     if q.media_hash is not None:
         filters.append(f'media_hash := `{q.media_hash}`')
     if q.op is not None:
-        filters.append(f'op := {str(q.op).lower()}')
+        filters.append(f'op := {q.op}')
+    if q.capcode is not None:
+        filters.append(f'capcode := {q.capcode}')
     if q.deleted is not None:
-        filters.append(f'deleted := {str(q.deleted).lower()}')
+        filters.append(f'deleted := {q.deleted}')
+    if q.sticky is not None:
+        filters.append(f'sticky := {q.sticky}')
     # typesense doesn't have null filtering yet
     # https://github.com/typesense/typesense/issues/790
     if q.file is not None:
         filters.append(f'media_filename :{"!" if q.file else ""}= `None`')
+    if q.width is not None:
+        filters.append(f'width := {q.width}')
+    if q.height is not None:
+        filters.append(f'height := {q.height}')
     if q.before is not None:
         filters.append(f'timestamp :< {q.before}')
     if q.after is not None:
