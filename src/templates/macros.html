@@ -102,7 +102,7 @@
 {% macro render_field(field) %}
   <div class="form-control">
     {% if field.name not in ['submit', 'captcha_id'] %}
-      {{ field.label }}
+      <div class="field_label">{{ field.label }}</div>
     {% endif %}
 
     {{ field(**kwargs)|safe }}

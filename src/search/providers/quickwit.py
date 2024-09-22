@@ -1,4 +1,5 @@
 from itertools import batched
+from typing import Any
 
 from orjson import dumps, loads
 
@@ -66,7 +67,7 @@ class QuickwitSearch(BaseSearch):
         resp = await self.client.get(url)
         return loads(await resp.read())
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    async def _add_docs(self, index: str, docs: list[Any]):
         # await self._remove_docs(index, get_doc_pks(docs))
         url = self._get_index_url2(index) + '/ingest'
         # this 10k limit is documented nowhere...

@@ -1,3 +1,5 @@
+from typing import Any
+
 import aiomysql
 from orjson import loads
 
@@ -63,7 +65,7 @@ class ManticoreSearch(BaseSearch):
     async def _index_stats(self, index: str):
         return {'Error': 'Stats page not implemented yet.'}
 
-    async def _add_docs(self, index: str, docs: list[any]):
+    async def _add_docs(self, index: str, docs: list[Any]):
         columns = [f.field for f in search_index_fields]
         vals = [tuple(d[c] for c in columns) for d in docs]
         q = f'insert into {index}({",".join(f"`{c}`" for c in columns)}) values {",".join("%s" for _ in vals)}'

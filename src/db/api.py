@@ -6,12 +6,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from configs import CONSTS, DbType
 from db import get_database_instance
-from e_nums import DbType, UserRole
+from enums import DbType, UserRole
 from meta import all_4chan_boards
 
 
 class dotdict(dict):
-    '''dot.notation access to dictionary attributes'''
+    """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__

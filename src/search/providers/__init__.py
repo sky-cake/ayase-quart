@@ -1,8 +1,4 @@
-from base64 import b85decode, b85encode
 from dataclasses import dataclass
-from zlib import compress, decompress
-
-from orjson import dumps, loads
 
 from configs import CONSTS, IndexSearchType
 
@@ -23,17 +19,20 @@ class SearchIndexField:
 
 
 search_index_fields = [
-    SearchIndexField('pk', str, filterable=True),
+    SearchIndexField('pk', int, filterable=True),
     SearchIndexField('title', str, searchable=True, optional=True),
     SearchIndexField('comment', str, searchable=True, optional=True),
-    SearchIndexField('board', str, filterable=True),
-    SearchIndexField('thread_num', int, filterable=True),
+    SearchIndexField('board', int, filterable=True),
     SearchIndexField('media_filename', str, filterable=True, optional=True),
     SearchIndexField('media_hash', str, filterable=True, optional=True),
     SearchIndexField('num', int, filterable=True),
+    SearchIndexField('width', int, filterable=True, optional=True),
+    SearchIndexField('height', int, filterable=True, optional=True),
     SearchIndexField('timestamp', int, sortable=True, filterable=True),
     SearchIndexField('op', bool, filterable=True),
     SearchIndexField('deleted', bool, filterable=True),
+    SearchIndexField('capcode', int, filterable=True),
+    SearchIndexField('sticky', bool, filterable=True),
     SearchIndexField('data', str),
 ]
 
@@ -60,12 +59,3 @@ def get_search_provider():
     search_p = Search_p(CONSTS.index_search_host, CONSTS.index_search_config)
     get_search_provider.search_p = search_p
     return search_p
-
-
-# https://www.meilisearch.com/docs/guides/performance/indexing_best_practices#optimize-document-size
-def compress_data(data: dict):
-    return b85encode(compress(dumps(data), level=9, wbits=-15)).decode()
-
-
-def decompress_data(data: str):
-    return loads(decompress(b85decode(data), wbits=-15, bufsize=2048))
