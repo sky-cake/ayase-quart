@@ -39,7 +39,7 @@ class CONSTS(NamedTuple):
         SECRET_KEY = f.read().strip()
 
     site_name = "Ayase Quart"
-    site_url = "https://127.0.0.1:9001"
+    site_url = "http://127.0.0.1:9001"
 
     if TESTING:
         site_host = "127.0.0.1"

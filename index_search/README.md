@@ -2,19 +2,39 @@
 
 Since we have a native MySQL search page available to use, a dedicated search engine is optional.
 
+For setting up a Search Engine, please consult [https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart](https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart).
+
 ### Search Engines
 
+- LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
 - Meili [[Docs](https://www.meilisearch.com/docs/learn/getting_started/installation) | [GitHub](https://github.com/meilisearch/meilisearch)]
 - Manticore [[Docs](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [GitHub](https://github.com/manticoresoftware/manticoresearch)]
 - MySQL 8.x [[Docs](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [GitHub](https://github.com/mysql/mysql-server)]
-- LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
 - TypeSense [[Docs](https://typesense.org/docs/guide/install-typesense.html) | [GitHub](https://github.com/typesense/typesense)]
 - QuickWit [[Docs](https://quickwit.io/docs/get-started/quickstart) | [GitHub](https://github.com/quickwit-oss/quickwit)]
 
 
 ### Notes
 
-- **Meili** (Recommended)
+- **LNX** (Recommended)
+    - **Generation**: 4
+    - **Language**: Rust
+    - **Pros**:
+        - Extremely fast, less than 2ms for 100 results
+    - **Cons**:
+        - No boolean support
+        - No null support
+        - Requires locking for writing (only single API writer allowed, what a bad design)
+        - Documentation lacking
+        - Latest Docker image 0.10.0 doesn't launch
+        - Working Docker image 0.9.0 has old version of Tantivy (0.18.0)
+        - Has double quote escape issues
+        - No multi-server support
+    - **Notes**:
+        - Uses Tantivy for first stage
+        - Markets itself as consistent performance under load vs Meili & Typesense
+        - Not exactly ready for prime time
+- **Meili**
     - **Generation**: 3
     - **Language**: Rust
     - **Pros**:
@@ -40,24 +60,6 @@ Since we have a native MySQL search page available to use, a dedicated search en
     - **Notes**:
       - More of a letdown compared to Meilisearch
       - Doesn't allow un-authenticated dev mode
-- **LNX**
-    - **Generation**: 4
-    - **Language**: Rust
-    - **Pros**:
-        - Extremely fast, less than 2ms for 100 results
-    - **Cons**:
-        - No boolean support
-        - No null support
-        - Requires locking for writing (only single API writer allowed, what a bad design)
-        - Documentation lacking
-        - Latest Docker image 0.10.0 doesn't launch
-        - Working Docker image 0.9.0 has old version of Tantivy (0.18.0)
-        - Has double quote escape issues
-        - No multi-server support
-    - **Notes**:
-        - Uses Tantivy for first stage
-        - Markets itself as consistent performance under load vs Meili & Typesense
-        - Not exactly ready for prime time
 - **Manticore**
     - **Generation**: 4
     - **Language**: C++

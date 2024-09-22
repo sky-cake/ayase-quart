@@ -1,9 +1,8 @@
 services:
   typesense:
-    image: typesense/typesense:latest
-    ports:
-      - "8108:8108"
+    image: typesense/typesense:26.0
+    network_mode: 'host'
+    stdin_open: true
+    command: '--data-dir /data --api-key=typesense --enable-cors'
     volumes:
       - ./data:/data
-    command: '--data-dir /data --api-key=xyz --enable-cors'
-    restart: unless-stopped
