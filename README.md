@@ -16,34 +16,36 @@ It supports MySQL and SQLite databases.
 
 ## Set Up - Without Docker
 
-Please use Python 3.11 or 3.12.
+Please use Python 3.12.
 
 Assuming you have a data source set up, you can:
 
 1. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
 2. Create a file called `./src/configs.py` using `./src/rename_to_configs.py`
-    - If you do not have a data source to point to, set up [Ritual (SQLite)](https://github.com/sky-cake/Ritual), [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper), [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters) or [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL. Ayase Quart provides some notes below to help set them up.
-3. Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
+    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
+      - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
+      - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
+      - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
+      - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
+3. (Optional) Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
 4. Create a virtualenv and install dependencies,
     - `python3.12 -m venv venv`
     - `source venv/bin/activate`
     - `python3.12 -m pip install -r requirements.txt`
     - `sudo apt-get install python3-dev default-libmysqlclient-dev build-essential`
 5. `python3.12 main.py`
-6. Visit `https://127.0.0.1:9001` or `https://<IP_ADDRESS>:9001`, depending on whether you're using SSL certs.
+6. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is `http://127.0.0.1:9001`.
 7. (Optional) Set up a full text search (FTS) database for index searching.
-   - Choose a search engine and run its docker container with `docker compose up`. Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing for your discretion.
+   - Choose a search engine and run its docker container with `docker compose up`. Learn about configuring search engines at [https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart](https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart).
+   - Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing phase for your discretion.
+     - LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
      - Meili [[Docs](https://www.meilisearch.com/docs/learn/getting_started/installation) | [GitHub](https://github.com/meilisearch/meilisearch)] (recommended)
      - Manticore [[Docs](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [GitHub](https://github.com/manticoresoftware/manticoresearch)]
      - MySQL 8.x [[Docs](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [GitHub](https://github.com/mysql/mysql-server)] (not supported yet)
-     - LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
      - TypeSense [[Docs](https://typesense.org/docs/guide/install-typesense.html) | [GitHub](https://github.com/typesense/typesense)]
      - QuickWit [[Docs](https://quickwit.io/docs/get-started/quickstart) | [GitHub](https://github.com/quickwit-oss/quickwit)]
     - Remember to check that your config port matches the docker container port.
-    - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) and follow the instructions.
-      - Initialize, run.
-      - Choose boards, populate, run.
-      - Wipe data, if desired, run.
+    - Run `python3.12 -m search load --reset board1 [board2 [board3 ...]]`. Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for more instructions.
 8. (Optional) Set up redis for rate limiting auth endpoints.
 
     ```
@@ -57,7 +59,7 @@ Assuming you have a data source set up, you can:
 9.  (Optional) Submit pull requests with fixes and new features.
 
 
-## Set Up - With Docker
+## Set Up - With Docker (Not Tested)
 
 1. Create a file called `./src/configs.py` using `./src/rename_to_configs.py` and set the variables.
 2. Create certificates, if needed. See the next section for this.

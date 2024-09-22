@@ -1,0 +1,11 @@
+services:
+  quickwit:
+    image: quickwit/quickwit:0.8.2
+    network_mode: host
+    stdin_open: true
+    environment:
+      QW_DISABLE_TELEMETRY: 1
+    command:
+      - "run"
+    volumes:
+      - "./data:/quickwit/qwdata"
