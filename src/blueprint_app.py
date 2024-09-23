@@ -3,7 +3,7 @@ import quart_flask_patch  # isort: skip
 from time import perf_counter
 
 from flask_paginate import Pagination
-from quart import Blueprint
+from quart import Blueprint, request
 
 from asagi_converter import (
     convert_thread,
@@ -25,7 +25,6 @@ from utils import (
     validate_board_shortname,
     validate_threads
 )
-from time import perf_counter
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 
@@ -53,6 +52,8 @@ async def v_index():
 
 @blueprint_app.get("/<string:board_shortname>")
 async def v_board_index(board_shortname: str):
+    """See `v_board_index_page()` for benchmarks.
+    """
     validate_board_shortname(board_shortname)
 
     index = await generate_index(board_shortname, 1)
@@ -76,15 +77,35 @@ async def v_board_index(board_shortname: str):
 
 @blueprint_app.get("/<string:board_shortname>/page/<int:page_num>")
 async def v_board_index_page(board_shortname: str, page_num: int):
+    """
+    validate: 0.0000
+    gen_indx: 1.4598
+    val_thrd: 0.0000
+    paginate: 0.1702
+    rendered: 0.2564
+    """
+    i = perf_counter()
     validate_board_shortname(board_shortname)
+    f = perf_counter()
+    print(f'validate: {f-i:.4f}')
 
+    i = perf_counter()
     index = await generate_index(board_shortname, page_num)
+    f = perf_counter()
+    print(f'gen_indx: {f-i:.4f}')
 
+    i = perf_counter()
     validate_threads(index['threads'])
+    f = perf_counter()
+    print(f'val_thrd: {f-i:.4f}')
 
+    i = perf_counter()
     pagination = await make_pagination_board_index(board_shortname, index, page_num)
+    f = perf_counter()
+    print(f'paginate: {f-i:.4f}')
 
-    return await render_controller(
+    i = perf_counter()
+    render = await render_controller(
         template_board_index,
         **CONSTS.render_constants,
         pagination=pagination,
@@ -94,6 +115,9 @@ async def v_board_index_page(board_shortname: str, page_num: int):
         title=get_title(board_shortname),
         tab_title=get_title(board_shortname),
     )
+    f = perf_counter()
+    print(f'rendered: {f-i:.4f}')
+    return render
 
 
 async def make_pagination_catalog(board_shortname, catalog, page_num):

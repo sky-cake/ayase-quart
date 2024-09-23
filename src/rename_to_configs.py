@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import NamedTuple
 
-from quart import get_flashed_messages, url_for, request
+from quart import get_flashed_messages, request, url_for
 
 from enums import DbType, IndexSearchType
 from meta import all_4chan_boards

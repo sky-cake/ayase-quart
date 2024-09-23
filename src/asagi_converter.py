@@ -1,22 +1,32 @@
 import asyncio
 import html
 import re
+from collections import defaultdict
 from functools import cache
 from textwrap import dedent
 from time import perf_counter
 from typing import Any, Dict, List
 
-from quart import current_app
+from quart import current_app, request
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS
 from enums import DbType, SearchMode
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from time import perf_counter
+
+selector_columns = (
+    'thread_num', 'no', 'board_shortname', 'now', 'deleted_time', 'name',
+    'sticky', 'sub', 'w', 'h', 'tn_w', 'tn_h', 'time',
+    'asagi_preview_filename', 'asagi_filename', 'tim', 'md5',
+    'fsize', 'filename', 'ext', 'resto', 'capcode', 'trip',
+    'spoiler', 'country', 'poster_hash', 'closed', 'filedeleted', 'exif', 'com'
+)
 
 @cache
 def get_selector(board_shortname, double_percent=True):
+    """Remember to update `selector_columns` when you modify these selectors.
+    """
     if CONSTS.db_type == DbType.mysql:
         SELECTOR = """
         SELECT
@@ -477,51 +487,83 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
     return quotelinks, lines
 
 
-async def generate_index(board_shortname: str, page_num: int, html=True):
-    """Generates the board index"""
+async def generate_index(board_shortname: str, page_num: int):
+    """Generates the board index. The index shows the OP and its 3 latest comments, if any.
 
-    page_num -= 1  # start from 0 when running queries
-    op_list = await convert_thread_ops(board_shortname, page_num)
-    # for each thread, get the first 5 posts and put them in 'threads'
-    threads = []
-    for op in op_list:
-        thread_id = op["posts"][0]["no"]
-        asagi_thread, quotelinks = await convert_thread_preview(board_shortname, thread_id)
+    Returns the dict:
+    
+    ```
+    {'threads': [
+        {'posts': [{OP1}, {reply1}, {reply2}, ...]},
+        {'posts': [{OP2}, {reply1}, {reply2}, ...]},
+    ]}
+    ```
 
-        # determine number of omitted posts
-        omitted_posts = op["posts"][0]["replies"] - len(asagi_thread["posts"]) - 1  # subtract OP
-        op["posts"][0]["omitted_posts"] = omitted_posts
+    OPs have these extra fields added to them:
+        - replies: int
+        - images: int
+        # - omitted_posts: int (to be implemented)
+        # - omitted_images: int (to be implemented)
+    """
+    page_num -= 1  # start from 0 offset when running queries
 
-        # determine number of omitted images
-        num_images_shown = 0
-        for i in range(len(asagi_thread["posts"])):
-            post = asagi_thread["posts"][i]
-            if post["md5"] and post["resto"] != 0:
-                num_images_shown += 1
-            # add quotelinks to thread
-            if html:
-                asagi_thread["posts"][i]["quotelinks"] = quotelinks
+    # Combine OP and replies into a single query to minimize database calls
+    combined_query = f"""
+    WITH latest_ops AS (
+        {get_selector(board_shortname)},
+            threads.`nreplies`,
+            threads.`nimages`,
+            threads.`time_bump`,
+            images.`media_hash`,
+            images.`media`,
+            images.`preview_reply`,
+            images.`preview_op`,
+            NULL as reply_number
+        FROM `{board_shortname}`
+            INNER JOIN `{board_shortname}_threads` AS threads USING (`thread_num`)
+            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
+        WHERE `OP` = 1
+        ORDER BY `time_bump` DESC
+        LIMIT 10
+        OFFSET %(page_num)s -- OFFSET, present or absent, does not slow down the query
+    ),
+    latest_replies AS (
+        {get_selector(board_shortname)},
+            NULL AS `nreplies`,
+            NULL AS `nimages`,
+            NULL AS `time_bump`,
+            images.`media_hash`,
+            images.`media`,
+            images.`preview_reply`,
+            images.`preview_op`,
+            ROW_NUMBER() OVER (PARTITION BY {board_shortname}.`thread_num` ORDER BY {board_shortname}.`num` DESC) AS reply_number
+        FROM `{board_shortname}`
+            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
+        WHERE `thread_num` IN (SELECT thread_num FROM latest_ops) AND `OP` != 1
+    )
+    SELECT * FROM latest_ops
+    UNION ALL
+    SELECT * FROM latest_replies
+    WHERE reply_number <= 3
+    ;"""
+    result = await current_app.db.query_execute(combined_query, params={'page_num': page_num})
 
-        omitted_images = op["posts"][0]["images"] - num_images_shown
-        if op["posts"][0]["md5"]:
-            omitted_images -= 1  # subtract OP if OP has image
+    ops_result = [row for row in result if row['resto'] == 0]
+    replies_result = [row for row in result if row['resto'] != 0]
 
-        op["posts"][0]["omitted_images"] = omitted_images
+    replies_by_thread = defaultdict(list)
+    for reply in replies_result:
+        replies_by_thread[reply['thread_num']].append(convert_post_v2(reply))
 
-        combined = {}
-        # if the thread has only one post, don't repeat OP post.
-        if op["posts"][0]["replies"] == 0:
-            combined = op
-        else:
-            combined["posts"] = op["posts"] + asagi_thread["posts"]
+    results = {'threads': []}
+    for op in ops_result:
+        thread_num = op['thread_num']
+        thread_data = {'posts': [convert_post_v2(op)]}
+        if thread_num in replies_by_thread:
+            thread_data['posts'].extend(replies_by_thread[thread_num])
+        results['threads'].append(thread_data)
 
-        threads.append(combined)
-
-    # encapsulate threads around a dict
-    result = {}
-    result["threads"] = threads
-
-    return result
+    return results
 
 
 async def get_op_thread_count(board_shortname) -> int:
@@ -643,3 +685,36 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
 
     result["posts"] = posts
     return result, quotelink_map
+
+
+def convert_post_v2(post: Dict[Any, Any]) -> Dict:
+    """You loop through your posts, whatever it's structure is, and call
+    this function. We will change all of the field names so it renders in the template.
+
+    Returns a converted post. No quotelinks.
+    """
+
+    # has an image
+    if post.get('md5'):
+        if post.get('resto') == 0:
+            post['asagi_preview_filename'] = post.pop('preview_op')
+        else:
+            post['asagi_preview_filename'] = post.pop('preview_reply')
+
+        post['asagi_filename'] = post.pop('media')
+
+    # is an OP
+    if post['resto'] == 0:
+        if post.get('nreplies'):
+            post['replies'] = post.pop('nreplies')
+
+        if post.get('nimages'):
+            post['images'] = post.pop('nimages')
+
+    thread_num = post.get('thread_num')
+    comment = post.get('com')
+    board_shortname = post.get('board_shortname')
+
+    _, post['com'] = restore_comment(thread_num, comment, board_shortname)
+
+    return post
