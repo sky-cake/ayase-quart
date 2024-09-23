@@ -78,6 +78,14 @@ async def v_board_index(board_shortname: str):
 @blueprint_app.get("/<string:board_shortname>/page/<int:page_num>")
 async def v_board_index_page(board_shortname: str, page_num: int):
     """
+    Benchmarked with SQLite, /news/ with 150 OPs, 8th gen i7.
+    validate: 0.0000
+    gen_indx: 0.0374
+    val_thrd: 0.0000
+    paginate: 0.0156
+    rendered: 1.100 +- 0.400
+
+    Benchmarked with MySQL (9th gen i5), /g/ with ~2 million posts. Rendered on a 5700X
     validate: 0.0000
     gen_indx: 1.4598
     val_thrd: 0.0000
@@ -142,6 +150,12 @@ async def make_pagination_catalog(board_shortname, catalog, page_num):
 
 @blueprint_app.get("/<string:board_shortname>/catalog")
 async def v_catalog(board_shortname: str):
+    """
+    Benchmarked with SQLite, /news/ with 150 OPs, 8th gen i7.
+    time_queries: 0.0646
+    time_paginate: 0.0160
+    time_render: 1.500 +- 0.500 # inconsistent render times
+    """
     validate_board_shortname(board_shortname)
 
     catalog = await generate_catalog(board_shortname, 1)
@@ -187,15 +201,29 @@ async def v_catalog_page(board_shortname: str, page_num: int):
 
 @blueprint_app.get("/<string:board_shortname>/thread/<int:thread_id>")
 async def v_thread(board_shortname: str, thread_id: int):
+    """
+    Benchmarked with SQLite, /news/ post with 102 comments, 8th gen i7.
+    convert:  0.0703
+    validate: 0.0000
+    rendered: 2.5000 +- 0.500
+    """
     validate_board_shortname(board_shortname)
 
+    i = perf_counter()
     # use the existing json app function to grab the data
     thread_dict, quotelinks = await convert_thread(board_shortname, thread_id)
+    f = perf_counter()
+    print(f'convert:  {f-i:.4f}')
+
+    i = perf_counter()
     validate_threads(thread_dict['posts'])
+    f = perf_counter()
+    print(f'validate: {f-i:.4f}')
 
     title = f"/{board_shortname}/ #{thread_id}"
 
-    return await render_controller(
+    i = perf_counter()
+    render = await render_controller(
         template_thread,
         **CONSTS.render_constants,
         posts=thread_dict["posts"],
@@ -204,6 +232,9 @@ async def v_thread(board_shortname: str, thread_id: int):
         title=title,
         tab_title=title,
     )
+    f = perf_counter()
+    print(f'rendered: {f-i:.4f}')
+    return render
 
 
 @blueprint_app.get("/<string:board_shortname>/posts/<int:thread_id>")
