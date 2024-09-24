@@ -32,7 +32,7 @@ configs.py
 secret.txt
 *.pem
 
-# User toml config files, expect templates and pyproject
+# User toml config files, except templates and pyproject
 *.toml
 !*.tpl.toml
 !pyproject.toml
