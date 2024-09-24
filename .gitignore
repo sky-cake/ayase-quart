@@ -1,15 +1,38 @@
+# Custom dev setups
+launch.json
 .vscode
+
+# Build artifacts
 __pycache__/
-.env
-8080
+dist/
+build/
+sdist/
+target/
 *.log
-*.pem
-configs.py
-hayden_asagi/
-venv
-secret.txt
+
+# Virtualenvs
+.env
+.venv
+env/
+venv/
+env.bak/
+venv.bak/
+
+# images and search
 neo/
+hayden_asagi/
 meili_data/
 data/
+
+# sqlite databases
 *.db
-launch.json
+
+# Application config + secrets
+configs.py
+secret.txt
+*.pem
+
+# User toml config files, expect templates and pyproject
+*.toml
+!*.tpl.toml
+!pyproject.toml
