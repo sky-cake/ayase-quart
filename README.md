@@ -21,21 +21,22 @@ Please use Python 3.12.
 Assuming you have a data source set up, you can:
 
 1. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
-2. Create a file called `./src/configs.py` using `./src/rename_to_configs.py`
+1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with the desired boards
+1. Create a file called `./src/configs.py` using `./src/rename_to_configs.py`
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
       - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
       - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-3. (Optional) Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
-4. Create a virtualenv and install dependencies,
+1. (Optional) Create SSL certificates (see below) and put them in `./src`. They should be called `cert.pem` and `key.pem`.
+1. Create a virtualenv and install dependencies,
     - `python3.12 -m venv venv`
     - `source venv/bin/activate`
     - `python3.12 -m pip install -r requirements.txt`
     - `sudo apt-get install python3-dev default-libmysqlclient-dev build-essential`
-5. `python3.12 main.py`
-6. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is `http://127.0.0.1:9001`.
-7. (Optional) Set up a full text search (FTS) database for index searching.
+1. `python3.12 main.py`
+1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is `http://127.0.0.1:9001`.
+1. (Optional) Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`. Learn about configuring search engines at [https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart](https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart).
    - Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing phase for your discretion.
      - LNX [[Docs](https://docs.lnx.rs/) | [GitHub](https://github.com/lnx-search/lnx)]
@@ -46,7 +47,7 @@ Assuming you have a data source set up, you can:
      - QuickWit [[Docs](https://quickwit.io/docs/get-started/quickstart) | [GitHub](https://github.com/quickwit-oss/quickwit)]
     - Remember to check that your config port matches the docker container port.
     - Run `python3.12 -m search load --reset board1 [board2 [board3 ...]]`. Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for more instructions.
-8. (Optional) Set up redis for rate limiting auth endpoints.
+1. (Optional) Set up redis for rate limiting auth endpoints.
 
     ```
     sudo apt update
@@ -56,7 +57,7 @@ Assuming you have a data source set up, you can:
     sudo systemctl status redis
     ```
 
-9.  (Optional) Submit pull requests with fixes and new features.
+1.  (Optional) Submit pull requests with fixes and new features.
 
 
 ## Set Up - With Docker (Not Tested)
