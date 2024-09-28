@@ -5,7 +5,7 @@ from typing import NamedTuple
 from quart import get_flashed_messages, request, url_for
 
 from enums import DbType, IndexSearchType
-from meta import all_4chan_boards
+from boards import load_boards, get_shorts_objects
 
 
 def make_path(*file_path):
@@ -18,6 +18,7 @@ class CONSTS(NamedTuple):
 
     TESTING = True
     autoreload = True
+    validate_boards_db = True
     moderation_db_path = make_path('moderation.db')
 
     admin_username = 'admin'
@@ -51,16 +52,9 @@ class CONSTS(NamedTuple):
 
     site_name = 'Ayase Quart'
 
-    # You can set boards equal to a subset of all boards here
-    # If you set this to `all_4chan_boards`, all boards in your DB will be available in AQ
-    # boards = {
-    #     'ck': 'Food & Cooking',
-    #     'g': 'Technology',
-    #     't': 'Torrent',
-    #     'mu': 'Music',
-    #     'unknown': 'Unknown',  # this board will not show up since its not a 4chan board
-    # }
-    boards = all_4chan_boards
+    boards = load_boards()
+    board_shortnames, board_objects = get_shorts_objects(boards)
+    boards_in_database = board_shortnames
 
     html_linked_target = '_self'  # or '_blank' # links to 4chan will always remain '_blank'
 
@@ -102,13 +96,6 @@ class CONSTS(NamedTuple):
     ## Do not touch the below code. Thank you. ##
     ## Do not touch the below code. Thank you. ##
 
-    board_objects = [{'shortname': k, 'name': v} for k, v in boards.items()]
-    board_objects = sorted(board_objects, key=lambda x: x['shortname'])
-
-    board_shortname_to_name = {o['shortname']: o['name'] for o in board_objects}
-    board_shortnames = [board_object['shortname'] for board_object in board_objects]
-    boards_in_database = []  # to be populated later
-
     render_constants = dict(
         theme=theme,
         site_name=site_name,
@@ -130,11 +117,13 @@ class CONSTS(NamedTuple):
 ## Do not touch the below code. Thank you. ##
 ## Do not touch the below code. Thank you. ##
 
-from db.api import get_boards_in_database
+def filter_boards_in_db():
+    from db.api import get_db_tables
 
-
-def remove_boards_from_configs_if_not_in_database():
-    removals = [board for board in CONSTS.boards if board not in CONSTS.boards_in_database]
+    db_tables = asyncio.run(get_db_tables())
+    valid_boards = {t for t in db_tables if len(t) < 5} & CONSTS.boards.keys()
+    removals = [board for board in CONSTS.boards if board not in valid_boards]
+    CONSTS.boards_in_database = list(valid_boards)
     if removals:
         print(f'ATTENTION! Boards not found in database:\n\t[{", ".join(removals)}]\nThey will be ignored.')
         for b in removals:
@@ -144,12 +133,9 @@ def remove_boards_from_configs_if_not_in_database():
         raise ValueError(f'No boards to show! Configure one of {CONSTS.boards_in_database}')
 
     # recompute these configs
-    CONSTS.board_objects = [{'shortname': b, 'name': CONSTS.boards[b]} for b in CONSTS.boards]
-    CONSTS.board_shortname_to_name = {b: CONSTS.boards[b] for b in CONSTS.boards}
-    CONSTS.board_shortnames = [b for b in CONSTS.boards]
+    CONSTS.board_shortnames, CONSTS.board_objects = get_shorts_objects(CONSTS.boards)
     CONSTS.render_constants['board_objects'] = CONSTS.board_objects
 
 
-CONSTS.boards_in_database = asyncio.run(get_boards_in_database())
-remove_boards_from_configs_if_not_in_database()
-
+if CONSTS.validate_boards_db:
+    filter_boards_in_db()
