@@ -11,10 +11,12 @@ from asagi_converter import (
     get_op_thread_count
 )
 from configs import CONSTS
+from posts.template_optimizer import wrap_post_t
 from templates import (
     template_board_index,
     template_catalog,
     template_index,
+    template_index_search_post_t,
     template_posts,
     template_thread
 )
@@ -23,20 +25,6 @@ from utils import (
     render_controller,
     validate_board_shortname,
     validate_threads
-)
-
-from time import perf_counter
-
-from quart import Blueprint
-
-from configs import CONSTS
-from posts.template_optimizer import wrap_post_t
-from templates import (
-    template_index_search_post_t
-)
-from utils import (
-    render_controller,
-    validate_board_shortname
 )
 
 blueprint_app = Blueprint("blueprint_app", __name__)
