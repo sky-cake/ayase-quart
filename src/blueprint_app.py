@@ -1,9 +1,8 @@
-import quart_flask_patch  # isort: skip
 
 from time import perf_counter
 
 from flask_paginate import Pagination
-from quart import Blueprint, request
+from quart import Blueprint
 
 from asagi_converter import (
     convert_thread,
@@ -24,6 +23,20 @@ from utils import (
     render_controller,
     validate_board_shortname,
     validate_threads
+)
+
+from time import perf_counter
+
+from quart import Blueprint
+
+from configs import CONSTS
+from posts.template_optimizer import wrap_post_t
+from templates import (
+    template_index_search_post_t
+)
+from utils import (
+    render_controller,
+    validate_board_shortname
 )
 
 blueprint_app = Blueprint("blueprint_app", __name__)
@@ -199,35 +212,52 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     )
 
 
+def get_posts_t(thread_dict: dict, post_2_quotelinks: None|list[int]=None) -> str:
+    posts_t = []
+    for post in thread_dict:
+        if quotelinks := post_2_quotelinks.get(str(post['no'])):
+            post['quotelinks'] = quotelinks
+        else:
+            post['quotelinks'] = ''
+
+        post['comment'] = post.pop('com')
+
+        posts_t.append(wrap_post_t(post))
+
+    posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+    return posts_t
+
+
 @blueprint_app.get("/<string:board_shortname>/thread/<int:thread_id>")
 async def v_thread(board_shortname: str, thread_id: int):
     """
     Benchmarked with SQLite, /news/ post with 102 comments, 8th gen i7.
-    convert:  0.0703
+    queries:  0.0703
     validate: 0.0000
-    rendered: 2.5000 +- 0.500
+    rendered: 0.0070 += 0.003
     """
     validate_board_shortname(board_shortname)
 
     i = perf_counter()
     # use the existing json app function to grab the data
-    thread_dict, quotelinks = await convert_thread(board_shortname, thread_id)
+    thread_dict, post_2_quotelinks = await convert_thread(board_shortname, thread_id)
     f = perf_counter()
-    print(f'convert:  {f-i:.4f}')
+    print(f'queries:  {f-i:.4f}')
 
     i = perf_counter()
     validate_threads(thread_dict['posts'])
     f = perf_counter()
     print(f'validate: {f-i:.4f}')
 
+    posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks=post_2_quotelinks)
+
     title = f"/{board_shortname}/ #{thread_id}"
 
     i = perf_counter()
     render = await render_controller(
         template_thread,
+        posts_t=posts_t,
         **CONSTS.render_constants,
-        posts=thread_dict["posts"],
-        quotelinks=quotelinks,
         board=board_shortname,
         title=title,
         tab_title=title,

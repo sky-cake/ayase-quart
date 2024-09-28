@@ -25,7 +25,7 @@
                     File:
                     <a href="{{ get_full_media_src(image_uri, post) }}">{{post.filename}}.{{post.ext}}</a>
                     (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}}){% endif %}</span>
-                    Replies: {{post.replies}} Files: {{post.images}} {% if post.posters %}Posters: {{post.posters}}{% endif %}
+                    Replies: {{post.nreplies}} Files: {{post.nimages}} {% if post.nposters %}Posters: {{post.nposters}}{% endif %}
                 </div>
                 <a class="fileThumb">
                     {{get_img(thumb_uri, image_uri, post, classes="opImg postImg spoiler" if post.spoiler else "opImg postImg")}}
@@ -78,7 +78,7 @@
                 [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="{{html_link_target}}">View</a>]
             {% endif %}
             <div id="bl_{{post.no}}" class="backlink">
-                {% for quotelink in post.replies %}
+                {% for quotelink in post.quotelinks %}
                     <span class="quotelink">
                         <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
                     </span>

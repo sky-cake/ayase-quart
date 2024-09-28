@@ -31,7 +31,7 @@ Notes:
 - zlib decompresses at 400 MB/s vs zstd at 2 GB/s. See https://github.com/facebook/zstd#benchmarks.
 - zero values: null, 0, empty string, empty list
 - common values: board_shortname, capcodes, countries
-- uncommon values: file sizes, replies, timestamps
+- uncommon values: file sizes, quotelinks, timestamps
 """
 
 fields: Tuple[str] = (
@@ -60,7 +60,7 @@ fields: Tuple[str] = (
     'h',
     'tn_w',
     'tn_h',
-    'replies',
+    'quotelinks',
     'no',
     'resto',
     'deleted_time',

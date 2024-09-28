@@ -51,5 +51,5 @@ async def v_post(board_shortname: str, post_id: int):
     post = post[0]
     validate_post(post)
 
-    html_content = await render_controller(template_post, **CONSTS.render_constants, post=post, board=board_shortname, quotelink=quotelinks)
+    html_content = await render_controller(template_post, **CONSTS.render_constants, post=post, board=board_shortname, quotelinks=quotelinks)
     return jsonify(html_content=html_content)

@@ -2,7 +2,7 @@
 {% block body %}
     <div id="main">
         <div class="board">
-            {% include 'posts.html' %}
+            {{posts_t|safe}}
         </div>
     </div>
 {% endblock %}
