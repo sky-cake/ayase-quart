@@ -1,3 +1,4 @@
+from time import perf_counter
 import re
 from html import escape
 from functools import cache
@@ -73,3 +74,18 @@ def highlight_search_results(form, posts):
                 posts['posts'][i][asagi_name] = post[asagi_name][:j] + highlight_str + post[asagi_name][j + len(escaped_field) :]
 
     return posts
+
+
+class Perf:
+    __slots__ = ('previous', 'total')
+
+    def __init__(self):
+        self.previous = perf_counter()
+        self.total = 0
+
+    def check(self, name: str=""):
+        now = perf_counter()
+        elapsed = now - self.previous
+        self.previous = now
+        self.total += elapsed
+        print(f'{elapsed:.4f} {self.total:.4f} {name}')
