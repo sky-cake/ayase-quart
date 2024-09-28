@@ -153,4 +153,3 @@ def remove_boards_from_configs_if_not_in_database():
 CONSTS.boards_in_database = asyncio.run(get_boards_in_database())
 remove_boards_from_configs_if_not_in_database()
 
-CONSTS.index_search_host = CONSTS.index_search_host.strip('/')
