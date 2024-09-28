@@ -1,5 +1,6 @@
 import re
 from html import escape
+from functools import cache
 
 from jinja2 import Template
 from quart import render_template
@@ -22,9 +23,9 @@ def validate_post(post):
     if not post:
         raise NotFound(post)
 
-
-def get_title(board_shortname):
-    title = f"/{board_shortname}/ - {CONSTS.board_shortname_to_name[board_shortname]}"
+@cache
+def get_title(board_shortname: str):
+    title = f"/{board_shortname}/ - {CONSTS.boards[board_shortname]}"
     return title
 
 
