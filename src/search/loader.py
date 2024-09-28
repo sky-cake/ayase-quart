@@ -244,10 +244,10 @@ def process_post_rows(board: str, rows: list[tuple], post_pack_fn: Callable[[dic
     rows = [{k:v for k,v in zip(row_keys, row)} for row in rows]
 
     # the rows contain all posts within a batch of threads of a single board, so we're guaranteed to find all the replies
-    reply_lookup = get_reply_lookup(rows)
+    post_2_quotelinks = get_quotelink_lookup(rows)
 
     # generator, because it'll get pulled by the batching anyways
-    posts = (process_post(row, board_int, reply_lookup, post_pack_fn) for row in rows)
+    posts = (process_post(row, board_int, post_2_quotelinks, post_pack_fn) for row in rows)
     
     # do more work while we're in another process
 
@@ -258,10 +258,10 @@ def process_post_rows(board: str, rows: list[tuple], post_pack_fn: Callable[[dic
     return batches
 
 
-def process_post(post: dict, board_int: int, thread_replies: dict, post_pack_fn: Callable[[dict], dict]) -> dict:
+def process_post(post: dict, board_int: int, post_2_quotelinks: dict, post_pack_fn: Callable[[dict], dict]) -> dict:
     """Factored out logic for processing single post.
     """
-    post['replies'] = thread_replies.get(post['no'], []) # need replies before packing metadata
+    post['quotelinks'] = post_2_quotelinks.get(post['no'], []) # need replies before packing metadata
     post['capcode'] = capcode_2_id(post['capcode']) # cast the capcode to int also in the metadata
     post['data'] = pack_metadata(post)
     post['pk'] = board_int_num_2_pk(board_int, post["doc_id"])
@@ -311,15 +311,17 @@ def remove_fields_new_dict(post: dict):
 # pop is forced to iterate a bit more but new_dict is forced to allocate a new dict entirely
 remove_fields: Callable = remove_fields_pop
 
-def get_reply_lookup(rows: list[dict]):
-    replies = defaultdict(list)
+
+def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
+    """Returns a dict of post numbers to reply post numbers."""
+    post_2_quotelinks = defaultdict(list)
     for row in rows:
         if not (comment := row.get('com')):
             continue
         num = row['no']
         for quotelink in get_text_quotelinks(comment):
-            replies[int(quotelink)].append(num)
-    return replies
+            post_2_quotelinks[int(quotelink)].append(num)
+    return post_2_quotelinks
 
 
 async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerator:

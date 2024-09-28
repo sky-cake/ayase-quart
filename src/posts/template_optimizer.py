@@ -22,7 +22,7 @@ needed_keys = {
     'time',
     'now',
     'board_shortname',
-    'replies',
+    'quotelinks',
     'comment',
 }
 
@@ -47,7 +47,7 @@ def wrap_post_t(post: dict):
             t_since4pass=get_since4pass_t(post),
             t_filedeleted=get_filedeleted_t(post),
             t_header=get_header_t(post),
-            t_backlink=get_backlink_t(post),
+            t_quotelink=get_quotelink_t(post),
         )
     )
     return post
@@ -115,7 +115,7 @@ def media_metadata_t(fsize: int, w: int, h: int):
 
 
 def get_media_path(filename: str, board: str, media_type: MediaType) -> str:
-    if not filename:
+    if not filename or not CONSTS.thumb_uri or not CONSTS.image_uri:
         return ''
 
     uri = CONSTS.thumb_uri
@@ -290,12 +290,12 @@ def get_header_t(post: dict):
 	"""
 
 
-def get_backlink_t(post: dict):
-    if not (replies := post['replies']):
+def get_quotelink_t(post: dict):
+    if not (quotelinks := post['quotelinks']):
         return ''
     board = post['board_shortname']
-    replies = ' '.join(f'<span class="quotelink"><a href="#p{ bl }" class="quotelink" data-board_shortname="{board}">&gt;&gt;{ bl }</a></span>' for bl in replies)
-    return f'<div id="bl_{post["no"]}" class="backlink">{replies}</div>'
+    quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{ quotelink }" class="quotelink" data-board_shortname="{board}">&gt;&gt;{ quotelink }</a></span>' for quotelink in quotelinks)
+    return f'<div id="bl_{post["no"]}" class="backlink">{quotelinks}</div>'
 
 
 user_keys = (

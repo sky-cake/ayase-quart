@@ -66,9 +66,9 @@
 {% endif %}
 
 <div class="meta">
-    Replies: <b>{{ thread.replies }}</b> / Images: <b>{{ thread.images }}</b> / Posters: <b>
-        {% if thread.posters %}
-            {{thread.posters}}
+    Replies: <b>{{ thread.nreplies }}</b> / Images: <b>{{ thread.nimages }}</b> / Posters: <b>
+        {% if thread.nposters %}
+            {{thread.nposters}}
         {% else %}
             ?
         {% endif %}

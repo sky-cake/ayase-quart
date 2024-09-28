@@ -242,7 +242,7 @@ async def convert_standalone_posts(posts, medias, return_quotelinks=True):
     """
 
     result = {'posts': []}
-    quotelink_map = {}
+    post_2_quotelinks = {}
     for post, media in zip(posts, medias):
         if media:
             if post['md5'] != media['media_hash']:
@@ -266,15 +266,15 @@ async def convert_standalone_posts(posts, medias, return_quotelinks=True):
                 post_quotelinks = get_text_quotelinks(reply["com"])
 
                 for quotelink in post_quotelinks:
-                    if quotelink not in quotelink_map:
-                        quotelink_map[quotelink] = []
-                    quotelink_map[quotelink].append(reply["no"])
+                    if quotelink not in post_2_quotelinks:
+                        post_2_quotelinks[quotelink] = []
+                    post_2_quotelinks[quotelink].append(reply["no"])
 
         _, post['com'] = restore_comment(op_num, post['com'], post['board_shortname'])
         if post['sub']:
             post['sub'] = html.escape(post['sub'])
         result['posts'].append(post)
-    return result, quotelink_map
+    return result, post_2_quotelinks
 
 
 async def get_post_replies(board_shortname, thread_num, post_num):
@@ -380,8 +380,8 @@ async def get_catalog(board_shortname: str, page_num: int):
     SELECT_CATALOG = f"""
     {get_selector(board_shortname)},
 
-        threads.nreplies AS replies,
-        threads.nimages AS images,
+        threads.nreplies,
+        threads.nimages,
 
         `{board_shortname}`.media_hash,
         `{board_shortname}_images`.`media` AS asagi_filename,
@@ -500,8 +500,8 @@ async def generate_index(board_shortname: str, page_num: int):
     ```
 
     OPs have these extra fields added to them:
-        - replies: int
-        - images: int
+        - nreplies: int
+        - nimages: int
         # - omitted_posts: int (to be implemented)
         # - omitted_images: int (to be implemented)
     """
@@ -638,7 +638,7 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
     """Converts asagi API data to 4chan API format."""
 
     result = {}
-    quotelink_map = {}
+    post_2_quotelinks = {}
     posts = []
     for i in range(len(thread)):
         if not thread or not thread[i]:
@@ -656,8 +656,8 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
                     posts[i]["asagi_filename"] = image["media"]
 
         if details and posts[i]["resto"] == 0:
-            posts[i]["replies"] = details[i].get("nreplies", None)
-            posts[i]["images"] = details[i].get("nimages", None)
+            posts[i]["nreplies"] = details[i].get("nreplies", None)
+            posts[i]["nimages"] = details[i].get("nimages", None)
 
         if not is_catalog:
             if posts[i]['resto'] == 0:
@@ -667,12 +667,12 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
 
             post_quotelinks, posts[i]["com"] = restore_comment(op_num, posts[i]["com"], posts[i]['board_shortname'])
             for quotelink in post_quotelinks:
-                if quotelink not in quotelink_map:
-                    quotelink_map[quotelink] = []
-                quotelink_map[quotelink].append(posts[i]["no"])
+                if quotelink not in post_2_quotelinks:
+                    post_2_quotelinks[quotelink] = []
+                post_2_quotelinks[quotelink].append(posts[i]["no"])
 
     if is_post:
-        return posts, quotelink_map
+        return posts, post_2_quotelinks
 
     if is_catalog:
         return posts
@@ -684,14 +684,14 @@ def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_c
         return result
 
     result["posts"] = posts
-    return result, quotelink_map
+    return result, post_2_quotelinks
 
 
-def convert_post_v2(post: Dict[Any, Any]) -> Dict:
+def convert_post_v2(post: Dict[Any, Any], quotelinks: None|list[int]=None) -> Dict:
     """You loop through your posts, whatever it's structure is, and call
     this function. We will change all of the field names so it renders in the template.
 
-    Returns a converted post. No quotelinks.
+    Returns a converted, restored post.
     """
 
     # has an image
@@ -703,18 +703,13 @@ def convert_post_v2(post: Dict[Any, Any]) -> Dict:
 
         post['asagi_filename'] = post.pop('media')
 
-    # is an OP
-    if post['resto'] == 0:
-        if post.get('nreplies'):
-            post['replies'] = post.pop('nreplies')
-
-        if post.get('nimages'):
-            post['images'] = post.pop('nimages')
-
     thread_num = post.get('thread_num')
     comment = post.get('com')
     board_shortname = post.get('board_shortname')
 
     _, post['com'] = restore_comment(thread_num, comment, board_shortname)
+
+    if quotelinks:
+        post['quotelinks'] = quotelinks
 
     return post

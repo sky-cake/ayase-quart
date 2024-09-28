@@ -38,9 +38,9 @@
   <div class="thread-stats">
     {%- if post.sticky -%} Sticky / {%- endif -%}
     {%- if post.closed -%} Closed / {%- endif -%}
-    <span class="ts-replies" data-tip="Replies" title="Replies">{{post.replies}}</span>
+    <span class="ts-replies" data-tip="Replies" title="Replies">{{post.nreplies}}</span>
     /
-    <span class="ts-images" data-tip="Images" title="Files">{{post.images}}</span>
+    <span class="ts-images" data-tip="Images" title="Files">{{post.nimages}}</span>
     /
     <span data-tip="Posters" class="ts-ips" title="Posters">
       {%- if post.posters -%} {{post.posters}} {%- else -%} ? {%- endif -%}
