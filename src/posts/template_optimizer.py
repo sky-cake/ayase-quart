@@ -180,7 +180,7 @@ def get_media_t(post: dict):
             (<span title="{md5h}">
                 {spoiler}
                 {media_metadata_t(post['fsize'], post['w'], post['w'])}
-            </span>
+            </span>)
         </div>
         <a class="fileThumb">
 			<img
