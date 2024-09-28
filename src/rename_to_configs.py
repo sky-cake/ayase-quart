@@ -91,11 +91,6 @@ class CONSTS(NamedTuple):
     chdir_to_root = False
     static_dir = os.path.join(root_dir, "static")
 
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-    ## Do not touch the below code. Thank you. ##
-
     render_constants = dict(
         theme=theme,
         site_name=site_name,
@@ -110,12 +105,6 @@ class CONSTS(NamedTuple):
         request=request,
         get_flashed_messages=get_flashed_messages,
     )
-
-
-## Do not touch the below code. Thank you. ##
-## Do not touch the below code. Thank you. ##
-## Do not touch the below code. Thank you. ##
-## Do not touch the below code. Thank you. ##
 
 def filter_boards_in_db():
     from db.api import get_db_tables
