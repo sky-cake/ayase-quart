@@ -24,7 +24,8 @@ from utils import (
     get_title,
     render_controller,
     validate_board_shortname,
-    validate_threads
+    validate_threads,
+    Perf,
 )
 
 blueprint_app = Blueprint("blueprint_app", __name__)
@@ -226,22 +227,19 @@ async def v_thread(board_shortname: str, thread_id: int):
     """
     validate_board_shortname(board_shortname)
 
-    i = perf_counter()
+    p = Perf()
     # use the existing json app function to grab the data
     thread_dict, post_2_quotelinks = await convert_thread(board_shortname, thread_id)
-    f = perf_counter()
-    print(f'queries:  {f-i:.4f}')
+    p.check('queries')
 
-    i = perf_counter()
     validate_threads(thread_dict['posts'])
-    f = perf_counter()
-    print(f'validate: {f-i:.4f}')
+    p.check('validate')
 
     posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks=post_2_quotelinks)
+    p.check('posts_t')
 
     title = f"/{board_shortname}/ #{thread_id}"
 
-    i = perf_counter()
     render = await render_controller(
         template_thread,
         posts_t=posts_t,
@@ -250,8 +248,7 @@ async def v_thread(board_shortname: str, thread_id: int):
         title=title,
         tab_title=title,
     )
-    f = perf_counter()
-    print(f'rendered: {f-i:.4f}')
+    p.check('rendered')
     return render
 
 
