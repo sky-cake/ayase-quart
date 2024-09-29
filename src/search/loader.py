@@ -10,8 +10,7 @@ from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
 from asagi_converter import get_selector, get_text_quotelinks, selector_columns
-from configs import CONSTS
-from db import close_db_pool, fetch_tuple, get_database_instance, prime_db_pool
+from db import close_db_pool, fetch_tuple, prime_db_pool
 from posts.capcodes import capcode_2_id
 
 from .post_metadata import board_2_int, board_int_num_2_pk, pack_metadata

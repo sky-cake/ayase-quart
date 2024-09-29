@@ -1,7 +1,6 @@
 import quart_flask_patch  # isort: skip
 
 from logging import getLogger
-from time import perf_counter
 
 from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
@@ -17,7 +16,6 @@ from render import (
     validate_board_shortname
 )
 from search.highlighting import get_term_re, mark_highlight
-from search.loader import index_board
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
@@ -29,6 +27,7 @@ from templates import (
     template_index_search_post_t,
     template_search
 )
+from utils import Perf
 
 search_log = getLogger('search')
 
@@ -78,7 +77,7 @@ async def v_index_search():
     results = []
     quotelinks = []
     page_links = ''
-    start = perf_counter()
+    p = Perf('index search')
     search_p = get_search_provider()
 
     if request.method == 'POST':
@@ -119,16 +118,14 @@ async def v_index_search():
 
         q = get_search_query(form.data)
 
-        parsed_query = perf_counter() - start
-        search_log.warning(f'  {parsed_query=:.4f} +{parsed_query:.4f}')
+        p.check('parsed query')
 
         results, total_hits = await search_p.search_posts(q)
         pages = total_pages(total_hits, q.result_limit)
         cur_page = q.page
         page_links = template_pagination_links('/index_search', form.data, pages, cur_page)
 
-        done_search = perf_counter() - start
-        search_log.warning(f'   {done_search=:.4f} +{done_search-parsed_query:.4f}')
+        p.check('search done')
 
         if search_mode == SearchMode.index:
             hl_re = get_term_re(q.terms) if q.terms else None
@@ -141,16 +138,14 @@ async def v_index_search():
 
                 posts_t.append(wrap_post_t(post))
 
-        patched_posts = perf_counter() - start
-        search_log.warning(f' {patched_posts=:.4f} +{patched_posts-done_search:.4f}')
+        p.check('patch posts')
 
         if search_mode == SearchMode.index:
             posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
         else:
             posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
 
-        rendered_posts = perf_counter() - start
-        search_log.warning(f'{rendered_posts=:.4f} +{rendered_posts-patched_posts:.4f}')
+        p.check('render posts')
 
     rend = template_index_search.render(
         search_mode=search_mode,
@@ -167,9 +162,8 @@ async def v_index_search():
         total_hits=total_hits,
     )
 
-    if searched:
-        rendered_page = perf_counter() - start
-        search_log.warning(f' {rendered_page=:.4f} +{rendered_page-rendered_posts:.4f}')
+    p.check('render page')
+    print(p)
 
     return rend
 
