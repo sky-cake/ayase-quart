@@ -7,15 +7,11 @@ from . import db_mysql, db_sqlite
 from .db_interface import DatabaseInterface
 
 
-def get_database_instance(app_context=True) -> DatabaseInterface:
+def get_database_instance() -> DatabaseInterface:
     db_module = _get_db_module(CONSTS.db_type)
-    if app_context:
-        if not hasattr(get_database_instance, 'db_app_context'):
-            get_database_instance.db_app_context = db_module.DatabaseAppContext()
-        return get_database_instance.db_app_context
-    if not hasattr(get_database_instance, 'db'):
-        get_database_instance.db = db_module.Database()
-    return get_database_instance.db
+    if not hasattr(get_database_instance, 'db_app_context'):
+        get_database_instance.db_app_context = db_module.DatabaseAppContext()
+    return get_database_instance.db_app_context
 
 
 def _get_db_module(db_type: DbType):

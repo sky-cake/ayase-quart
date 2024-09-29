@@ -22,23 +22,14 @@ class AttrDictCursor(aiomysql.DictCursor):
 
 class MySQLDatabaseAppContext(DatabaseInterface):
     async def connect(self):
-        print('Creating database pool, started.')
-        current_app.pool = await aiomysql.create_pool(
-            host=CONSTS.db_host,
-            user=CONSTS.db_user,
-            password=CONSTS.db_password,
-            db=CONSTS.db_database,
-            minsize=CONSTS.db_min_connections,
-            maxsize=CONSTS.db_max_connections,
-            pool_recycle=30,  # renew pool connections every N seconds so data does not get stale
-        )
-        print('Creating database pool, completed.')
+        current_app.pool = await _get_pool(store=False)
+        print('Mysql pool open')
 
-    async def query_execute(self, sql, params=None, fetchone=False, commit=False):
+    async def query_execute(self, sql: str, params=None, fetchone=False, commit=False):
         async with current_app.pool.acquire() as conn:
             async with conn.cursor(AttrDictCursor) as cursor:
 
-                if CONSTS.SQLALCHEMY_ECHO:
+                if CONSTS.sql_echo:
                     final_sql = cursor.mogrify(sql, params)
                     print('::SQL::', final_sql, '')
 
@@ -56,55 +47,12 @@ class MySQLDatabaseAppContext(DatabaseInterface):
         current_app.pool.close()
         await current_app.pool.wait_closed()
 
-
-class MySQLDatabase(DatabaseInterface):
-    def __init__(self):
-        self.pool = None
-
-    async def connect(self):
-        print('Creating database pool, started.')
-        self.pool = await aiomysql.create_pool(
-            host=CONSTS.db_host,
-            user=CONSTS.db_user,
-            password=CONSTS.db_password,
-            db=CONSTS.db_database,
-            minsize=CONSTS.db_min_connections,
-            maxsize=CONSTS.db_max_connections,
-            pool_recycle=30,  # renew pool connections every N seconds so data does not get stale
-        )
-        print('Creating database pool, completed.')
-
-    async def query_execute(self, sql, params=None, fetchone=False, commit=False):
-        async with self.pool.acquire() as conn:
-            async with conn.cursor(AttrDictCursor) as cursor:
-
-                if CONSTS.SQLALCHEMY_ECHO:
-                    final_sql = cursor.mogrify(sql, params)
-                    print('::SQL::', final_sql, '')
-
-                await cursor.execute(sql, params)
-
-                if commit:
-                    return conn.commit()
-
-                if fetchone:
-                    return await cursor.fetchone()
-
-                return await cursor.fetchall()
-
-    async def disconnect(self):
-        if self.pool is not None:
-            self.pool.close()
-            await self.pool.wait_closed()
-
-
 # Functions below are for doing Tuple queries, which are faster fetching Dict results
 
-
-async def _get_pool():
+async def _get_pool(store=True):
     # we apply an attribute on this function to avoid polluting the module's namespace
-    if not hasattr(_get_pool, 'pool'):
-        _get_pool.pool = await aiomysql.create_pool(
+    if not hasattr(_get_pool, 'pool') or not store:
+        pool = await aiomysql.create_pool(
             host=CONSTS.db_host,
             user=CONSTS.db_user,
             password=CONSTS.db_password,
@@ -113,6 +61,9 @@ async def _get_pool():
             maxsize=CONSTS.db_max_connections,
             autocommit=True,
         )
+        if not store:
+            return pool
+        _get_pool.pool = pool
     return _get_pool.pool
 
 
@@ -137,5 +88,4 @@ async def _close_pool():
     delattr(_get_pool, 'pool')
 
 
-Database = MySQLDatabase
 DatabaseAppContext = MySQLDatabaseAppContext
