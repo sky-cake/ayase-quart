@@ -12,51 +12,78 @@ from enums import DbType, SearchMode
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
 
+# these comments state the API field names, and descriptions, if applicable
+# see the API docs for more info
+# https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
 selector_columns = (
-    'thread_num', 'no', 'board_shortname', 'now', 'deleted_time', 'name',
-    'sticky', 'sub', 'w', 'h', 'tn_w', 'tn_h', 'time',
-    'asagi_preview_filename', 'asagi_filename', 'tim', 'md5',
-    'fsize', 'filename', 'ext', 'resto', 'capcode', 'trip',
-    'spoiler', 'country', 'poster_hash', 'closed', 'filedeleted', 'exif', 'com'
+    'thread_num', # an archiver construct. The OP post ID.
+    'num', # `no` - The numeric post ID
+    'board_shortname', # board acronym
+    'ts_formatted', # `now` - MM/DD/YY(Day)HH:MM (:SS on some boards), EST/EDT timezone
+    'ts_expired', # an archiver construct. Could also be `archvied_on` - UNIX timestamp the post was archived
+    'name', # `name` - Name user posted with. Defaults to Anonymous
+    'sticky', # `sticky`- If the thread is being pinned to the top of the page
+    'title', # `sub` - OP Subject text
+    'media_w', # `w` - Image width dimension
+    'media_h', # `h` - Image height dimension
+    'preview_w', # `tn_w` - Thumbnail image width dimension 	
+    'preview_h', # `tn_h` - Thumbnail image height dimension
+    'ts_unixepoch', # `time` - UNIX timestamp the post was created
+    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
+    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
+    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
+    'media_size', # `fsize` - Size of uploaded file in bytes
+    'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
+    'ext', # an AQ construct
+    'op_num', # `resto` - for replies: this is the ID of the thread being replied to. For OP: this value is zero
+    'capcode', # `capcode` - The capcode identifier for a post
+    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'spoiler', # `spoiler` - If the image was spoilered or not
+    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+    'poster_hash', # an archiver construct
+    'locked', # `closed` - if the thread is closed to replies
+    'deleted', # `filedeleted` - if post had attachment and attachment is deleted
+    'exif', # an archiver construct
+    'comment', # `com` - Comment (HTML escaped)
+    # 'tim', # `tim` - Unix timestamp + microtime that an image was uploaded. AQ does not use this.
 )
 
 @cache
-def get_selector(board_shortname, double_percent=True):
-    """Remember to update `selector_columns` when you modify these selectors.
+def get_selector(board_shortname: str, double_percent: bool=True) -> str:
+    """Remember to update `selector_columns` variable above when you modify these selectors.
     """
     if CONSTS.db_type == DbType.mysql:
         SELECTOR = """
         SELECT
         `{board_shortname}`.`thread_num`,
-        `num` AS `no`,
+        `num`,
         '{board_shortname}' AS `board_shortname`,
-        DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `now`,
-        CASE WHEN `timestamp_expired` IS NULL THEN 0 ELSE DATE_FORMAT(FROM_UNIXTIME(`timestamp_expired`), "%m/%d/%y (%a) %H:%i:%S") END AS `deleted_time`,
+        DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `ts_formatted`,
+        CASE WHEN `timestamp_expired` IS NULL THEN 0 ELSE DATE_FORMAT(FROM_UNIXTIME(`timestamp_expired`), "%m/%d/%y (%a) %H:%i:%S") END AS `ts_expired`,
         `name`,
         CAST(COALESCE(`{board_shortname}`.`sticky`, 0) AS UNSIGNED) AS sticky,
-        (CASE WHEN `title` IS NULL THEN '' ELSE `title` END) AS `sub`,
-        CAST(COALESCE(`media_w`, 0) AS UNSIGNED) AS `w`,
-        CAST(COALESCE(`media_h`, 0) AS UNSIGNED) AS `h`,
-        CAST(COALESCE(`preview_w`, 0) AS UNSIGNED) AS `tn_w`,
-        CAST(COALESCE(`preview_h`, 0) AS UNSIGNED) AS `tn_h`,
-        `timestamp` AS `time`,
-        `preview_orig` AS `asagi_preview_filename`,
-        `media_orig` AS `asagi_filename`,
-        (CASE WHEN `media_orig` IS NULL THEN timestamp * 1000 ELSE SUBSTRING_INDEX(media_orig, '.', 1) END) AS `tim`,
-        `{board_shortname}`.`media_hash` AS `md5`,
-        CAST(COALESCE(`media_size`, 0) AS UNSIGNED) AS `fsize`,
-        (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `filename`,
+        (CASE WHEN `title` IS NULL THEN '' ELSE `title` END) AS `title`,
+        CAST(COALESCE(`media_w`, 0) AS UNSIGNED) AS `media_w`,
+        CAST(COALESCE(`media_h`, 0) AS UNSIGNED) AS `media_h`,
+        CAST(COALESCE(`preview_w`, 0) AS UNSIGNED) AS `preview_w`,
+        CAST(COALESCE(`preview_h`, 0) AS UNSIGNED) AS `preview_h`,
+        `timestamp` AS `ts_unixepoch`,
+        `preview_orig`,
+        `media_orig`,
+        `{board_shortname}`.`media_hash`,
+        CAST(COALESCE(`media_size`, 0) AS UNSIGNED) AS `media_size`,
+        (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `media_filename`,
         (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS `ext`,
-        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE `{board_shortname}`.`thread_num` END) AS `resto`,
+        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE `{board_shortname}`.`thread_num` END) AS `op_num`,
         (CASE WHEN capcode='N' THEN NULL ELSE `capcode` END) AS `capcode`,
         `trip`,
         CAST(COALESCE(`spoiler`, 0) AS UNSIGNED) as spoiler,
-        `poster_country` AS `country`,
+        `poster_country`,
         `poster_hash`,
-        CAST(COALESCE(`{board_shortname}`.`locked`, 0) AS UNSIGNED) AS `closed`,
-        CAST(COALESCE(`deleted`, 0) AS UNSIGNED) AS `filedeleted`,
+        CAST(COALESCE(`{board_shortname}`.`locked`, 0) AS UNSIGNED) AS `locked`,
+        CAST(COALESCE(`deleted`, 0) AS UNSIGNED) AS `deleted`,
         `exif`,
-        `comment` AS `com`
+        `comment`
         """
         if double_percent:
             SELECTOR = SELECTOR.replace('%', '%%')
@@ -64,35 +91,34 @@ def get_selector(board_shortname, double_percent=True):
         SELECTOR = """
         SELECT
         {board_shortname}.thread_num,
-        num AS no,
+        `num`,
         '{board_shortname}' AS board_shortname,
-        datetime(timestamp, 'unixepoch') AS now,
-        CASE WHEN timestamp_expired IS NULL THEN 0 ELSE datetime(timestamp_expired, 'unixepoch') END AS deleted_time,
+        datetime(timestamp, 'unixepoch') AS ts_formatted,
+        CASE WHEN timestamp_expired IS NULL THEN 0 ELSE datetime(timestamp_expired, 'unixepoch') END AS ts_expired,
         name,
         CAST(COALESCE({board_shortname}.sticky, 0) AS UNSIGNED) as sticky,
-        CASE WHEN title IS NULL THEN '' ELSE title END AS sub,
-        CAST(COALESCE(media_w, 0) AS UNSIGNED) AS w,
-        CAST(COALESCE(media_h, 0) AS UNSIGNED) AS h,
-        CAST(COALESCE(preview_w, 0) AS UNSIGNED) AS tn_w,
-        CAST(COALESCE(preview_h, 0) AS UNSIGNED) AS tn_h,
-        timestamp AS time,
-        preview_orig AS asagi_preview_filename,
-        media_orig AS asagi_filename,
-        CASE WHEN media_orig IS NULL THEN timestamp * 1000 ELSE substr(media_orig, 1, instr(media_orig, '.') - 1) END AS tim,
-        {board_shortname}.media_hash AS md5,
-        CAST(COALESCE(media_size, 0) AS UNSIGNED) AS fsize,
-        CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS filename,
+        CASE WHEN title IS NULL THEN '' ELSE title END AS title,
+        CAST(COALESCE(media_w, 0) AS UNSIGNED) AS media_w,
+        CAST(COALESCE(media_h, 0) AS UNSIGNED) AS media_h,
+        CAST(COALESCE(preview_w, 0) AS UNSIGNED) AS preview_w,
+        CAST(COALESCE(preview_h, 0) AS UNSIGNED) AS preview_h,
+        timestamp AS ts_unixepoch,
+        preview_orig,
+        media_orig,
+        {board_shortname}.media_hash,
+        CAST(COALESCE(media_size, 0) AS UNSIGNED) AS media_size,
+        CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS media_filename,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, instr(media_filename, '.') + 1) END AS ext,
-        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board_shortname}.thread_num END AS resto,
+        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board_shortname}.thread_num END AS op_num,
         CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
         trip,
         CAST(COALESCE(spoiler, 0) AS UNSIGNED) as spoiler,
-        poster_country AS country,
+        poster_country,
         poster_hash,
-        CAST(COALESCE({board_shortname}.locked, 0) AS UNSIGNED) AS closed,
-        CAST(COALESCE(deleted, 0) AS UNSIGNED) AS filedeleted,
+        CAST(COALESCE({board_shortname}.locked, 0) AS UNSIGNED) AS locked,
+        CAST(COALESCE(deleted, 0) AS UNSIGNED) AS deleted,
         exif,
-        comment AS com
+        comment
         """
     else:
         raise ValueError(CONSTS.db_type)
@@ -217,17 +243,23 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     if sql.strip() == '':
         return {'posts': []}, {}  # no boards specified
 
-    sql += f' \n ORDER BY time {order_by}'
+    sql += f' \n ORDER BY ts_unixepoch {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
 
     posts = await current_app.db.query_execute(sql, params=param_values)
-    images = await get_post_images(board_shortname, [p['no'] for p in posts])
+
+    if not posts:
+        result = {'posts': []}
+        post_2_quotelinks = {}
+        return result, post_2_quotelinks
+
+    images = await get_post_images(board_shortname, [p['num'] for p in posts])
 
     num_to_image = {i['num']: i for i in images}
 
     images_sorted = []
     for p in posts:
-        images_sorted.append(num_to_image.get(p['no'], None))
+        images_sorted.append(num_to_image.get(p['num'], None))
 
     return_quotelinks = form_data['search_mode'] == SearchMode.index
     return await convert_standalone_posts(posts, images_sorted, return_quotelinks=return_quotelinks)
@@ -242,34 +274,34 @@ async def convert_standalone_posts(posts, medias, return_quotelinks=True):
     post_2_quotelinks = {}
     for post, media in zip(posts, medias):
         if media:
-            if post['md5'] != media['media_hash']:
-                raise ValueError('Not equal: ', post['md5'], media['media_hash'])
+            if post['media_hash'] != media['media_hash']:
+                raise ValueError('Not equal: ', post['media_hash'], media['media_hash'])
 
-            if post["resto"] == 0:
-                post["asagi_preview_filename"] = media["preview_op"]
+            if post["op_num"] == 0:
+                post["preview_orig"] = media["preview_op"]
             else:
-                post["asagi_preview_filename"] = media["preview_reply"]
+                post["preview_orig"] = media["preview_reply"]
 
-            post["asagi_filename"] = media["media"]
+            post["media_orig"] = media["media"]
 
-        if post['resto'] == 0:
-            op_num = post['no']
+        if post['op_num'] == 0:
+            op_num = post['num']
         else:
-            op_num = post['resto']
+            op_num = post['op_num']
 
         if return_quotelinks:
-            replies = await get_post_replies(post['board_shortname'], op_num, post['no'])
+            replies = await get_post_replies(post['board_shortname'], op_num, post['num'])
             for reply in replies:
-                post_quotelinks = get_text_quotelinks(reply["com"])
+                post_quotelinks = get_text_quotelinks(reply["comment"])
 
                 for quotelink in post_quotelinks:
                     if quotelink not in post_2_quotelinks:
                         post_2_quotelinks[quotelink] = []
-                    post_2_quotelinks[quotelink].append(reply["no"])
+                    post_2_quotelinks[quotelink].append(reply["num"])
 
-        _, post['com'] = restore_comment(op_num, post['com'], post['board_shortname'])
-        if post['sub']:
-            post['sub'] = html.escape(post['sub'])
+        _, post['comment'] = restore_comment(op_num, post['comment'], post['board_shortname'])
+        if post['title']:
+            post['title'] = html.escape(post['title'])
         result['posts'].append(post)
     return result, post_2_quotelinks
 
@@ -285,7 +317,16 @@ async def get_post_images(board_shortname: str, post_nums: list[int]):
 
     placeholders = ','.join(['%s'] * len(post_nums))
 
-    SELECT_POST_IMAGES = f"SELECT `num`, {image_selector} FROM `{board_shortname}_images` i INNER JOIN `{board_shortname}` USING (media_hash) WHERE `num` IN ({placeholders});"
+    SELECT_POST_IMAGES = f"""
+    SELECT
+        `num`,
+        {image_selector}
+    FROM `{board_shortname}_images` i
+        INNER JOIN `{board_shortname}` USING (`media_hash`)
+    WHERE `num` IN ({placeholders})
+    ;"""
+
+    print(SELECT_POST_IMAGES)
 
     return await current_app.db.query_execute(SELECT_POST_IMAGES, params=post_nums)
 
@@ -328,7 +369,7 @@ def substitute_square_brackets(text):
     return text
 
 
-def restore_comment(op_num: int, com: str, board_shortname: str):
+def restore_comment(op_num: int, comment: str, board_shortname: str):
     """
     Re-convert asagi stripped comment into clean html.
     Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
@@ -349,10 +390,10 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
     GT = '&gt;'
     GTGT = "&gt;&gt;"
 
-    if com is None:
+    if comment is None:
         return [], ''
 
-    lines = html_highlight(html.escape(com)).split("\n")
+    lines = html_highlight(html.escape(comment)).split("\n")
     for i, line in enumerate(lines):
         # >green text
         if GT == line[:4] and GT != line[4:8]:
@@ -381,22 +422,22 @@ def get_qls_and_posts(rows: list[dict]) -> tuple[dict, list]:
     posts = []
     for i, row in enumerate(rows):
 
-        if row.get('md5'):
-            if row.get('resto') == 0:
-                row['asagi_preview_filename'] = row.pop('preview_op')
+        if row.get('media_hash'):
+            if row.get('op_num') == 0:
+                row['preview_orig'] = row.pop('preview_op')
             else:
-                row['asagi_preview_filename'] = row.pop('preview_reply')
+                row['preview_orig'] = row.pop('preview_reply')
 
-            row['asagi_filename'] = row.pop('media')
+            row['media_orig'] = row.pop('media')
 
         thread_num = row.get('thread_num')
-        comment = row.get('com')
+        comment = row.get('comment')
         board_shortname = row.get('board_shortname')
 
-        row_quotelinks, row['com'] = restore_comment(thread_num, comment, board_shortname)
+        row_quotelinks, row['comment'] = restore_comment(thread_num, comment, board_shortname)
 
         for row_quotelink in row_quotelinks:
-            post_2_quotelinks[row_quotelink].append(rows[i]["no"])
+            post_2_quotelinks[row_quotelink].append(rows[i]["num"])
 
         posts.append(row)
 
@@ -430,7 +471,6 @@ async def generate_index(board_shortname: str, page_num: int):
             threads.`nreplies`,
             threads.`nimages`,
             threads.`time_bump`,
-            images.`media_hash`,
             images.`media`,
             images.`preview_reply`,
             images.`preview_op`,
@@ -448,7 +488,6 @@ async def generate_index(board_shortname: str, page_num: int):
             NULL AS `nreplies`,
             NULL AS `nimages`,
             NULL AS `time_bump`,
-            images.`media_hash`,
             images.`media`,
             images.`preview_reply`,
             images.`preview_op`,
@@ -464,8 +503,8 @@ async def generate_index(board_shortname: str, page_num: int):
     ;"""
     result = await current_app.db.query_execute(combined_query, params={'page_num': page_num})
 
-    ops_result = [row for row in result if row['resto'] == 0]
-    replies_result = [row for row in result if row['resto'] != 0]
+    ops_result = [row for row in result if row['op_num'] == 0]
+    replies_result = [row for row in result if row['op_num'] != 0]
 
     replies_by_thread = defaultdict(list)
     for reply in replies_result:
@@ -491,8 +530,8 @@ async def generate_catalog(board_shortname: str, page_num: int):
             nreplies,
             nimages,
             `{board_shortname}`.media_hash,
-            `{board_shortname}_images`.`media` AS asagi_filename,
-            `{board_shortname}_images`.`preview_op` AS asagi_preview_filename
+            `{board_shortname}_images`.`media` AS media_orig,
+            `{board_shortname}_images`.`preview_op` AS preview_orig
         FROM `{board_shortname}`
             LEFT JOIN `{board_shortname}_threads` USING (thread_num)
             LEFT JOIN `{board_shortname}_images` USING (media_id)
@@ -549,7 +588,7 @@ async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
 
 
 async def generate_post(board_shortname: str, post_id: int) -> tuple[dict]:
-    """Returns {thread_num: 123, com: 'hello', ...}"""
+    """Returns {thread_num: 123, comment: 'hello', ...}"""
     sql = f"""
         {get_selector(board_shortname)},
             images.`media_hash`,

@@ -37,7 +37,7 @@
 {%- macro thread_stats(post) -%}
   <div class="thread-stats">
     {%- if post.sticky -%} Sticky / {%- endif -%}
-    {%- if post.closed -%} Closed / {%- endif -%}
+    {%- if post.locked -%} Closed / {%- endif -%}
     <span class="ts-replies" data-tip="Replies" title="Replies">{{post.nreplies}}</span>
     /
     <span class="ts-images" data-tip="Images" title="Files">{{post.nimages}}</span>
@@ -51,7 +51,7 @@
 {%- macro get_full_media_src(image_uri, post) -%}
   {%- if image_uri -%}
 
-    {%- set fname_img = (post.asagi_filename|string) -%}
+    {%- set fname_img = (post.media_orig|string) -%}
     {%- set url = (image_uri.format(board_shortname=post.board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
 
     {{url}}
@@ -65,8 +65,8 @@
 {%- macro get_thumb_src(thumb_uri, post) -%}
   {%- if thumb_uri -%}
 
-    {%- set fname_thumb = (post.asagi_preview_filename|string) -%}
-    {%- set fname_img = (post.asagi_filename|string) -%}
+    {%- set fname_thumb = (post.preview_orig|string) -%}
+    {%- set fname_img = (post.media_orig|string) -%}
 
     {%- set url = (thumb_uri.format(board_shortname=post.board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
 
@@ -86,9 +86,9 @@
   <img
     src="{{thumb_src}}"
     class="{{classes}}"
-    data-md5="{{ post.md5 }}"
-    width="{{ post.tn_w }}"
-    height="{{ post.tn_h }}"
+    data-media_hash="{{ post.media_hash }}"
+    width="{{ post.preview_w }}"
+    height="{{ post.preview_h }}"
     loading="lazy"
     data-ext="{{post.ext}}"
     data-thumb_src="{{thumb_src}}"

@@ -10,8 +10,7 @@ from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
 from asagi_converter import get_selector, get_text_quotelinks, selector_columns
-from configs import CONSTS
-from db import close_db_pool, fetch_tuple, get_database_instance, prime_db_pool
+from db import close_db_pool, fetch_tuple, prime_db_pool
 from posts.capcodes import capcode_2_id
 
 from .post_metadata import board_2_int, board_int_num_2_pk, pack_metadata
@@ -261,12 +260,12 @@ def process_post_rows(board: str, rows: list[tuple], post_pack_fn: Callable[[dic
 def process_post(post: dict, board_int: int, post_2_quotelinks: dict, post_pack_fn: Callable[[dict], dict]) -> dict:
     """Factored out logic for processing single post.
     """
-    post['quotelinks'] = post_2_quotelinks.get(post['no'], []) # need replies before packing metadata
+    post['quotelinks'] = post_2_quotelinks.get(post['num'], []) # need replies before packing metadata
     post['capcode'] = capcode_2_id(post['capcode']) # cast the capcode to int also in the metadata
     post['data'] = pack_metadata(post)
     post['pk'] = board_int_num_2_pk(board_int, post["doc_id"])
     post['board'] = board_int
-    post['op'] = post['resto'] == 0
+    post['op'] = post['op_num'] == 0
 
     rename_keys(post)
     set_bool_fields(post)
@@ -276,13 +275,8 @@ def process_post(post: dict, board_int: int, post_2_quotelinks: dict, post_pack_
 
 
 key_remap = (
-    ('deleted', 'filedeleted'),
-    ('comment', 'com'),
-    ('media_filename', 'filename'),
-    ('media_hash', 'md5'),
-    ('num', 'no'),
-    ('width', 'w'),
-    ('height', 'h'),
+    ('width', 'media_w'),
+    ('height', 'media_h'),
 )
 def rename_keys(post: dict):
     for se_key, asagi_key in key_remap:
@@ -316,9 +310,9 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
     """Returns a dict of post numbers to reply post numbers."""
     post_2_quotelinks = defaultdict(list)
     for row in rows:
-        if not (comment := row.get('com')):
+        if not (comment := row.get('comment')):
             continue
-        num = row['no']
+        num = row['num']
         for quotelink in get_text_quotelinks(comment):
             post_2_quotelinks[int(quotelink)].append(num)
     return post_2_quotelinks
@@ -348,8 +342,13 @@ async def main(boards: list[str], reset: bool=False):
     sp = get_search_provider()
     try:
         if reset:
-            await sp.posts_wipe()
+            try:
+                await sp.posts_wipe()
+            except Exception as e:
+                print('No existing index.')
+
             await sp.init_indexes()
+
         for board in boards:
             await index_board(board, sp)
         await sp.finalize()

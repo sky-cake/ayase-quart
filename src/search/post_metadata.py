@@ -19,9 +19,9 @@ We focus on retaining only fields needed for rendering search results (fields co
 
 - op
 - deleted
-- timestamp (time/now)
-- mediahash (md5)
-- no (num)
+- ts_unixepoch
+- mediahash
+- num
 - board (board_shortname)
 
 The data is packed into a list for faster access, and we ensure values stay in order for correct unpacking. Common and zero values are placed first to maximize compression efficiency. If the keys/fields are changed, everything must re-indexed.
@@ -36,35 +36,35 @@ Notes:
 
 fields: Tuple[str] = (
     'sticky',
-    'closed',
+    'locked',
     'spoiler',
     'trip',
     'since4pass',
     'poster_hash',
-    'country',
+    'poster_country',
     'troll_country',
-    'sub',
+    'title',
     'name',
     'email',
     'capcode',
-    'filedeleted',
+    'deleted',
     'board_shortname',
-    'filename',
-    'asagi_filename',
-    'asagi_preview_filename',
+    'media_filename',
+    'media_orig',
+    'preview_orig',
     'exif',
-    'md5',
+    'media_hash',
     'ext',
-    'fsize',
-    'w',
-    'h',
-    'tn_w',
-    'tn_h',
+    'media_size',
+    'media_w',
+    'media_h',
+    'preview_w',
+    'preview_h',
     'quotelinks',
-    'no',
-    'resto',
-    'deleted_time',
-    'time',
+    'num',
+    'op_num',
+    'ts_expired',
+    'ts_unixepoch',
 )
 
 
@@ -96,12 +96,12 @@ def pack_metadata(row: dict) -> str:
     row['board_shortname'] = board_2_int(row['board_shortname'])
     if row['name'] == 'Anonymous':
         row['name'] = None
-    if del_time := row['deleted_time']:
+    if del_time := row['ts_expired']:
         # something wrong with the dumps
         if del_time.startswith('12/31/69'):
-            row['deleted_time'] = 0
+            row['ts_expired'] = 0
         else:
-            row['deleted_time'] = formatted_2_posix_ts(del_time)
+            row['ts_expired'] = formatted_2_posix_ts(del_time)
     return b64encode(compress(msg_packer.pack([row.get(f) for f in fields]), level=9, wbits=-15)).decode()
 
 
@@ -111,7 +111,7 @@ def unpack_metadata(data: str, comment: str) -> dict:
     msg_unpacker.feed(decompress(b64decode(data, validate=True), wbits=-15, bufsize=DECOMP_BUFFER_SIZE))
     data = msg_unpacker.unpack()
     post = {k:v for k,v in zip(fields, data)}
-    post['now'] = posix_ts_2_formatted(data[-1])
+    post['ts_formatted'] = posix_ts_2_formatted(data[-1])
     post['board_shortname'] = int_2_board(post['board_shortname'])
     post['capcode'] = id_2_capcode(post['capcode'])
     post['comment'] = comment
