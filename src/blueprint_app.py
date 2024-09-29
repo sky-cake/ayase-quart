@@ -202,12 +202,10 @@ async def v_catalog_page(board_shortname: str, page_num: int):
 def get_posts_t(thread_dict: dict, post_2_quotelinks: list[int]) -> str:
     posts_t = []
     for post in thread_dict:
-        if quotelinks := post_2_quotelinks.get(str(post['no'])):
+        if quotelinks := post_2_quotelinks.get(str(post['num'])):
             post['quotelinks'] = quotelinks
         else:
             post['quotelinks'] = ''
-
-        post['comment'] = post.pop('com')
 
         posts_t.append(wrap_post_t(post))
 
@@ -220,7 +218,7 @@ def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     nreplies = 0
     nimages = 0
     for post in posts:
-        if post.get('resto') == 0:
+        if post.get('op_num') == 0:
             nreplies = post.get('nreplies', nreplies)
             nimages = post.get('nimages', nimages)
             break

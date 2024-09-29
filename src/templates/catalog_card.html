@@ -1,13 +1,13 @@
-<div id="{{ thread.no }}" class="thread doc_id_{{ thread.no }}" tabindex="0">
+<div id="{{ thread.num }}" class="thread doc_id_{{ thread.num }}" tabindex="0">
     <div class="post_data">
-        {% if thread.sub %}
+        {% if thread.title %}
             <br>
-            <span class="post_title">{{ thread.sub }}</span>
+            <span class="post_title">{{ thread.title }}</span>
             <br>
         {% endif %}
         <span class="post_controls">
-            [<a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" class="btnr parent" target="{{html_link_target}}">View</a>]
-            [<a href="https://boards.4chan.org/{{ thread.board_shortname }}/thread/{{ thread.no }}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
+            [<a href="/{{ thread.board_shortname }}/thread/{{ thread.num }}" class="btnr parent" target="{{html_link_target}}">View</a>]
+            [<a href="https://boards.4chan.org/{{ thread.board_shortname }}/thread/{{ thread.num }}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
 
         {{ capcode_author(thread) }}
@@ -41,25 +41,25 @@
     </span>
     <span class="poster_hash"></span>
     <br/>
-    <time datetime="{{ thread.time }}">{{ thread.now }}</time>
+    <time datetime="{{ thread.ts_unixepoch }}">{{ thread.ts_formatted }}</time>
     <span class="post_number">
-        <a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}#p{{ thread.no }}" data-function="highlight" data-post="{{ thread.no }}">No. {{ thread.no }}</a>
+        <a href="/{{ thread.board_shortname }}/thread/{{ thread.num }}#p{{ thread.num }}" data-function="highlight" data-post="{{ thread.num }}">No. {{ thread.num }}</a>
     </span>
 
 </div>
 
-<a href="/{{ thread.board_shortname }}/thread/{{ thread.no }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">
+<a href="/{{ thread.board_shortname }}/thread/{{ thread.num }}" rel="noreferrer" target="{{html_link_target}}" class="thread_image_link" data-expand="true">
 
     {{get_img(thumb_uri, image_uri, thread, classes="thumb thread_image", expand_media=False)}}
 
 </a>
 
-{% if thread.sticky or thread.closed %}
+{% if thread.sticky or thread.locked %}
     <div class="threadIcons">
         {% if thread.sticky %}
             <span title="Sticky" class="threadIcon stickyIconCatalog"></span>
         {% endif %}
-        {% if thread.closed %}
+        {% if thread.locked %}
             <span title="Closed" class="threadIcon closedIconCatalog"></span>
         {% endif %}
     </div>
@@ -76,10 +76,10 @@
 </div>
 
 <div class="teaser">
-    {% if thread.sub %}
-        <span class="post_title">{{thread.sub}}</span>:
+    {% if thread.title %}
+        <span class="post_title">{{thread.title}}</span>:
     {% endif %}
-    {{thread.com}}
+    {{thread.comment}}
 </div>
 
 </div>

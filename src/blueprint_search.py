@@ -133,7 +133,7 @@ async def v_index_search():
         if search_mode == SearchMode.index:
             hl_re = get_term_re(q.terms) if q.terms else None
             for post in results:
-                op_num = post['no'] if post['resto'] == 0 else post['resto']
+                op_num = post['num'] if post['op_num'] == 0 else post['op_num']
                 if post['comment']:
                     if hl_re:
                         post['comment'] = mark_highlight(hl_re, post['comment'])

@@ -14,13 +14,6 @@ from templates import template_login
 blueprint_auth = Blueprint("blueprint_auth", __name__, template_folder="templates")
 
 
-# COLUMN_LIST = "doc_id, media_id, poster_ip, num, subnum, thread_num, op, timestamp, timestamp_expired, preview_orig, preview_w, preview_h, media_filename, media_w, media_h, media_size, media_hash, media_orig, spoiler, deleted, capcode, email, name, trip, title, comment, delpass, sticky, locked, poster_hash, poster_country, exif"
-# INSERT_THREAD_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE thread_num=:thread_num;"
-# DELETE_THREAD = "DELETE FROM {board} WHERE thread_num=:thread_num;"
-# INSERT_POST_INTO_DELETED = "INSERT INTO {board}_deleted SELECT * FROM {board} WHERE num=:num;"
-# DELETE_POST = "DELETE FROM {board} WHERE num=:num;"
-
-
 async def auth(action: AuthActions, user_id=None):
     """Handles session actions."""
     async with current_app.app_context():

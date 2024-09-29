@@ -39,27 +39,25 @@ async def render_controller(template: str | Template, **kwargs):
 def highlight_search_results(form, posts):
     """`posts = {'posts': [{...}, {...}, ...]}`"""
 
-    form_to_asagi_field_names = []
+    field_names = []
     if form.comment.data:
-        form_to_asagi_field_names.append({'form_name': 'comment', 'asagi_name': 'com'})
+        field_names.append('comment')
     if form.title.data:
-        form_to_asagi_field_names.append({'form_name': 'title', 'asagi_name': 'sub'})
+        field_names.append('title')
 
     for i, post in enumerate(posts['posts']):
 
-        for field in form_to_asagi_field_names:
-            asagi_name = field['asagi_name']
-            form_name = field['form_name']
+        for field_name in field_names:
 
-            escaped_field = escape(form[form_name].data)
+            escaped_field = escape(form[field_name].data)
 
-            indices = [m.start() for m in re.finditer(escaped_field.lower(), post[asagi_name].lower())]
+            indices = [m.start() for m in re.finditer(escaped_field.lower(), post[field_name].lower())]
 
             for j in indices[::-1]:
-                original_str = post[asagi_name][j : j + len(escaped_field)]
+                original_str = post[field_name][j : j + len(escaped_field)]
 
-                highlight_str = f'<span class="search_highlight_{form_name}">{original_str}</span>'
+                highlight_str = f'<span class="search_highlight_{field_name}">{original_str}</span>'
 
-                posts['posts'][i][asagi_name] = post[asagi_name][:j] + highlight_str + post[asagi_name][j + len(escaped_field) :]
+                posts['posts'][i][field_name] = post[field_name][:j] + highlight_str + post[field_name][j + len(escaped_field) :]
 
     return posts

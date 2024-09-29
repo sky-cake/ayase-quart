@@ -18,9 +18,9 @@ def post_html_comment(comment: str):
 
 
 needed_keys = {
-    'no',
-    'time',
-    'now',
+    'num',
+    'ts_unixepoch',
+    'ts_formatted',
     'board_shortname',
     'quotelinks',
     'comment',
@@ -54,8 +54,8 @@ def wrap_post_t(post: dict):
 
 
 def get_sub_t(post: dict):
-    if sub := post['sub']:
-        return f'<span class="subject">{sub}</span>'
+    if title := post['title']:
+        return f'<span class="subject">{title}</span>'
     return ''
 
 
@@ -108,14 +108,14 @@ mb_d = 1024 * 1024
 mb_junc = 1048576
 
 
-def media_metadata_t(fsize: int, w: int, h: int):
-    if fsize >= mb_junc:
-        return f'{fsize / mb_d :.2f} MB, {w}x{h}'
-    return f'{fsize / kb_d :.1f} KB, {w}x{h}'
+def media_metadata_t(media_size: int, media_w: int, media_h: int):
+    if media_size >= mb_junc:
+        return f'{media_size / mb_d :.2f} MB, {media_w}x{media_h}'
+    return f'{media_size / kb_d :.1f} KB, {media_w}x{media_h}'
 
 
-def get_media_path(filename: str, board: str, media_type: MediaType) -> str:
-    if not filename or not CONSTS.thumb_uri or not CONSTS.image_uri:
+def get_media_path(media_filename: str, board: str, media_type: MediaType) -> str:
+    if not media_filename or not CONSTS.thumb_uri or not CONSTS.image_uri:
         return ''
 
     uri = CONSTS.thumb_uri
@@ -123,19 +123,19 @@ def get_media_path(filename: str, board: str, media_type: MediaType) -> str:
     if media_type == MediaType.image:
         uri = CONSTS.image_uri
 
-    return f'{uri.format(board_shortname=board).strip('/')}/{filename[0:4]}/{filename[4:6]}/{filename}'
+    return f'{uri.format(board_shortname=board).strip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
 
 
 def get_gallery_media_t(post: dict):
-    if not post['filename']:
+    if not post['media_filename']:
         return ''
     ext = post['ext']
-    asagi_filename = post['asagi_filename']
-    asagi_preview_filename = post['asagi_preview_filename']
-    md5h = post['md5']
+    media_orig = post['media_orig']
+    preview_orig = post['preview_orig']
+    md5h = post['media_hash']
     board = post['board_shortname']
-    full_src = get_media_path(asagi_filename, board, MediaType.image)
-    thumb_src = get_media_path(asagi_preview_filename, board, MediaType.thumb)
+    full_src = get_media_path(media_orig, board, MediaType.image)
+    thumb_src = get_media_path(preview_orig, board, MediaType.thumb)
     classes = ['replyImg', 'postImg']
     if post['spoiler']:
         classes.append('spoiler')
@@ -143,9 +143,9 @@ def get_gallery_media_t(post: dict):
 		<img
 			src="{thumb_src}"
 			class="{" ".join(classes)}"
-			data-md5="{ md5h }"
-			width="{ post['tn_w'] }"
-			height="{ post['tn_h'] }"
+			data-media_hash="{ md5h }"
+			width="{ post['preview_w'] }"
+			height="{ post['preview_h'] }"
 			loading="lazy"
 			data-ext="{ext}"
 			data-thumb_src="{thumb_src}"
@@ -158,37 +158,37 @@ def get_gallery_media_t(post: dict):
 
 
 def get_media_t(post: dict):
-    if not (filename := post['filename']):
+    if not (media_filename := post['media_filename']):
         return ''
     ext = post['ext']
-    asagi_filename = post['asagi_filename']
-    asagi_preview_filename = post['asagi_preview_filename']
-    no = post['no']
-    md5h = post['md5']
+    media_orig = post['media_orig']
+    preview_orig = post['preview_orig']
+    num = post['num']
+    md5h = post['media_hash']
     board = post['board_shortname']
     spoiler = 'Spoiler,' if post['spoiler'] else ''
-    full_src = get_media_path(asagi_filename, board, MediaType.image)
-    thumb_src = get_media_path(asagi_preview_filename, board, MediaType.thumb)
+    full_src = get_media_path(media_orig, board, MediaType.image)
+    thumb_src = get_media_path(preview_orig, board, MediaType.thumb)
     classes = ['replyImg', 'postImg']
     if post['spoiler']:
         classes.append('spoiler')
     return f"""
-	<div class="file" id="f{no}">
-        <div class="fileText" id="fT{no}">
+	<div class="file" id="f{num}">
+        <div class="fileText" id="fT{num}">
             File:
-            <a href="{full_src}" title="{asagi_filename}">{filename}.{ext}</a>
+            <a href="{full_src}" title="{media_orig}">{media_filename}.{ext}</a>
             (<span title="{md5h}">
                 {spoiler}
-                {media_metadata_t(post['fsize'], post['w'], post['h'])}
+                {media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}
             </span>)
         </div>
         <a class="fileThumb">
 			<img
 				src="{thumb_src}"
 				class="{" ".join(classes)}"
-				data-md5="{ md5h }"
-				width="{ post['tn_w'] }"
-				height="{ post['tn_h'] }"
+				data-media_hash="{ md5h }"
+				width="{ post['preview_w'] }"
+				height="{ post['preview_h'] }"
 				loading="lazy"
 				data-ext="{ext}"
 				data-thumb_src="{thumb_src}"
@@ -204,10 +204,10 @@ def get_media_t(post: dict):
 
 def set_links(post: dict):
     board = post['board_shortname']
-    no = post['no']
-    thread = resto if (resto := post['resto']) else no
+    num = post['num']
+    thread = op_num if (op_num := post['op_num']) else num
     post['t_thread_link'] = f'/{board}/thread/{thread}'
-    post['t_post_link'] = f'/{board}/thread/{thread}#p{no}'
+    post['t_post_link'] = f'/{board}/thread/{thread}#p{num}'
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
@@ -221,19 +221,19 @@ closed_t = '<img src="/static/images/closed.gif" alt="Closed" title="Closed" cla
 
 
 def get_closed_t(post: dict):
-    return closed_t if post.get('closed') else ''
+    return closed_t if post.get('locked') else ''
 
 
 def get_country_t(post: dict):
-    if not (country := post['country']):
+    if not (poster_country := post['poster_country']):
         return ''
-    return f'<span title="{country}" class="flag flag-{country.lower()}"></span>'
+    return f'<span title="{poster_country}" class="flag flag-{poster_country.lower()}"></span>'
 
 
 def get_troll_country_t(post: dict):
     if not (troll_country := post.get('troll_country')):
         return ''
-    return f'<span title="{post["country"]}" class="flag-pol2 flag-{troll_country.lower()}"></span>'
+    return f'<span title="{post["poster_country"]}" class="flag-pol2 flag-{troll_country.lower()}"></span>'
 
 
 def get_trip_t(post: dict):
@@ -248,9 +248,9 @@ def get_mobile_t(post: dict):
         <span class="name">{post['name']}</span>
         <br>
     </span>
-    <span class="dateTime postNum" data-utc="{post['time']}">
-        {post['now']}
-        <a href="#{post['no']}" title="Link to this post">No. {post['no']}</a>
+    <span class="dateTime postNum" data-utc="{post['ts_unixepoch']}">
+        {post['ts_formatted']}
+        <a href="#{post['num']}" title="Link to this post">No. {post['num']}</a>
     </span>
 	"""
 
@@ -274,19 +274,19 @@ def get_since4pass_t(post: dict):
 
 
 def get_filedeleted_t(post: dict):
-    if not post.get('filedeleted'):
+    if not post.get('deleted'):
         return ''
-    msg = f'deleted on {del_time}' if (del_time := post.get('deleted_time')) else 'prematurely deleted.'
+    msg = f'deleted on {del_time}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
     return f'<strong class="warning" title="This post was {msg}.">[Deleted]</strong>'
 
 
 def get_header_t(post: dict):
-    no = post['no']
+    num = post['num']
     return f"""
-	<div class="postContainer replyContainer" id="pc{no}">
-	<div class="sideArrows" id="sa{no}">&gt;&gt;</div>
+	<div class="postContainer replyContainer" id="pc{num}">
+	<div class="sideArrows" id="sa{num}">&gt;&gt;</div>
 
-	<div id="p{no}" class="post reply">
+	<div id="p{num}" class="post reply">
 	"""
 
 
@@ -295,7 +295,7 @@ def get_quotelink_t(post: dict):
         return ''
     board = post['board_shortname']
     quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{ quotelink }" class="quotelink" data-board_shortname="{board}">&gt;&gt;{ quotelink }</a></span>' for quotelink in quotelinks)
-    return f'<div id="bl_{post["no"]}" class="backlink">{quotelinks}</div>'
+    return f'<div id="bl_{post["num"]}" class="backlink">{quotelinks}</div>'
 
 
 user_keys = (

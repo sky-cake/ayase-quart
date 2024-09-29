@@ -1,39 +1,39 @@
 {% from 'macros.html' import capcode_author, thread_stats, get_img, get_full_media_src, get_thumb_src %}
 
-{% if post.resto == 0 and not search_result%}
+{% if post.op_num == 0 and not search_result%}
     {{ thread_stats(post) }}
-    <div class="postContainer opContainer" id="pc{{post.no}}">
+    <div class="postContainer opContainer" id="pc{{post.num}}">
 {% else %}
-    <div class="postContainer replyContainer" id="pc{{post.no}}">
-        <div class="sideArrows" id="sa{{post.no}}">&gt;&gt;</div>
+    <div class="postContainer replyContainer" id="pc{{post.num}}">
+        <div class="sideArrows" id="sa{{post.num}}">&gt;&gt;</div>
 {% endif %}
 
 
-{% if post.resto == 0 and not search_result %}
-    <div id="p{{post.no}}" class="post op reply">
+{% if post.op_num == 0 and not search_result %}
+    <div id="p{{post.num}}" class="post op reply">
 {% else %}
-    <div id="p{{post.no}}" class="post reply">
+    <div id="p{{post.num}}" class="post reply">
 {% endif %}
 
-<div class="postInfoM mobile" id="pim{{post.no}}">
-    {% if post.sub %}
-        <span class="subject">{{post.sub|safe}}</span>
+<div class="postInfoM mobile" id="pim{{post.num}}">
+    {% if post.title %}
+        <span class="subject">{{post.title|safe}}</span>
     {% endif %}
     <span class="nameBlock">
         <span class="name">{{post.name}}</span>
         <br>
     </span>
-    <span class="dateTime postNum" data-utc="{{post.time}}">
-        {{post.now}}
-        <a href="#{{post.num}}" title="Link to this post">No. {{post.no}}</a>
+    <span class="dateTime postNum" data-utc="{{post.ts_unixepoch}}">
+        {{post.ts_formatted}}
+        <a href="#{{post.num}}" title="Link to this post">No. {{post.num}}</a>
     </span>
 </div>
-{% if post.resto == 0 and post.filename %}
-    <div class="file" id="f{{post.no}}">
-        <div class="fileText" id="fT{{post.no}}">
+{% if post.op_num == 0 and post.media_filename %}
+    <div class="file" id="f{{post.num}}">
+        <div class="fileText" id="fT{{post.num}}">
             File:
-            <a href="{{ get_full_media_src(image_uri, post) }}">{{post.filename}}.{{post.ext}}</a>
-            (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor')}} KB, {{post.w}}x{{post.h}}){% endif %}</span>
+            <a href="{{ get_full_media_src(image_uri, post) }}">{{post.media_filename}}.{{post.ext}}</a>
+            (<span title="{{post.media_hash}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.media_size >= 1048576 %}{{(post.media_size / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.media_w}}x{{post.media_h}}){% else %}{{(post.media_size / 1024 )| round(1, 'floor')}} KB, {{post.media_w}}x{{post.media_h}}){% endif %}</span>
             {% if search_result %}
                 Replies: {{post.nreplies}} Files: {{post.nimages}} {% if post.nposters %}Posters: {{post.nposters}}{% endif %}
             {% endif %}
@@ -43,21 +43,21 @@
         </a>
     </div>
 {% endif %}
-<div class="postInfo desktop" id="pi{{post.no}}">
+<div class="postInfo desktop" id="pi{{post.num}}">
     {% if search_result %}
         <b>/{{post.board_shortname}}/</b>
     {% endif %}
-    {% if search_result and post.resto == 0 %}
+    {% if search_result and post.op_num == 0 %}
         <strong style="color: #4da57c;">OP</strong>
     {% endif %}
-    {% if post.filedeleted and not post.deleted_time %}
+    {% if post.deleted and not post.ts_expired %}
         <strong class="warning" title="This post was prematurely deleted.">[Deleted]</strong>
     {% endif %}
-    {% if post.filedeleted and post.deleted_time %}
-        <strong class="warning" title="This post was deleted on {{post.deleted_time}}.">[Deleted]</strong>
+    {% if post.deleted and post.ts_expired %}
+        <strong class="warning" title="This post was deleted on {{post.ts_expired}}.">[Deleted]</strong>
     {% endif %}
-    {% if post.sub %}
-        <span class="subject">{{post.sub|safe}}</span>
+    {% if post.title %}
+        <span class="subject">{{post.title|safe}}</span>
     {% endif %}
     <span class="nameBlock {{ capcode_author(post.capcode) }}">
         {% if post.email and post.email != 'noko' %}<a href="mailto:{{ post.email }}">{% endif %}<span class="name{% if post.capcode %} capcode{% endif %}"{% if post.exif %} title="Exif: {{post.exif}}"{% endif %}>{{ post.name }}</span>{% if post.trip %}<span class="postertrip">{{ post.trip }}</span>{% endif %}{% if post.email and post.email != 'noko' %}</a>{% endif %}
@@ -66,42 +66,42 @@
     </span>
     {% if post.since4pass %}<span class="n-pu" title="Pass user since {{post.since4pass}}."></span>{% endif %}
     {% if post.poster_hash %}<span class="posteruid id_{{post.poster_hash}}">(ID: <a title="." href="#">{{post.poster_hash}}</a>) </span>{% endif %}
-    {% if post.country %}<span title="{{post.country}}" class="flag flag-{{post.country|lower}}"></span>{% endif %}
-    {% if post.troll_country %}<span title="{{post.country}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
-    <span class="dateTime" data-utc="{{post.time}}">{{post.now}}</span>
+    {% if post.poster_country %}<span title="{{post.poster_country}}" class="flag flag-{{post.poster_country|lower}}"></span>{% endif %}
+    {% if post.troll_country %}<span title="{{post.poster_country}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
+    <span class="dateTime" data-utc="{{post.ts_unixepoch}}">{{post.ts_formatted}}</span>
     <span class="postNum desktop">
-        {% if search_result and post.resto != 0 %}
-            <a href="/{{post.board_shortname}}/thread/{{post.resto}}#p{{post.no}}">No.{{post.no}}</a>
-        {% elif search_result and post.resto == 0 %}
-            <a href="/{{post.board_shortname}}/thread/{{post.no}}#p{{post.no}}">No.{{post.no}}</a>
+        {% if search_result and post.op_num != 0 %}
+            <a href="/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}">No.{{post.num}}</a>
+        {% elif search_result and post.op_num == 0 %}
+            <a href="/{{post.board_shortname}}/thread/{{post.num}}#p{{post.num}}">No.{{post.num}}</a>
         {% else %}
-            <a href="#p{{post.no}}" title="Link to this post">No. {{post.no}}</a>
+            <a href="#p{{post.num}}" title="Link to this post">No. {{post.num}}</a>
         {% endif %}
-        {% if post.resto == 0 %}
+        {% if post.op_num == 0 %}
             {% if post.sticky %}
                 <img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">
             {% endif %}
-            {% if post.closed %}
+            {% if post.locked %}
                 <img src="/static/images/closed.gif" alt="Closed" title="Closed" class="closedIcon retina">
             {% endif %}
         {% endif %}
     </span>
     <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
-    {% if search_result and post.resto != 0 %}
-        [<a href="/{{post.board_shortname}}/thread/{{post.resto}}#p{{post.no}}" target="{{html_link_target}}">View</a>]
+    {% if search_result and post.op_num != 0 %}
+        [<a href="/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}" target="{{html_link_target}}">View</a>]
     {% endif %}
-    {% if search_result and post.resto == 0 %}
-        [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="{{html_link_target}}">View</a>]
+    {% if search_result and post.op_num == 0 %}
+        [<a href="/{{post.board_shortname}}/thread/{{post.num}}" target="{{html_link_target}}">View</a>]
     {% endif %}
-    {% if not search_result and post.resto == 0 %}
+    {% if not search_result and post.op_num == 0 %}
         {% if board_index_page %}
-            [<a href="/{{post.board_shortname}}/thread/{{post.no}}" target="{{html_link_target}}">View</a>]
+            [<a href="/{{post.board_shortname}}/thread/{{post.num}}" target="{{html_link_target}}">View</a>]
         {% endif %}
-        [<a href="https://boards.4chan.org/{{ post.board_shortname }}/thread/{{ post.no }}" rel="noreferrer" target="_blank">Source</a>]
+        [<a href="https://boards.4chan.org/{{ post.board_shortname }}/thread/{{ post.num }}" rel="noreferrer" target="_blank">Source</a>]
     {% endif %}
-    <div id="bl_{{post.no}}" class="backlink">
+    <div id="bl_{{post.num}}" class="backlink">
         {% if quotelinks %}
-            {% for quotelink in quotelinks[post.no|string] %}
+            {% for quotelink in quotelinks[post.num|string] %}
                 <span class="quotelink">
                     <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
                 </span>
@@ -109,18 +109,18 @@
         {% endif %}
     </div>
 </div>
-{% if post.resto and post.filename %}
-    <div class="file" id="f{{post.no}}">
-        <div class="fileText" id="fT{{post.no}}">
+{% if post.op_num and post.media_filename %}
+    <div class="file" id="f{{post.num}}">
+        <div class="fileText" id="fT{{post.num}}">
             File:
-            <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.asagi_filename}}">{{post.filename}}.{{post.ext}}</a>
-            (<span title="{{post.md5}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.fsize >= 1048576 %}{{(post.fsize / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.w}}x{{post.h}}){% else %}{{(post.fsize / 1024 )| round(1, 'floor') }} KB, {{post.w}}x{{post.h}}){% endif %}</span>
+            <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.media_orig}}">{{post.media_filename}}.{{post.ext}}</a>
+            (<span title="{{post.media_hash}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.media_size >= 1048576 %}{{(post.media_size / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.media_w}}x{{post.media_h}}){% else %}{{(post.media_size / 1024 )| round(1, 'floor') }} KB, {{post.media_w}}x{{post.media_h}}){% endif %}</span>
         </div>
         <a class="fileThumb">
             {{get_img(thumb_uri, image_uri, post, classes="replyImg postImg spoiler" if post.spoiler else "replyImg postImg")}}
         </a>
     </div>
 {% endif %}
-<blockquote class="postMessage" id="m{{post.no}}">{{post.com|safe}}</blockquote>
+<blockquote class="postMessage" id="m{{post.num}}">{{post.comment|safe}}</blockquote>
 </div>
 </div>

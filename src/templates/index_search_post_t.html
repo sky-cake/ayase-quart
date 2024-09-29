@@ -1,14 +1,14 @@
 {{ t_header }}
-<div class="postInfoM mobile" id="pim{{no}}">
+<div class="postInfoM mobile" id="pim{{num}}">
     {{ t_sub }}
     {{ t_mobile }}
 </div>
-{% if resto == 0 %}
+{% if op_num == 0 %}
     {{t_media}}
 {% endif %}
-<div class="postInfo desktop" id="pi{{no}}">
+<div class="postInfo desktop" id="pi{{num}}">
     <b>/{{board_shortname}}/</b>
-    {% if resto == 0 %}
+    {% if op_num == 0 %}
         <strong style="color: #4da57c;">OP</strong>
     {% endif %}
     {{ t_filedeleted }}
@@ -21,21 +21,21 @@
     {{ t_since4pass }}
     {{ t_country }}
     {{ t_troll_country }}
-    <span class="dateTime" data-utc="{{time}}">{{now}}</span>
+    <span class="dateTime" data-utc="{{ts_unixepoch}}">{{ts_formatted}}</span>
     <span class="postNum desktop">
-        <a href="{{t_post_link}}">No.{{no}}</a>
-        {% if resto == 0 %}
+        <a href="{{t_post_link}}">No.{{num}}</a>
+        {% if op_num == 0 %}
             {{ t_sticky }}
             {{ t_closed }}
         {% endif %}
     </span>
     <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
-    [<a href="{{t_post_link if resto else t_thread_link}}">View</a>]
+    [<a href="{{t_post_link if op_num else t_thread_link}}">View</a>]
     {{ t_quotelink }}
 </div>
-{% if resto %}
+{% if op_num %}
     {{t_media}}
 {% endif %}
-<blockquote class="postMessage" id="m{{no}}">{{comment or ''}}</blockquote>
+<blockquote class="postMessage" id="m{{num}}">{{comment or ''}}</blockquote>
 </div>
 </div>
