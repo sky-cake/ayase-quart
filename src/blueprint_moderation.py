@@ -9,13 +9,13 @@ from db.api import (
     get_report_with_id
 )
 from forms import ReportForm
+from render import render_controller
 from templates import (
     template_reports_delete,
     template_reports_edit,
     template_reports_index,
     template_reports_view
 )
-from utils import render_controller
 
 blueprint_moderation = Blueprint('blueprint_moderation', __name__)
 

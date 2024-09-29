@@ -1,8 +1,10 @@
 import os
 from tomllib import load
 
-BOARDS_FILE = 'boards.toml'
-DEFAULT_BOARDS_FILE = 'boards.tpl.toml'
+from utils import make_src_path
+
+BOARDS_FILE = make_src_path('boards.toml')
+DEFAULT_BOARDS_FILE = make_src_path('boards.tpl.toml')
 
 def load_boards():
     if not hasattr(load_boards, 'boards'):

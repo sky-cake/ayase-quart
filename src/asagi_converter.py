@@ -1,13 +1,10 @@
-import asyncio
 import html
 import re
 from collections import defaultdict
 from functools import cache
 from textwrap import dedent
-from time import perf_counter
-from typing import Any, Dict, List
 
-from quart import current_app, request
+from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS
@@ -178,7 +175,7 @@ def validate_and_generate_params(form_data):
     return param_values, param_filters
 
 
-async def get_posts_filtered(form_data: Dict[Any, Any], result_limit: int, order_by: str):
+async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     """form_data e.g.
     ```
         form_data = dict(
@@ -283,12 +280,7 @@ async def get_post_replies(board_shortname, thread_num, post_num):
     return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
-async def get_post(board_shortname: str, post_num: int):
-    SELECT_POST = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `num`=%(post_num)s"
-    return await current_app.db.query_execute(SELECT_POST, params={'post_num': post_num}, fetchone=True)
-
-
-async def get_post_images(board_shortname: str, post_nums: List[int]):
+async def get_post_images(board_shortname: str, post_nums: list[int]):
     image_selector = get_image_selector()
 
     placeholders = ','.join(['%s'] * len(post_nums))
@@ -298,111 +290,8 @@ async def get_post_images(board_shortname: str, post_nums: List[int]):
     return await current_app.db.query_execute(SELECT_POST_IMAGES, params=post_nums)
 
 
-async def get_thread(board_shortname: str, thread_num: int):
-    SELECT_THREAD = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s ORDER BY `num`"
-    return await current_app.db.query_execute(SELECT_THREAD, params={'thread_num': thread_num})
-
-
-async def get_thread_images(board_shortname: str, thread_num: int):
-    image_selector = get_image_selector()
-    SELECT_THREAD_IMAGES = (
-        f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s)"
-    )
-
-    return await current_app.db.query_execute(SELECT_THREAD_IMAGES, params={'thread_num': thread_num})
-
-
-async def get_thread_details(board_shortname: str, thread_num: int):
-    SELECT_THREAD_DETAILS = f"SELECT `nreplies`, `nimages` FROM `{board_shortname}_threads` WHERE `thread_num`=%(thread_num)s"
-    return await current_app.db.query_execute(SELECT_THREAD_DETAILS, params={'thread_num': thread_num}, fetchone=True)
-
-
-async def get_thread_preview(board_shortname: str, thread_num: int):
-    SELECT_THREAD_PREVIEW = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s ORDER BY `num` DESC LIMIT 5"
-    return await current_app.db.query_execute(SELECT_THREAD_PREVIEW, params={'thread_num': thread_num})
-
-
-async def get_thread_preview_images(board_shortname: str, thread_num: int):
-    image_selector = get_image_selector()
-    SELECT_THREAD_PREVIEW_IMAGES = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN (SELECT `media_hash` FROM `{board_shortname}` WHERE `thread_num`=%(thread_num)s ORDER BY `num`)"
-
-    return await current_app.db.query_execute(SELECT_THREAD_PREVIEW_IMAGES, params={'thread_num': thread_num})
-
-
-async def get_op_list(board_shortname: str, page_num: int):
-    SELECT_OP_LIST_BY_OFFSET = (
-        get_selector(board_shortname)
-        + f"FROM {board_shortname} INNER JOIN {board_shortname}_threads ON `{board_shortname}_threads`.`thread_num` = `{board_shortname}`.`thread_num` WHERE OP=1 ORDER BY `time_bump` DESC LIMIT 10 OFFSET %(page_num)s;"
-    )
-    return await current_app.db.query_execute(SELECT_OP_LIST_BY_OFFSET, params={'page_num': page_num * 10})
-
-
-async def get_op_images(board_shortname: str, md5s: list):
-    if not md5s:
-        raise NotImplementedError(md5s)
-
-    image_selector = get_image_selector()
-    placeholders = ','.join(['%s'] * len(md5s))
-    SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH = f"SELECT {image_selector} FROM `{board_shortname}_images` WHERE `media_hash` IN ({placeholders})"
-
-    return await current_app.db.query_execute(SELECT_OP_IMAGE_LIST_BY_MEDIA_HASH, params=md5s)
-
-
-async def get_op_details(board_shortname: str, thread_nums: List[int]):
-    if not thread_nums:
-        raise NotImplementedError(thread_nums)
-
-    thread_nums = [int(x) for x in thread_nums]
-    placeholders = ','.join(['%s'] * len(thread_nums))
-    SELECT_OP_DETAILS_LIST_BY_THREAD_NUM = f"SELECT `thread_num`, `nreplies`, `nimages` FROM `{board_shortname}_threads` WHERE `thread_num` IN ({placeholders})"
-    results = await current_app.db.query_execute(SELECT_OP_DETAILS_LIST_BY_THREAD_NUM, params=thread_nums)
-    return sorted(results, key=lambda x: x['thread_num'])
-
-
-async def get_catalog(board_shortname: str, page_num: int):
-    SELECT_NUMS = f"""
-    SELECT num
-    FROM `{board_shortname}`
-        INNER JOIN `{board_shortname}_threads` AS threads
-            ON `{board_shortname}`.`thread_num` = threads.`thread_num`
-        LEFT JOIN `{board_shortname}_images`
-            ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`
-    WHERE OP=1
-    ORDER BY threads.`time_bump` DESC
-    LIMIT 150
-    OFFSET %(page_num)s
-    """
-    rows = await current_app.db.query_execute(SELECT_NUMS, params={'page_num': page_num})
-    nums = [row.num for row in rows]
-
-    placeholders = ','.join(['%s'] * len(nums))
-
-    SELECT_CATALOG = f"""
-    {get_selector(board_shortname)},
-
-        threads.nreplies,
-        threads.nimages,
-
-        `{board_shortname}`.media_hash,
-        `{board_shortname}_images`.`media` AS asagi_filename,
-        `{board_shortname}_images`.`preview_op` AS asagi_preview_filename
-
-    FROM `{board_shortname}`
-        INNER JOIN `{board_shortname}_threads` AS threads
-            ON `{board_shortname}`.`thread_num` = threads.`thread_num`
-        LEFT JOIN `{board_shortname}_images`
-            ON `{board_shortname}_images`.`media_hash` = `{board_shortname}`.`media_hash`
-    WHERE num in ({placeholders})
-    ;
-    """
-    rows = await current_app.db.query_execute(SELECT_CATALOG, params=nums)
-
-    posts = []
-    for i in range(len(rows)):
-        if not rows or not rows[i]:
-            continue
-        posts.append(dict(rows[i]))  # The record object doesn't support assignment so we convert it to a normal dict
-    return posts
+async def get_op_thread_count(board_shortname) -> int:
+    return (await current_app.db.query_execute(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
 
 
 def get_text_quotelinks(text: str):
@@ -487,6 +376,33 @@ def restore_comment(op_num: int, com: str, board_shortname: str):
     return quotelinks, lines
 
 
+def get_qls_and_posts(rows: list[dict]) -> tuple[dict, list]:
+    post_2_quotelinks = defaultdict(list)
+    posts = []
+    for i, row in enumerate(rows):
+
+        if row.get('md5'):
+            if row.get('resto') == 0:
+                row['asagi_preview_filename'] = row.pop('preview_op')
+            else:
+                row['asagi_preview_filename'] = row.pop('preview_reply')
+
+            row['asagi_filename'] = row.pop('media')
+
+        thread_num = row.get('thread_num')
+        comment = row.get('com')
+        board_shortname = row.get('board_shortname')
+
+        row_quotelinks, row['com'] = restore_comment(thread_num, comment, board_shortname)
+
+        for row_quotelink in row_quotelinks:
+            post_2_quotelinks[row_quotelink].append(rows[i]["no"])
+
+        posts.append(row)
+
+    return post_2_quotelinks, posts
+
+
 async def generate_index(board_shortname: str, page_num: int):
     """Generates the board index. The index shows the OP and its 3 latest comments, if any.
 
@@ -553,12 +469,12 @@ async def generate_index(board_shortname: str, page_num: int):
 
     replies_by_thread = defaultdict(list)
     for reply in replies_result:
-        replies_by_thread[reply['thread_num']].append(convert_post_v2(reply))
+        replies_by_thread[reply['thread_num']].append(get_qls_and_posts([reply])[1][0])
 
     results = {'threads': []}
     for op in ops_result:
         thread_num = op['thread_num']
-        thread_data = {'posts': [convert_post_v2(op)]}
+        thread_data = {'posts': [get_qls_and_posts([op])[1][0]]}
         if thread_num in replies_by_thread:
             thread_data['posts'].extend(replies_by_thread[thread_num])
         results['threads'].append(thread_data)
@@ -566,150 +482,90 @@ async def generate_index(board_shortname: str, page_num: int):
     return results
 
 
-async def get_op_thread_count(board_shortname) -> int:
-    return (await current_app.db.query_execute(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
-
-
 async def generate_catalog(board_shortname: str, page_num: int):
     """Generates the catalog structure"""
-
     page_num -= 1  # start page number at 1
 
-    time_init = perf_counter()
-    catalog_list = await get_catalog(board_shortname, page_num)
-    time_queries = perf_counter()
-    print(f'time_queries: {time_queries - time_init:.4f}')
+    sql = f"""
+        {get_selector(board_shortname)},
+            nreplies,
+            nimages,
+            `{board_shortname}`.media_hash,
+            `{board_shortname}_images`.`media` AS asagi_filename,
+            `{board_shortname}_images`.`preview_op` AS asagi_preview_filename
+        FROM `{board_shortname}`
+            LEFT JOIN `{board_shortname}_threads` USING (thread_num)
+            LEFT JOIN `{board_shortname}_images` USING (media_id)
+        WHERE `OP`=1
+        ORDER BY `time_bump` DESC
+        LIMIT 150
+        OFFSET %(page_num)s
+    """
+    rows = await current_app.db.query_execute(sql, params={'page_num': page_num})
+    catalog_list = [dict(row) for row in rows]
 
     result = [
         {"page": i // 15, "threads": catalog_list[i:i + 15]}
         for i in range(0, len(catalog_list), 15)
     ]
-
     return result
 
 
-async def convert_post(board_shortname: str, post_id: int):
-    """Generates a single post"""
+async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
+    """Generates a thread.
 
-    post, images = await asyncio.gather(get_post(board_shortname, post_id), get_post_images(board_shortname, [post_id]))
+    Returns the dict:
+    ```
+        {'posts': [{...}, {...}, {...}, ...]}
+    ```
 
-    post = [post]
-    images = [images]
-    return convert(post, images=images, is_post=True)
-
-
-async def convert_thread_ops(board_shortname: str, page_num: int):
-    """Generate the OP post"""
-
-    op_list = await get_op_list(board_shortname, page_num)
-    if not op_list:
-        return convert([], [], [], is_ops=True)
-
-    op_image_list, op_detail_list = await asyncio.gather(get_op_images(board_shortname, [op.md5 for op in op_list]), get_op_details(board_shortname, [op.no for op in op_list]))
-
-    thread_ops = convert(op_list, op_detail_list, op_image_list, is_ops=True)
-    return thread_ops
-
-
-async def convert_thread_preview(board_shortname: str, thread_id: int):
-    """Generate a thread preview, removing OP post"""
-
-    thread, images = await asyncio.gather(get_thread_preview(board_shortname, thread_id), get_thread_preview_images(board_shortname, thread_id))
-
-    for i in range(len(thread)):
-        if thread[i]["resto"] == 0:
-            del thread[i]
-
-    thread.reverse()
-    return convert(thread, images=images)
-
-
-async def convert_thread(board_shortname: str, thread_id: int):
-    """Convert threads to 4chan api"""
-
-    thread, images, details = await asyncio.gather(
-        get_thread(board_shortname, thread_id), get_thread_images(board_shortname, thread_id), get_thread_details(board_shortname, thread_id)
-    )
-    details = [details]  # details needs to be an array
-    return convert(thread, details, images)
-
-
-def convert(thread, details=None, images=None, is_ops=False, is_post=False, is_catalog=False):
-    """Converts asagi API data to 4chan API format."""
-
-    result = {}
-    post_2_quotelinks = {}
-    posts = []
-    for i in range(len(thread)):
-        if not thread or not thread[i]:
-            continue
-
-        posts.append(dict(thread[i]))  # The record object doesn't support assignment so we convert it to a normal dict
-
-        if images:
-            for image in images:
-                if image and image["media_hash"] == posts[i]["md5"]:
-                    if posts[i]["resto"] == 0:
-                        posts[i]["asagi_preview_filename"] = image["preview_op"]
-                    else:
-                        posts[i]["asagi_preview_filename"] = image["preview_reply"]
-                    posts[i]["asagi_filename"] = image["media"]
-
-        if details and posts[i]["resto"] == 0:
-            posts[i]["nreplies"] = details[i].get("nreplies", None)
-            posts[i]["nimages"] = details[i].get("nimages", None)
-
-        if not is_catalog:
-            if posts[i]['resto'] == 0:
-                op_num = posts[i]['no']
-            else:
-                op_num = posts[i]['resto']
-
-            post_quotelinks, posts[i]["com"] = restore_comment(op_num, posts[i]["com"], posts[i]['board_shortname'])
-            for quotelink in post_quotelinks:
-                if quotelink not in post_2_quotelinks:
-                    post_2_quotelinks[quotelink] = []
-                post_2_quotelinks[quotelink].append(posts[i]["no"])
-
-    if is_post:
-        return posts, post_2_quotelinks
-
-    if is_catalog:
-        return posts
-
-    if is_ops:
-        result = []
-        for op in posts:
-            result.append({"posts": [op]})
-        return result
-
-    result["posts"] = posts
-    return result, post_2_quotelinks
-
-
-def convert_post_v2(post: Dict[Any, Any], quotelinks: None|list[int]=None) -> Dict:
-    """You loop through your posts, whatever it's structure is, and call
-    this function. We will change all of the field names so it renders in the template.
-
-    Returns a converted, restored post.
+    OPs have these extra fields added to them compared to comments:
+        - nreplies: int
+        - nimages: int
     """
+    # Combine OP and replies into a single query to minimize database calls
+    combined_query = f"""
+        {get_selector(board_shortname)},
+            threads.`nreplies`,
+            threads.`nimages`,
+            threads.`time_bump`,
+            images.`media_hash`,
+            images.`media`,
+            images.`preview_reply`,
+            images.`preview_op`
+        FROM `{board_shortname}`
+            LEFT JOIN `{board_shortname}_threads` AS threads USING (`thread_num`)
+            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
+        WHERE `thread_num` = %(thread_num)s
+        ORDER BY `num` ASC
+    ;"""
+    rows = await current_app.db.query_execute(combined_query, params={'thread_num': thread_num})
 
-    # has an image
-    if post.get('md5'):
-        if post.get('resto') == 0:
-            post['asagi_preview_filename'] = post.pop('preview_op')
-        else:
-            post['asagi_preview_filename'] = post.pop('preview_reply')
+    post_2_quotelinks, posts = get_qls_and_posts(rows)
 
-        post['asagi_filename'] = post.pop('media')
+    results = {'posts': posts}
 
-    thread_num = post.get('thread_num')
-    comment = post.get('com')
-    board_shortname = post.get('board_shortname')
+    return post_2_quotelinks, results
 
-    _, post['com'] = restore_comment(thread_num, comment, board_shortname)
 
-    if quotelinks:
-        post['quotelinks'] = quotelinks
+async def generate_post(board_shortname: str, post_id: int) -> tuple[dict]:
+    """Returns {thread_num: 123, com: 'hello', ...}"""
+    sql = f"""
+        {get_selector(board_shortname)},
+            images.`media_hash`,
+            images.`media`,
+            images.`preview_reply`,
+            images.`preview_op`
+        FROM `{board_shortname}`
+            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
+        WHERE `num` = %(num)s
+        LIMIT 1
+    ;"""
+    post = await current_app.db.query_execute(sql, params={'num': post_id}, fetchone=True)
 
-    return post
+    if not post:
+        return None, None
+
+    post_2_quotelinks, posts = get_qls_and_posts([post])
+    post = posts[0]
+    return post_2_quotelinks, post

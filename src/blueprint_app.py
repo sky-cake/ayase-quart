@@ -1,32 +1,23 @@
-
-from time import perf_counter
-
 from flask_paginate import Pagination
 from quart import Blueprint
 
 from asagi_converter import (
-    convert_thread,
     generate_catalog,
     generate_index,
+    generate_thread,
     get_op_thread_count
 )
 from configs import CONSTS
 from posts.template_optimizer import wrap_post_t
+from render import get_title, render_controller, validate_board_shortname
 from templates import (
     template_board_index,
     template_catalog,
     template_index,
     template_index_search_post_t,
-    template_posts,
     template_thread
 )
-from utils import (
-    get_title,
-    render_controller,
-    validate_board_shortname,
-    validate_threads,
-    Perf,
-)
+from utils import Perf, validate_threads
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 
@@ -80,41 +71,33 @@ async def v_board_index(board_shortname: str):
 @blueprint_app.get("/<string:board_shortname>/page/<int:page_num>")
 async def v_board_index_page(board_shortname: str, page_num: int):
     """
-    Benchmarked with SQLite, /news/ with 150 OPs, 8th gen i7.
+    Benchmarked with SQLite (local), 150 OPs, 8th gen i7.
     validate: 0.0000
     gen_indx: 0.0374
     val_thrd: 0.0000
     paginate: 0.0156
     rendered: 1.100 +- 0.400
 
-    Benchmarked with MySQL (9th gen i5), /g/ with ~2 million posts. Rendered on a 5700X
+    Benchmarked with MySQL (home server), ~2 million posts. Rendered on a 5700X
     validate: 0.0000
     gen_indx: 1.4598
     val_thrd: 0.0000
     paginate: 0.1702
     rendered: 0.2564
     """
-    i = perf_counter()
+    p = Perf()
     validate_board_shortname(board_shortname)
-    f = perf_counter()
-    print(f'validate: {f-i:.4f}')
+    p.check('validate')
 
-    i = perf_counter()
     index = await generate_index(board_shortname, page_num)
-    f = perf_counter()
-    print(f'gen_indx: {f-i:.4f}')
+    p.check('gen index')
 
-    i = perf_counter()
     validate_threads(index['threads'])
-    f = perf_counter()
-    print(f'val_thrd: {f-i:.4f}')
+    p.check('val thrd')
 
-    i = perf_counter()
     pagination = await make_pagination_board_index(board_shortname, index, page_num)
-    f = perf_counter()
-    print(f'paginate: {f-i:.4f}')
+    p.check('paginate')
 
-    i = perf_counter()
     render = await render_controller(
         template_board_index,
         **CONSTS.render_constants,
@@ -125,8 +108,7 @@ async def v_board_index_page(board_shortname: str, page_num: int):
         title=get_title(board_shortname),
         tab_title=get_title(board_shortname),
     )
-    f = perf_counter()
-    print(f'rendered: {f-i:.4f}')
+    p.check('rendered')
     return render
 
 
@@ -153,19 +135,24 @@ async def make_pagination_catalog(board_shortname, catalog, page_num):
 @blueprint_app.get("/<string:board_shortname>/catalog")
 async def v_catalog(board_shortname: str):
     """
-    Benchmarked with SQLite, /news/ with 150 OPs, 8th gen i7.
-    time_queries: 0.0646
-    time_paginate: 0.0160
-    time_render: 1.500 +- 0.500 # inconsistent render times
+    Benchmarked with SQLite, page 0, 8th gen i7.
+    query   : 0.0649
+    paginate: 0.0564
+    render  : 0.4166
+
+    Benchmarked with SQLite, page 0, 5700X.
+    query   : 0.8345
+    paginate: 0.1712
+    render  : 0.5372
     """
     validate_board_shortname(board_shortname)
 
+    p = Perf()
     catalog = await generate_catalog(board_shortname, 1)
+    p.check('query   ')
 
-    time_init = perf_counter()
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
-    time_paginate = perf_counter()
-    print(f'time_paginate: {time_paginate - time_init:.4f}')
+    p.check('paginate')
 
     render = await render_controller(
         template_catalog,
@@ -176,21 +163,29 @@ async def v_catalog(board_shortname: str):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
-    time_render = perf_counter()
-    print(f'time_render: {time_render - time_paginate:.4f}')
+    p.check('render')
 
     return render
 
 
 @blueprint_app.get("/<string:board_shortname>/catalog/<int:page_num>")
 async def v_catalog_page(board_shortname: str, page_num: int):
+    """
+    Benchmarked with SQLite, page 129, 5700X.
+    query   : 0.8202
+    paginate: 0.1734
+    render  : 0.5233
+    """
     validate_board_shortname(board_shortname)
 
+    p = Perf()
     catalog = await generate_catalog(board_shortname, page_num)
+    p.check('query   ')
 
     pagination = await make_pagination_catalog(board_shortname, catalog, page_num)
+    p.check('paginate')
 
-    return await render_controller(
+    render = await render_controller(
         template_catalog,
         **CONSTS.render_constants,
         catalog=catalog,
@@ -199,9 +194,12 @@ async def v_catalog_page(board_shortname: str, page_num: int):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
+    p.check('render')
+
+    return render
 
 
-def get_posts_t(thread_dict: dict, post_2_quotelinks: None|list[int]=None) -> str:
+def get_posts_t(thread_dict: dict, post_2_quotelinks: list[int]) -> str:
     posts_t = []
     for post in thread_dict:
         if quotelinks := post_2_quotelinks.get(str(post['no'])):
@@ -217,25 +215,46 @@ def get_posts_t(thread_dict: dict, post_2_quotelinks: None|list[int]=None) -> st
     return posts_t
 
 
+def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
+    """Returns (nreplies, nimages)"""
+    nreplies = 0
+    nimages = 0
+    for post in posts:
+        if post.get('resto') == 0:
+            nreplies = post.get('nreplies', nreplies)
+            nimages = post.get('nimages', nimages)
+            break
+    return nreplies, nimages
+
+
 @blueprint_app.get("/<string:board_shortname>/thread/<int:thread_id>")
 async def v_thread(board_shortname: str, thread_id: int):
     """
-    Benchmarked with SQLite, /news/ post with 102 comments, 8th gen i7.
-    queries:  0.0703
+    Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.
+    queries : 0.0150
     validate: 0.0000
-    rendered: 0.0070 += 0.003
+    posts_t : 0.0293
+    rendered: 0.0053
+
+    Benchmarked with MYSQL (home server), /ck/ post with 284 comments, 5700X.
+    queries : 1.1000 +- 0.5000
+    validate: 0.0000
+    posts_t : 0.0274
+    rendered: 0.0419
     """
     validate_board_shortname(board_shortname)
 
     p = Perf()
     # use the existing json app function to grab the data
-    thread_dict, post_2_quotelinks = await convert_thread(board_shortname, thread_id)
-    p.check('queries')
+    post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
+    p.check('queries ')
+
+    nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 
     validate_threads(thread_dict['posts'])
     p.check('validate')
 
-    posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks=post_2_quotelinks)
+    posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)
     p.check('posts_t')
 
     title = f"/{board_shortname}/ #{thread_id}"
@@ -243,6 +262,8 @@ async def v_thread(board_shortname: str, thread_id: int):
     render = await render_controller(
         template_thread,
         posts_t=posts_t,
+        nreplies=nreplies,
+        nimages=nimages,
         **CONSTS.render_constants,
         board=board_shortname,
         title=title,
@@ -250,26 +271,3 @@ async def v_thread(board_shortname: str, thread_id: int):
     )
     p.check('rendered')
     return render
-
-
-@blueprint_app.get("/<string:board_shortname>/posts/<int:thread_id>")
-async def v_posts(board_shortname: str, thread_id: int):
-
-    validate_board_shortname(board_shortname)
-
-    thread_dict, quotelinks = await convert_thread(board_shortname, thread_id)
-
-    validate_threads(thread_dict['posts'])
-
-    # remove OP post
-    del thread_dict["posts"][0]
-
-    return await render_controller(
-        template_posts,
-        **CONSTS.render_constants,
-        posts=thread_dict["posts"],
-        quotelinks=quotelinks,
-        board=board_shortname,
-        title=get_title(board_shortname),
-        tab_title=get_title(board_shortname),
-    )

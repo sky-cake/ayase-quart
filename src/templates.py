@@ -1,9 +1,10 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from configs import CONSTS, make_path
+from configs import CONSTS
+from utils import make_src_path
 
 env = Environment(
-    loader=FileSystemLoader(make_path('templates')),
+    loader=FileSystemLoader(make_src_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
     auto_reload=CONSTS.autoreload,
 )
@@ -37,7 +38,7 @@ template_reports_delete = env.get_template('reports/delete.html')
 
 
 safe_env = Environment(
-    loader=FileSystemLoader(make_path('templates')),
+    loader=FileSystemLoader(make_src_path('templates')),
     auto_reload=CONSTS.autoreload,
     trim_blocks=True,
     lstrip_blocks=True,

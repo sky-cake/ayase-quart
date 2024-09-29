@@ -11,6 +11,11 @@ from configs import CONSTS
 from enums import SearchMode
 from forms import IndexSearchConfigForm, SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
+from render import (
+    highlight_search_results,
+    render_controller,
+    validate_board_shortname
+)
 from search.highlighting import get_term_re, mark_highlight
 from search.loader import index_board
 from search.pagination import template_pagination_links, total_pages
@@ -23,11 +28,6 @@ from templates import (
     template_index_search_gallery_post_t,
     template_index_search_post_t,
     template_search
-)
-from utils import (
-    highlight_search_results,
-    render_controller,
-    validate_board_shortname
 )
 
 search_log = getLogger('search')

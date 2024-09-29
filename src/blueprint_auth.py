@@ -8,8 +8,8 @@ from configs import CONSTS
 from db.api import get_user_with_username, is_user_admin, is_user_moderator
 from enums import AuthActions
 from forms import LoginForm
+from render import render_controller
 from templates import template_login
-from utils import render_controller
 
 blueprint_auth = Blueprint("blueprint_auth", __name__, template_folder="templates")
 

@@ -4,13 +4,9 @@ from typing import NamedTuple
 
 from quart import get_flashed_messages, request, url_for
 
+from boards import get_shorts_objects, load_boards
 from enums import DbType, IndexSearchType
-from boards import load_boards, get_shorts_objects
-
-
-def make_path(*file_path):
-    """Make a file path as though this file's directory is a root directory."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), *file_path))
+from utils import make_src_path
 
 
 class CONSTS(NamedTuple):
@@ -19,14 +15,14 @@ class CONSTS(NamedTuple):
     TESTING = True
     autoreload = True
     validate_boards_db = True
-    moderation_db_path = make_path('moderation.db')
+    moderation_db_path = make_src_path('moderation.db')
 
     admin_username = 'admin'
     admin_password = 'admin'
 
     db_type = DbType.mysql  # DbType.mysql, DbType.sqlite
 
-    db_path = make_path('/path/to/archive.db')  # DbType.sqlite
+    db_path = make_src_path('/path/to/archive.db')  # DbType.sqlite
 
     db_host = '192.168.0.47'  # DbType.mysql
     db_port = 3306
@@ -36,7 +32,7 @@ class CONSTS(NamedTuple):
     db_min_connections = 3
     db_max_connections = 10
 
-    with open(make_path("secret.txt"), encoding="utf-8") as f:
+    with open(make_src_path("secret.txt"), encoding="utf-8") as f:
         SECRET_KEY = f.read().strip()
 
     site_name = "Ayase Quart"
@@ -47,8 +43,8 @@ class CONSTS(NamedTuple):
         site_port = 9001
         site_url = f"http://{site_host}:{site_port}"
 
-    key_file = None # make_path('key.pem')
-    cert_file = None # make_path('cert.pem')
+    key_file = None # make_src_path('key.pem')
+    cert_file = None # make_src_path('cert.pem')
 
     site_name = 'Ayase Quart'
 

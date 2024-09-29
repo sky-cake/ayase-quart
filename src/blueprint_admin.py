@@ -11,6 +11,7 @@ from db.api import (
     get_user_with_id
 )
 from forms import UserForm
+from render import render_controller
 from templates import (
     template_latest,
     template_stats,
@@ -18,7 +19,6 @@ from templates import (
     template_users_delete,
     template_users_edit
 )
-from utils import render_controller
 
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
