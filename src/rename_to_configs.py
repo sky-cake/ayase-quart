@@ -105,7 +105,7 @@ class CONSTS(NamedTuple):
 def filter_boards_in_db():
     from db.api import get_db_tables
 
-    db_tables = asyncio.run(get_db_tables())
+    db_tables = asyncio.run(get_db_tables(close_pool_after=True))
     valid_boards = {t for t in db_tables if len(t) < 5} & CONSTS.boards.keys()
     removals = [board for board in CONSTS.boards if board not in valid_boards]
     CONSTS.boards_in_database = list(valid_boards)

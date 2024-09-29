@@ -5,7 +5,7 @@ from quart import flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from configs import CONSTS, DbType
-from db import fetch_tuple
+from db import fetch_tuple, close_db_pool
 from enums import DbType, UserRole
 
 
@@ -158,7 +158,8 @@ async def init_moderation_db():
             await flash('Initial admin user created.')
 
 
-async def get_db_tables() -> list[str]:
+async def get_db_tables(close_pool_after=False) -> list[str]:
+    '''set close_pool_after=True if calling from runtime that won't close the db pool at a later time'''
     if not hasattr(get_db_tables, 'tables'):
         match CONSTS.db_type:
             case DbType.mysql:
@@ -169,6 +170,9 @@ async def get_db_tables() -> list[str]:
                 return []
         rows = await fetch_tuple(sql_string)
         get_db_tables.tables = [row[0] for row in rows]
+
+        if close_pool_after:
+            await close_db_pool()
     return get_db_tables.tables
 
 
