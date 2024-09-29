@@ -36,8 +36,8 @@ class LnxSearch(BaseSearch):
                 'search_fields': ['title', 'comment'],
                 "boost_fields": {},
                 "reader_threads": 16,
-                "max_concurrency": 16,
-                "writer_buffer": 2_144_000_000, # 2GB
+                "max_concurrency": 4, # keep low for larger datasets
+                "writer_buffer": 4_294_967_296, # 4GB
                 "writer_threads": 16,
                 "set_conjunction_by_default": True,  # default AND instead of OR for queries
                 "use_fast_fuzzy": False,  # only exact match
@@ -62,7 +62,6 @@ class LnxSearch(BaseSearch):
     async def _index_delete(self, index: str):
         url = self._get_index_url(index)
         resp = await self.client.delete(url)
-        await self._commit_write(index)
         # return loads(await resp.read())
 
     async def _index_ready(self, index: str):
@@ -126,13 +125,6 @@ class LnxSearch(BaseSearch):
             print(parsed)
 
         parsed = parsed['data']
-
-        if parsed == 'index does not exist':
-            raise ValueError(f'{parsed=}, {index=}')
-
-        if 'count' not in parsed:
-            print(parsed)
-            return [], 0
 
         total = parsed.get('count', 0)
         hits = (_restore_result(r['doc']) for r in parsed['hits'])
@@ -271,7 +263,7 @@ def get_lnx_field(field: SearchIndexField):
     ftype = _get_field_type(field)
     lnx_field = {
         'type': ftype,
-        'stored': True,
+        'stored': field.field in ('comment', 'data'),
     }
     not_text = ftype not in ('string', 'text')
     filt_sort = any((field.filterable, field.sortable))
