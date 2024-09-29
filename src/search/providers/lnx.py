@@ -126,13 +126,6 @@ class LnxSearch(BaseSearch):
 
         parsed = parsed['data']
 
-        if parsed == 'index does not exist':
-            raise ValueError(f'{parsed=}, {index=}')
-
-        if 'count' not in parsed:
-            print(parsed)
-            return [], 0
-
         total = parsed.get('count', 0)
         hits = (_restore_result(r['doc']) for r in parsed['hits'])
         return hits, total
