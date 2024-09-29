@@ -8,7 +8,7 @@ from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS
-from enums import DbType, SearchMode
+from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
 
@@ -127,11 +127,6 @@ def get_selector(board_shortname: str, double_percent: bool=True) -> str:
     return SELECTOR
 
 
-def get_image_selector():
-    MD5_IMAGE_SELECTOR = "`media_hash`,`media`,`preview_reply`,`preview_op`"
-    return MD5_IMAGE_SELECTOR
-
-
 def construct_date_filter(param_name):
     if CONSTS.db_type == DbType.mysql:
         if param_name == 'date_before':
@@ -230,7 +225,13 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     for board_shortname in form_data['boards']:
 
         s = get_selector(board_shortname)
-        s += f' \n FROM `{board_shortname}`'
+        s += f""",
+                `media`,
+                `preview_reply`,
+                `preview_op`
+            FROM `{board_shortname}`
+                LEFT JOIN `{board_shortname}_images` USING (`media_id`)
+        """
         s += ' \n WHERE 1=1 '
 
         for field in param_values:
@@ -248,49 +249,45 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
 
     posts = await current_app.db.query_execute(sql, params=param_values)
 
-    if not posts:
-        result = {'posts': []}
-        post_2_quotelinks = {}
-        return result, post_2_quotelinks
-
-    images = await get_post_images(board_shortname, [p['num'] for p in posts])
-
-    num_to_image = {i['num']: i for i in images}
-
-    images_sorted = []
-    for p in posts:
-        images_sorted.append(num_to_image.get(p['num'], None))
-
-    return_quotelinks = form_data['search_mode'] == SearchMode.index
-    return await convert_standalone_posts(posts, images_sorted, return_quotelinks=return_quotelinks)
-
-
-async def convert_standalone_posts(posts, medias, return_quotelinks=True):
-    """Converts asagi API data to 4chan API format for posts that don't include
-    an entire thread of data (e.g. search results, or other random posts grouped together).
-    """
-
     result = {'posts': []}
     post_2_quotelinks = {}
-    for post, media in zip(posts, medias):
-        if media:
-            if post['media_hash'] != media['media_hash']:
-                raise ValueError('Not equal: ', post['media_hash'], media['media_hash'])
+    if not posts:
+        return result, post_2_quotelinks
 
-            if post["op_num"] == 0:
-                post["preview_orig"] = media["preview_op"]
+    post_2_quotelinks, posts = await get_qls_and_posts(posts, fetch_replies=True)
+    result['posts'] = posts
+    return result, post_2_quotelinks
+
+
+async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tuple[dict, list]:
+    post_2_quotelinks = defaultdict(list)
+    posts = []
+    for i, row in enumerate(rows):
+
+        if row.get('media_hash'):
+            if row.get('op_num') == 0:
+                row['preview_orig'] = row.pop('preview_op')
             else:
-                post["preview_orig"] = media["preview_reply"]
+                row['preview_orig'] = row.pop('preview_reply')
 
-            post["media_orig"] = media["media"]
+            row['media_orig'] = row.pop('media')
 
-        if post['op_num'] == 0:
-            op_num = post['num']
-        else:
-            op_num = post['op_num']
+        thread_num = row.get('thread_num')
+        comment = row.get('comment')
+        board_shortname = row.get('board_shortname')
 
-        if return_quotelinks:
-            replies = await get_post_replies(post['board_shortname'], op_num, post['num'])
+        row_quotelinks, row['comment'] = restore_comment(thread_num, comment, board_shortname)
+
+        for row_quotelink in row_quotelinks:
+            post_2_quotelinks[row_quotelink].append(rows[i]["num"])
+
+        if fetch_replies:
+            if row['op_num'] == 0:
+                op_num = row['num']
+            else:
+                op_num = row['op_num']
+        
+            replies = await get_post_replies(row['board_shortname'], op_num, row['num'])
             for reply in replies:
                 post_quotelinks = get_text_quotelinks(reply["comment"])
 
@@ -299,36 +296,18 @@ async def convert_standalone_posts(posts, medias, return_quotelinks=True):
                         post_2_quotelinks[quotelink] = []
                     post_2_quotelinks[quotelink].append(reply["num"])
 
-        _, post['comment'] = restore_comment(op_num, post['comment'], post['board_shortname'])
-        if post['title']:
-            post['title'] = html.escape(post['title'])
-        result['posts'].append(post)
-    return result, post_2_quotelinks
+        if row['title']:
+            row['title'] = html.escape(row['title'])
+
+        posts.append(row)
+
+    return post_2_quotelinks, posts
 
 
 async def get_post_replies(board_shortname, thread_num, post_num):
     comment = f'%>>{int(post_num)}%'
     SELECT_POST_REPLIES = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `comment` LIKE %(comment)s AND `thread_num` = %(thread_num)s;"
     return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
-
-
-async def get_post_images(board_shortname: str, post_nums: list[int]):
-    image_selector = get_image_selector()
-
-    placeholders = ','.join(['%s'] * len(post_nums))
-
-    SELECT_POST_IMAGES = f"""
-    SELECT
-        `num`,
-        {image_selector}
-    FROM `{board_shortname}_images` i
-        INNER JOIN `{board_shortname}` USING (`media_hash`)
-    WHERE `num` IN ({placeholders})
-    ;"""
-
-    print(SELECT_POST_IMAGES)
-
-    return await current_app.db.query_execute(SELECT_POST_IMAGES, params=post_nums)
 
 
 async def get_op_thread_count(board_shortname) -> int:
@@ -417,33 +396,6 @@ def restore_comment(op_num: int, comment: str, board_shortname: str):
     return quotelinks, lines
 
 
-def get_qls_and_posts(rows: list[dict]) -> tuple[dict, list]:
-    post_2_quotelinks = defaultdict(list)
-    posts = []
-    for i, row in enumerate(rows):
-
-        if row.get('media_hash'):
-            if row.get('op_num') == 0:
-                row['preview_orig'] = row.pop('preview_op')
-            else:
-                row['preview_orig'] = row.pop('preview_reply')
-
-            row['media_orig'] = row.pop('media')
-
-        thread_num = row.get('thread_num')
-        comment = row.get('comment')
-        board_shortname = row.get('board_shortname')
-
-        row_quotelinks, row['comment'] = restore_comment(thread_num, comment, board_shortname)
-
-        for row_quotelink in row_quotelinks:
-            post_2_quotelinks[row_quotelink].append(rows[i]["num"])
-
-        posts.append(row)
-
-    return post_2_quotelinks, posts
-
-
 async def generate_index(board_shortname: str, page_num: int):
     """Generates the board index. The index shows the OP and its 3 latest comments, if any.
 
@@ -508,12 +460,16 @@ async def generate_index(board_shortname: str, page_num: int):
 
     replies_by_thread = defaultdict(list)
     for reply in replies_result:
-        replies_by_thread[reply['thread_num']].append(get_qls_and_posts([reply])[1][0])
+        post_2_quotelinks, replies = await get_qls_and_posts([reply])
+        replies_by_thread[reply['thread_num']].append(replies[0])
 
     results = {'threads': []}
     for op in ops_result:
         thread_num = op['thread_num']
-        thread_data = {'posts': [get_qls_and_posts([op])[1][0]]}
+
+        post_2_quotelinks, posts = await get_qls_and_posts([op])
+        thread_data = {'posts': [posts[0]]}
+
         if thread_num in replies_by_thread:
             thread_data['posts'].extend(replies_by_thread[thread_num])
         results['threads'].append(thread_data)
@@ -580,7 +536,7 @@ async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
     ;"""
     rows = await current_app.db.query_execute(combined_query, params={'thread_num': thread_num})
 
-    post_2_quotelinks, posts = get_qls_and_posts(rows)
+    post_2_quotelinks, posts = await get_qls_and_posts(rows)
 
     results = {'posts': posts}
 
@@ -605,6 +561,6 @@ async def generate_post(board_shortname: str, post_id: int) -> tuple[dict]:
     if not post:
         return None, None
 
-    post_2_quotelinks, posts = get_qls_and_posts([post])
+    post_2_quotelinks, posts = await get_qls_and_posts([post])
     post = posts[0]
     return post_2_quotelinks, post
