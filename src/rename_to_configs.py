@@ -81,7 +81,7 @@ class CONSTS(NamedTuple):
     )
 
     MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
-    SQLALCHEMY_ECHO = False
+    sql_echo = False
 
     root_dir = os.path.dirname(__file__)
     chdir_to_root = False

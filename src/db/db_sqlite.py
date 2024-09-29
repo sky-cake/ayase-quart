@@ -21,7 +21,7 @@ class SQLiteDatabaseAppContext(DatabaseInterface):
     async def query_execute(self, sql, params=None, fetchone=False, commit=False):
         sql = patch_query(sql)
 
-        if CONSTS.SQLALCHEMY_ECHO:
+        if CONSTS.sql_echo:
             print(sql)
             print(params)
 
