@@ -36,8 +36,8 @@ class LnxSearch(BaseSearch):
                 'search_fields': ['title', 'comment'],
                 "boost_fields": {},
                 "reader_threads": 16,
-                "max_concurrency": 16,
-                "writer_buffer": 2_144_000_000, # 2GB
+                "max_concurrency": 4, # keep low for larger datasets
+                "writer_buffer": 4_294_967_296, # 4GB
                 "writer_threads": 16,
                 "set_conjunction_by_default": True,  # default AND instead of OR for queries
                 "use_fast_fuzzy": False,  # only exact match
@@ -271,7 +271,7 @@ def get_lnx_field(field: SearchIndexField):
     ftype = _get_field_type(field)
     lnx_field = {
         'type': ftype,
-        'stored': True,
+        'stored': field.field in ('comment', 'data'),
     }
     not_text = ftype not in ('string', 'text')
     filt_sort = any((field.filterable, field.sortable))
