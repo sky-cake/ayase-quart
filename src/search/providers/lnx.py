@@ -62,7 +62,6 @@ class LnxSearch(BaseSearch):
     async def _index_delete(self, index: str):
         url = self._get_index_url(index)
         resp = await self.client.delete(url)
-        await self._commit_write(index)
         # return loads(await resp.read())
 
     async def _index_ready(self, index: str):
