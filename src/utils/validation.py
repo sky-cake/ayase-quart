@@ -2,6 +2,7 @@
 
 from werkzeug.exceptions import NotFound
 
+
 def validate_threads(threads: list[dict]):
     if len(threads) < 1:
         raise NotFound(threads)

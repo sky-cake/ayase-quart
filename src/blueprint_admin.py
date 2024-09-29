@@ -39,10 +39,6 @@ def get_sql_latest_ops(board_shortname):
     return f"""select '{board_shortname}' as board_shortname, timestamp, num, case when title is null then '' else title end as title, comment from {board_shortname} where op=1 order by num desc limit 5;"""
 
 
-def get_sql_latest_gallery(board_shortname, limit=100):
-    return f"""{get_selector(board_shortname)} from {board_shortname} where media_id is not null and media_filename is not null order by timestamp desc limit {int(limit)};"""
-
-
 @blueprint_admin.route("/stats")
 @admin_required
 async def stats():

@@ -5,7 +5,7 @@ from quart import flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from configs import CONSTS, DbType
-from db import fetch_tuple, close_db_pool
+from db import close_db_pool, fetch_tuple
 from enums import DbType, UserRole
 
 

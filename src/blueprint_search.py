@@ -1,4 +1,3 @@
-import quart_flask_patch  # isort: skip
 
 from logging import getLogger
 
@@ -8,7 +7,7 @@ from werkzeug.exceptions import BadRequest
 from asagi_converter import get_posts_filtered, restore_comment
 from configs import CONSTS
 from enums import SearchMode
-from forms import IndexSearchConfigForm, SearchForm
+from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from render import (
     highlight_search_results,
