@@ -9,7 +9,8 @@ from asagi_converter import (
 from configs import CONSTS
 from render import render_controller, validate_board_shortname
 from templates import template_post
-from utils import Perf, validate_post
+from utils import Perf
+from utils.validation import validate_post
 
 blueprint_api = Blueprint("blueprint_api", __name__)
 
