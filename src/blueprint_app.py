@@ -17,7 +17,8 @@ from templates import (
     template_index_search_post_t,
     template_thread
 )
-from utils import Perf, validate_threads
+from utils import Perf
+from utils.validation import validate_threads
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 

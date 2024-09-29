@@ -8,17 +8,6 @@ def make_src_path(*file_path):
     """Make a file path starting from src/."""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', *file_path))
 
-
-def validate_threads(threads):
-    if len(threads) < 1:
-        raise NotFound(threads)
-
-
-def validate_post(post):
-    if not post:
-        raise NotFound(post)
-
-
 class Perf:
     __slots__ = ('previous', 'checkpoints', 'topic')
 
