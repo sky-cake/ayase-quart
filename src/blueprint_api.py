@@ -56,11 +56,12 @@ async def v_post(board_shortname: str, post_id: int):
     """
     validate_board_shortname(board_shortname)
 
-    p = Perf()
+    p = Perf("post")
     post_2_quotelinks, post = await generate_post(board_shortname, post_id)
     p.check('query')
     validate_post(post)
 
     html_content = await render_controller(template_post, **CONSTS.render_constants, post=post, board=board_shortname, quotelinks=post_2_quotelinks)
-    p.check('rendr')
+    p.check('render')
+    print(p)
     return jsonify(html_content=html_content)

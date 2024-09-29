@@ -85,15 +85,15 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     paginate: 0.1702
     rendered: 0.2564
     """
-    p = Perf()
+    p = Perf('index page')
     validate_board_shortname(board_shortname)
-    p.check('validate')
+    p.check('validate board')
 
     index = await generate_index(board_shortname, page_num)
-    p.check('gen index')
+    p.check('generate index')
 
     validate_threads(index['threads'])
-    p.check('val thrd')
+    p.check('validate thread')
 
     pagination = await make_pagination_board_index(board_shortname, index, page_num)
     p.check('paginate')
@@ -109,6 +109,8 @@ async def v_board_index_page(board_shortname: str, page_num: int):
         tab_title=get_title(board_shortname),
     )
     p.check('rendered')
+    print(p)
+
     return render
 
 
@@ -147,9 +149,9 @@ async def v_catalog(board_shortname: str):
     """
     validate_board_shortname(board_shortname)
 
-    p = Perf()
+    p = Perf('catalog')
     catalog = await generate_catalog(board_shortname, 1)
-    p.check('query   ')
+    p.check('query')
 
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
     p.check('paginate')
@@ -164,6 +166,7 @@ async def v_catalog(board_shortname: str):
         tab_title=f"/{board_shortname}/ Catalog",
     )
     p.check('render')
+    print(p)
 
     return render
 
@@ -178,9 +181,9 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     """
     validate_board_shortname(board_shortname)
 
-    p = Perf()
+    p = Perf('catalog page')
     catalog = await generate_catalog(board_shortname, page_num)
-    p.check('query   ')
+    p.check('query')
 
     pagination = await make_pagination_catalog(board_shortname, catalog, page_num)
     p.check('paginate')
@@ -195,6 +198,7 @@ async def v_catalog_page(board_shortname: str, page_num: int):
         tab_title=f"/{board_shortname}/ Catalog",
     )
     p.check('render')
+    print(p)
 
     return render
 
@@ -242,10 +246,10 @@ async def v_thread(board_shortname: str, thread_id: int):
     """
     validate_board_shortname(board_shortname)
 
-    p = Perf()
+    p = Perf(topic='thread')
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
-    p.check('queries ')
+    p.check('queries')
 
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 
@@ -268,4 +272,5 @@ async def v_thread(board_shortname: str, thread_id: int):
         tab_title=title,
     )
     p.check('rendered')
+    print(p)
     return render

@@ -20,17 +20,25 @@ def validate_post(post):
 
 
 class Perf:
-    __slots__ = ('previous', 'total', 'longest')
+    __slots__ = ('previous', 'checkpoints', 'topic')
 
-    def __init__(self):
+    def __init__(self, topic: str=None):
+        self.topic = topic
+        self.checkpoints = []
         self.previous = perf_counter()
-        self.total = 0
-        self.longest = 0
 
     def check(self, name: str=""):
         now = perf_counter()
         elapsed = now - self.previous
         self.previous = now
-        self.total += elapsed
-        self.longest = max(self.longest, len(name))
-        print(f'{name:<{self.longest}}: {elapsed:.4f}')
+        self.checkpoints.append((name, elapsed))
+
+    # todo: call from logger for mass disabling
+    def __repr__(self) -> str:
+        total = sum(point[1] for point in self.checkpoints)
+        longest = max(max(len(point[0]) for point in self.checkpoints), 5) # 5 is len of 'total'
+        topic = f'[{self.topic}]\n' if self.topic else ''
+        return topic + '\n'.join(
+            f'{name:<{longest}}: {elapsed:.4f} {elapsed / total * 100 :.1f}%'
+            for name, elapsed in self.checkpoints
+        ) + f'\n{"total":<{longest}}: {total:.4f}'
