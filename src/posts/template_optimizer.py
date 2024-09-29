@@ -179,7 +179,7 @@ def get_media_t(post: dict):
             <a href="{full_src}" title="{asagi_filename}">{filename}.{ext}</a>
             (<span title="{md5h}">
                 {spoiler}
-                {media_metadata_t(post['fsize'], post['w'], post['w'])}
+                {media_metadata_t(post['fsize'], post['w'], post['h'])}
             </span>)
         </div>
         <a class="fileThumb">
