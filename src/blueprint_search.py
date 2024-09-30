@@ -10,11 +10,10 @@ from enums import SearchMode
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from render import (
-    highlight_search_results,
     render_controller,
-    validate_board_shortname
+    validate_board_shortname,
 )
-from search.highlighting import get_term_re, mark_highlight
+from search.highlighting import get_term_re, mark_highlight, highlight_search_results
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
@@ -24,7 +23,7 @@ from templates import (
     template_index_search_config,
     template_index_search_gallery_post_t,
     template_index_search_post_t,
-    template_search
+    template_search,
 )
 from utils import Perf
 
