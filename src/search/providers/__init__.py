@@ -25,6 +25,7 @@ search_index_fields = [
     SearchIndexField('board', int, filterable=True),
     SearchIndexField('media_filename', str, filterable=True, optional=True),
     SearchIndexField('media_hash', str, filterable=True, optional=True),
+    SearchIndexField('trip', str, filterable=True, optional=True),
     SearchIndexField('num', int, filterable=True),
     SearchIndexField('width', int, filterable=True, optional=True),
     SearchIndexField('height', int, filterable=True, optional=True),

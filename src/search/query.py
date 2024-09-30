@@ -16,6 +16,7 @@ class SearchQuery:
     num: Optional[int] = None
     media_file: Optional[str] = None
     media_hash: Optional[str] = None
+    trip: Optional[str] = None
     width: Optional[int] = 0
     height: Optional[int] = 0
     capcode: Optional[int] = None
@@ -61,6 +62,8 @@ def get_search_query(params: dict) -> SearchQuery:
         q.height = positive_int(params['height'])
     if params['capcode'] != Capcode.default.value:
         q.capcode = capcode_2_id(params['capcode'])
+    if params['tripcode']:
+        q.trip = params['tripcode']
     if params['is_op']:
         q.op = True
     if params['is_not_op']:
