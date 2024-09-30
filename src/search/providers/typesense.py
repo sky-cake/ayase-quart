@@ -132,9 +132,9 @@ def _build_filter(q: SearchQuery):
     if q.file is not None:
         filters.append(f'media_filename :{"!" if q.file else ""}= `None`')
     if q.width is not None:
-        filters.append(f'width := {q.width}')
+        filters.append(f'media_w := {q.width}')
     if q.height is not None:
-        filters.append(f'height := {q.height}')
+        filters.append(f'media_w := {q.height}')
     if q.before is not None:
         filters.append(f'timestamp :< {q.before}')
     if q.after is not None:

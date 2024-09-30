@@ -267,20 +267,10 @@ def process_post(post: dict, board_int: int, post_2_quotelinks: dict, post_pack_
     post['board'] = board_int
     post['op'] = post['op_num'] == 0
 
-    rename_keys(post)
     set_bool_fields(post)
     remove_fields(post)
 
     return post_pack_fn(post)
-
-
-key_remap = (
-    ('width', 'media_w'),
-    ('height', 'media_h'),
-)
-def rename_keys(post: dict):
-    for se_key, asagi_key in key_remap:
-        post[se_key] = post.pop(asagi_key)
 
 
 # mysql bool is just tinyint

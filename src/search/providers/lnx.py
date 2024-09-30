@@ -242,7 +242,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'width:{q.width}',
+                        'ctx': f'media_w:{q.width}',
                     },
                 }
             )
@@ -251,7 +251,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'height:{q.height}',
+                        'ctx': f'media_h:{q.height}',
                     },
                 }
             )
