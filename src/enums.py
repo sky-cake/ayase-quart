@@ -14,7 +14,6 @@ class SearchMode(StrEnum):
 class IndexSearchType(StrEnum):
     meili = 'meili'
     manticore = 'manticore'
-    mysql = 'mysql'
     lnx = 'lnx'
     typesense = 'typesense'
     quickwit = 'quickwit'
