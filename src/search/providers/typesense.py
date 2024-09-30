@@ -119,6 +119,8 @@ def _build_filter(q: SearchQuery):
         filters.append(f'media_filename := `{q.media_file}`')
     if q.media_hash is not None:
         filters.append(f'media_hash := `{q.media_hash}`')
+    if q.trip is not None:
+        filters.append(f'trip := `{q.trip}`')
     if q.op is not None:
         filters.append(f'op := {q.op}')
     if q.capcode is not None:

@@ -46,6 +46,7 @@ class SearchForm(QuartForm):
     num = StringField("Post Number", validators=[Optional(), Length(2, 20)])
     media_filename = StringField("Filename", validators=[Optional(), Length(2, 256)])
     media_hash = StringField("File Hash", validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
+    tripcode = StringField("Tripcode", validators=[Optional(), Length(8, 15)])
     date_after = DateField('Date after', validators=[Optional()], format='%Y-%m-%d')
     date_before = DateField('Date before', validators=[Optional()], format='%Y-%m-%d')
     has_file = BooleanField('Has File', default=False, validators=[Optional()])

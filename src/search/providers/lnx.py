@@ -237,6 +237,15 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
+        if q.trip is not None:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'trip:{q.trip}',
+                    },
+                }
+            )
         if q.width: # anything not 0
             query.append(
                 {
