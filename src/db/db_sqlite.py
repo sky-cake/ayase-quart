@@ -59,10 +59,7 @@ async def _run_query_fast(query: str, params: tuple=None):
 
     pool = await wait_pool
     async with pool.execute(query, params) as cursor:
-        res = [await cursor.fetchall()]
-        if len(res) == 1:
-            return res[0]
-        return res
+        return await cursor.fetchall()
 
 
 async def _close_pool():

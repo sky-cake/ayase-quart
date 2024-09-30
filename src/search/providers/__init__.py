@@ -41,8 +41,6 @@ def get_search_provider():
     if hasattr(get_search_provider, 'search_p'):
         return get_search_provider.search_p
     match CONSTS.index_search_provider:
-        case IndexSearchType.mysql:
-            from .mysql import MysqlSearch as Search_p
         case IndexSearchType.meili:
             from .meili import MeiliSearch as Search_p
         case IndexSearchType.typesense:
@@ -54,7 +52,7 @@ def get_search_provider():
         case IndexSearchType.quickwit:
             from .quickwit import QuickwitSearch as Search_p
         case _:
-            from .mysql import MysqlSearch as Search_p
+            from .lnx import LnxSearch as Search_p
 
     search_p = Search_p(CONSTS.index_search_host, CONSTS.index_search_config)
     get_search_provider.search_p = search_p

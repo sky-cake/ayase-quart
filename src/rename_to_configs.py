@@ -46,8 +46,6 @@ class CONSTS(NamedTuple):
     key_file = None # make_src_path('key.pem')
     cert_file = None # make_src_path('cert.pem')
 
-    site_name = 'Ayase Quart'
-
     boards = load_boards()
     board_shortnames, board_objects = get_shorts_objects(boards)
     boards_in_database = board_shortnames
@@ -80,7 +78,6 @@ class CONSTS(NamedTuple):
         }
     )
 
-    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1 MB upload capacity
     sql_echo = False
 
     root_dir = os.path.dirname(__file__)
