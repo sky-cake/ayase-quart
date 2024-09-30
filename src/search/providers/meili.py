@@ -152,9 +152,9 @@ class MeiliSearch(BaseSearch):
         if q.trip is not None:
             filters.append(f'trip = {q.trip}')
         if q.width is not None:
-            filters.append(f'width = {q.width}')
+            filters.append(f'media_w = {q.width}')
         if q.height is not None:
-            filters.append(f'height = {q.height}')
+            filters.append(f'media_h = {q.height}')
         if q.capcode is not None:
             filters.append(f'capcode = {q.capcode}')
         if q.op is not None:
