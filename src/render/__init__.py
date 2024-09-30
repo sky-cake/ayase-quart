@@ -8,7 +8,7 @@ from configs import CONSTS
 
 
 def validate_board_shortname(board_shortname: str) -> None:
-    if not board_shortname in CONSTS.board_shortnames:
+    if not board_shortname in CONSTS.boards:
         raise NotFound(board_shortname, CONSTS.board_shortnames)
 
 @cache
