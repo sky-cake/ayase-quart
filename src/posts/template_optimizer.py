@@ -123,7 +123,7 @@ def get_media_path(media_filename: str, board: str, media_type: MediaType) -> st
     if media_type == MediaType.image:
         uri = CONSTS.image_uri
 
-    return f'{uri.format(board_shortname=board).strip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
+    return f'{uri.format(board_shortname=board).rstrip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
 
 
 def get_gallery_media_t(post: dict):
