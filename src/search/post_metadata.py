@@ -96,12 +96,12 @@ def pack_metadata(row: dict) -> str:
     row['board_shortname'] = board_2_int(row['board_shortname'])
     if row['name'] == 'Anonymous':
         row['name'] = None
-    if del_time := row['ts_expired']:
-        # something wrong with the dumps
-        if del_time.startswith('12/31/69'):
-            row['ts_expired'] = 0
-        else:
-            row['ts_expired'] = formatted_2_posix_ts(del_time)
+    del_time = row['ts_expired']
+    # get_selector() ts_expired sqlite 0 is int, mysql 0 is str due to case else with str return
+    if del_time in (0, '0'):
+        row['ts_expired'] = 0
+    else:
+        row['ts_expired'] = formatted_2_posix_ts(del_time)
     return b64encode(compress(msg_packer.pack([row.get(f) for f in fields]), level=9, wbits=-15)).decode()
 
 
