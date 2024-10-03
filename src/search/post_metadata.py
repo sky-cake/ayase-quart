@@ -1,4 +1,3 @@
-from datetime import datetime
 from functools import cache
 from typing import Tuple
 
@@ -7,6 +6,7 @@ from pybase64 import b64decode, b64encode
 from zlib_ng.zlib_ng import compress, decompress  # avx-512
 
 from posts.capcodes import id_2_capcode
+from utils.timestamps import ts_2_formatted
 
 """
 To avoid frequent mysql/sqlite database lookups for random search queries, we store records in the search engine using generated, static PKs, and optimize for space using the following compression pipeline:
@@ -66,30 +66,6 @@ fields: Tuple[str] = (
     'ts_expired',
     'ts_unixepoch',
 )
-
-
-# We do not handle timezones.
-
-
-now_fmt = '%m/%d/%y (%a) %H:%M:%S'  # '10/29/15 (Thu) 22:33:37'
-def posix_ts_2_formatted(ts: int) -> str:
-    """Format: 10/29/15 (Thu) 22:33:37"""
-    return datetime.fromtimestamp(ts).strftime(now_fmt)
-
-
-def formatted_2_posix_ts(datetime_str: str) -> int:
-    formats = [
-        '%m/%d/%y (%a) %H:%M:%S', # '10/29/15 (Thu) 22:33:37'
-        '%Y-%m-%d %H:%M:%S', # '2024-09-18 14:30:00'
-    ]
-
-    for fmt in formats:
-        try:
-            return int(datetime.strptime(datetime_str, fmt).timestamp())
-        except ValueError:
-            pass
-    raise ValueError(f"Date format not recognized for: {datetime_str}")
-
 
 msg_packer: Packer = Packer()
 def pack_metadata(row: dict) -> str:
