@@ -2,6 +2,7 @@ from enum import StrEnum
 from html import escape
 
 from configs import CONSTS
+from utils.timestamps import ts_2_formatted
 
 
 class MediaType(StrEnum):
@@ -276,7 +277,7 @@ def get_since4pass_t(post: dict):
 def get_filedeleted_t(post: dict):
     if not post.get('deleted'):
         return ''
-    msg = f'deleted on {del_time}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
+    msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
     return f'<strong class="warning" title="This post was {msg}.">[Deleted]</strong>'
 
 

@@ -3,6 +3,8 @@ import re
 from collections import defaultdict
 from functools import cache
 from textwrap import dedent
+from itertools import batched
+import asyncio
 
 from quart import current_app
 from werkzeug.exceptions import BadRequest
@@ -11,6 +13,7 @@ from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
+from db import fetch_tuple
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -49,55 +52,20 @@ selector_columns = (
 )
 
 @cache
-def get_selector(board_shortname: str, double_percent: bool=True) -> str:
+def get_selector(board: str, double_percent: bool=True) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
     if CONSTS.db_type == DbType.mysql:
-        SELECTOR = """
+        SELECTOR = f"""
         SELECT
-        `{board_shortname}`.`thread_num`,
-        `num`,
-        '{board_shortname}' AS `board_shortname`,
-        DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `ts_formatted`,
-        CASE WHEN `timestamp_expired` = 0 THEN `timestamp_expired` ELSE DATE_FORMAT(FROM_UNIXTIME(`timestamp_expired`), "%m/%d/%y (%a) %H:%i:%S") END AS `ts_expired`,
-        `name`,
-        `{board_shortname}`.`sticky` AS `sticky`,
-        (CASE WHEN `title` IS NULL THEN '' ELSE `title` END) AS `title`,
-        `media_w` AS `media_w`,
-        `media_h` AS `media_h`,
-        `preview_w` AS `preview_w`,
-        `preview_h` AS `preview_h`,
-        `timestamp` AS `ts_unixepoch`,
-        `preview_orig`,
-        `media_orig`,
-        `{board_shortname}`.`media_hash`,
-        `media_size` AS `media_size`,
-        (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `media_filename`,
-        (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS `ext`,
-        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE `{board_shortname}`.`thread_num` END) AS `op_num`,
-        (CASE WHEN capcode='N' THEN NULL ELSE `capcode` END) AS `capcode`,
-        `trip`,
-        `spoiler` as `spoiler`,
-        `poster_country`,
-        `poster_hash`,
-        `{board_shortname}`.`locked` AS `locked`,
-        `deleted` AS `deleted`,
-        `exif`,
-        `comment`
-        """
-        if double_percent:
-            SELECTOR = SELECTOR.replace('%', '%%')
-    elif CONSTS.db_type == DbType.sqlite:
-        SELECTOR = """
-        SELECT
-        {board_shortname}.thread_num,
-        `num`,
-        '{board_shortname}' AS board_shortname,
-        datetime(timestamp, 'unixepoch') AS ts_formatted,
-        CASE WHEN timestamp_expired > 0 THEN datetime(timestamp_expired, 'unixepoch') ELSE 0 END AS ts_expired,
+        {board}.thread_num,
+        num,
+        '{board}' AS board_shortname,
+        DATE_FORMAT(FROM_UNIXTIME(timestamp), "%m/%d/%y (%a) %H:%i:%S") AS ts_formatted,
+        timestamp_expired AS ts_expired,
         name,
-        {board_shortname}.sticky as sticky,
-        CASE WHEN title IS NULL THEN '' ELSE title END AS title,
+        {board}.sticky AS sticky,
+        coalesce(title, '') AS title,
         media_w AS media_w,
         media_h AS media_h,
         preview_w AS preview_w,
@@ -105,17 +73,52 @@ def get_selector(board_shortname: str, double_percent: bool=True) -> str:
         timestamp AS ts_unixepoch,
         preview_orig,
         media_orig,
-        {board_shortname}.media_hash,
+        {board}.media_hash,
+        media_size AS media_size,
+        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS media_filename,
+        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS ext,
+        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END) AS op_num,
+        (CASE WHEN capcode='N' THEN NULL ELSE capcode END) AS capcode,
+        trip,
+        spoiler as spoiler,
+        poster_country,
+        poster_hash,
+        {board}.locked AS locked,
+        deleted AS deleted,
+        exif,
+        comment
+        """
+        if double_percent:
+            SELECTOR = SELECTOR.replace('%', '%%')
+    elif CONSTS.db_type == DbType.sqlite:
+        SELECTOR = f"""
+        SELECT
+        {board}.thread_num,
+        num,
+        '{board}' AS board_shortname,
+        datetime(timestamp, 'unixepoch') AS ts_formatted,
+        timestamp_expired AS ts_expired,
+        name,
+        {board}.sticky as sticky,
+        coalesce(title, '') AS title,
+        media_w AS media_w,
+        media_h AS media_h,
+        preview_w AS preview_w,
+        preview_h AS preview_h,
+        timestamp AS ts_unixepoch,
+        preview_orig,
+        media_orig,
+        {board}.media_hash,
         media_size AS media_size,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS media_filename,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, instr(media_filename, '.') + 1) END AS ext,
-        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board_shortname}.thread_num END AS op_num,
+        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END AS op_num,
         CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
         trip,
         spoiler as spoiler,
         poster_country,
         poster_hash,
-        {board_shortname}.locked AS locked,
+        {board}.locked AS locked,
         deleted AS deleted,
         exif,
         comment
@@ -123,24 +126,23 @@ def get_selector(board_shortname: str, double_percent: bool=True) -> str:
     else:
         raise ValueError(CONSTS.db_type)
 
-    SELECTOR = dedent(SELECTOR).format(board_shortname=board_shortname)
-    return SELECTOR
+    return dedent(SELECTOR)
 
 
 def construct_date_filter(param_name):
     if CONSTS.db_type == DbType.mysql:
         if param_name == 'date_before':
-            return f"`timestamp` <= UNIX_TIMESTAMP(%({param_name})s)"
+            return f"timestamp <= UNIX_TIMESTAMP(%({param_name})s)"
         elif param_name == 'date_after':
-            return f"`timestamp` >= UNIX_TIMESTAMP(%({param_name})s)"
+            return f"timestamp >= UNIX_TIMESTAMP(%({param_name})s)"
         else:
             raise ValueError(f"Unsupported operator: {param_name}")
 
     elif CONSTS.db_type == DbType.sqlite:
         if param_name == 'date_before':
-            return f"`timestamp` <= strftime('%s', %({param_name})s)"
+            return f"timestamp <= strftime('%s', %({param_name})s)"
         elif param_name == 'date_after':
-            return f"`timestamp` >= strftime('%s', %({param_name})s)"
+            return f"timestamp >= strftime('%s', %({param_name})s)"
         else:
             raise ValueError(f"Unsupported operator: {param_name}")
 
@@ -292,8 +294,6 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
                 post_quotelinks = get_text_quotelinks(reply["comment"])
 
                 for quotelink in post_quotelinks:
-                    if quotelink not in post_2_quotelinks:
-                        post_2_quotelinks[quotelink] = []
                     post_2_quotelinks[quotelink].append(reply["num"])
 
         if row['title']:
@@ -304,9 +304,9 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
     return post_2_quotelinks, posts
 
 
-async def get_post_replies(board_shortname, thread_num, post_num):
+async def get_post_replies(board: str, thread_num: int, post_num: int):
     comment = f'%>>{int(post_num)}%'
-    SELECT_POST_REPLIES = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `comment` LIKE %(comment)s AND `thread_num` = %(thread_num)s;"
+    SELECT_POST_REPLIES = get_selector(board) + f"FROM {board} WHERE comment LIKE %(comment)s AND thread_num = %(thread_num)s;"
     return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
@@ -396,7 +396,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str):
     return quotelinks, lines
 
 
-async def generate_index(board_shortname: str, page_num: int):
+async def generate_index(board: str, page_num: int):
     """Generates the board index. The index shows the OP and its 3 latest comments, if any.
 
     Returns the dict:
@@ -416,97 +416,140 @@ async def generate_index(board_shortname: str, page_num: int):
     """
     page_num -= 1  # start from 0 offset when running queries
 
-    # Combine OP and replies into a single query to minimize database calls
-    combined_query = f"""
-    WITH latest_ops AS (
-        {get_selector(board_shortname)},
-            threads.`nreplies`,
-            threads.`nimages`,
-            threads.`time_bump`,
-            images.`media`,
-            images.`preview_reply`,
-            images.`preview_op`,
-            NULL as reply_number
-        FROM `{board_shortname}`
-            INNER JOIN `{board_shortname}_threads` AS threads USING (`thread_num`)
-            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
-        WHERE `OP` = 1
-        ORDER BY `time_bump` DESC
+    threads_q = f'''
+        select
+            thread_num,
+            nreplies,
+            nimages,
+            time_bump
+        from {board}_threads
+        ORDER BY time_bump DESC
         LIMIT 10
-        OFFSET %(page_num)s -- OFFSET, present or absent, does not slow down the query
-    ),
-    latest_replies AS (
-        {get_selector(board_shortname)},
-            NULL AS `nreplies`,
-            NULL AS `nimages`,
-            NULL AS `time_bump`,
-            images.`media`,
-            images.`preview_reply`,
-            images.`preview_op`,
-            ROW_NUMBER() OVER (PARTITION BY {board_shortname}.`thread_num` ORDER BY {board_shortname}.`num` DESC) AS reply_number
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
-        WHERE `thread_num` IN (SELECT thread_num FROM latest_ops) AND `OP` != 1
+        OFFSET %s
+    '''
+    if not (threads := await current_app.db.query_execute(threads_q, params=(page_num,))):
+        return {'threads': []}
+
+    thread_params = ','.join('%s' for _ in range(len(threads)))
+    
+    op_query = f'''
+    {get_selector(board)}
+    from {board}
+    where
+        op = 1
+        and thread_num in ({thread_params})
+    '''
+    
+    replies_query = f'''
+    with latest_replies AS (
+        select
+            num as reply_num,
+            ROW_NUMBER() OVER (
+                PARTITION BY {board}.thread_num order by {board}.num desc
+            ) AS reply_number
+        from {board}
+        where
+            op = 0
+            and thread_num in ({thread_params})
     )
-    SELECT * FROM latest_ops
-    UNION ALL
-    SELECT * FROM latest_replies
-    WHERE reply_number <= 3
-    ;"""
-    result = await current_app.db.query_execute(combined_query, params={'page_num': page_num})
+    {get_selector(board)}
+    from latest_replies
+    left join {board} on
+        latest_replies.reply_num = {board}.num
+    where latest_replies.reply_number <= 3
+    '''
 
-    ops_result = [row for row in result if row['op_num'] == 0]
-    replies_result = [row for row in result if row['op_num'] != 0]
+    thread_nums = tuple(t['thread_num'] for t in threads)
+    thread_nums_d = {t['thread_num']:t for t in threads}
 
-    replies_by_thread = defaultdict(list)
-    for reply in replies_result:
-        post_2_quotelinks, replies = await get_qls_and_posts([reply])
-        replies_by_thread[reply['thread_num']].append(replies[0])
+    ops, replies = await asyncio.gather(
+        current_app.db.query_execute(op_query, params=thread_nums),
+        current_app.db.query_execute(replies_query, params=thread_nums),
+    )
 
-    results = {'threads': []}
-    for op in ops_result:
-        thread_num = op['thread_num']
+    reply_qls = get_quotelink_lookup(replies)
+    for reply in replies:
+        reply['quotelinks'] = reply_qls.get(reply['num'], [])
+        _, reply['comment'] = restore_comment(reply['op_num'], reply['comment'], board)
+    
+    thread_posts = defaultdict(list)
+    for op in ops:
+        op_num = op['num']
+        _, op['comment'] = restore_comment(op_num, op['comment'], board)
+        op.update(thread_nums_d[op_num])
+        thread_posts[op_num].append(op)
+    for reply in replies:
+        thread_posts[reply['op_num']].append(reply)
 
-        post_2_quotelinks, posts = await get_qls_and_posts([op])
-        thread_data = {'posts': [posts[0]]}
-
-        if thread_num in replies_by_thread:
-            thread_data['posts'].extend(replies_by_thread[thread_num])
-        results['threads'].append(thread_data)
-
-    return results
+    return {
+        'threads': [
+            {'posts': thread_posts[thread['thread_num']]}
+            for thread in threads
+        ]
+    }
 
 
-async def generate_catalog(board_shortname: str, page_num: int):
+# copied from search/loader.py, temporary
+def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
+    """Returns a dict of post numbers to reply post numbers."""
+    post_2_quotelinks = defaultdict(list)
+    for row in rows:
+        if not (comment := row.get('comment')):
+            continue
+        num = row['num']
+        for quotelink in get_text_quotelinks(comment):
+            post_2_quotelinks[int(quotelink)].append(num)
+    return post_2_quotelinks
+
+
+async def generate_catalog(board: str, page_num: int):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
 
-    sql = f"""
-        {get_selector(board_shortname)},
+    threads_q = f'''
+        select
+            thread_num,
             nreplies,
-            nimages,
-            `{board_shortname}`.media_hash,
-            `{board_shortname}_images`.`media` AS media_orig,
-            `{board_shortname}_images`.`preview_op` AS preview_orig
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_threads` USING (thread_num)
-            LEFT JOIN `{board_shortname}_images` USING (media_id)
-        WHERE `OP`=1
-        ORDER BY `time_bump` DESC
+            nimages
+        from {board}_threads
+        ORDER BY time_bump DESC
         LIMIT 150
-        OFFSET %(page_num)s
-    """
-    rows = await current_app.db.query_execute(sql, params={'page_num': page_num})
-    catalog_list = [dict(row) for row in rows]
+        OFFSET %s
+    '''
+    if not (rows := await fetch_tuple(threads_q, (page_num,))):
+        return []
 
-    result = [
-        {"page": i // 15, "threads": catalog_list[i:i + 15]}
-        for i in range(0, len(catalog_list), 15)
+    threads = {row[0]: row[1:] for row in rows}
+
+    posts_q = f'''
+        {get_selector(board)},
+        {board}.media_hash,
+        {board}_images.media AS media_orig,
+        {board}_images.preview_op AS preview_orig
+    FROM {board}
+        LEFT JOIN {board}_images USING (media_id)
+    where op = 1
+    and thread_num in ({",".join("%s" for _ in range(len(threads)))})
+    '''
+    rows = await current_app.db.query_execute(posts_q, params=tuple(threads.keys()))
+    batch_size = 15
+    return [
+        {
+            "page": i,
+            'threads': [{
+                    **row,
+                    'nreplies': (thread:=threads[row['num']])[0],
+                    'nimages': thread[1]
+                }
+                for row in batch
+            ]
+        }
+        for i, batch in
+        enumerate(batched(rows, batch_size))
     ]
-    return result
 
 
-async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
+async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
     """Generates a thread.
 
     Returns the dict:
@@ -520,19 +563,19 @@ async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
     """
     # Combine OP and replies into a single query to minimize database calls
     combined_query = f"""
-        {get_selector(board_shortname)},
-            threads.`nreplies`,
-            threads.`nimages`,
-            threads.`time_bump`,
-            images.`media_hash`,
-            images.`media`,
-            images.`preview_reply`,
-            images.`preview_op`
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_threads` AS threads USING (`thread_num`)
-            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
-        WHERE `thread_num` = %(thread_num)s
-        ORDER BY `num` ASC
+        {get_selector(board)},
+            threads.nreplies,
+            threads.nimages,
+            threads.time_bump,
+            images.media_hash,
+            images.media,
+            images.preview_reply,
+            images.preview_op
+        FROM {board}
+            LEFT JOIN {board}_threads AS threads USING (thread_num)
+            LEFT JOIN {board}_images AS images USING (media_id)
+        WHERE thread_num = %(thread_num)s
+        ORDER BY num ASC
     ;"""
     rows = await current_app.db.query_execute(combined_query, params={'thread_num': thread_num})
 
@@ -543,18 +586,17 @@ async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
     return post_2_quotelinks, results
 
 
-async def generate_post(board_shortname: str, post_id: int) -> tuple[dict]:
+async def generate_post(board: str, post_id: int) -> tuple[dict]:
     """Returns {thread_num: 123, comment: 'hello', ...}"""
     sql = f"""
-        {get_selector(board_shortname)},
-            images.`media_hash`,
-            images.`media`,
-            images.`preview_reply`,
-            images.`preview_op`
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
-        WHERE `num` = %(num)s
-        LIMIT 1
+        {get_selector(board)},
+            images.media_hash,
+            images.media,
+            images.preview_reply,
+            images.preview_op
+        FROM {board}
+            LEFT JOIN {board}_images AS images USING (media_id)
+        WHERE num = %(num)s
     ;"""
     post = await current_app.db.query_execute(sql, params={'num': post_id}, fetchone=True)
 

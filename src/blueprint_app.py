@@ -49,14 +49,18 @@ async def v_board_index(board_shortname: str):
     """See `v_board_index_page()` for benchmarks.
     """
     validate_board_shortname(board_shortname)
-
+    p = Perf('index')
+    
     index = await generate_index(board_shortname, 1)
-
+    p.check('query')
+    
     validate_threads(index['threads'])
+    p.check('validate')
 
     pagination = await make_pagination_board_index(board_shortname, index, 0)
+    p.check('pagination')
 
-    return await render_controller(
+    rendered = await render_controller(
         template_board_index,
         **CONSTS.render_constants,
         board_index_page=True,
@@ -67,6 +71,10 @@ async def v_board_index(board_shortname: str):
         board=board_shortname,
         title=get_title(board_shortname),
     )
+    p.check('render')
+    print(p)
+    
+    return rendered
 
 
 @blueprint_app.get("/<string:board_shortname>/page/<int:page_num>")

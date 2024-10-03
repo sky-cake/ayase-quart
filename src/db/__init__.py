@@ -3,7 +3,7 @@ from typing import Callable
 from configs import CONSTS
 from enums import DbType
 
-from . import db_mysql, db_sqlite
+from . import mysql, sqlite
 from .db_interface import DatabaseInterface
 
 
@@ -17,9 +17,9 @@ def get_database_instance() -> DatabaseInterface:
 def _get_db_module(db_type: DbType):
     match db_type:
         case DbType.mysql:
-            return db_mysql
+            return mysql
         case DbType.sqlite:
-            return db_sqlite
+            return sqlite
         case _:
             raise ValueError("Unsupported database type")
 
