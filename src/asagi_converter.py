@@ -597,7 +597,6 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
         FROM {board}
             LEFT JOIN {board}_images AS images USING (media_id)
         WHERE num = %(num)s
-        LIMIT 1
     ;"""
     post = await current_app.db.query_execute(sql, params={'num': post_id}, fetchone=True)
 
