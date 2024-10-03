@@ -132,17 +132,17 @@ def get_selector(board: str, double_percent: bool=True) -> str:
 def construct_date_filter(param_name):
     if CONSTS.db_type == DbType.mysql:
         if param_name == 'date_before':
-            return f"`timestamp` <= UNIX_TIMESTAMP(%({param_name})s)"
+            return f"timestamp <= UNIX_TIMESTAMP(%({param_name})s)"
         elif param_name == 'date_after':
-            return f"`timestamp` >= UNIX_TIMESTAMP(%({param_name})s)"
+            return f"timestamp >= UNIX_TIMESTAMP(%({param_name})s)"
         else:
             raise ValueError(f"Unsupported operator: {param_name}")
 
     elif CONSTS.db_type == DbType.sqlite:
         if param_name == 'date_before':
-            return f"`timestamp` <= strftime('%s', %({param_name})s)"
+            return f"timestamp <= strftime('%s', %({param_name})s)"
         elif param_name == 'date_after':
-            return f"`timestamp` >= strftime('%s', %({param_name})s)"
+            return f"timestamp >= strftime('%s', %({param_name})s)"
         else:
             raise ValueError(f"Unsupported operator: {param_name}")
 
@@ -304,9 +304,9 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
     return post_2_quotelinks, posts
 
 
-async def get_post_replies(board_shortname, thread_num, post_num):
+async def get_post_replies(board: str, thread_num: int, post_num: int):
     comment = f'%>>{int(post_num)}%'
-    SELECT_POST_REPLIES = get_selector(board_shortname) + f"FROM `{board_shortname}` WHERE `comment` LIKE %(comment)s AND `thread_num` = %(thread_num)s;"
+    SELECT_POST_REPLIES = get_selector(board) + f"FROM {board} WHERE comment LIKE %(comment)s AND thread_num = %(thread_num)s;"
     return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
@@ -549,7 +549,7 @@ async def generate_catalog(board: str, page_num: int):
     ]
 
 
-async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
+async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
     """Generates a thread.
 
     Returns the dict:
@@ -563,19 +563,19 @@ async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
     """
     # Combine OP and replies into a single query to minimize database calls
     combined_query = f"""
-        {get_selector(board_shortname)},
-            threads.`nreplies`,
-            threads.`nimages`,
-            threads.`time_bump`,
-            images.`media_hash`,
-            images.`media`,
-            images.`preview_reply`,
-            images.`preview_op`
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_threads` AS threads USING (`thread_num`)
-            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
-        WHERE `thread_num` = %(thread_num)s
-        ORDER BY `num` ASC
+        {get_selector(board)},
+            threads.nreplies,
+            threads.nimages,
+            threads.time_bump,
+            images.media_hash,
+            images.media,
+            images.preview_reply,
+            images.preview_op
+        FROM {board}
+            LEFT JOIN {board}_threads AS threads USING (thread_num)
+            LEFT JOIN {board}_images AS images USING (media_id)
+        WHERE thread_num = %(thread_num)s
+        ORDER BY num ASC
     ;"""
     rows = await current_app.db.query_execute(combined_query, params={'thread_num': thread_num})
 
@@ -586,17 +586,17 @@ async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
     return post_2_quotelinks, results
 
 
-async def generate_post(board_shortname: str, post_id: int) -> tuple[dict]:
+async def generate_post(board: str, post_id: int) -> tuple[dict]:
     """Returns {thread_num: 123, comment: 'hello', ...}"""
     sql = f"""
-        {get_selector(board_shortname)},
-            images.`media_hash`,
-            images.`media`,
-            images.`preview_reply`,
-            images.`preview_op`
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_images` AS images USING (`media_id`)
-        WHERE `num` = %(num)s
+        {get_selector(board)},
+            images.media_hash,
+            images.media,
+            images.preview_reply,
+            images.preview_op
+        FROM {board}
+            LEFT JOIN {board}_images AS images USING (media_id)
+        WHERE num = %(num)s
         LIMIT 1
     ;"""
     post = await current_app.db.query_execute(sql, params={'num': post_id}, fetchone=True)
