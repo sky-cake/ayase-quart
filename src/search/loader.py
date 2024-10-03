@@ -221,10 +221,10 @@ async def get_post_rows(board: str, thread_nums: list[int]):
     # you may need to update `row_keys` (below) if you modify this query's selectors.
     q = f"""
         {get_selector(board)},
-            `doc_id`,
-            `title`,
-            `timestamp`
-        from `{board}`
+            doc_id,
+            title,
+            timestamp
+        from {board}
         where thread_num in ({placeholders})
     ;"""
 
