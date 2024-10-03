@@ -293,8 +293,6 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
                 post_quotelinks = get_text_quotelinks(reply["comment"])
 
                 for quotelink in post_quotelinks:
-                    if quotelink not in post_2_quotelinks:
-                        post_2_quotelinks[quotelink] = []
                     post_2_quotelinks[quotelink].append(reply["num"])
 
         if row['title']:
