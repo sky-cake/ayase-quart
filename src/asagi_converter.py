@@ -3,6 +3,7 @@ import re
 from collections import defaultdict
 from functools import cache
 from textwrap import dedent
+from itertools import batched
 
 from quart import current_app
 from werkzeug.exceptions import BadRequest
@@ -11,6 +12,7 @@ from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
+from db import fetch_tuple
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -476,33 +478,51 @@ async def generate_index(board_shortname: str, page_num: int):
     return results
 
 
-async def generate_catalog(board_shortname: str, page_num: int):
+async def generate_catalog(board: str, page_num: int):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
 
-    sql = f"""
-        {get_selector(board_shortname)},
+    threads_q = f'''
+        select
+            thread_num,
             nreplies,
-            nimages,
-            `{board_shortname}`.media_hash,
-            `{board_shortname}_images`.`media` AS media_orig,
-            `{board_shortname}_images`.`preview_op` AS preview_orig
-        FROM `{board_shortname}`
-            LEFT JOIN `{board_shortname}_threads` USING (thread_num)
-            LEFT JOIN `{board_shortname}_images` USING (media_id)
-        WHERE `OP`=1
-        ORDER BY `time_bump` DESC
+            nimages
+        from {board}_threads
+        ORDER BY time_bump DESC
         LIMIT 150
-        OFFSET %(page_num)s
-    """
-    rows = await current_app.db.query_execute(sql, params={'page_num': page_num})
-    catalog_list = [dict(row) for row in rows]
+        OFFSET %s
+    '''
+    if not (rows := await fetch_tuple(threads_q, (page_num,))):
+        return []
 
-    result = [
-        {"page": i // 15, "threads": catalog_list[i:i + 15]}
-        for i in range(0, len(catalog_list), 15)
+    threads = {row[0]: row[1:] for row in rows}
+
+    posts_q = f'''
+        {get_selector(board)},
+        {board}.media_hash,
+        {board}_images.media AS media_orig,
+        {board}_images.preview_op AS preview_orig
+    FROM {board}
+        LEFT JOIN {board}_images USING (media_id)
+    where op = 1
+    and thread_num in ({",".join("%s" for _ in range(len(threads)))})
+    '''
+    rows = await current_app.db.query_execute(posts_q, params=tuple(threads.keys()))
+    batch_size = 15
+    return [
+        {
+            "page": i,
+            'threads': [{
+                    **row,
+                    'nreplies': (thread:=threads[row['num']])[0],
+                    'nimages': thread[1]
+                }
+                for row in batch
+            ]
+        }
+        for i, batch in
+        enumerate(batched(rows, batch_size))
     ]
-    return result
 
 
 async def generate_thread(board_shortname: str, thread_num: int) -> tuple[dict]:
