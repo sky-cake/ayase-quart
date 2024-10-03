@@ -1,5 +1,4 @@
 from functools import cache
-from typing import Tuple
 
 from msgpack import Packer, Unpacker  # 90% smaller than json
 from pybase64 import b64decode, b64encode
@@ -34,7 +33,7 @@ Notes:
 - uncommon values: file sizes, quotelinks, timestamps
 """
 
-fields: Tuple[str] = (
+fields = (
     'sticky',
     'locked',
     'spoiler',
@@ -72,12 +71,6 @@ def pack_metadata(row: dict) -> str:
     row['board_shortname'] = board_2_int(row['board_shortname'])
     if row['name'] == 'Anonymous':
         row['name'] = None
-    del_time = row['ts_expired']
-    # get_selector() ts_expired sqlite 0 is int, mysql 0 is str due to case else with str return
-    if del_time in (0, '0'):
-        row['ts_expired'] = 0
-    else:
-        row['ts_expired'] = formatted_2_posix_ts(del_time)
     return b64encode(compress(msg_packer.pack([row.get(f) for f in fields]), level=9, wbits=-15)).decode()
 
 
@@ -87,7 +80,7 @@ def unpack_metadata(data: str, comment: str) -> dict:
     msg_unpacker.feed(decompress(b64decode(data, validate=True), wbits=-15, bufsize=DECOMP_BUFFER_SIZE))
     data = msg_unpacker.unpack()
     post = {k:v for k,v in zip(fields, data)}
-    post['ts_formatted'] = posix_ts_2_formatted(data[-1])
+    post['ts_formatted'] = ts_2_formatted(data[-1])
     post['board_shortname'] = int_2_board(post['board_shortname'])
     post['capcode'] = id_2_capcode(post['capcode'])
     post['comment'] = comment

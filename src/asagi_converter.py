@@ -49,55 +49,20 @@ selector_columns = (
 )
 
 @cache
-def get_selector(board_shortname: str, double_percent: bool=True) -> str:
+def get_selector(board: str, double_percent: bool=True) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
     if CONSTS.db_type == DbType.mysql:
-        SELECTOR = """
+        SELECTOR = f"""
         SELECT
-        `{board_shortname}`.`thread_num`,
-        `num`,
-        '{board_shortname}' AS `board_shortname`,
-        DATE_FORMAT(FROM_UNIXTIME(`timestamp`), "%m/%d/%y (%a) %H:%i:%S") AS `ts_formatted`,
-        CASE WHEN `timestamp_expired` = 0 THEN `timestamp_expired` ELSE DATE_FORMAT(FROM_UNIXTIME(`timestamp_expired`), "%m/%d/%y (%a) %H:%i:%S") END AS `ts_expired`,
-        `name`,
-        `{board_shortname}`.`sticky` AS `sticky`,
-        (CASE WHEN `title` IS NULL THEN '' ELSE `title` END) AS `title`,
-        `media_w` AS `media_w`,
-        `media_h` AS `media_h`,
-        `preview_w` AS `preview_w`,
-        `preview_h` AS `preview_h`,
-        `timestamp` AS `ts_unixepoch`,
-        `preview_orig`,
-        `media_orig`,
-        `{board_shortname}`.`media_hash`,
-        `media_size` AS `media_size`,
-        (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS `media_filename`,
-        (CASE WHEN `media_filename` IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS `ext`,
-        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE `{board_shortname}`.`thread_num` END) AS `op_num`,
-        (CASE WHEN capcode='N' THEN NULL ELSE `capcode` END) AS `capcode`,
-        `trip`,
-        `spoiler` as `spoiler`,
-        `poster_country`,
-        `poster_hash`,
-        `{board_shortname}`.`locked` AS `locked`,
-        `deleted` AS `deleted`,
-        `exif`,
-        `comment`
-        """
-        if double_percent:
-            SELECTOR = SELECTOR.replace('%', '%%')
-    elif CONSTS.db_type == DbType.sqlite:
-        SELECTOR = """
-        SELECT
-        {board_shortname}.thread_num,
-        `num`,
-        '{board_shortname}' AS board_shortname,
-        datetime(timestamp, 'unixepoch') AS ts_formatted,
-        CASE WHEN timestamp_expired > 0 THEN datetime(timestamp_expired, 'unixepoch') ELSE 0 END AS ts_expired,
+        {board}.thread_num,
+        num,
+        '{board}' AS board_shortname,
+        DATE_FORMAT(FROM_UNIXTIME(timestamp), "%m/%d/%y (%a) %H:%i:%S") AS ts_formatted,
+        timestamp_expired AS ts_expired,
         name,
-        {board_shortname}.sticky as sticky,
-        CASE WHEN title IS NULL THEN '' ELSE title END AS title,
+        {board}.sticky AS sticky,
+        coalesce(title, '') AS title,
         media_w AS media_w,
         media_h AS media_h,
         preview_w AS preview_w,
@@ -105,17 +70,52 @@ def get_selector(board_shortname: str, double_percent: bool=True) -> str:
         timestamp AS ts_unixepoch,
         preview_orig,
         media_orig,
-        {board_shortname}.media_hash,
+        {board}.media_hash,
+        media_size AS media_size,
+        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS media_filename,
+        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS ext,
+        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END) AS op_num,
+        (CASE WHEN capcode='N' THEN NULL ELSE capcode END) AS capcode,
+        trip,
+        spoiler as spoiler,
+        poster_country,
+        poster_hash,
+        {board}.locked AS locked,
+        deleted AS deleted,
+        exif,
+        comment
+        """
+        if double_percent:
+            SELECTOR = SELECTOR.replace('%', '%%')
+    elif CONSTS.db_type == DbType.sqlite:
+        SELECTOR = f"""
+        SELECT
+        {board}.thread_num,
+        num,
+        '{board}' AS board_shortname,
+        datetime(timestamp, 'unixepoch') AS ts_formatted,
+        timestamp_expired AS ts_expired,
+        name,
+        {board}.sticky as sticky,
+        coalesce(title, '') AS title,
+        media_w AS media_w,
+        media_h AS media_h,
+        preview_w AS preview_w,
+        preview_h AS preview_h,
+        timestamp AS ts_unixepoch,
+        preview_orig,
+        media_orig,
+        {board}.media_hash,
         media_size AS media_size,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS media_filename,
         CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, instr(media_filename, '.') + 1) END AS ext,
-        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board_shortname}.thread_num END AS op_num,
+        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END AS op_num,
         CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
         trip,
         spoiler as spoiler,
         poster_country,
         poster_hash,
-        {board_shortname}.locked AS locked,
+        {board}.locked AS locked,
         deleted AS deleted,
         exif,
         comment
@@ -123,8 +123,7 @@ def get_selector(board_shortname: str, double_percent: bool=True) -> str:
     else:
         raise ValueError(CONSTS.db_type)
 
-    SELECTOR = dedent(SELECTOR).format(board_shortname=board_shortname)
-    return SELECTOR
+    return dedent(SELECTOR)
 
 
 def construct_date_filter(param_name):
