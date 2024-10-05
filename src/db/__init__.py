@@ -41,4 +41,4 @@ def _get_tuple_query_fn() -> Callable:
 
 
 # only tuples for speed, no AttrDict/dotdicts
-fetch_tuple: Callable = _get_tuple_query_fn()
+query_tuple: Callable = _get_tuple_query_fn()

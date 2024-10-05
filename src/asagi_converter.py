@@ -13,7 +13,7 @@ from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from db import fetch_tuple
+from db import query_tuple
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -516,7 +516,7 @@ async def generate_catalog(board: str, page_num: int=1):
         LIMIT 150
         OFFSET %s
     '''
-    if not (rows := await fetch_tuple(threads_q, (page_num,))):
+    if not (rows := await query_tuple(threads_q, (page_num,))):
         return []
 
     threads = {row[0]: row[1:] for row in rows}
