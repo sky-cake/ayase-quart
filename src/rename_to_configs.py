@@ -29,7 +29,7 @@ class CONSTS(NamedTuple):
 
     html_linked_target = '_self'  # or '_blank' # links to 4chan will always remain '_blank'
 
-    theme = 'tomorrow'  # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+    theme = site_conf.get('theme', 'tomorrow')
 
     redis_url = '' # Optional. The redis URL for rate limiting. The default is usually 'redis://localhost:6379'
 
