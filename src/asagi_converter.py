@@ -53,72 +53,37 @@ selector_columns = (
 def get_selector(board: str) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
-    if CONSTS.db_type == DbType.mysql:
-        SELECTOR = f"""
-        SELECT
-        {board}.thread_num,
-        num,
-        '{board}' AS board_shortname,
-        timestamp_expired AS ts_expired,
-        name,
-        {board}.sticky AS sticky,
-        coalesce(title, '') AS title,
-        media_w AS media_w,
-        media_h AS media_h,
-        preview_w AS preview_w,
-        preview_h AS preview_h,
-        timestamp AS ts_unix,
-        preview_orig,
-        media_orig,
-        {board}.media_hash,
-        media_size AS media_size,
-        media_filename AS media_filename,
-        op as op,
-        CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
-        capcode AS capcode,
-        trip,
-        spoiler as spoiler,
-        poster_country,
-        poster_hash,
-        {board}.locked AS locked,
-        deleted AS deleted,
-        exif,
-        comment
-        """
-    elif CONSTS.db_type == DbType.sqlite:
-        SELECTOR = f"""
-        SELECT
-        {board}.thread_num,
-        num,
-        '{board}' AS board_shortname,
-        timestamp_expired AS ts_expired,
-        name,
-        {board}.sticky as sticky,
-        coalesce(title, '') AS title,
-        media_w AS media_w,
-        media_h AS media_h,
-        preview_w AS preview_w,
-        preview_h AS preview_h,
-        timestamp AS ts_unix,
-        preview_orig,
-        media_orig,
-        {board}.media_hash,
-        media_size AS media_size,
-        media_filename AS media_filename,
-        op as op,
-        CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
-        capcode AS capcode,
-        trip,
-        spoiler as spoiler,
-        poster_country,
-        poster_hash,
-        {board}.locked AS locked,
-        deleted AS deleted,
-        exif,
-        comment
-        """
-    else:
-        raise ValueError(CONSTS.db_type)
+    SELECTOR = f"""
+    SELECT
+    {board}.thread_num,
+    num,
+    '{board}' AS board_shortname,
+    timestamp_expired AS ts_expired,
+    name,
+    {board}.sticky AS sticky,
+    coalesce(title, '') AS title,
+    media_w AS media_w,
+    media_h AS media_h,
+    preview_w AS preview_w,
+    preview_h AS preview_h,
+    timestamp AS ts_unix,
+    preview_orig,
+    media_orig,
+    {board}.media_hash,
+    media_size AS media_size,
+    media_filename AS media_filename,
+    op as op,
+    CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
+    capcode AS capcode,
+    trip,
+    spoiler as spoiler,
+    poster_country,
+    poster_hash,
+    {board}.locked AS locked,
+    deleted AS deleted,
+    exif,
+    comment
+    """
 
     return dedent(SELECTOR)
 
