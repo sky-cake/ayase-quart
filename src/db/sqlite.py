@@ -68,7 +68,7 @@ async def _run_query_dict(query: str, params=None, fetchone=False, commit=False)
     
     async with pool.execute(query, params) as cursor:
         if commit:
-            current_app.pool.commit()
+            pool.commit()
             return
         if fetchone:
             return await cursor.fetchone()
