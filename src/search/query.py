@@ -7,6 +7,7 @@ from posts.capcodes import Capcode, capcode_2_id
 from utils.validation import positive_int
 
 from .post_metadata import board_2_int
+from . import DEFAULT_RESULTS_LIMIT, MAX_RESULTS_LIMIT
 
 
 @dataclass(slots=True)
@@ -27,7 +28,7 @@ class SearchQuery:
     deleted: Optional[bool] = None
     op: Optional[bool] = None
     sticky: Optional[bool] = None
-    result_limit: int = CONSTS.default_result_limit
+    result_limit: int = DEFAULT_RESULTS_LIMIT
     page: Optional[int] = 1
     sort: str = 'asc'
     sort_by: Optional[str] = 'timestamp'
@@ -47,7 +48,7 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['num']:
         q.num = int(params['num'])
     if params['result_limit']:
-        q.result_limit = positive_int(params['result_limit'], upper=CONSTS.max_result_limit)
+        q.result_limit = positive_int(params['result_limit'], upper=MAX_RESULTS_LIMIT)
     if params['media_filename']:
         q.media_file = params['media_filename']
     if params['media_hash']:

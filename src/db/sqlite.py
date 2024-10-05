@@ -3,9 +3,11 @@ import asyncio
 
 import aiosqlite
 
-from configs import CONSTS
+from configs2 import db_conf
 from .base_db import BasePlaceHolderGen
 
+sql_echo = db_conf.get('echo', False)
+sqlite_conf = db_conf.get('sqlite', {})
 
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""
@@ -22,7 +24,7 @@ def row_factory(cursor, row: tuple):
 
 async def _new_pool():
     return await aiosqlite.connect(
-        CONSTS.db_path,
+        **sqlite_conf,
         autocommit=True,
     )
 

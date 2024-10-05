@@ -13,6 +13,7 @@ from render import (
     render_controller,
     validate_board_shortname,
 )
+from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
 from search.highlighting import get_term_re, mark_highlight, highlight_search_results
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
@@ -62,7 +63,7 @@ async def error_invalid(e):
 
 @blueprint_search.route("/index_search", methods=['GET', 'POST'])
 async def v_index_search():
-    if not CONSTS.search:
+    if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
     search_mode = SearchMode.index
@@ -167,7 +168,7 @@ async def v_index_search():
 
 @blueprint_search.route("/search", methods=['GET', 'POST'])
 async def v_search():
-    if not CONSTS.search:
+    if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
     form = await SearchForm.create_form(meta={'csrf': False})
@@ -202,7 +203,7 @@ async def v_search():
 
         posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data)  # posts = {'posts': [{...}, {...}, ...]}
 
-        if CONSTS.search_result_highlight:
+        if HIGHLIGHT_ENABLED:
             posts = highlight_search_results(form, posts)
 
         posts = posts['posts']

@@ -4,7 +4,7 @@ from typing import Any
 from orjson import dumps, loads
 
 from . import (
-    MAX_RESULTS,
+    MAX_RESULTS_LIMIT,
     POST_PK,
     SearchIndexField,
     SearchQuery,

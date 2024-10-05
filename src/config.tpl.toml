@@ -1,0 +1,69 @@
+[app]
+testing = false
+secret = 'DEFAULT_CHANGE_ME' # python -c "import secrets as s; print(s.token_hex(24))"
+validate_boards_db = true
+autoreload = false
+
+# quart/hypercorn keys
+port = 9001
+# ssl_key = 'key.pem'
+# ssl_cert = 'cert.pem
+
+[site]
+name = 'Ayase Quart'
+theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+
+[db]
+db_type = 'mysql' # mysql, sqlite, postgresql
+echo = false # print rendered sql statements to console if enabled
+
+[db.mysql] # follow pymysql/aiomysql connection keys
+host = '127.0.0.1'
+port = 3306
+# unix_socket = '/var/run/mysqld/mysqld.sock'
+db = 'asagi'
+user = 'asagi'
+password = 'asagi'
+minsize = 1
+maxsize = 50
+
+[db.sqlite] # follow aiosqlite connection keys
+database = 'path/to/file.db'
+
+[db.postgresql] # follow aiosqlite connection keys
+host = 'localhost' # 
+port = 5432
+user = 'asagi'
+password = 'asagi'
+database = 'asagi'
+min_size = 1
+max_size = 50
+
+[redis] # follow coredis connection keys
+host = "127.0.0.1"
+port = 6379
+db = 0s
+
+[media]
+root = '/static/neo'
+image_uri = "/static/neo/{board_shortname}/image" # must contain {board_shortname}
+thumb_uri = "/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
+
+[search]
+enabled = true
+highlight = true
+default_result_limit = 100
+max_result_limit = 10000
+provider = 'lnx' # lnx, meili, manticore, typesense, mysql, quickwit
+host = 'http://localhost:8000'
+
+[search.meili]
+
+[search.lnx]
+
+[moderation]
+admin_user = 'admin'
+admin_password = 'admin'
+
+[moderation.sqlite]
+database = 'moderation.db'
