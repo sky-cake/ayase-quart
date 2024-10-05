@@ -5,7 +5,7 @@ from quart import flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from configs import CONSTS, DbType
-from db import close_db_pool, fetch_tuple
+from db import close_db_pool, query_tuple
 from enums import DbType, UserRole
 
 
@@ -168,7 +168,7 @@ async def get_db_tables(close_pool_after=False) -> list[str]:
                 sql_string = "SELECT name FROM sqlite_master WHERE type='table';"
             case _:
                 return []
-        rows = await fetch_tuple(sql_string)
+        rows = await query_tuple(sql_string)
         get_db_tables.tables = [row[0] for row in rows]
 
         if close_pool_after:
