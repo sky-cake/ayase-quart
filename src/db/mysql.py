@@ -49,6 +49,26 @@ async def _run_query_fast(query: str, params: tuple=None):
             return res
 
 
+async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+        pool = await _get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor(AttrDictCursor) as cursor:
+
+                if sql_echo:
+                    final_sql = cursor.mogrify(query, params)
+                    print('::SQL::', final_sql, '')
+
+                await cursor.execute(query, params)
+
+                if commit:
+                    return conn.commit()
+
+                if fetchone:
+                    return await cursor.fetchone()
+
+                return await cursor.fetchall()
+
+
 async def _close_pool():
     if not hasattr(_get_pool, 'pool'):
         return
@@ -56,4 +76,10 @@ async def _close_pool():
     await _get_pool.pool.wait_closed()
     delattr(_get_pool, 'pool')
 
+class MysqlPlaceholderGen(BasePlaceHolderGen):
+    __slots__ = ()
 
+    def __call__(self):
+        return '%s'
+
+PlaceHolderGenerator = MysqlPlaceholderGen

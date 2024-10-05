@@ -28,6 +28,22 @@ async def _run_query_fast(query: str, params: tuple=None):
         await conn.execute(query, params)
         return await conn.fetchall()
 
+async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        if sql_echo:
+            print('::SQL::', query)
+            print('::PARAMS::', query)
+
+        await conn.execute(query, params)
+
+        if commit:
+            return conn.commit()
+
+        if fetchone:
+            return await conn.fetchone()
+        return await conn.fetchall()
+
 
 async def _close_pool():
     if not hasattr(_get_pool, 'pool'):

@@ -34,5 +34,13 @@ def _get_tuple_query_fn() -> Callable:
     return db_module._run_query_fast
 
 
+def _get_dict_query_fn() -> Callable:
+    db_module = _get_db_module(CONST.db_type)
+    return db_module._run_query_dict
+
+
 # only tuples for speed, no AttrDict/dotdicts
 query_tuple: Callable = _get_tuple_query_fn()
+
+query_dict: Callable = _get_dict_query_fn()
+

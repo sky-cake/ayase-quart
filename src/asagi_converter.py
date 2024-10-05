@@ -6,14 +6,13 @@ from textwrap import dedent
 from itertools import batched
 import asyncio
 
-from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from db import query_tuple
+from db import query_tuple, query_dict
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -249,7 +248,7 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     sql += f' \n ORDER BY ts_unixepoch {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
 
-    posts = await current_app.db.query_execute(sql, params=param_values)
+    posts = await query_dict(sql, params=param_values)
 
     result = {'posts': []}
     post_2_quotelinks = {}
@@ -307,11 +306,11 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
 async def get_post_replies(board: str, thread_num: int, post_num: int):
     comment = f'%>>{int(post_num)}%'
     SELECT_POST_REPLIES = get_selector(board) + f"FROM {board} WHERE comment LIKE %(comment)s AND thread_num = %(thread_num)s;"
-    return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
+    return await query_dict(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
 async def get_op_thread_count(board_shortname) -> int:
-    return (await current_app.db.query_execute(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
+    return (await query_dict(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
 
 
 def get_text_quotelinks(text: str):
@@ -427,7 +426,7 @@ async def generate_index(board: str, page_num: int=1):
         LIMIT 10
         OFFSET %s
     '''
-    if not (threads := await current_app.db.query_execute(threads_q, params=(page_num,))):
+    if not (threads := await query_dict(threads_q, params=(page_num,))):
         return {'threads': []}
 
     thread_params = ','.join('%s' for _ in range(len(threads)))
@@ -463,8 +462,8 @@ async def generate_index(board: str, page_num: int=1):
     thread_nums_d = {t['thread_num']:t for t in threads}
 
     ops, replies = await asyncio.gather(
-        current_app.db.query_execute(op_query, params=thread_nums),
-        current_app.db.query_execute(replies_query, params=thread_nums),
+        query_dict(op_query, params=thread_nums),
+        query_dict(replies_query, params=thread_nums),
     )
 
     reply_qls = get_quotelink_lookup(replies)
@@ -531,7 +530,8 @@ async def generate_catalog(board: str, page_num: int=1):
     where op = 1
     and thread_num in ({",".join("%s" for _ in range(len(threads)))})
     '''
-    rows = await current_app.db.query_execute(posts_q, params=tuple(threads.keys()))
+    rows = await query_dict(posts_q, params=tuple(threads.keys()))
+    
     batch_size = 15
     return [
         {
@@ -577,7 +577,7 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         WHERE thread_num = %(thread_num)s
         ORDER BY num ASC
     ;"""
-    rows = await current_app.db.query_execute(combined_query, params={'thread_num': thread_num})
+    rows = await query_dict(combined_query, params={'thread_num': thread_num})
 
     post_2_quotelinks, posts = await get_qls_and_posts(rows)
 
@@ -598,7 +598,7 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
             LEFT JOIN {board}_images AS images USING (media_id)
         WHERE num = %(num)s
     ;"""
-    post = await current_app.db.query_execute(sql, params={'num': post_id}, fetchone=True)
+    post = await query_dict(sql, params={'num': post_id}, fetchone=True)
 
     if not post:
         return None, None

@@ -6,19 +6,30 @@ from configs import CONSTS
 
 
 
+async def _new_pool():
+    return await aiosqlite.connect(
+        CONSTS.db_path,
+        autocommit=True,
+    )
+
+async def _get_pool(store=True, dict_row=False):
+    if not store:
+        return await _new_pool()
+
+    if not hasattr(_get_pool, 'pools'):
+        _get_pool.pools = {}
+    
+    stored_pool = 'pool_t' if dict_row else 'pool_dr'
+    if pool := _get_pool.pools.get(stored_pool):
+        return pool
+    
+    pool = await _new_pool()
+    if dict_row:
+        pool.row_factory = row_factory
+    _get_pool.pools[stored_pool] = pool
+    return pool
 
 
-async def _get_pool(store=True):
-    # we apply an attribute on this function to avoid polluting the module's namespace
-    if not hasattr(_get_pool, 'pool') or not store:
-        pool = await aiosqlite.connect(
-            CONSTS.db_path,
-            autocommit=True,
-        )
-        if not store:
-            return pool
-        _get_pool.pool = pool
-    return _get_pool.pool
 
 
 async def _run_query_fast(query: str, params: tuple=None):
@@ -32,11 +43,29 @@ async def _run_query_fast(query: str, params: tuple=None):
         return await cursor.fetchall()
 
 
+async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+    wait_pool = _get_pool(dict_row=True)
+    query = patch_query(query) # patch query while waiting for the pool to connect on first connection
+    pool = await wait_pool
+    
+    if sql_echo:
+        print(query)
+        print(params)
+    
+    async with pool.execute(query, params) as cursor:
+        if commit:
+            current_app.pool.commit()
+            return
+        if fetchone:
+            return await cursor.fetchone()
+        return await cursor.fetchall()
+
+
 async def _close_pool():
-    if not hasattr(_get_pool, 'pool'):
+    if not (pools := getattr(_get_pool, 'pools', None)):
         return
-    await _get_pool.pool.close()
-    delattr(_get_pool, 'pool')
+    await asyncio.gather(*(p.close() for p in pools.values()))
+    delattr(_get_pool, 'pools')
 
 
 re_mysql_bind_to_sqlite_bind = re.compile(r'%\((\w+)\)s')
