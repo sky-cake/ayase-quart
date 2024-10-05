@@ -31,7 +31,7 @@ maxsize = 50
 database = 'path/to/file.db'
 
 [db.postgresql] # follow aiosqlite connection keys
-host = 'localhost' # 
+host = 'localhost' # also used for unix domain socket
 port = 5432
 user = 'asagi'
 password = 'asagi'
@@ -42,7 +42,7 @@ max_size = 50
 [redis] # follow coredis connection keys
 host = "127.0.0.1"
 port = 6379
-db = 0s
+db = 0
 
 [media]
 root = '/static/neo'
