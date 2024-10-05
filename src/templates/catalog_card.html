@@ -13,7 +13,7 @@
         {{ capcode_author(thread) }}
 
         {% if thread.trip %}<span class="post_trip">{{ thread.trip }}</span>{% endif %}
-        {% if thread.capcode and (not thread.capcode in 'AFMDGV') %}
+        {% if thread.capcode not in 'NAFMDGV' %}
             <strong class="capcode id_unknown">## {{thread.capcode}}</strong>
         {% endif %}
         {% if 'thread.capcode' == 'A' %}
@@ -41,7 +41,7 @@
     </span>
     <span class="poster_hash"></span>
     <br/>
-    <time datetime="{{ thread.ts_unixepoch }}">{{ thread.ts_formatted }}</time>
+    <time datetime="{{ thread.ts_unix }}">{{ format_ts(thread.ts_unix) }}</time>
     <span class="post_number">
         <a href="/{{ thread.board_shortname }}/thread/{{ thread.num }}#p{{ thread.num }}" data-function="highlight" data-post="{{ thread.num }}">No. {{ thread.num }}</a>
     </span>

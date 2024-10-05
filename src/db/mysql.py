@@ -1,9 +1,8 @@
 import aiomysql
-from quart import current_app
 
 from configs import CONSTS
 
-from .db_interface import DatabaseInterface
+from .base_db import BasePlaceHolderGen
 
 
 class AttrDict(dict):
@@ -19,35 +18,6 @@ class AttrDict(dict):
 class AttrDictCursor(aiomysql.DictCursor):
     dict_type = AttrDict
 
-
-class MySQLDatabaseAppContext(DatabaseInterface):
-    async def connect(self):
-        current_app.pool = await _get_pool(store=False)
-        print('Mysql pool open')
-
-    async def query_execute(self, sql: str, params=None, fetchone=False, commit=False):
-        async with current_app.pool.acquire() as conn:
-            async with conn.cursor(AttrDictCursor) as cursor:
-
-                if CONSTS.sql_echo:
-                    final_sql = cursor.mogrify(sql, params)
-                    print('::SQL::', final_sql, '')
-
-                await cursor.execute(sql, params)
-
-                if commit:
-                    return conn.commit()
-
-                if fetchone:
-                    return await cursor.fetchone()
-
-                return await cursor.fetchall()
-
-    async def disconnect(self):
-        current_app.pool.close()
-        await current_app.pool.wait_closed()
-
-# Functions below are for doing Tuple queries, which are faster fetching Dict results
 
 async def _get_pool(store=True):
     # we apply an attribute on this function to avoid polluting the module's namespace
@@ -80,6 +50,26 @@ async def _run_query_fast(query: str, params: tuple=None):
             return res
 
 
+async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+        pool = await _get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor(AttrDictCursor) as cursor:
+
+                if sql_echo:
+                    final_sql = cursor.mogrify(query, params)
+                    print('::SQL::', final_sql, '')
+
+                await cursor.execute(query, params)
+
+                if commit:
+                    return conn.commit()
+
+                if fetchone:
+                    return await cursor.fetchone()
+
+                return await cursor.fetchall()
+
+
 async def _close_pool():
     if not hasattr(_get_pool, 'pool'):
         return
@@ -87,5 +77,10 @@ async def _close_pool():
     await _get_pool.pool.wait_closed()
     delattr(_get_pool, 'pool')
 
+class MysqlPlaceholderGen(BasePlaceHolderGen):
+    __slots__ = ()
 
-DatabaseAppContext = MySQLDatabaseAppContext
+    def __call__(self):
+        return '%s'
+
+PlaceHolderGenerator = MysqlPlaceholderGen

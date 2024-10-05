@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from configs import CONSTS
 from utils import make_src_path
+from utils.timestamps import ts_2_formatted
 
 env = Environment(
     loader=FileSystemLoader(make_src_path('templates')),
@@ -45,5 +46,8 @@ safe_env = Environment(
     keep_trailing_newline=True,
     autoescape=False,
 )
+safe_env.globals.update(dict(
+    format_ts=ts_2_formatted,
+))
 template_index_search_post_t = safe_env.get_template('index_search_post_t.html')
 template_index_search_gallery_post_t = safe_env.get_template('index_search_gallery_post_t.html')

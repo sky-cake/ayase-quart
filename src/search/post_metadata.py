@@ -18,7 +18,7 @@ We focus on retaining only fields needed for rendering search results (fields co
 
 - op
 - deleted
-- ts_unixepoch
+- ts_unix
 - mediahash
 - num
 - board (board_shortname)
@@ -37,6 +37,7 @@ fields = (
     'sticky',
     'locked',
     'spoiler',
+    'op',
     'trip',
     'since4pass',
     'poster_hash',
@@ -53,7 +54,6 @@ fields = (
     'preview_orig',
     'exif',
     'media_hash',
-    'ext',
     'media_size',
     'media_w',
     'media_h',
@@ -63,7 +63,7 @@ fields = (
     'num',
     'op_num',
     'ts_expired',
-    'ts_unixepoch',
+    'ts_unix',
 )
 
 msg_packer: Packer = Packer()
@@ -80,7 +80,6 @@ def unpack_metadata(data: str, comment: str) -> dict:
     msg_unpacker.feed(decompress(b64decode(data, validate=True), wbits=-15, bufsize=DECOMP_BUFFER_SIZE))
     data = msg_unpacker.unpack()
     post = {k:v for k,v in zip(fields, data)}
-    post['ts_formatted'] = ts_2_formatted(data[-1])
     post['board_shortname'] = int_2_board(post['board_shortname'])
     post['capcode'] = id_2_capcode(post['capcode'])
     post['comment'] = comment

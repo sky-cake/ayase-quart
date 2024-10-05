@@ -14,7 +14,7 @@ from blueprint_auth import blueprint_auth
 from blueprint_moderation import blueprint_moderation
 from blueprint_search import blueprint_search
 from configs import CONSTS
-from db import get_database_instance
+from db import prime_db_pool, close_db_pool
 from db.api import init_moderation_db
 from limiter import limiter
 
@@ -51,13 +51,11 @@ async def create_app():
     app.register_blueprint(blueprint_search)
     app.register_blueprint(blueprint_moderation)
 
-    app.db = get_database_instance()
-
     await init_moderation_db()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
-    app.before_serving(app.db.connect)
-    app.after_serving(app.db.disconnect)
+    app.before_serving(prime_db_pool)
+    app.after_serving(close_db_pool)
 
     return app
 

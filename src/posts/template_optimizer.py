@@ -3,6 +3,7 @@ from html import escape
 
 from configs import CONSTS
 from utils.timestamps import ts_2_formatted
+from posts.capcodes import Capcode
 
 
 class MediaType(StrEnum):
@@ -20,8 +21,7 @@ def post_html_comment(comment: str):
 
 needed_keys = {
     'num',
-    'ts_unixepoch',
-    'ts_formatted',
+    'ts_unix',
     'board_shortname',
     'quotelinks',
     'comment',
@@ -84,21 +84,21 @@ cc_t_unknown = lambda capcode: f'<strong class="capcode hand id_unknown" title="
 
 
 def get_capcode_t(post: dict) -> str:
-    cc = post.get('capcode')
+    cc: Capcode = post['capcode']
     match cc:
-        case None:
+        case Capcode.user:
             return ''
-        case 'V':
-            return cc_t_verified
-        case 'A':
-            return cc_t_admin
-        case 'F':
-            return cc_t_founder
-        case 'M':
+        case Capcode.moderator:
             return cc_t_moderator
-        case 'D':
+        case Capcode.verified:
+            return cc_t_verified
+        case Capcode.admin:
+            return cc_t_admin
+        case Capcode.founder:
+            return cc_t_founder
+        case Capcode.dev:
             return cc_t_dev
-        case 'G':
+        case Capcode.manager:
             return cc_t_manager
         case _:
             return cc_t_unknown(cc)
@@ -128,9 +128,9 @@ def get_media_path(media_filename: str, board: str, media_type: MediaType) -> st
 
 
 def get_gallery_media_t(post: dict):
-    if not post['media_filename']:
+    if not (media_filename := post['media_filename']):
         return ''
-    ext = post['ext']
+    ext = media_filename.rsplit(',', 1)[-1]
     media_orig = post['media_orig']
     preview_orig = post['preview_orig']
     md5h = post['media_hash']
@@ -161,7 +161,7 @@ def get_gallery_media_t(post: dict):
 def get_media_t(post: dict):
     if not (media_filename := post['media_filename']):
         return ''
-    ext = post['ext']
+    ext = media_filename.rsplit(',', 1)[-1]
     media_orig = post['media_orig']
     preview_orig = post['preview_orig']
     num = post['num']
@@ -177,7 +177,7 @@ def get_media_t(post: dict):
 	<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
             File:
-            <a href="{full_src}" title="{media_orig}">{media_filename}.{ext}</a>
+            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
             (<span title="{md5h}">
                 {spoiler}
                 {media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}
@@ -206,7 +206,7 @@ def get_media_t(post: dict):
 def set_links(post: dict):
     board = post['board_shortname']
     num = post['num']
-    thread = op_num if (op_num := post['op_num']) else num
+    thread = post['op_num']
     post['t_thread_link'] = f'/{board}/thread/{thread}'
     post['t_post_link'] = f'/{board}/thread/{thread}#p{num}'
 
@@ -244,13 +244,14 @@ def get_trip_t(post: dict):
 
 
 def get_mobile_t(post: dict):
+    timestamp = post['ts_unix']
     return f"""
 	<span class="nameBlock">
         <span class="name">{post['name']}</span>
         <br>
     </span>
-    <span class="dateTime postNum" data-utc="{post['ts_unixepoch']}">
-        {post['ts_formatted']}
+    <span class="dateTime postNum" data-utc="{timestamp}">
+        {ts_2_formatted(timestamp)}
         <a href="#{post['num']}" title="Link to this post">No. {post['num']}</a>
     </span>
 	"""

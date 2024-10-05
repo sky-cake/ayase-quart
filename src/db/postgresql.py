@@ -1,35 +1,10 @@
 import asyncpg
-from quart import current_app
 
 from configs import CONSTS
 
-from .db_interface import DatabaseInterface
+from .base_db import BasePlaceHolderGen
 
 
-class PostgreSQLDatabaseAppContext(DatabaseInterface):
-    async def connect(self):
-        current_app.pool = await _get_pool(store=False)
-        print('Postgresql pool open')
-
-    async def query_execute(self, sql: str, params=None, fetchone=False, commit=False):
-        async with current_app.pool.acquire() as conn:
-            if CONSTS.sql_echo:
-                print('::SQL::', sql)
-
-            await conn.execute(sql, params)
-
-            if commit:
-                return conn.commit()
-
-            if fetchone:
-                return await conn.fetchone()
-            return await conn.fetchall()
-
-    async def disconnect(self):
-        await current_app.pool.close()
-
-
-# Functions below are for doing Tuple queries, which are faster fetching Dict results
 async def _get_pool(store=True):
     # we apply an attribute on this function to avoid polluting the module's namespace
     if not hasattr(_get_pool, 'pool') or not store:
@@ -54,6 +29,22 @@ async def _run_query_fast(query: str, params: tuple=None):
         await conn.execute(query, params)
         return await conn.fetchall()
 
+async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+    pool = await _get_pool()
+    async with pool.acquire() as conn:
+        if sql_echo:
+            print('::SQL::', query)
+            print('::PARAMS::', query)
+
+        await conn.execute(query, params)
+
+        if commit:
+            return conn.commit()
+
+        if fetchone:
+            return await conn.fetchone()
+        return await conn.fetchall()
+
 
 async def _close_pool():
     if not hasattr(_get_pool, 'pool'):
@@ -62,4 +53,14 @@ async def _close_pool():
     delattr(_get_pool, 'pool')
 
 
-DatabaseAppContext = PostgreSQLDatabaseAppContext
+class PostgresqlPlaceholderGen(BasePlaceHolderGen):
+    __slots__ = ('counter')
+
+    def __init__(self):
+        self.counter = 0
+    
+    def __call__(self):
+        self.counter += 1
+        return f':{self.counter}'
+
+PlaceHolderGenerator = PostgresqlPlaceholderGen

@@ -1,8 +1,8 @@
-from quart import Blueprint, current_app, redirect, request, url_for
+from quart import Blueprint, redirect, request, url_for
 
-from asagi_converter import get_selector
 from blueprint_auth import admin_required
 from configs import CONSTS, DbType
+from db import query_dict, Phg
 from db.api import (
     create_user,
     delete_user,
@@ -23,7 +23,7 @@ from templates import (
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
 
-placeholders = ','.join(['%s'] * len(CONSTS.boards_in_database))
+placeholders = Phg().size(CONSTS.boards_in_database)
 
 if CONSTS.db_type == DbType.mysql:
     DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""
@@ -42,14 +42,14 @@ def get_sql_latest_ops(board_shortname):
 @blueprint_admin.route("/stats")
 @admin_required
 async def stats():
-    database_storage_size = await current_app.db.query_execute(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
+    database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
 
     if CONSTS.db_type == DbType.mysql:
         params = [CONSTS.db_database, *CONSTS.boards_in_database]
     elif CONSTS.db_type == DbType.sqlite:
         params = [*CONSTS.boards_in_database]
 
-    database_table_storage_sizes = await current_app.db.query_execute(DATABASE_TABLE_STORAGE_SIZES, params=params)
+    database_table_storage_sizes = await query_dict(DATABASE_TABLE_STORAGE_SIZES, params=params)
 
     return await render_controller(
         template_stats,
@@ -67,7 +67,7 @@ async def latest():
     threads = []
     for board_shortname in CONSTS.board_shortnames:
         sql = get_sql_latest_ops(board_shortname)
-        latest_ops = await current_app.db.query_execute(sql)
+        latest_ops = await query_dict(sql)
         threads.extend(latest_ops)
 
     return await render_controller(

@@ -19,7 +19,7 @@ blueprint_api = Blueprint("blueprint_api", __name__)
 async def catalog(board_shortname: str):
     validate_board_shortname(board_shortname)
 
-    return await generate_catalog(board_shortname, 1)
+    return await generate_catalog(board_shortname)
 
 
 @blueprint_api.get("/<string:board_shortname>/thread/<int:thread_id>.json")

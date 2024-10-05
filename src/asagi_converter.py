@@ -6,14 +6,13 @@ from textwrap import dedent
 from itertools import batched
 import asyncio
 
-from quart import current_app
 from werkzeug.exceptions import BadRequest
 
 from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from db import fetch_tuple
+from db import query_tuple, query_dict, Phg
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -22,7 +21,6 @@ selector_columns = (
     'thread_num', # an archiver construct. The OP post ID.
     'num', # `no` - The numeric post ID
     'board_shortname', # board acronym
-    'ts_formatted', # `now` - MM/DD/YY(Day)HH:MM (:SS on some boards), EST/EDT timezone
     'ts_expired', # an archiver construct. Could also be `archvied_on` - UNIX timestamp the post was archived
     'name', # `name` - Name user posted with. Defaults to Anonymous
     'sticky', # `sticky`- If the thread is being pinned to the top of the page
@@ -31,14 +29,14 @@ selector_columns = (
     'media_h', # `h` - Image height dimension
     'preview_w', # `tn_w` - Thumbnail image width dimension 	
     'preview_h', # `tn_h` - Thumbnail image height dimension
-    'ts_unixepoch', # `time` - UNIX timestamp the post was created
+    'ts_unix', # `time` - UNIX timestamp the post was created
     'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
     'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
     'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
     'media_size', # `fsize` - Size of uploaded file in bytes
     'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
-    'ext', # an AQ construct
-    'op_num', # `resto` - for replies: this is the ID of the thread being replied to. For OP: this value is zero
+    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
+    'op_num', # thread_num
     'capcode', # `capcode` - The capcode identifier for a post
     'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
     'spoiler', # `spoiler` - If the image was spoilered or not
@@ -52,79 +50,40 @@ selector_columns = (
 )
 
 @cache
-def get_selector(board: str, double_percent: bool=True) -> str:
+def get_selector(board: str) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
-    if CONSTS.db_type == DbType.mysql:
-        SELECTOR = f"""
-        SELECT
-        {board}.thread_num,
-        num,
-        '{board}' AS board_shortname,
-        DATE_FORMAT(FROM_UNIXTIME(timestamp), "%m/%d/%y (%a) %H:%i:%S") AS ts_formatted,
-        timestamp_expired AS ts_expired,
-        name,
-        {board}.sticky AS sticky,
-        coalesce(title, '') AS title,
-        media_w AS media_w,
-        media_h AS media_h,
-        preview_w AS preview_w,
-        preview_h AS preview_h,
-        timestamp AS ts_unixepoch,
-        preview_orig,
-        media_orig,
-        {board}.media_hash,
-        media_size AS media_size,
-        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS media_filename,
-        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS ext,
-        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END) AS op_num,
-        (CASE WHEN capcode='N' THEN NULL ELSE capcode END) AS capcode,
-        trip,
-        spoiler as spoiler,
-        poster_country,
-        poster_hash,
-        {board}.locked AS locked,
-        deleted AS deleted,
-        exif,
-        comment
-        """
-        if double_percent:
-            SELECTOR = SELECTOR.replace('%', '%%')
-    elif CONSTS.db_type == DbType.sqlite:
-        SELECTOR = f"""
-        SELECT
-        {board}.thread_num,
-        num,
-        '{board}' AS board_shortname,
-        datetime(timestamp, 'unixepoch') AS ts_formatted,
-        timestamp_expired AS ts_expired,
-        name,
-        {board}.sticky as sticky,
-        coalesce(title, '') AS title,
-        media_w AS media_w,
-        media_h AS media_h,
-        preview_w AS preview_w,
-        preview_h AS preview_h,
-        timestamp AS ts_unixepoch,
-        preview_orig,
-        media_orig,
-        {board}.media_hash,
-        media_size AS media_size,
-        CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS media_filename,
-        CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, instr(media_filename, '.') + 1) END AS ext,
-        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END AS op_num,
-        CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
-        trip,
-        spoiler as spoiler,
-        poster_country,
-        poster_hash,
-        {board}.locked AS locked,
-        deleted AS deleted,
-        exif,
-        comment
-        """
-    else:
-        raise ValueError(CONSTS.db_type)
+    SELECTOR = f"""
+    SELECT
+    {board}.thread_num,
+    num,
+    '{board}' AS board_shortname,
+    timestamp_expired AS ts_expired,
+    name,
+    {board}.sticky AS sticky,
+    coalesce(title, '') AS title,
+    media_w AS media_w,
+    media_h AS media_h,
+    preview_w AS preview_w,
+    preview_h AS preview_h,
+    timestamp AS ts_unix,
+    preview_orig,
+    media_orig,
+    {board}.media_hash,
+    media_size AS media_size,
+    media_filename AS media_filename,
+    op as op,
+    CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
+    capcode AS capcode,
+    trip,
+    spoiler as spoiler,
+    poster_country,
+    poster_hash,
+    {board}.locked AS locked,
+    deleted AS deleted,
+    exif,
+    comment
+    """
 
     return dedent(SELECTOR)
 
@@ -246,10 +205,10 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     if sql.strip() == '':
         return {'posts': []}, {}  # no boards specified
 
-    sql += f' \n ORDER BY ts_unixepoch {order_by}'
+    sql += f' \n ORDER BY ts_unix {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
 
-    posts = await current_app.db.query_execute(sql, params=param_values)
+    posts = await query_dict(sql, params=param_values)
 
     result = {'posts': []}
     post_2_quotelinks = {}
@@ -267,11 +226,7 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
     for i, row in enumerate(rows):
 
         if row.get('media_hash'):
-            if row.get('op_num') == 0:
-                row['preview_orig'] = row.pop('preview_op')
-            else:
-                row['preview_orig'] = row.pop('preview_reply')
-
+            row['preview_orig'] = row.pop('preview_op') if row['op'] else row.pop('preview_reply')
             row['media_orig'] = row.pop('media')
 
         thread_num = row.get('thread_num')
@@ -284,10 +239,7 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
             post_2_quotelinks[row_quotelink].append(rows[i]["num"])
 
         if fetch_replies:
-            if row['op_num'] == 0:
-                op_num = row['num']
-            else:
-                op_num = row['op_num']
+            op_num = row['op_num']
         
             replies = await get_post_replies(row['board_shortname'], op_num, row['num'])
             for reply in replies:
@@ -307,11 +259,11 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
 async def get_post_replies(board: str, thread_num: int, post_num: int):
     comment = f'%>>{int(post_num)}%'
     SELECT_POST_REPLIES = get_selector(board) + f"FROM {board} WHERE comment LIKE %(comment)s AND thread_num = %(thread_num)s;"
-    return await current_app.db.query_execute(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
+    return await query_dict(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
 async def get_op_thread_count(board_shortname) -> int:
-    return (await current_app.db.query_execute(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
+    return (await query_dict(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
 
 
 def get_text_quotelinks(text: str):
@@ -396,7 +348,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str):
     return quotelinks, lines
 
 
-async def generate_index(board: str, page_num: int):
+async def generate_index(board: str, page_num: int=1):
     """Generates the board index. The index shows the OP and its 3 latest comments, if any.
 
     Returns the dict:
@@ -425,19 +377,19 @@ async def generate_index(board: str, page_num: int):
         from {board}_threads
         ORDER BY time_bump DESC
         LIMIT 10
-        OFFSET %s
+        OFFSET {Phg()()}
     '''
-    if not (threads := await current_app.db.query_execute(threads_q, params=(page_num,))):
+    if not (threads := await query_dict(threads_q, params=(page_num,))):
         return {'threads': []}
 
-    thread_params = ','.join('%s' for _ in range(len(threads)))
+    thread_phs = Phg().size(threads)
     
     op_query = f'''
     {get_selector(board)}
     from {board}
     where
         op = 1
-        and thread_num in ({thread_params})
+        and thread_num in ({thread_phs})
     '''
     
     replies_query = f'''
@@ -450,7 +402,7 @@ async def generate_index(board: str, page_num: int):
         from {board}
         where
             op = 0
-            and thread_num in ({thread_params})
+            and thread_num in ({thread_phs})
     )
     {get_selector(board)}
     from latest_replies
@@ -463,8 +415,8 @@ async def generate_index(board: str, page_num: int):
     thread_nums_d = {t['thread_num']:t for t in threads}
 
     ops, replies = await asyncio.gather(
-        current_app.db.query_execute(op_query, params=thread_nums),
-        current_app.db.query_execute(replies_query, params=thread_nums),
+        query_dict(op_query, params=thread_nums),
+        query_dict(replies_query, params=thread_nums),
     )
 
     reply_qls = get_quotelink_lookup(replies)
@@ -502,10 +454,11 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
     return post_2_quotelinks
 
 
-async def generate_catalog(board: str, page_num: int):
+async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
 
+    phg = Phg()
     threads_q = f'''
         select
             thread_num,
@@ -514,9 +467,9 @@ async def generate_catalog(board: str, page_num: int):
         from {board}_threads
         ORDER BY time_bump DESC
         LIMIT 150
-        OFFSET %s
+        OFFSET {phg()}
     '''
-    if not (rows := await fetch_tuple(threads_q, (page_num,))):
+    if not (rows := await query_tuple(threads_q, (page_num,))):
         return []
 
     threads = {row[0]: row[1:] for row in rows}
@@ -529,9 +482,10 @@ async def generate_catalog(board: str, page_num: int):
     FROM {board}
         LEFT JOIN {board}_images USING (media_id)
     where op = 1
-    and thread_num in ({",".join("%s" for _ in range(len(threads)))})
+    and thread_num in ({Phg().size(threads)})
     '''
-    rows = await current_app.db.query_execute(posts_q, params=tuple(threads.keys()))
+    rows = await query_dict(posts_q, params=tuple(threads.keys()))
+    
     batch_size = 15
     return [
         {
@@ -574,10 +528,10 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         FROM {board}
             LEFT JOIN {board}_threads AS threads USING (thread_num)
             LEFT JOIN {board}_images AS images USING (media_id)
-        WHERE thread_num = %(thread_num)s
+        WHERE thread_num = {Phg()()}
         ORDER BY num ASC
     ;"""
-    rows = await current_app.db.query_execute(combined_query, params={'thread_num': thread_num})
+    rows = await query_dict(combined_query, params=(thread_num))
 
     post_2_quotelinks, posts = await get_qls_and_posts(rows)
 
@@ -596,9 +550,9 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
             images.preview_op
         FROM {board}
             LEFT JOIN {board}_images AS images USING (media_id)
-        WHERE num = %(num)s
+        WHERE num = {Phg()()}
     ;"""
-    post = await current_app.db.query_execute(sql, params={'num': post_id}, fetchone=True)
+    post = await query_dict(sql, params=(post_id,), fetchone=True)
 
     if not post:
         return None, None

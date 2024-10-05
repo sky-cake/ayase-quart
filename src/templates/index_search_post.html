@@ -14,8 +14,8 @@
                 <span class="name">{{post.name}}</span>
                 <br>
             </span>
-            <span class="dateTime postNum" data-utc="{{post.ts_unixepoch}}">
-                {{post.ts_formatted}}
+            <span class="dateTime postNum" data-utc="{{post.ts_unix}}">
+                {{format_ts(thread.ts_unix)}}
                 <a href="#{{post.num}}" title="Link to this post">No. {{post.num}}</a>
             </span>
         </div>
@@ -23,7 +23,7 @@
             <div class="file" id="f{{post.num}}">
                 <div class="fileText" id="fT{{post.num}}">
                     File:
-                    <a href="{{ get_full_media_src(image_uri, post) }}">{{post.media_filename}}.{{post.ext}}</a>
+                    <a href="{{ get_full_media_src(image_uri, post) }}">{{post.media_filename}}</a>
                     (<span title="{{post.media_hash}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.media_size >= 1048576 %}{{(post.media_size / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.media_w}}x{{post.media_h}}){% else %}{{(post.media_size / 1024 )| round(1, 'floor')}} KB, {{post.media_w}}x{{post.media_h}}){% endif %}</span>
                     Replies: {{post.nreplies}} Files: {{post.nimages}} {% if post.nposters %}Posters: {{post.nposters}}{% endif %}
                 </div>
@@ -47,15 +47,15 @@
                 <span class="subject">{{post.title}}</span>
             {% endif %}
             <span class="nameBlock {{ capcode_author(post.capcode) }}">
-                {% if post.email and post.email != 'noko' %}<a href="mailto:{{ post.email }}">{% endif %}<span class="name{% if post.capcode %} capcode{% endif %}"{% if post.exif %} title="Exif: {{post.exif}}"{% endif %}>{{ post.name }}</span>{% if post.trip %}<span class="postertrip">{{ post.trip }}</span>{% endif %}{% if post.email and post.email != 'noko' %}</a>{% endif %}
+                {% if post.email and post.email != 'noko' %}<a href="mailto:{{ post.email }}">{% endif %}<span class="name{% if post.capcode and post.capcode != 'N' %} capcode{% endif %}"{% if post.exif %} title="Exif: {{post.exif}}"{% endif %}>{{ post.name }}</span>{% if post.trip %}<span class="postertrip">{{ post.trip }}</span>{% endif %}{% if post.email and post.email != 'noko' %}</a>{% endif %}
 
-                {% if post.capcode and post.capcode != 'A' and post.capcode != 'F' and post.capcode != 'M' and post.capcode != 'D' and post.capcode != 'G' and post.capcode != 'V' %}<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {{post.capcode}}</strong>{% endif %}{% if post.capcode == 'A' %}<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">{% endif %}{% if post.capcode == 'F' %}<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">{% endif %}{% if post.capcode == 'M' %}<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">{% endif %}{% if post.capcode == 'D' %}<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">{% endif %}{% if post.capcode == 'G' %}<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">{% endif %}{% if post.capcode == 'V' %}<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>{% endif %}
+                {% if post.capcode not in 'NAFMDGV' %}<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {{post.capcode}}</strong>{% endif %}{% if post.capcode == 'A' %}<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">{% endif %}{% if post.capcode == 'F' %}<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">{% endif %}{% if post.capcode == 'M' %}<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">{% endif %}{% if post.capcode == 'D' %}<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">{% endif %}{% if post.capcode == 'G' %}<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">{% endif %}{% if post.capcode == 'V' %}<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>{% endif %}
             </span>
             {% if post.since4pass %}<span class="n-pu" title="Pass user since {{post.since4pass}}."></span>{% endif %}
             {% if post.poster_hash %}<span class="posteruid id_{{post.poster_hash}}">(ID: <a title="." href="#">{{post.poster_hash}}</a>) </span>{% endif %}
             {% if post.poster_country %}<span title="{{post.poster_country}}" class="flag flag-{{post.poster_country|lower}}"></span>{% endif %}
             {% if post.troll_country %}<span title="{{post.poster_country}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
-            <span class="dateTime" data-utc="{{post.ts_unixepoch}}">{{post.ts_formatted}}</span>
+            <span class="dateTime" data-utc="{{post.ts_unix}}">{{format_ts(thread.ts_unix)}}</span>
             <span class="postNum desktop">
                 {% if post.op_num != 0 %}
                     <a href="/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}">No.{{post.num}}</a>
@@ -89,7 +89,7 @@
             <div class="file" id="f{{post.num}}">
                 <div class="fileText" id="fT{{post.num}}">
                     File:
-                    <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.media_orig}}">{{post.media_filename}}.{{post.ext}}</a>
+                    <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.media_orig}}">{{post.media_filename}}</a>
                     (<span title="{{post.media_hash}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.media_size >= 1048576 %}{{(post.media_size / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.media_w}}x{{post.media_h}}){% else %}{{(post.media_size / 1024 )| round(1, 'floor') }} KB, {{post.media_w}}x{{post.media_h}}){% endif %}</span>
                 </div>
                 <a class="fileThumb">

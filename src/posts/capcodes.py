@@ -8,13 +8,20 @@ from enum import StrEnum
 
 class Capcode(StrEnum):
     default = 'default'
-    user = ''
+    user = 'N'
     founder = 'F'
     dev = 'D'
     admin = 'A'
     moderator = 'M'
     manager = 'G'
     verified = 'V'
+
+    def from_str(capcode_str: str):
+        try:
+            return Capcode[capcode_str.strip().upper()]
+        except:
+            return Capcode.user
+
 
 capcode_ints = {
     Capcode.user: 0,
@@ -26,16 +33,11 @@ capcode_ints = {
     Capcode.verified: 6,
 }
 
-# 0 reserved for any
-def capcode_2_id(capcode: str|None) -> int:
-    if capcode is None:
-        return 0
+def capcode_2_id(capcode: str) -> int:
     capcode = capcode.strip().upper()
     return capcode_ints.get(capcode, 0)
 
 
-int_capcodes: dict[int, str] = {v:k for k,v in capcode_ints.items()}
-def id_2_capcode(capcode_id: int|None) -> str:
-    if capcode_id not in int_capcodes:
-        return None
+int_capcodes: dict[int, Capcode] = {v:k for k,v in capcode_ints.items()}
+def id_2_capcode(capcode_id: int) -> Capcode:
     return int_capcodes.get(capcode_id, Capcode.user)
