@@ -36,7 +36,6 @@ selector_columns = (
     'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
     'media_size', # `fsize` - Size of uploaded file in bytes
     'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
-    'ext', # an AQ construct
     'op_num', # `resto` - for replies: this is the ID of the thread being replied to. For OP: this value is zero
     'capcode', # `capcode` - The capcode identifier for a post
     'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
@@ -74,10 +73,9 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         media_orig,
         {board}.media_hash,
         media_size AS media_size,
-        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', 1) END) AS media_filename,
-        (CASE WHEN media_filename IS NULL THEN NULL ELSE SUBSTRING_INDEX(media_filename, '.', -1) END) AS ext,
         (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END) AS op_num,
         (CASE WHEN capcode='N' THEN NULL ELSE capcode END) AS capcode,
+        media_filename AS media_filename,
         trip,
         spoiler as spoiler,
         poster_country,
@@ -109,10 +107,9 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         media_orig,
         {board}.media_hash,
         media_size AS media_size,
-        CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, 1, instr(media_filename, '.') - 1) END AS media_filename,
-        CASE WHEN media_filename IS NULL THEN NULL ELSE substr(media_filename, instr(media_filename, '.') + 1) END AS ext,
         CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END AS op_num,
         CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
+        media_filename AS media_filename,
         trip,
         spoiler as spoiler,
         poster_country,

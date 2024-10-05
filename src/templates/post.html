@@ -32,7 +32,7 @@
     <div class="file" id="f{{post.num}}">
         <div class="fileText" id="fT{{post.num}}">
             File:
-            <a href="{{ get_full_media_src(image_uri, post) }}">{{post.media_filename}}.{{post.ext}}</a>
+            <a href="{{ get_full_media_src(image_uri, post) }}">{{post.media_filename}}</a>
             (<span title="{{post.media_hash}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.media_size >= 1048576 %}{{(post.media_size / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.media_w}}x{{post.media_h}}){% else %}{{(post.media_size / 1024 )| round(1, 'floor')}} KB, {{post.media_w}}x{{post.media_h}}){% endif %}</span>
             {% if search_result %}
                 Replies: {{post.nreplies}} Files: {{post.nimages}} {% if post.nposters %}Posters: {{post.nposters}}{% endif %}
@@ -113,7 +113,7 @@
     <div class="file" id="f{{post.num}}">
         <div class="fileText" id="fT{{post.num}}">
             File:
-            <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.media_orig}}">{{post.media_filename}}.{{post.ext}}</a>
+            <a href="{{ get_full_media_src(image_uri, post) }}" target="{{html_link_target}}" title="{{ post.media_orig}}">{{post.media_filename}}</a>
             (<span title="{{post.media_hash}}">{% if post.spoiler %}Spoiler, {% endif %}{% if post.media_size >= 1048576 %}{{(post.media_size / 1024 / 1024 )| round(2, 'floor')}} MB, {{post.media_w}}x{{post.media_h}}){% else %}{{(post.media_size / 1024 )| round(1, 'floor') }} KB, {{post.media_w}}x{{post.media_h}}){% endif %}</span>
         </div>
         <a class="fileThumb">
