@@ -39,8 +39,14 @@ def _get_dict_query_fn() -> Callable:
     return db_module._run_query_dict
 
 
+def _get_placeholder_generator():
+    db_module = _get_db_module(CONST.db_type)
+    return db_module.PlaceHolderGenerator
+
 # only tuples for speed, no AttrDict/dotdicts
 query_tuple: Callable = _get_tuple_query_fn()
 
 query_dict: Callable = _get_dict_query_fn()
 
+# shortnened for placeholder_generator
+Phg = _get_placeholder_generator()

@@ -12,7 +12,7 @@ from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from db import query_tuple, query_dict
+from db import query_tuple, query_dict, Phg
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -424,19 +424,19 @@ async def generate_index(board: str, page_num: int=1):
         from {board}_threads
         ORDER BY time_bump DESC
         LIMIT 10
-        OFFSET %s
+        OFFSET {Phg()()}
     '''
     if not (threads := await query_dict(threads_q, params=(page_num,))):
         return {'threads': []}
 
-    thread_params = ','.join('%s' for _ in range(len(threads)))
+    thread_phs = Phg().size(threads)
     
     op_query = f'''
     {get_selector(board)}
     from {board}
     where
         op = 1
-        and thread_num in ({thread_params})
+        and thread_num in ({thread_phs})
     '''
     
     replies_query = f'''
@@ -449,7 +449,7 @@ async def generate_index(board: str, page_num: int=1):
         from {board}
         where
             op = 0
-            and thread_num in ({thread_params})
+            and thread_num in ({thread_phs})
     )
     {get_selector(board)}
     from latest_replies
@@ -505,6 +505,7 @@ async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
 
+    phg = Phg()
     threads_q = f'''
         select
             thread_num,
@@ -513,7 +514,7 @@ async def generate_catalog(board: str, page_num: int=1):
         from {board}_threads
         ORDER BY time_bump DESC
         LIMIT 150
-        OFFSET %s
+        OFFSET {phg()}
     '''
     if not (rows := await query_tuple(threads_q, (page_num,))):
         return []
@@ -528,7 +529,7 @@ async def generate_catalog(board: str, page_num: int=1):
     FROM {board}
         LEFT JOIN {board}_images USING (media_id)
     where op = 1
-    and thread_num in ({",".join("%s" for _ in range(len(threads)))})
+    and thread_num in ({Phg().size(threads)})
     '''
     rows = await query_dict(posts_q, params=tuple(threads.keys()))
     

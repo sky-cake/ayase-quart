@@ -2,6 +2,7 @@ import aiomysql
 
 from configs import CONSTS
 
+from .base_db import BasePlaceHolderGen
 
 
 class AttrDict(dict):

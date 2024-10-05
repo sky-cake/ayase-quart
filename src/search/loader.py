@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
 from asagi_converter import get_selector, get_text_quotelinks, selector_columns
-from db import close_db_pool, query_tuple, prime_db_pool
+from db import close_db_pool, query_tuple, prime_db_pool, Phg
 from posts.capcodes import capcode_2_id
 
 from .post_metadata import board_2_int, board_int_num_2_pk, pack_metadata
@@ -213,10 +213,10 @@ async def index_board(board: str, search_provider: BaseSearch):
     await board_loader.run()
 
 
-max_placeholders = ','.join('%s' for _ in range(THREAD_BATCH))
+max_placeholders = Phg().qty(THREAD_BATCH)
 async def get_post_rows(board: str, thread_nums: list[int]):
     # don't rebuild the placeholders when they will always be the same except the last one
-    placeholders = max_placeholders if len(thread_nums) == THREAD_BATCH else ','.join(['%s'] * len(thread_nums))
+    placeholders = max_placeholders if len(thread_nums) == THREAD_BATCH else Phg().size(thread_nums)
 
     # you may need to update `row_keys` (below) if you modify this query's selectors.
     q = f"""

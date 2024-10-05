@@ -1,9 +1,8 @@
 from quart import Blueprint, redirect, request, url_for
 
-from asagi_converter import get_selector
 from blueprint_auth import admin_required
 from configs import CONSTS, DbType
-from db import query_dict
+from db import query_dict, Phg
 from db.api import (
     create_user,
     delete_user,
@@ -24,7 +23,7 @@ from templates import (
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
 
-placeholders = ','.join(['%s'] * len(CONSTS.boards_in_database))
+placeholders = Phg().size(CONSTS.boards_in_database)
 
 if CONSTS.db_type == DbType.mysql:
     DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""

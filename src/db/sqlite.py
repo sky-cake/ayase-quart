@@ -4,6 +4,7 @@ import asyncio
 import aiosqlite
 
 from configs import CONSTS
+from .base_db import BasePlaceHolderGen
 
 
 class DotDict(dict):
@@ -87,3 +88,10 @@ def patch_query(query: str) -> str:
     return re_mysql_bind_to_sqlite_bind.sub(r':\1', query).replace('`', '').replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
 
 
+class SqlitePlaceholderGen(BasePlaceHolderGen):
+    __slots__ = ()
+
+    def __call__(self):
+        return '?'
+
+PlaceHolderGenerator = SqlitePlaceholderGen

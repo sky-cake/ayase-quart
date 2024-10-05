@@ -2,6 +2,7 @@ import asyncpg
 
 from configs import CONSTS
 
+from .base_db import BasePlaceHolderGen
 
 
 async def _get_pool(store=True):
@@ -52,3 +53,14 @@ async def _close_pool():
     delattr(_get_pool, 'pool')
 
 
+class PostgresqlPlaceholderGen(BasePlaceHolderGen):
+    __slots__ = ('counter')
+
+    def __init__(self):
+        self.counter = 0
+    
+    def __call__(self):
+        self.counter += 1
+        return f':{self.counter}'
+
+PlaceHolderGenerator = PostgresqlPlaceholderGen
