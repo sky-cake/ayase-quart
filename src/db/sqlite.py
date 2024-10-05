@@ -43,9 +43,6 @@ async def _get_pool(store=True, dict_row=False):
     _get_pool.pools[stored_pool] = pool
     return pool
 
-
-
-
 async def _run_query_fast(query: str, params: tuple=None):
     wait_pool = _get_pool()
 
