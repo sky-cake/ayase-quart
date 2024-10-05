@@ -528,10 +528,10 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         FROM {board}
             LEFT JOIN {board}_threads AS threads USING (thread_num)
             LEFT JOIN {board}_images AS images USING (media_id)
-        WHERE thread_num = %(thread_num)s
+        WHERE thread_num = {Phg()()}
         ORDER BY num ASC
     ;"""
-    rows = await query_dict(combined_query, params={'thread_num': thread_num})
+    rows = await query_dict(combined_query, params=(thread_num))
 
     post_2_quotelinks, posts = await get_qls_and_posts(rows)
 
@@ -550,9 +550,9 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
             images.preview_op
         FROM {board}
             LEFT JOIN {board}_images AS images USING (media_id)
-        WHERE num = %(num)s
+        WHERE num = {Phg()()}
     ;"""
-    post = await query_dict(sql, params={'num': post_id}, fetchone=True)
+    post = await query_dict(sql, params=(post_id,), fetchone=True)
 
     if not post:
         return None, None
