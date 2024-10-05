@@ -65,7 +65,7 @@ app = asyncio.run(create_app())
 
 if __name__ == '__main__' and CONSTS.TESTING:
     app.run(
-        CONSTS.site_host,
+        '127.0.0.1',
         port=CONSTS.site_port,
         debug=CONSTS.TESTING,
         certfile=CONSTS.cert_file,
