@@ -21,7 +21,6 @@ selector_columns = (
     'thread_num', # an archiver construct. The OP post ID.
     'num', # `no` - The numeric post ID
     'board_shortname', # board acronym
-    'ts_formatted', # `now` - MM/DD/YY(Day)HH:MM (:SS on some boards), EST/EDT timezone
     'ts_expired', # an archiver construct. Could also be `archvied_on` - UNIX timestamp the post was archived
     'name', # `name` - Name user posted with. Defaults to Anonymous
     'sticky', # `sticky`- If the thread is being pinned to the top of the page
@@ -51,7 +50,7 @@ selector_columns = (
 )
 
 @cache
-def get_selector(board: str, double_percent: bool=True) -> str:
+def get_selector(board: str) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
     if CONSTS.db_type == DbType.mysql:
@@ -60,7 +59,6 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         {board}.thread_num,
         num,
         '{board}' AS board_shortname,
-        DATE_FORMAT(FROM_UNIXTIME(timestamp), "%m/%d/%y (%a) %H:%i:%S") AS ts_formatted,
         timestamp_expired AS ts_expired,
         name,
         {board}.sticky AS sticky,
@@ -74,7 +72,6 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         media_orig,
         {board}.media_hash,
         media_size AS media_size,
-        (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END) AS op_num,
         media_filename AS media_filename,
         op as op,
         CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
@@ -88,15 +85,12 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         exif,
         comment
         """
-        if double_percent:
-            SELECTOR = SELECTOR.replace('%', '%%')
     elif CONSTS.db_type == DbType.sqlite:
         SELECTOR = f"""
         SELECT
         {board}.thread_num,
         num,
         '{board}' AS board_shortname,
-        datetime(timestamp, 'unixepoch') AS ts_formatted,
         timestamp_expired AS ts_expired,
         name,
         {board}.sticky as sticky,
@@ -110,7 +104,6 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         media_orig,
         {board}.media_hash,
         media_size AS media_size,
-        CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END AS op_num,
         media_filename AS media_filename,
         op as op,
         CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,

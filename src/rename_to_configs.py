@@ -7,6 +7,7 @@ from quart import get_flashed_messages, request, url_for
 from boards import get_shorts_objects, load_boards
 from enums import DbType, IndexSearchType
 from utils import make_src_path
+from utils.timestamps import ts_2_formatted # temporary
 
 
 class CONSTS(NamedTuple):
@@ -97,6 +98,7 @@ class CONSTS(NamedTuple):
         url_for=url_for,
         request=request,
         get_flashed_messages=get_flashed_messages,
+        format_ts=ts_2_formatted,
     )
 
 def filter_boards_in_db():

@@ -41,7 +41,7 @@
     </span>
     <span class="poster_hash"></span>
     <br/>
-    <time datetime="{{ thread.ts_unixepoch }}">{{ thread.ts_formatted }}</time>
+    <time datetime="{{ thread.ts_unixepoch }}">{{ format_ts(thread.ts_unixepoch) }}</time>
     <span class="post_number">
         <a href="/{{ thread.board_shortname }}/thread/{{ thread.num }}#p{{ thread.num }}" data-function="highlight" data-post="{{ thread.num }}">No. {{ thread.num }}</a>
     </span>
