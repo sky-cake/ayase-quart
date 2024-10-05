@@ -206,7 +206,7 @@ def get_media_t(post: dict):
 def set_links(post: dict):
     board = post['board_shortname']
     num = post['num']
-    thread = op_num if (op_num := post['op_num']) else num
+    thread = post['op_num']
     post['t_thread_link'] = f'/{board}/thread/{thread}'
     post['t_post_link'] = f'/{board}/thread/{thread}#p{num}'
 

@@ -265,7 +265,6 @@ def process_post(post: dict, board_int: int, post_2_quotelinks: dict, post_pack_
     post['data'] = pack_metadata(post)
     post['pk'] = board_int_num_2_pk(board_int, post["doc_id"])
     post['board'] = board_int
-    post['op'] = post['op_num'] == 0
 
     set_bool_fields(post)
     remove_fields(post)

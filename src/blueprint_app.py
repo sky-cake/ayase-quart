@@ -231,7 +231,7 @@ def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     nreplies = 0
     nimages = 0
     for post in posts:
-        if post.get('op_num') == 0:
+        if post.get('op'):
             nreplies = post.get('nreplies', nreplies)
             nimages = post.get('nimages', nimages)
             break

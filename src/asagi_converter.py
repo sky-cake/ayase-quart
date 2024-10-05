@@ -36,7 +36,8 @@ selector_columns = (
     'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
     'media_size', # `fsize` - Size of uploaded file in bytes
     'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
-    'op_num', # `resto` - for replies: this is the ID of the thread being replied to. For OP: this value is zero
+    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
+    'op_num', # thread_num
     'capcode', # `capcode` - The capcode identifier for a post
     'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
     'spoiler', # `spoiler` - If the image was spoilered or not
@@ -76,6 +77,8 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         (CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END) AS op_num,
         (CASE WHEN capcode='N' THEN NULL ELSE capcode END) AS capcode,
         media_filename AS media_filename,
+        op as op,
+        CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
         trip,
         spoiler as spoiler,
         poster_country,
@@ -110,6 +113,8 @@ def get_selector(board: str, double_percent: bool=True) -> str:
         CASE WHEN op=1 THEN CAST(0 AS UNSIGNED) ELSE {board}.thread_num END AS op_num,
         CASE WHEN capcode='N' THEN NULL ELSE capcode END AS capcode,
         media_filename AS media_filename,
+        op as op,
+        CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
         trip,
         spoiler as spoiler,
         poster_country,
@@ -263,11 +268,7 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
     for i, row in enumerate(rows):
 
         if row.get('media_hash'):
-            if row.get('op_num') == 0:
-                row['preview_orig'] = row.pop('preview_op')
-            else:
-                row['preview_orig'] = row.pop('preview_reply')
-
+            row['preview_orig'] = row.pop('preview_op') if row['op'] else row.pop('preview_reply')
             row['media_orig'] = row.pop('media')
 
         thread_num = row.get('thread_num')
@@ -280,10 +281,7 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
             post_2_quotelinks[row_quotelink].append(rows[i]["num"])
 
         if fetch_replies:
-            if row['op_num'] == 0:
-                op_num = row['num']
-            else:
-                op_num = row['op_num']
+            op_num = row['op_num']
         
             replies = await get_post_replies(row['board_shortname'], op_num, row['num'])
             for reply in replies:
