@@ -1,10 +1,23 @@
 import re
+import asyncio
 
 import aiosqlite
 
 from configs import CONSTS
 
 
+class DotDict(dict):
+    """dot.notation access to dictionary attributes"""
+
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+
+def row_factory(cursor, row: tuple):
+    keys = [col[0] for col in cursor.description]
+    d = {k: v for k, v in zip(keys, row)}
+    return DotDict(d)
 
 async def _new_pool():
     return await aiosqlite.connect(
