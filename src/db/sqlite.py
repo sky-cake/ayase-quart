@@ -1,42 +1,12 @@
 import re
 
 import aiosqlite
-from quart import current_app
 
 from configs import CONSTS
 
-from .db_interface import DatabaseInterface, row_factory
 
 
-class SQLiteDatabaseAppContext(DatabaseInterface):
-    async def connect(self):
-        current_app.pool = await aiosqlite.connect(CONSTS.db_path)
-        current_app.pool.row_factory = row_factory
-        print('Sqlite pool open')
 
-    async def disconnect(self):
-        await current_app.pool.close()
-
-    async def query_execute(self, sql: str, params=None, fetchone=False, commit=False):
-        sql = patch_query(sql)
-
-        if CONSTS.sql_echo:
-            print(sql)
-            print(params)
-
-        async with current_app.pool.execute(sql, params) as cursor:
-
-            if commit:
-                current_app.pool.commit()
-                return
-
-            if fetchone:
-                return await cursor.fetchone()
-
-            return await cursor.fetchall()
-
-
-# Functions below are for doing Tuple queries, which are faster fetching Dict results
 
 async def _get_pool(store=True):
     # we apply an attribute on this function to avoid polluting the module's namespace
@@ -75,4 +45,3 @@ def patch_query(query: str) -> str:
     return re_mysql_bind_to_sqlite_bind.sub(r':\1', query).replace('`', '').replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
 
 
-DatabaseAppContext = SQLiteDatabaseAppContext

@@ -4,15 +4,6 @@ from functools import cache
 from configs import CONSTS
 from enums import DbType
 
-from .db_interface import DatabaseInterface
-
-
-def get_database_instance() -> DatabaseInterface:
-    db_module = _get_db_module(CONSTS.db_type)
-    if not hasattr(get_database_instance, 'db_app_context'):
-        get_database_instance.db_app_context = db_module.DatabaseAppContext()
-    return get_database_instance.db_app_context
-
 
 @cache
 def _get_db_module(db_type: DbType):
