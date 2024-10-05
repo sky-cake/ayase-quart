@@ -51,7 +51,7 @@ async def v_board_index(board_shortname: str):
     validate_board_shortname(board_shortname)
     p = Perf('index')
     
-    index = await generate_index(board_shortname, 1)
+    index = await generate_index(board_shortname)
     p.check('query')
     
     validate_threads(index['threads'])
@@ -159,7 +159,7 @@ async def v_catalog(board_shortname: str):
     validate_board_shortname(board_shortname)
 
     p = Perf('catalog')
-    catalog = await generate_catalog(board_shortname, 1)
+    catalog = await generate_catalog(board_shortname)
     p.check('query')
 
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)

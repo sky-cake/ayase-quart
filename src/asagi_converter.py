@@ -396,7 +396,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str):
     return quotelinks, lines
 
 
-async def generate_index(board: str, page_num: int):
+async def generate_index(board: str, page_num: int=1):
     """Generates the board index. The index shows the OP and its 3 latest comments, if any.
 
     Returns the dict:
@@ -502,7 +502,7 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
     return post_2_quotelinks
 
 
-async def generate_catalog(board: str, page_num: int):
+async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
 
