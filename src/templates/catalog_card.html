@@ -13,7 +13,7 @@
         {{ capcode_author(thread) }}
 
         {% if thread.trip %}<span class="post_trip">{{ thread.trip }}</span>{% endif %}
-        {% if thread.capcode and (not thread.capcode in 'AFMDGV') %}
+        {% if thread.capcode not in 'NAFMDGV' %}
             <strong class="capcode id_unknown">## {{thread.capcode}}</strong>
         {% endif %}
         {% if 'thread.capcode' == 'A' %}

@@ -3,6 +3,7 @@ from html import escape
 
 from configs import CONSTS
 from utils.timestamps import ts_2_formatted
+from posts.capcodes import Capcode
 
 
 class MediaType(StrEnum):
@@ -84,21 +85,21 @@ cc_t_unknown = lambda capcode: f'<strong class="capcode hand id_unknown" title="
 
 
 def get_capcode_t(post: dict) -> str:
-    cc = post.get('capcode')
+    cc: Capcode = post['capcode']
     match cc:
-        case None:
+        case Capcode.user:
             return ''
-        case 'V':
-            return cc_t_verified
-        case 'A':
-            return cc_t_admin
-        case 'F':
-            return cc_t_founder
-        case 'M':
+        case Capcode.moderator:
             return cc_t_moderator
-        case 'D':
+        case Capcode.verified:
+            return cc_t_verified
+        case Capcode.admin:
+            return cc_t_admin
+        case Capcode.founder:
+            return cc_t_founder
+        case Capcode.dev:
             return cc_t_dev
-        case 'G':
+        case Capcode.manager:
             return cc_t_manager
         case _:
             return cc_t_unknown(cc)

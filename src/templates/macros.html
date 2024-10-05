@@ -21,7 +21,7 @@
 
 
 {%- macro capcode_author(capcode) -%}
-  {%- set capcode_map = {'A': 'capcodeAdmin', 'F': 'capcodeFounder', 'M': 'capcodeMod', 'D': 'capcodeDeveloper', 'G': 'capcodeManager', 'V': 'capcodeVerified'} -%}
+  {%- set capcode_map = {'A': 'capcodeAdmin', 'F': 'capcodeFounder', 'M': 'capcodeMod', 'D': 'capcodeDeveloper', 'G': 'capcodeManager', 'V': 'capcodeVerified', 'N': ''} -%}
   {{ capcode_map[capcode] }}
 {%- endmacro -%}
 
