@@ -38,7 +38,7 @@ async def index_search_config():
         template_index_search_config,
         **CONSTS.render_constants,
         tab_title=CONSTS.site_name,
-        board_list=' '.join(CONSTS.boards_in_database),
+        board_list=' '.join(CONSTS.board_shortnames),
     )
 
 

@@ -23,7 +23,7 @@ from templates import (
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
 
-placeholders = Phg().size(CONSTS.boards_in_database)
+placeholders = Phg().size(CONSTS.board_shortnames)
 
 if CONSTS.db_type == DbType.mysql:
     DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""
@@ -45,9 +45,9 @@ async def stats():
     database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
 
     if CONSTS.db_type == DbType.mysql:
-        params = [CONSTS.db_database, *CONSTS.boards_in_database]
+        params = [CONSTS.db_database, *CONSTS.board_shortnames]
     elif CONSTS.db_type == DbType.sqlite:
-        params = [*CONSTS.boards_in_database]
+        params = [*CONSTS.board_shortnames]
 
     database_table_storage_sizes = await query_dict(DATABASE_TABLE_STORAGE_SIZES, params=params)
 

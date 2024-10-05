@@ -49,7 +49,6 @@ class CONSTS(NamedTuple):
 
     boards = load_boards()
     board_shortnames, board_objects = get_shorts_objects(boards)
-    boards_in_database = board_shortnames
 
     html_linked_target = '_self'  # or '_blank' # links to 4chan will always remain '_blank'
 
@@ -107,14 +106,13 @@ def filter_boards_in_db():
     db_tables = asyncio.run(get_db_tables(close_pool_after=True))
     valid_boards = {t for t in db_tables if len(t) < 5} & CONSTS.boards.keys()
     removals = [board for board in CONSTS.boards if board not in valid_boards]
-    CONSTS.boards_in_database = list(valid_boards)
     if removals:
         print(f'ATTENTION! Boards not found in database:\n\t[{", ".join(removals)}]\nThey will be ignored.')
         for b in removals:
             del CONSTS.boards[b]
 
     if not CONSTS.boards:
-        raise ValueError(f'No boards to show! Configure one of {CONSTS.boards_in_database}')
+        raise ValueError(f'No boards to show! Configure one of {valid_boards}')
 
     # recompute these configs
     CONSTS.board_shortnames, CONSTS.board_objects = get_shorts_objects(CONSTS.boards)
