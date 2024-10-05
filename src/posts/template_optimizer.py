@@ -21,7 +21,7 @@ def post_html_comment(comment: str):
 
 needed_keys = {
     'num',
-    'ts_unixepoch',
+    'ts_unix',
     'board_shortname',
     'quotelinks',
     'comment',
@@ -244,7 +244,7 @@ def get_trip_t(post: dict):
 
 
 def get_mobile_t(post: dict):
-    timestamp = post['ts_unixepoch']
+    timestamp = post['ts_unix']
     return f"""
 	<span class="nameBlock">
         <span class="name">{post['name']}</span>

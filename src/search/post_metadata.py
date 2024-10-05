@@ -18,7 +18,7 @@ We focus on retaining only fields needed for rendering search results (fields co
 
 - op
 - deleted
-- ts_unixepoch
+- ts_unix
 - mediahash
 - num
 - board (board_shortname)
@@ -63,7 +63,7 @@ fields = (
     'num',
     'op_num',
     'ts_expired',
-    'ts_unixepoch',
+    'ts_unix',
 )
 
 msg_packer: Packer = Packer()

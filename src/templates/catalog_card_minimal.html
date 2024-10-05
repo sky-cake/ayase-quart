@@ -8,7 +8,7 @@
             [<a href="https://boards.4chan.org/{{ thread.board_shortname }}/thread/{{ thread.num }}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         <br/>
-        <time datetime="{{ thread.ts_unixepoch }}">{{ format_ts(thread.ts_unixepoch) }}</time>
+        <time datetime="{{ thread.ts_unix }}">{{ format_ts(thread.ts_unix) }}</time>
         <span class="post_number">
             <a href="/{{ thread.board_shortname }}/thread/{{ thread.num }}#p{{ thread.num }}" data-function="highlight" data-post="{{ thread.num }}">No. {{ thread.num }}</a>
         </span>

@@ -23,8 +23,8 @@
         <span class="name">{{post.name}}</span>
         <br>
     </span>
-    <span class="dateTime postNum" data-utc="{{post.ts_unixepoch}}">
-        {{format_ts(post.ts_unixepoch)}}
+    <span class="dateTime postNum" data-utc="{{post.ts_unix}}">
+        {{format_ts(post.ts_unix)}}
         <a href="#{{post.num}}" title="Link to this post">No. {{post.num}}</a>
     </span>
 </div>
@@ -68,7 +68,7 @@
     {% if post.poster_hash %}<span class="posteruid id_{{post.poster_hash}}">(ID: <a title="." href="#">{{post.poster_hash}}</a>) </span>{% endif %}
     {% if post.poster_country %}<span title="{{post.poster_country}}" class="flag flag-{{post.poster_country|lower}}"></span>{% endif %}
     {% if post.troll_country %}<span title="{{post.poster_country}}" class="flag-pol2 flag-{{post.troll_country|lower}}"></span>{% endif %}
-    <span class="dateTime" data-utc="{{post.ts_unixepoch}}">{{format_ts(post.ts_unixepoch)}}</span>
+    <span class="dateTime" data-utc="{{post.ts_unix}}">{{format_ts(post.ts_unix)}}</span>
     <span class="postNum desktop">
         {% if search_result and post.op_num != 0 %}
             <a href="/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}">No.{{post.num}}</a>

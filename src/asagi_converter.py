@@ -29,7 +29,7 @@ selector_columns = (
     'media_h', # `h` - Image height dimension
     'preview_w', # `tn_w` - Thumbnail image width dimension 	
     'preview_h', # `tn_h` - Thumbnail image height dimension
-    'ts_unixepoch', # `time` - UNIX timestamp the post was created
+    'ts_unix', # `time` - UNIX timestamp the post was created
     'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
     'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
     'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
@@ -67,7 +67,7 @@ def get_selector(board: str) -> str:
         media_h AS media_h,
         preview_w AS preview_w,
         preview_h AS preview_h,
-        timestamp AS ts_unixepoch,
+        timestamp AS ts_unix,
         preview_orig,
         media_orig,
         {board}.media_hash,
@@ -99,7 +99,7 @@ def get_selector(board: str) -> str:
         media_h AS media_h,
         preview_w AS preview_w,
         preview_h AS preview_h,
-        timestamp AS ts_unixepoch,
+        timestamp AS ts_unix,
         preview_orig,
         media_orig,
         {board}.media_hash,
@@ -240,7 +240,7 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     if sql.strip() == '':
         return {'posts': []}, {}  # no boards specified
 
-    sql += f' \n ORDER BY ts_unixepoch {order_by}'
+    sql += f' \n ORDER BY ts_unix {order_by}'
     sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
 
     posts = await query_dict(sql, params=param_values)
