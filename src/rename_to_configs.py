@@ -40,9 +40,7 @@ class CONSTS(NamedTuple):
     site_url = "http://127.0.0.1:9001"
 
     if TESTING:
-        site_host = "127.0.0.1"
         site_port = 9001
-        site_url = f"http://{site_host}:{site_port}"
 
     key_file = None # make_src_path('key.pem')
     cert_file = None # make_src_path('cert.pem')
