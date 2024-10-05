@@ -16,6 +16,7 @@ from blueprint_search import blueprint_search
 from configs import CONSTS
 from db import prime_db_pool, close_db_pool
 from db.api import init_moderation_db
+from moderation.api import init_moderation_db
 from limiter import limiter
 
 if CONSTS.TESTING:
