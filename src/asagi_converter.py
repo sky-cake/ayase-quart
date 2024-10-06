@@ -114,24 +114,24 @@ def validate_and_generate_params(form_data):
     Specifies the filters for each valid field.
     """
     param_filters = {
-        'title': {'like': True, 's': '`title` LIKE %(title)s'},
-        'comment': {'like': True, 's': '`comment` LIKE %(comment)s'},
-        'media_filename': {'like': True, 's': '`media_filename` LIKE %(media_filename)s'},
-        'media_hash': {'s': '`media_hash` = %(media_hash)s'},
-        'num': {'s': '`num` = %(num)s'},
         'date_before': {'s': construct_date_filter('date_before')},
         'date_after': {'s': construct_date_filter('date_after')},
-        'has_no_file': {'s': '`media_filename` is null or `media_filename` = ""'},
-        'has_file': {'s': '`media_filename` is not null and `media_filename` != ""'},
-        'is_op': {'s': '`op` = 1'},
-        'is_not_op': {'s': '`op` != 1'},
-        'is_deleted': {'s': '`deleted` = 1'},
-        'is_not_deleted': {'s': '`deleted` != 1'},
-        'is_sticky': {'s': '`sticky` = 1'},
-        'is_not_sticky': {'s': '`sticky` != 1'},
-        'width': {'s': '`media_w` = %(width)s'},
-        'height': {'s': '`media_h` = %(height)s'},
-        'capcode': {'s': '`capcode` = %(capcode)s'},
+        'title': {'like': True, 's': 'title LIKE %(title)s'},
+        'comment': {'like': True, 's': 'comment LIKE %(comment)s'},
+        'media_filename': {'like': True, 's': 'media_filename LIKE %(media_filename)s'},
+        'media_hash': {'s': 'media_hash = %(media_hash)s'},
+        'num': {'s': 'num = %(num)s'},
+        'has_no_file': {'s': 'media_filename is null or media_filename = ""'},
+        'has_file': {'s': 'media_filename is not null and media_filename != ""'},
+        'is_op': {'s': 'op = 1'},
+        'is_not_op': {'s': 'op != 1'},
+        'is_deleted': {'s': 'deleted = 1'},
+        'is_not_deleted': {'s': 'deleted != 1'},
+        'is_sticky': {'s': 'sticky = 1'},
+        'is_not_sticky': {'s': 'sticky != 1'},
+        'width': {'s': 'media_w = %(width)s'},
+        'height': {'s': 'media_h = %(height)s'},
+        'capcode': {'s': 'capcode = %(capcode)s'},
     }
 
     defaults_to_ignore = {
@@ -186,11 +186,11 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
 
         s = get_selector(board_shortname)
         s += f""",
-                `media`,
-                `preview_reply`,
-                `preview_op`
-            FROM `{board_shortname}`
-                LEFT JOIN `{board_shortname}_images` USING (`media_id`)
+                media,
+                preview_reply,
+                preview_op
+            FROM {board_shortname}
+                LEFT JOIN {board_shortname}_images USING (media_id)
         """
         s += ' \n WHERE 1=1 '
 

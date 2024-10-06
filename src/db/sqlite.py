@@ -84,7 +84,7 @@ async def _close_pool():
 re_mysql_bind_to_sqlite_bind = re.compile(r'%\((\w+)\)s')
 def patch_query(query: str) -> str:
     """We write queries against MYSQL initially, then apply SQLITE patches with this function."""
-    return re_mysql_bind_to_sqlite_bind.sub(r':\1', query).replace('`', '').replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
+    return re_mysql_bind_to_sqlite_bind.sub(r':\1', query).replace('%s', '?').replace("strftime('?', ", "strftime('%s', ")
 
 
 class SqlitePlaceholderGen(BasePlaceHolderGen):
