@@ -1,7 +1,7 @@
 from flask import request
 from flask_limiter import Limiter
 
-from configs2 import redis_conf
+from configs import redis_conf
 
 REDIS_LIMITER_DB = f"redis://{redis_conf['host']}:{redis_conf['port']}/{redis_conf['db']}"
 

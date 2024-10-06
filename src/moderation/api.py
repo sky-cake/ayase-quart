@@ -4,7 +4,7 @@ from datetime import datetime
 from quart import flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from configs2 import moderation_conf
+from configs import moderation_conf
 from db import close_db_pool, query_tuple, DB_TYPE
 from enums import DbType, UserRole
 

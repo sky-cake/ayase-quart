@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from configs2 import search_conf
+from configs import search_conf
 from enums import IndexSearchType
 
 from ..query import SearchQuery  # re-export

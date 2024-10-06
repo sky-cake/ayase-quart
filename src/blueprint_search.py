@@ -5,7 +5,7 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
-from configs2 import SITE_NAME
+from configs import SITE_NAME
 from enums import SearchMode
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t

@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 
-from configs2 import app_conf, site_conf, search_conf, media_conf
+from configs import app_conf, site_conf, search_conf, media_conf
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
 from enums import IndexSearchType

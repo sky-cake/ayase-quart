@@ -4,7 +4,7 @@ from jinja2 import Template
 from quart import render_template
 from werkzeug.exceptions import NotFound
 
-from configs2 import app_conf
+from configs import app_conf
 import boards
 
 TESTING = app_conf.get('testing', False)

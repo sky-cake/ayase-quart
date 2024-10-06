@@ -1,6 +1,6 @@
 import asyncpg
 
-from configs2 import db_conf
+from configs import db_conf
 
 from .base_db import BasePlaceHolderGen
 

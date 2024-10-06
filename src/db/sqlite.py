@@ -3,7 +3,7 @@ import asyncio
 
 import aiosqlite
 
-from configs2 import db_conf
+from configs import db_conf
 from .base_db import BasePlaceHolderGen
 
 sql_echo = db_conf.get('echo', False)

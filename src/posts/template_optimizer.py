@@ -1,7 +1,7 @@
 from enum import StrEnum
 from html import escape
 
-from configs2 import media_conf
+from configs import media_conf
 from utils.timestamps import ts_2_formatted
 from posts.capcodes import Capcode
 

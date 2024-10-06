@@ -1,7 +1,7 @@
 from typing import Callable
 from functools import cache
 
-from configs2 import db_conf
+from configs import db_conf
 from enums import DbType
 
 DB_TYPE = DbType[db_conf['db_type']]

@@ -2,7 +2,7 @@ import os
 from tomllib import load
 
 from utils import make_src_path
-from configs2 import app_conf
+from configs import app_conf
 
 BOARDS_FILE = make_src_path('boards.toml')
 DEFAULT_BOARDS_FILE = make_src_path('boards.tpl.toml')

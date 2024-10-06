@@ -7,7 +7,7 @@ from asagi_converter import (
     generate_thread,
     get_op_thread_count
 )
-from configs2 import SITE_NAME
+from configs import SITE_NAME
 from posts.template_optimizer import wrap_post_t
 from render import get_title, render_controller, validate_board_shortname
 from templates import (
