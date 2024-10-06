@@ -5,7 +5,7 @@ from orjson import dumps, loads
 from search.highlighting import mark_post, mark_pre
 
 from . import (
-    MAX_RESULTS,
+    MAX_RESULTS_LIMIT,
     POST_PK,
     SearchIndexField,
     SearchQuery,
@@ -82,7 +82,7 @@ class TypesenseSearch(BaseSearch):
             include_fields='comment,data',
             page=q.page,
             per_page=q.result_limit,
-            limit_hits=MAX_RESULTS,
+            limit_hits=MAX_RESULTS_LIMIT,
             search_cutoff_ms=2_000,
             num_typos=0,
             split_join_tokens='off',

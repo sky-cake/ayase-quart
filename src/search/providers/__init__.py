@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
-from configs import CONSTS, IndexSearchType
+from configs2 import search_conf
+from enums import IndexSearchType
 
 from ..query import SearchQuery  # re-export
 
 POST_PK = 'pk'
-MAX_RESULTS = CONSTS.max_result_limit
-
+MAX_RESULTS_LIMIT = search_conf.get('max_result_limit', 10000)
 
 @dataclass(slots=True)
 class SearchIndexField:
@@ -41,7 +41,7 @@ search_index_fields = [
 def get_search_provider():
     if hasattr(get_search_provider, 'search_p'):
         return get_search_provider.search_p
-    match CONSTS.index_search_provider:
+    match IndexSearchType[search_conf['provider']]:
         case IndexSearchType.meili:
             from .meili import MeiliSearch as Search_p
         case IndexSearchType.typesense:
@@ -55,6 +55,6 @@ def get_search_provider():
         case _:
             from .lnx import LnxSearch as Search_p
 
-    search_p = Search_p(CONSTS.index_search_host, CONSTS.index_search_config)
+    search_p = Search_p(search_conf['host'], search_conf['config'])
     get_search_provider.search_p = search_p
     return search_p

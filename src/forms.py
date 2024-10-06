@@ -24,7 +24,8 @@ from wtforms.validators import (
 )
 
 from configs import CONSTS
-from db.api import get_user_with_username, is_correct_password
+from search import DEFAULT_RESULTS_LIMIT
+from moderation.api import get_user_with_username, is_correct_password
 from enums import ReportCategory, ReportStatus, SearchMode, UserRole
 from posts.capcodes import Capcode
 
@@ -40,7 +41,7 @@ class SearchForm(QuartForm):
     search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
-    result_limit = IntegerField('Result Limit', default=CONSTS.default_result_limit, validators=[NumberRange(1, CONSTS.max_result_limit)], description='Per board')
+    result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     num = StringField("Post Number", validators=[Optional(), Length(2, 20)])

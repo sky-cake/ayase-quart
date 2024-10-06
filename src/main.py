@@ -4,7 +4,6 @@ import asyncio
 import os
 
 from flask_bootstrap import Bootstrap5
-from hypercorn.middleware import ProxyFixMiddleware
 from quart import Quart
 
 from blueprint_admin import blueprint_admin
@@ -14,8 +13,9 @@ from blueprint_auth import blueprint_auth
 from blueprint_moderation import blueprint_moderation
 from blueprint_search import blueprint_search
 from configs import CONSTS
+from configs2 import QuartConfig
 from db import prime_db_pool, close_db_pool
-from db.api import init_moderation_db
+from moderation.api import init_moderation_db
 from limiter import limiter
 
 if CONSTS.TESTING:
@@ -30,11 +30,7 @@ async def create_app():
 
     app = Quart(__name__)
 
-    app.config.from_object(CONSTS)
-
-    if CONSTS.using_proxy:
-        # https://hypercorn.readthedocs.io/en/latest/how_to_guides/proxy_fix.html
-        app.asgi_app = ProxyFixMiddleware(app.asgi_app, mode="legacy", trusted_hops=1)
+    app.config.from_object(QuartConfig)
 
     if CONSTS.redis_url:
         limiter.init_app(app)
@@ -63,4 +59,11 @@ async def create_app():
 app = asyncio.run(create_app())
 
 if __name__ == '__main__' and CONSTS.TESTING:
-    app.run(CONSTS.site_host, port=CONSTS.site_port, debug=CONSTS.TESTING, certfile=CONSTS.cert_file, keyfile=CONSTS.key_file, use_reloader=CONSTS.TESTING and CONSTS.autoreload)
+    app.run(
+        '127.0.0.1',
+        port=CONSTS.site_port,
+        debug=CONSTS.TESTING,
+        certfile=CONSTS.cert_file,
+        keyfile=CONSTS.key_file,
+        use_reloader=CONSTS.TESTING and CONSTS.autoreload
+    )

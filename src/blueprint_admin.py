@@ -1,9 +1,10 @@
 from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import admin_required
-from configs import CONSTS, DbType
-from db import query_dict, Phg
-from db.api import (
+from configs import CONSTS
+from enums import DbType
+from db import query_dict, Phg, DB_TYPE
+from moderation.api import (
     create_user,
     delete_user,
     edit_user,
@@ -23,16 +24,16 @@ from templates import (
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
 
-placeholders = Phg().size(CONSTS.boards_in_database)
+placeholders = Phg().size(CONSTS.board_shortnames)
 
-if CONSTS.db_type == DbType.mysql:
+if DB_TYPE == DbType.mysql:
     DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""
     DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB" from information_schema.tables where table_schema = %(db)s group by table_schema;"""
-elif CONSTS.db_type == DbType.sqlite:
+elif DB_TYPE == DbType.sqlite:
     DATABASE_TABLE_STORAGE_SIZES = f"""SELECT name as "Table Name", ROUND(SUM("pgsize") / (1024. * 1024), 2) as "Size in MB" FROM "dbstat" where name in ({placeholders}) GROUP BY name;"""
     DATABASE_STORAGE_SIZE = """SELECT ROUND((page_count * page_size) / (1024.0 * 1024.0), 1) as "Size in MB" FROM pragma_page_count(), pragma_page_size();"""
 else:
-    raise ValueError(CONSTS.db_type)
+    raise ValueError(DB_TYPE)
 
 
 def get_sql_latest_ops(board_shortname):
@@ -44,10 +45,10 @@ def get_sql_latest_ops(board_shortname):
 async def stats():
     database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
 
-    if CONSTS.db_type == DbType.mysql:
-        params = [CONSTS.db_database, *CONSTS.boards_in_database]
-    elif CONSTS.db_type == DbType.sqlite:
-        params = [*CONSTS.boards_in_database]
+    if DB_TYPE == DbType.mysql:
+        params = [CONSTS.db_database, *CONSTS.board_shortnames]
+    elif DB_TYPE == DbType.sqlite:
+        params = [*CONSTS.board_shortnames]
 
     database_table_storage_sizes = await query_dict(DATABASE_TABLE_STORAGE_SIZES, params=params)
 

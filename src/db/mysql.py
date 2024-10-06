@@ -1,9 +1,11 @@
 import aiomysql
 
-from configs import CONSTS
+from configs2 import db_conf
 
 from .base_db import BasePlaceHolderGen
 
+sql_echo = db_conf.get('echo', False)
+mysql_conf = db_conf.get('mysql', {})
 
 class AttrDict(dict):
     """Dict that can get attribute by dot, and doesn't raise KeyError"""
@@ -23,12 +25,7 @@ async def _get_pool(store=True):
     # we apply an attribute on this function to avoid polluting the module's namespace
     if not hasattr(_get_pool, 'pool') or not store:
         pool = await aiomysql.create_pool(
-            host=CONSTS.db_host,
-            user=CONSTS.db_user,
-            password=CONSTS.db_password,
-            db=CONSTS.db_database,
-            minsize=CONSTS.db_min_connections,
-            maxsize=CONSTS.db_max_connections,
+            **mysql_conf,
             autocommit=True,
         )
         if not store:

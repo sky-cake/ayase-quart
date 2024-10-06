@@ -1,9 +1,10 @@
 from typing import Callable
 from functools import cache
 
-from configs import CONSTS
+from configs2 import db_conf
 from enums import DbType
 
+DB_TYPE = DbType[db_conf['db_type']]
 
 @cache
 def _get_db_module(db_type: DbType):
@@ -20,27 +21,27 @@ def _get_db_module(db_type: DbType):
 
 # pre connect so the first hit doesn't have connection latency
 async def prime_db_pool():
-    db_module = _get_db_module(CONSTS.db_type)
+    db_module = _get_db_module(DB_TYPE)
     await db_module._get_pool()
 
 
 async def close_db_pool():
-    db_module = _get_db_module(CONSTS.db_type)
+    db_module = _get_db_module(DB_TYPE)
     await db_module._close_pool()
 
 
 def _get_tuple_query_fn() -> Callable:
-    db_module = _get_db_module(CONSTS.db_type)
+    db_module = _get_db_module(DB_TYPE)
     return db_module._run_query_fast
 
 
 def _get_dict_query_fn() -> Callable:
-    db_module = _get_db_module(CONST.db_type)
+    db_module = _get_db_module(DB_TYPE)
     return db_module._run_query_dict
 
 
 def _get_placeholder_generator():
-    db_module = _get_db_module(CONST.db_type)
+    db_module = _get_db_module(DB_TYPE)
     return db_module.PlaceHolderGenerator
 
 # only tuples for speed, no AttrDict/dotdicts

@@ -8,11 +8,10 @@ import asyncio
 
 from werkzeug.exceptions import BadRequest
 
-from configs import CONSTS
 from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from db import query_tuple, query_dict, Phg
+from db import query_tuple, query_dict, Phg, DB_TYPE
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -89,7 +88,7 @@ def get_selector(board: str) -> str:
 
 
 def construct_date_filter(param_name):
-    if CONSTS.db_type == DbType.mysql:
+    if DB_TYPE == DbType.mysql:
         if param_name == 'date_before':
             return f"timestamp <= UNIX_TIMESTAMP(%({param_name})s)"
         elif param_name == 'date_after':
@@ -97,7 +96,7 @@ def construct_date_filter(param_name):
         else:
             raise ValueError(f"Unsupported operator: {param_name}")
 
-    elif CONSTS.db_type == DbType.sqlite:
+    elif DB_TYPE == DbType.sqlite:
         if param_name == 'date_before':
             return f"timestamp <= strftime('%s', %({param_name})s)"
         elif param_name == 'date_after':
@@ -531,7 +530,7 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         WHERE thread_num = {Phg()()}
         ORDER BY num ASC
     ;"""
-    rows = await query_dict(combined_query, params=(thread_num))
+    rows = await query_dict(combined_query, params=(thread_num,))
 
     post_2_quotelinks, posts = await get_qls_and_posts(rows)
 

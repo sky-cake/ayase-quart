@@ -1,10 +1,12 @@
 from enum import StrEnum
 from html import escape
 
-from configs import CONSTS
+from configs2 import media_conf
 from utils.timestamps import ts_2_formatted
 from posts.capcodes import Capcode
 
+IMAGE_URI = media_conf.get('image_uri')
+THUMB_URI = media_conf.get('thumb_uri')
 
 class MediaType(StrEnum):
     image = 'image'
@@ -116,13 +118,13 @@ def media_metadata_t(media_size: int, media_w: int, media_h: int):
 
 
 def get_media_path(media_filename: str, board: str, media_type: MediaType) -> str:
-    if not media_filename or not CONSTS.thumb_uri or not CONSTS.image_uri:
+    if not media_filename or not THUMB_URI or not IMAGE_URI:
         return ''
 
-    uri = CONSTS.thumb_uri
+    uri = THUMB_URI
 
     if media_type == MediaType.image:
-        uri = CONSTS.image_uri
+        uri = IMAGE_URI
 
     return f'{uri.format(board_shortname=board).rstrip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
 

@@ -3,7 +3,7 @@ from orjson import dumps, loads
 from configs import CONSTS
 from search.highlighting import mark_post, mark_pre
 
-from . import POST_PK, SearchQuery, search_index_fields
+from . import POST_PK, SearchQuery, search_index_fields, MAX_RESULTS_LIMIT
 from .baseprovider import INDEXES, BaseSearch
 
 pk = POST_PK
@@ -49,7 +49,7 @@ class MeiliSearch(BaseSearch):
         resp = await self.client.get(url)
         return loads(await resp.read())
 
-    async def _add_docs(self, index: str, docs: list[Any]):
+    async def _add_docs(self, index: str, docs: list[any]):
         url = self._get_index_url(index) + '/documents'
         params = {'primaryKey': pk}
         await self.client.post(
@@ -94,7 +94,7 @@ class MeiliSearch(BaseSearch):
             searchCutoffMs=20_000,  # time before search gives up
             typoTolerance=dict(enabled=False),  # disable typo
             pagination=dict(
-                maxTotalHits=CONSTS.max_result_limit,
+                maxTotalHits=MAX_RESULTS_LIMIT,
             ),
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))

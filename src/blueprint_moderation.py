@@ -2,7 +2,7 @@ from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import moderator_required
 from configs import CONSTS
-from db.api import (
+from moderation.api import (
     delete_report,
     edit_report,
     get_open_reports,
