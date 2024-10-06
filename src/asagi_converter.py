@@ -243,8 +243,9 @@ async def get_post_replies(board: str, thread_num: int, post_num: int):
     return await query_dict(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
 
 
-async def get_op_thread_count(board_shortname) -> int:
-    return (await query_dict(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
+async def get_op_thread_count(board: str) -> int:
+    rows = await query_tuple(f'select count(*) from {board}_threads;')
+    return rows[0][0]
 
 
 def get_text_quotelinks(text: str):
