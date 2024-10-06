@@ -9,10 +9,7 @@ from configs import SITE_NAME
 from enums import SearchMode
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
-from render import (
-    render_controller,
-    validate_board_shortname,
-)
+from render import render_controller
 from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
 from search.highlighting import get_term_re, mark_highlight, highlight_search_results
 from search.pagination import template_pagination_links, total_pages
@@ -27,6 +24,7 @@ from templates import (
     template_search,
 )
 from utils import Perf
+from utils.validation import validate_board
 from boards import board_shortnames
 
 search_log = getLogger('search')
@@ -95,7 +93,7 @@ async def v_index_search():
         if not form.boards.data:
             raise BadRequest('select a board')
         for board in form.boards.data:
-            validate_board_shortname(board)
+            validate_board(board)
 
         if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
             raise BadRequest("search mode SearchMode.gallery only shows files")
@@ -182,7 +180,7 @@ async def v_search():
         if not form.boards.data:
             raise BadRequest('select a board')
         for board in form.boards.data:
-            validate_board_shortname(board)
+            validate_board(board)
 
         if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
             raise BadRequest("search mode SearchMode.gallery only shows files")

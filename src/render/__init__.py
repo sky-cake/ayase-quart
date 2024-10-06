@@ -2,16 +2,11 @@ from functools import cache
 
 from jinja2 import Template
 from quart import render_template
-from werkzeug.exceptions import NotFound
 
 from configs import app_conf
 import boards
 
 TESTING = app_conf.get('testing', False)
-
-def validate_board_shortname(board_shortname: str) -> None:
-    if not board_shortname in boards.boards:
-        raise NotFound(board_shortname, boards.board_shortnames)
 
 @cache
 def get_title(board_shortname: str):
