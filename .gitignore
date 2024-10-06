@@ -21,15 +21,12 @@ venv.bak/
 # images and search
 neo/
 hayden_asagi/
-meili_data/
 data/
 
 # sqlite databases
 *.db
 
-# Application config + secrets
-configs.py
-secret.txt
+# SSL keys
 *.pem
 
 # User toml config files, except templates and pyproject

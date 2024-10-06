@@ -1,15 +1,33 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from quart import get_flashed_messages, request, url_for
 
-from configs import CONSTS
+from configs2 import app_conf, site_conf, search_conf, media_conf
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
+from enums import IndexSearchType
+from boards import board_objects
+
+render_constants = dict(
+    site_name=site_conf.get('name'),
+    theme=site_conf.get('theme', 'tomorrow'),
+    search=search_conf.get('enabled', False),
+    index_search_host=search_conf.get('host'),
+    index_search_provider=IndexSearchType(search_conf.get('provider')),
+    image_uri=media_conf.get('image_uri'),
+    thumb_uri=media_conf.get('thumb_uri'),
+    request=request,
+    url_for=url_for,
+    get_flashed_messages=get_flashed_messages,
+    format_ts=ts_2_formatted,
+    board_objects=board_objects,
+)
 
 env = Environment(
     loader=FileSystemLoader(make_src_path('templates')),
     autoescape=select_autoescape(["html", "xml"]),
-    auto_reload=CONSTS.autoreload,
+    auto_reload=app_conf.get('autoreload', True),
 )
-env.globals.update(CONSTS.render_constants)
+env.globals.update(render_constants)
 
 # Cache templates
 template_index = env.get_template("index.html")
@@ -40,7 +58,7 @@ template_reports_delete = env.get_template('reports/delete.html')
 
 safe_env = Environment(
     loader=FileSystemLoader(make_src_path('templates')),
-    auto_reload=CONSTS.autoreload,
+    auto_reload=app_conf.get('autoreload', True),
     trim_blocks=True,
     lstrip_blocks=True,
     keep_trailing_newline=True,

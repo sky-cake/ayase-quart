@@ -7,7 +7,7 @@ from asagi_converter import (
     generate_thread,
     get_op_thread_count
 )
-from configs import CONSTS
+from configs2 import SITE_NAME
 from posts.template_optimizer import wrap_post_t
 from render import get_title, render_controller, validate_board_shortname
 from templates import (
@@ -41,7 +41,7 @@ async def make_pagination_board_index(board_shortname, index, page_num):
 
 @blueprint_app.get("/")
 async def v_index():
-    return await render_controller(template_index, **CONSTS.render_constants, tab_title=CONSTS.site_name)
+    return await render_controller(template_index, tab_title=SITE_NAME)
 
 
 @blueprint_app.get("/<string:board_shortname>")
@@ -62,7 +62,6 @@ async def v_board_index(board_shortname: str):
 
     rendered = await render_controller(
         template_board_index,
-        **CONSTS.render_constants,
         board_index_page=True,
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
@@ -109,7 +108,6 @@ async def v_board_index_page(board_shortname: str, page_num: int):
 
     render = await render_controller(
         template_board_index,
-        **CONSTS.render_constants,
         pagination=pagination,
         threads=index["threads"],
         quotelinks=[],
@@ -167,7 +165,6 @@ async def v_catalog(board_shortname: str):
 
     render = await render_controller(
         template_catalog,
-        **CONSTS.render_constants,
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
@@ -199,7 +196,6 @@ async def v_catalog_page(board_shortname: str, page_num: int):
 
     render = await render_controller(
         template_catalog,
-        **CONSTS.render_constants,
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
@@ -275,7 +271,6 @@ async def v_thread(board_shortname: str, thread_id: int):
         posts_t=posts_t,
         nreplies=nreplies,
         nimages=nimages,
-        **CONSTS.render_constants,
         board=board_shortname,
         title=title,
         tab_title=title,

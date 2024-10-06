@@ -1,6 +1,5 @@
 from orjson import dumps, loads
 
-from configs import CONSTS
 from search.highlighting import mark_post, mark_pre
 
 from . import POST_PK, SearchQuery, search_index_fields, MAX_RESULTS_LIMIT

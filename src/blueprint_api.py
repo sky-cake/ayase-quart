@@ -1,4 +1,4 @@
-from quart import Blueprint, jsonify, url_for
+from quart import Blueprint, jsonify
 
 from asagi_converter import (
     generate_catalog,
@@ -6,7 +6,6 @@ from asagi_converter import (
     generate_post,
     generate_thread
 )
-from configs import CONSTS
 from render import render_controller, validate_board_shortname
 from templates import template_post
 from utils import Perf
@@ -62,7 +61,7 @@ async def v_post(board_shortname: str, post_id: int):
     p.check('query')
     validate_post(post)
 
-    html_content = await render_controller(template_post, **CONSTS.render_constants, post=post, board=board_shortname, quotelinks=post_2_quotelinks)
+    html_content = await render_controller(template_post, post=post, board=board_shortname, quotelinks=post_2_quotelinks)
     p.check('render')
     print(p)
     return jsonify(html_content=html_content)

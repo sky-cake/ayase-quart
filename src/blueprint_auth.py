@@ -4,7 +4,6 @@ from quart import Blueprint, current_app, flash, redirect, session, url_for
 from werkzeug.security import check_password_hash
 
 from captcha import MathCaptcha
-from configs import CONSTS
 from moderation.api import (
     get_user_with_username,
     is_user_admin,
@@ -121,7 +120,7 @@ async def login():
 
     form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
     is_admin = await auth(AuthActions.is_admin)
-    return await render_controller(template_login, form=form, **CONSTS.render_constants, is_admin=is_admin)
+    return await render_controller(template_login, form=form, is_admin=is_admin)
 
 
 @blueprint_auth.route("/logout", methods=["GET"])
