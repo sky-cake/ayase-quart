@@ -5,13 +5,13 @@ from functools import cache
 from textwrap import dedent
 from itertools import batched
 import asyncio
+from datetime import date, datetime
 
 from werkzeug.exceptions import BadRequest
 
-from enums import DbType
 from posts.capcodes import Capcode
 from search.highlighting import html_highlight
-from db import query_tuple, query_dict, Phg, DB_TYPE
+from db import query_tuple, query_dict, Phg
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -87,40 +87,19 @@ def get_selector(board: str) -> str:
     return dedent(SELECTOR)
 
 
-def construct_date_filter(param_name):
-    if DB_TYPE == DbType.mysql:
-        if param_name == 'date_before':
-            return f"timestamp <= UNIX_TIMESTAMP(%({param_name})s)"
-        elif param_name == 'date_after':
-            return f"timestamp >= UNIX_TIMESTAMP(%({param_name})s)"
-        else:
-            raise ValueError(f"Unsupported operator: {param_name}")
-
-    elif DB_TYPE == DbType.sqlite:
-        if param_name == 'date_before':
-            return f"timestamp <= strftime('%s', %({param_name})s)"
-        elif param_name == 'date_after':
-            return f"timestamp >= strftime('%s', %({param_name})s)"
-        else:
-            raise ValueError(f"Unsupported operator: {param_name}")
-
-    else:
-        raise ValueError("Unsupported database type")
-
-
 def validate_and_generate_params(form_data):
     """
     Removes inauthentic/non-form data (malicious POST fields, CSRF tags, etc.)
     Specifies the filters for each valid field.
     """
     param_filters = {
-        'date_before': {'s': construct_date_filter('date_before')},
-        'date_after': {'s': construct_date_filter('date_after')},
         'title': {'like': True, 's': 'title LIKE %(title)s'},
         'comment': {'like': True, 's': 'comment LIKE %(comment)s'},
         'media_filename': {'like': True, 's': 'media_filename LIKE %(media_filename)s'},
         'media_hash': {'s': 'media_hash = %(media_hash)s'},
         'num': {'s': 'num = %(num)s'},
+        'date_before': {'s': 'timestamp <= %(date_before)s'},
+        'date_after': {'s': 'timestamp >= %(date_after)s'},
         'has_no_file': {'s': 'media_filename is null or media_filename = ""'},
         'has_file': {'s': 'media_filename is not null and media_filename != ""'},
         'is_op': {'s': 'op = 1'},
@@ -151,7 +130,10 @@ def validate_and_generate_params(form_data):
             if (field in defaults_to_ignore) and (form_data[field] != defaults_to_ignore[field]):
                 param_values[field] = form_data[field]
             elif field not in defaults_to_ignore:
-                param_values[field] = form_data[field]
+                field_val = form_data[field]
+                if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
+                    field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
+                param_values[field] = field_val
 
     return param_values, param_filters
 
