@@ -511,20 +511,14 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
 async def generate_post(board: str, post_id: int) -> tuple[dict]:
     """Returns {thread_num: 123, comment: 'hello', ...}"""
     sql = f"""
-        {get_selector(board)},
-            images.media_hash,
-            images.media,
-            images.preview_reply,
-            images.preview_op
+        {get_selector(board)}
         FROM {board}
-            LEFT JOIN {board}_images AS images USING (media_id)
         WHERE num = {Phg()()}
     ;"""
-    post = await query_dict(sql, params=(post_id,), fetchone=True)
+    posts = await query_dict(sql, params=(post_id,))
 
-    if not post:
+    if not posts:
         return None, None
 
-    post_2_quotelinks, posts = get_qls_and_posts([post])
-    post = posts[0]
-    return post_2_quotelinks, post
+    post_2_quotelinks, posts = get_qls_and_posts(posts)
+    return post_2_quotelinks, posts[0]
