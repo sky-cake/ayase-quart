@@ -443,12 +443,8 @@ async def generate_catalog(board: str, page_num: int=1):
     threads = {row[0]: row[1:] for row in rows}
 
     posts_q = f'''
-        {get_selector(board)},
-        {board}.media_hash,
-        {board}_images.media AS media_orig,
-        {board}_images.preview_op AS preview_orig
-    FROM {board}
-        LEFT JOIN {board}_images USING (media_id)
+        {get_selector(board)}
+    from {board}
     where op = 1
     and thread_num in ({Phg().size(threads)})
     '''
