@@ -208,14 +208,10 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     return render
 
 
-def get_posts_t(thread_dict: dict, post_2_quotelinks: list[int]) -> str:
+def get_posts_t(thread_dict: dict, post_2_quotelinks: dict[int, list[int]]) -> str:
     posts_t = []
     for post in thread_dict:
-        if quotelinks := post_2_quotelinks.get(str(post['num'])):
-            post['quotelinks'] = quotelinks
-        else:
-            post['quotelinks'] = ''
-
+        post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
         posts_t.append(wrap_post_t(post))
 
     posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)

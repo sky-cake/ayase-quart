@@ -10,6 +10,7 @@ from datetime import date, datetime
 from werkzeug.exceptions import BadRequest
 
 from posts.capcodes import Capcode
+from posts.quotelinks import get_quotelink_lookup
 from search.highlighting import html_highlight
 from db import query_tuple, query_dict, Phg
 
@@ -166,13 +167,9 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     # With the Asagi schema, each board has its own table, so we loop over boards and do UNION ALLs to get multi-board sql results
     for board_shortname in form_data['boards']:
 
-        s = get_selector(board_shortname)
-        s += f""",
-                media,
-                preview_reply,
-                preview_op
+        s = f"""
+            {get_selector(board_shortname)}
             FROM {board_shortname}
-                LEFT JOIN {board_shortname}_images USING (media_id)
         """
         s += ' \n WHERE 1=1 '
 
@@ -192,42 +189,41 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     posts = await query_dict(sql, params=param_values)
 
     result = {'posts': []}
-    post_2_quotelinks = {}
     if not posts:
-        return result, post_2_quotelinks
+        return result, {}
 
-    post_2_quotelinks, posts = await get_qls_and_posts(posts, fetch_replies=True)
+    board_quotelinks = await get_post_replies(posts)
+    
+    # TODO: this post_2_quotelinks is wrong
+    # it merges quotelinks from multiple boards together
+    # the error must be fixed downstream
+    # searching from from multiple boards should be allowed
+    post_2_quotelinks = defaultdict(set)
+    for _board, ql_lookup in board_quotelinks.items():
+        for num, quotelinks in ql_lookup.items():
+            post_2_quotelinks[num].update(quotelinks)
+    
+    for num in tuple(post_2_quotelinks.keys()):
+        post_2_quotelinks[num] = list(post_2_quotelinks[num])
+
+    _, posts = get_qls_and_posts(posts, gather_qls=False)
     result['posts'] = posts
     return result, post_2_quotelinks
 
 
-async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tuple[dict, list]:
+def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, list]:
     post_2_quotelinks = defaultdict(list)
     posts = []
-    for i, row in enumerate(rows):
+    for row in rows:
+        row_quotelinks, row['comment'] = restore_comment(
+            row['thread_num'],
+            row['comment'],
+            row['board_shortname']
+        )
 
-        if row.get('media_hash'):
-            row['preview_orig'] = row.pop('preview_op') if row['op'] else row.pop('preview_reply')
-            row['media_orig'] = row.pop('media')
-
-        thread_num = row.get('thread_num')
-        comment = row.get('comment')
-        board_shortname = row.get('board_shortname')
-
-        row_quotelinks, row['comment'] = restore_comment(thread_num, comment, board_shortname)
-
-        for row_quotelink in row_quotelinks:
-            post_2_quotelinks[row_quotelink].append(rows[i]["num"])
-
-        if fetch_replies:
-            op_num = row['op_num']
-        
-            replies = await get_post_replies(row['board_shortname'], op_num, row['num'])
-            for reply in replies:
-                post_quotelinks = get_text_quotelinks(reply["comment"])
-
-                for quotelink in post_quotelinks:
-                    post_2_quotelinks[quotelink].append(reply["num"])
+        if gather_qls:
+            for row_quotelink in row_quotelinks:
+                post_2_quotelinks[row_quotelink].append(row['num'])
 
         if row['title']:
             row['title'] = html.escape(row['title'])
@@ -236,34 +232,38 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
 
     return post_2_quotelinks, posts
 
+async def get_post_replies(posts: list[dict]) -> dict[str, dict[int, list[int]]]:
+    board_threads = defaultdict(set)
+    
+    for post in posts:
+        board_threads[post['board_shortname']].add(post['op_num'])
+    boards_threads = [(board, tuple(threads)) for board, threads in board_threads.items()]
 
-async def get_post_replies(board: str, thread_num: int, post_num: int):
-    comment = f'%>>{int(post_num)}%'
-    SELECT_POST_REPLIES = get_selector(board) + f"FROM {board} WHERE comment LIKE %(comment)s AND thread_num = %(thread_num)s;"
-    return await query_dict(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
+    board_qls = await asyncio.gather(*(
+        get_board_thread_quotelinks(board, threads)
+        for board, threads in boards_threads
+    ))
+    board_quotelinks = {
+        b_threads[0]: ql_lookup
+        for b_threads, ql_lookup in zip(board_threads, board_qls)
+    }
+    return board_quotelinks
+
+async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
+    rows = await query_dict(f'''
+        select num, comment
+        from {board}
+        where
+            comment is not null
+            and thread_num in ({Phg().size(thread_nums)})''',
+        params=thread_nums
+    )
+    return get_quotelink_lookup(rows)
 
 
 async def get_op_thread_count(board: str) -> int:
     rows = await query_tuple(f'select count(*) from {board}_threads;')
     return rows[0][0]
-
-
-def get_text_quotelinks(text: str):
-    """Given some escaped post/comment, `text`, returns a list of all the quotelinks (>>123456) in it."""
-    quotelinks = []
-    lines = html.escape(text).split("\n")  # text = '>>20074095\n>>20074101\nYou may be buying the wrong eggs'
-
-    GTGT = "&gt;&gt;"
-    for i, line in enumerate(lines):
-
-        if line.startswith(GTGT):
-            tokens = line.split(" ")
-            for token in tokens:
-                if token[:8] == GTGT and token[8:].isdigit():
-                    quotelinks.append(token[8:])
-
-    return quotelinks  # quotelinks = ['20074095', '20074101']
-
 
 square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
 spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL)  # with re.DOTALL, the dot matches any character, including newline characters.
@@ -422,20 +422,6 @@ async def generate_index(board: str, page_num: int=1):
         ]
     }
 
-
-# copied from search/loader.py, temporary
-def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
-    """Returns a dict of post numbers to reply post numbers."""
-    post_2_quotelinks = defaultdict(list)
-    for row in rows:
-        if not (comment := row.get('comment')):
-            continue
-        num = row['num']
-        for quotelink in get_text_quotelinks(comment):
-            post_2_quotelinks[int(quotelink)].append(num)
-    return post_2_quotelinks
-
-
 async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
@@ -515,7 +501,7 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
     ;"""
     rows = await query_dict(combined_query, params=(thread_num,))
 
-    post_2_quotelinks, posts = await get_qls_and_posts(rows)
+    post_2_quotelinks, posts = get_qls_and_posts(rows)
 
     results = {'posts': posts}
 
@@ -539,6 +525,6 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
     if not post:
         return None, None
 
-    post_2_quotelinks, posts = await get_qls_and_posts([post])
+    post_2_quotelinks, posts = get_qls_and_posts([post])
     post = posts[0]
     return post_2_quotelinks, post

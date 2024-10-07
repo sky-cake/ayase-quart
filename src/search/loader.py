@@ -9,13 +9,14 @@ from typing import AsyncGenerator, Callable, List
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
-from asagi_converter import get_selector, get_text_quotelinks, selector_columns
+from asagi_converter import get_selector, selector_columns
 from db import close_db_pool, query_tuple, prime_db_pool, Phg
 from posts.capcodes import capcode_2_id
 
 from .post_metadata import board_2_int, board_int_num_2_pk, pack_metadata
 from .providers import search_index_fields
 from .providers.baseprovider import BaseSearch
+from posts.quotelinks import get_quotelink_lookup
 
 """
 Hard to find the sweetspot for THREAD_BATCH, goldilocks zone is anywhere between 20-100, also it affects everything downchain.
@@ -293,19 +294,6 @@ def remove_fields_new_dict(post: dict):
 
 # pop is forced to iterate a bit more but new_dict is forced to allocate a new dict entirely
 remove_fields: Callable = remove_fields_pop
-
-
-def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
-    """Returns a dict of post numbers to reply post numbers."""
-    post_2_quotelinks = defaultdict(list)
-    for row in rows:
-        if not (comment := row.get('comment')):
-            continue
-        num = row['num']
-        for quotelink in get_text_quotelinks(comment):
-            post_2_quotelinks[int(quotelink)].append(num)
-    return post_2_quotelinks
-
 
 async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerator:
     batch_size = THREAD_BATCH * THREAD_BATCH_MULT
