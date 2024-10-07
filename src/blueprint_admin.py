@@ -1,9 +1,9 @@
 from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import admin_required
-from configs import CONSTS
 from enums import DbType
 from db import query_dict, Phg, DB_TYPE
+from db.mysql import mysql_conf # todo: figure out how to remove this import...
 from moderation.api import (
     create_user,
     delete_user,
@@ -20,11 +20,12 @@ from templates import (
     template_users_delete,
     template_users_edit
 )
+from boards import board_shortnames
 
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 
 
-placeholders = Phg().size(CONSTS.board_shortnames)
+placeholders = Phg().size(board_shortnames)
 
 if DB_TYPE == DbType.mysql:
     DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""
@@ -43,12 +44,12 @@ def get_sql_latest_ops(board_shortname):
 @blueprint_admin.route("/stats")
 @admin_required
 async def stats():
-    database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': CONSTS.db_database})
+    database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': mysql_conf.get('db', '')})
 
     if DB_TYPE == DbType.mysql:
-        params = [CONSTS.db_database, *CONSTS.board_shortnames]
+        params = [mysql_conf.get('db', ''), *board_shortnames]
     elif DB_TYPE == DbType.sqlite:
-        params = [*CONSTS.board_shortnames]
+        params = [*board_shortnames]
 
     database_table_storage_sizes = await query_dict(DATABASE_TABLE_STORAGE_SIZES, params=params)
 
@@ -56,7 +57,6 @@ async def stats():
         template_stats,
         database_storage_size=database_storage_size,
         database_table_storage_sizes=database_table_storage_sizes,
-        **CONSTS.render_constants,
         title='Stats',
         tab_title="Stats",
     )
@@ -66,7 +66,7 @@ async def stats():
 @admin_required
 async def latest():
     threads = []
-    for board_shortname in CONSTS.board_shortnames:
+    for board_shortname in board_shortnames:
         sql = get_sql_latest_ops(board_shortname)
         latest_ops = await query_dict(sql)
         threads.extend(latest_ops)
@@ -74,7 +74,6 @@ async def latest():
     return await render_controller(
         template_latest,
         threads=threads,
-        **CONSTS.render_constants,
         title='Latest',
         tab_title="Latest",
     )
@@ -109,7 +108,6 @@ async def users_create():
 
     return await render_controller(
         template_users_create,
-        **CONSTS.render_constants,
         title='Admin',
         tab_title='Admin',
     )
@@ -134,7 +132,6 @@ async def users_edit(user_id):
     return await render_controller(
         template_users_edit,
         user=user,
-        **CONSTS.render_constants,
         title='Admin',
         tab_title='Admin',
     )
@@ -150,7 +147,6 @@ async def users_delete(user_id):
     return await render_controller(
         template_users_delete,
         user_id=user_id,
-        **CONSTS.render_constants,
         title='Admin',
         tab_title='Admin',
     )

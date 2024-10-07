@@ -1,7 +1,6 @@
 from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import moderator_required
-from configs import CONSTS
 from moderation.api import (
     delete_report,
     edit_report,
@@ -28,7 +27,6 @@ async def reports_index():
     return await render_controller(
         template_reports_index,
         reports_open=reports_open,
-        **CONSTS.render_constants,
         title='Reports',
         tab_title='Reports',
     )
@@ -42,7 +40,6 @@ async def reports_view(report_id):
     return await render_controller(
         template_reports_view,
         report=report,
-        **CONSTS.render_constants,
         title='Reports',
         tab_title='Reports',
     )
@@ -66,7 +63,6 @@ async def reports_edit(report_id):
     return await render_controller(
         template_reports_edit,
         report=report,
-        **CONSTS.render_constants,
         title='Reports',
         tab_title='Reports',
     )
@@ -82,7 +78,6 @@ async def reports_delete(report_id):
     return await render_controller(
         template_reports_delete,
         report_id=report_id,
-        **CONSTS.render_constants,
         title='Reports',
         tab_title='Reports',
     )

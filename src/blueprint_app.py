@@ -7,9 +7,9 @@ from asagi_converter import (
     generate_thread,
     get_op_thread_count
 )
-from configs import CONSTS
+from configs import SITE_NAME
 from posts.template_optimizer import wrap_post_t
-from render import get_title, render_controller, validate_board_shortname
+from render import get_title, render_controller
 from templates import (
     template_board_index,
     template_catalog,
@@ -18,7 +18,7 @@ from templates import (
     template_thread
 )
 from utils import Perf
-from utils.validation import validate_threads
+from utils.validation import validate_threads, validate_board
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 
@@ -41,17 +41,17 @@ async def make_pagination_board_index(board_shortname, index, page_num):
 
 @blueprint_app.get("/")
 async def v_index():
-    return await render_controller(template_index, **CONSTS.render_constants, tab_title=CONSTS.site_name)
+    return await render_controller(template_index, tab_title=SITE_NAME)
 
 
 @blueprint_app.get("/<string:board_shortname>")
 async def v_board_index(board_shortname: str):
     """See `v_board_index_page()` for benchmarks.
     """
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
     p = Perf('index')
     
-    index = await generate_index(board_shortname)
+    index, quotelinks = await generate_index(board_shortname)
     p.check('query')
     
     validate_threads(index['threads'])
@@ -62,12 +62,11 @@ async def v_board_index(board_shortname: str):
 
     rendered = await render_controller(
         template_board_index,
-        **CONSTS.render_constants,
         board_index_page=True,
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
         threads=index["threads"],
-        quotelinks=[],
+        quotelinks=quotelinks,
         board=board_shortname,
         title=get_title(board_shortname),
     )
@@ -95,10 +94,10 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     rendered: 0.2564
     """
     p = Perf('index page')
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
     p.check('validate board')
 
-    index = await generate_index(board_shortname, page_num)
+    index, quotelinks = await generate_index(board_shortname, page_num)
     p.check('generate index')
 
     validate_threads(index['threads'])
@@ -109,10 +108,9 @@ async def v_board_index_page(board_shortname: str, page_num: int):
 
     render = await render_controller(
         template_board_index,
-        **CONSTS.render_constants,
         pagination=pagination,
         threads=index["threads"],
-        quotelinks=[],
+        quotelinks=quotelinks,
         board=board_shortname,
         title=get_title(board_shortname),
         tab_title=get_title(board_shortname),
@@ -156,7 +154,7 @@ async def v_catalog(board_shortname: str):
     paginate: 0.1712
     render  : 0.5372
     """
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
     p = Perf('catalog')
     catalog = await generate_catalog(board_shortname)
@@ -167,7 +165,6 @@ async def v_catalog(board_shortname: str):
 
     render = await render_controller(
         template_catalog,
-        **CONSTS.render_constants,
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
@@ -188,7 +185,7 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     paginate: 0.1734
     render  : 0.5233
     """
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
     p = Perf('catalog page')
     catalog = await generate_catalog(board_shortname, page_num)
@@ -199,7 +196,6 @@ async def v_catalog_page(board_shortname: str, page_num: int):
 
     render = await render_controller(
         template_catalog,
-        **CONSTS.render_constants,
         catalog=catalog,
         pagination=pagination,
         board=board_shortname,
@@ -212,14 +208,10 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     return render
 
 
-def get_posts_t(thread_dict: dict, post_2_quotelinks: list[int]) -> str:
+def get_posts_t(thread_dict: dict, post_2_quotelinks: dict[int, list[int]]) -> str:
     posts_t = []
     for post in thread_dict:
-        if quotelinks := post_2_quotelinks.get(str(post['num'])):
-            post['quotelinks'] = quotelinks
-        else:
-            post['quotelinks'] = ''
-
+        post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
         posts_t.append(wrap_post_t(post))
 
     posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
@@ -253,7 +245,7 @@ async def v_thread(board_shortname: str, thread_id: int):
     posts_t : 0.0274
     rendered: 0.0419
     """
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
     p = Perf(topic='thread')
     # use the existing json app function to grab the data
@@ -275,7 +267,6 @@ async def v_thread(board_shortname: str, thread_id: int):
         posts_t=posts_t,
         nreplies=nreplies,
         nimages=nimages,
-        **CONSTS.render_constants,
         board=board_shortname,
         title=title,
         tab_title=title,

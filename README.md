@@ -20,10 +20,11 @@ Please use Python 3.12.
 
 Assuming you have a data source set up, you can:
 
-1. Create a file called `secret.txt` in `/src`. Populate it with random text, e.g. `tr -dc A-Za-z0-9 </dev/urandom | head -c 64 > secret.txt`
 1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with the desired boards
 1. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper setting
-1. Create a file called `./src/configs.py` using `./src/rename_to_configs.py`
+	- Generate and set the app secret key (CSRF generation and other things)
+		- run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret
+		- change the `app.secret` key in `config.toml` from 'DEFAULT_CHANGE_ME' to the generated secret
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
       - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)

@@ -1,4 +1,4 @@
-from quart import Blueprint, jsonify, url_for
+from quart import Blueprint, jsonify
 
 from asagi_converter import (
     generate_catalog,
@@ -6,18 +6,17 @@ from asagi_converter import (
     generate_post,
     generate_thread
 )
-from configs import CONSTS
-from render import render_controller, validate_board_shortname
+from render import render_controller
 from templates import template_post
 from utils import Perf
-from utils.validation import validate_post
+from utils.validation import validate_post, validate_board
 
 blueprint_api = Blueprint("blueprint_api", __name__)
 
 
 @blueprint_api.get("/<string:board_shortname>/catalog.json")
 async def catalog(board_shortname: str):
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
     return await generate_catalog(board_shortname)
 
@@ -25,7 +24,7 @@ async def catalog(board_shortname: str):
 @blueprint_api.get("/<string:board_shortname>/thread/<int:thread_id>.json")
 async def thread(board_shortname: str, thread_id: int):
 
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
     post_2_quotelinks, results = await generate_thread(board_shortname, thread_id)
 
@@ -36,9 +35,9 @@ async def thread(board_shortname: str, thread_id: int):
 @blueprint_api.get("/<string:board_shortname>/<int:page_num>.json")
 async def board_index(board_shortname: str, page_num: int):
 
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
-    res = await generate_index(board_shortname, page_num, html=False)
+    res, _quotelinks = await generate_index(board_shortname, page_num, html=False)
     if res and res.get("threads"):
         return res
 
@@ -55,14 +54,14 @@ async def v_post(board_shortname: str, post_id: int):
     query: 0.0020
     rendr: 0.0103
     """
-    validate_board_shortname(board_shortname)
+    validate_board(board_shortname)
 
     p = Perf("post")
     post_2_quotelinks, post = await generate_post(board_shortname, post_id)
     p.check('query')
     validate_post(post)
 
-    html_content = await render_controller(template_post, **CONSTS.render_constants, post=post, board=board_shortname, quotelinks=post_2_quotelinks)
+    html_content = await render_controller(template_post, post=post, board=board_shortname, quotelinks=post_2_quotelinks)
     p.check('render')
     print(p)
     return jsonify(html_content=html_content)

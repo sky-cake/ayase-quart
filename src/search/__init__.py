@@ -1,4 +1,4 @@
-from configs2 import search_conf
+from configs import search_conf
 
 SEARCH_ENABLED = search_conf.get('enabled', False)
 HIGHLIGHT_ENABLED = search_conf.get('highlight', False)

@@ -1,7 +1,10 @@
-# Do not import CONSTS
-
 from werkzeug.exceptions import NotFound
 
+import boards
+
+def validate_board(board: str) -> None:
+    if not board in boards.boards:
+        raise NotFound(board, boards.board_shortnames)
 
 def validate_threads(threads: list[dict]):
     if len(threads) < 1:

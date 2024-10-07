@@ -23,11 +23,11 @@ from wtforms.validators import (
     ValidationError
 )
 
-from configs import CONSTS
 from search import DEFAULT_RESULTS_LIMIT
 from moderation.api import get_user_with_username, is_correct_password
 from enums import ReportCategory, ReportStatus, SearchMode, UserRole
 from posts.capcodes import Capcode
+from boards import board_shortnames
 
 LENGTH_MD5_HASH = 32
 
@@ -40,7 +40,7 @@ class MultiCheckboxField(SelectMultipleField):
 class SearchForm(QuartForm):
     search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
-    boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
+    boards = MultiCheckboxField('Boards', choices=board_shortnames)
     result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
@@ -66,7 +66,7 @@ class SearchForm(QuartForm):
 
 
 class IndexSearchConfigForm(QuartForm):
-    boards = MultiCheckboxField('Boards', choices=CONSTS.board_shortnames)
+    boards = MultiCheckboxField('Boards', choices=board_shortnames)
     operation = RadioField(
         'Operation',
         choices=[

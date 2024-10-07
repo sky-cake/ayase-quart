@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from configs import CONSTS
 from posts.capcodes import Capcode, capcode_2_id
 from utils.validation import positive_int
 

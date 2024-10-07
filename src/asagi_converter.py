@@ -5,13 +5,14 @@ from functools import cache
 from textwrap import dedent
 from itertools import batched
 import asyncio
+from datetime import date, datetime
 
 from werkzeug.exceptions import BadRequest
 
-from enums import DbType
 from posts.capcodes import Capcode
+from posts.quotelinks import get_quotelink_lookup
 from search.highlighting import html_highlight
-from db import query_tuple, query_dict, Phg, DB_TYPE
+from db import query_tuple, query_dict, Phg
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -87,51 +88,30 @@ def get_selector(board: str) -> str:
     return dedent(SELECTOR)
 
 
-def construct_date_filter(param_name):
-    if DB_TYPE == DbType.mysql:
-        if param_name == 'date_before':
-            return f"timestamp <= UNIX_TIMESTAMP(%({param_name})s)"
-        elif param_name == 'date_after':
-            return f"timestamp >= UNIX_TIMESTAMP(%({param_name})s)"
-        else:
-            raise ValueError(f"Unsupported operator: {param_name}")
-
-    elif DB_TYPE == DbType.sqlite:
-        if param_name == 'date_before':
-            return f"timestamp <= strftime('%s', %({param_name})s)"
-        elif param_name == 'date_after':
-            return f"timestamp >= strftime('%s', %({param_name})s)"
-        else:
-            raise ValueError(f"Unsupported operator: {param_name}")
-
-    else:
-        raise ValueError("Unsupported database type")
-
-
 def validate_and_generate_params(form_data):
     """
     Removes inauthentic/non-form data (malicious POST fields, CSRF tags, etc.)
     Specifies the filters for each valid field.
     """
     param_filters = {
-        'title': {'like': True, 's': '`title` LIKE %(title)s'},
-        'comment': {'like': True, 's': '`comment` LIKE %(comment)s'},
-        'media_filename': {'like': True, 's': '`media_filename` LIKE %(media_filename)s'},
-        'media_hash': {'s': '`media_hash` = %(media_hash)s'},
-        'num': {'s': '`num` = %(num)s'},
-        'date_before': {'s': construct_date_filter('date_before')},
-        'date_after': {'s': construct_date_filter('date_after')},
-        'has_no_file': {'s': '`media_filename` is null or `media_filename` = ""'},
-        'has_file': {'s': '`media_filename` is not null and `media_filename` != ""'},
-        'is_op': {'s': '`op` = 1'},
-        'is_not_op': {'s': '`op` != 1'},
-        'is_deleted': {'s': '`deleted` = 1'},
-        'is_not_deleted': {'s': '`deleted` != 1'},
-        'is_sticky': {'s': '`sticky` = 1'},
-        'is_not_sticky': {'s': '`sticky` != 1'},
-        'width': {'s': '`media_w` = %(width)s'},
-        'height': {'s': '`media_h` = %(height)s'},
-        'capcode': {'s': '`capcode` = %(capcode)s'},
+        'title': {'like': True, 's': 'title LIKE %(title)s'},
+        'comment': {'like': True, 's': 'comment LIKE %(comment)s'},
+        'media_filename': {'like': True, 's': 'media_filename LIKE %(media_filename)s'},
+        'media_hash': {'s': 'media_hash = %(media_hash)s'},
+        'num': {'s': 'num = %(num)s'},
+        'date_before': {'s': 'timestamp <= %(date_before)s'},
+        'date_after': {'s': 'timestamp >= %(date_after)s'},
+        'has_no_file': {'s': 'media_filename is null or media_filename = ""'},
+        'has_file': {'s': 'media_filename is not null and media_filename != ""'},
+        'is_op': {'s': 'op = 1'},
+        'is_not_op': {'s': 'op != 1'},
+        'is_deleted': {'s': 'deleted = 1'},
+        'is_not_deleted': {'s': 'deleted != 1'},
+        'is_sticky': {'s': 'sticky = 1'},
+        'is_not_sticky': {'s': 'sticky != 1'},
+        'width': {'s': 'media_w = %(width)s'},
+        'height': {'s': 'media_h = %(height)s'},
+        'capcode': {'s': 'capcode = %(capcode)s'},
     }
 
     defaults_to_ignore = {
@@ -151,7 +131,10 @@ def validate_and_generate_params(form_data):
             if (field in defaults_to_ignore) and (form_data[field] != defaults_to_ignore[field]):
                 param_values[field] = form_data[field]
             elif field not in defaults_to_ignore:
-                param_values[field] = form_data[field]
+                field_val = form_data[field]
+                if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
+                    field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
+                param_values[field] = field_val
 
     return param_values, param_filters
 
@@ -184,13 +167,9 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     # With the Asagi schema, each board has its own table, so we loop over boards and do UNION ALLs to get multi-board sql results
     for board_shortname in form_data['boards']:
 
-        s = get_selector(board_shortname)
-        s += f""",
-                `media`,
-                `preview_reply`,
-                `preview_op`
-            FROM `{board_shortname}`
-                LEFT JOIN `{board_shortname}_images` USING (`media_id`)
+        s = f"""
+            {get_selector(board_shortname)}
+            FROM {board_shortname}
         """
         s += ' \n WHERE 1=1 '
 
@@ -210,42 +189,41 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
     posts = await query_dict(sql, params=param_values)
 
     result = {'posts': []}
-    post_2_quotelinks = {}
     if not posts:
-        return result, post_2_quotelinks
+        return result, {}
 
-    post_2_quotelinks, posts = await get_qls_and_posts(posts, fetch_replies=True)
+    board_quotelinks = await get_post_replies(posts)
+    
+    # TODO: this post_2_quotelinks is wrong
+    # it merges quotelinks from multiple boards together
+    # the error must be fixed downstream
+    # searching from from multiple boards should be allowed
+    post_2_quotelinks = defaultdict(set)
+    for _board, ql_lookup in board_quotelinks.items():
+        for num, quotelinks in ql_lookup.items():
+            post_2_quotelinks[num].update(quotelinks)
+    
+    for num in tuple(post_2_quotelinks.keys()):
+        post_2_quotelinks[num] = list(post_2_quotelinks[num])
+
+    _, posts = get_qls_and_posts(posts, gather_qls=False)
     result['posts'] = posts
     return result, post_2_quotelinks
 
 
-async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tuple[dict, list]:
+def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, list]:
     post_2_quotelinks = defaultdict(list)
     posts = []
-    for i, row in enumerate(rows):
+    for row in rows:
+        row_quotelinks, row['comment'] = restore_comment(
+            row['thread_num'],
+            row['comment'],
+            row['board_shortname']
+        )
 
-        if row.get('media_hash'):
-            row['preview_orig'] = row.pop('preview_op') if row['op'] else row.pop('preview_reply')
-            row['media_orig'] = row.pop('media')
-
-        thread_num = row.get('thread_num')
-        comment = row.get('comment')
-        board_shortname = row.get('board_shortname')
-
-        row_quotelinks, row['comment'] = restore_comment(thread_num, comment, board_shortname)
-
-        for row_quotelink in row_quotelinks:
-            post_2_quotelinks[row_quotelink].append(rows[i]["num"])
-
-        if fetch_replies:
-            op_num = row['op_num']
-        
-            replies = await get_post_replies(row['board_shortname'], op_num, row['num'])
-            for reply in replies:
-                post_quotelinks = get_text_quotelinks(reply["comment"])
-
-                for quotelink in post_quotelinks:
-                    post_2_quotelinks[quotelink].append(reply["num"])
+        if gather_qls:
+            for row_quotelink in row_quotelinks:
+                post_2_quotelinks[row_quotelink].append(row['num'])
 
         if row['title']:
             row['title'] = html.escape(row['title'])
@@ -254,33 +232,38 @@ async def get_qls_and_posts(rows: list[dict], fetch_replies: bool=False) -> tupl
 
     return post_2_quotelinks, posts
 
+async def get_post_replies(posts: list[dict]) -> dict[str, dict[int, list[int]]]:
+    board_threads = defaultdict(set)
+    
+    for post in posts:
+        board_threads[post['board_shortname']].add(post['op_num'])
+    boards_threads = [(board, tuple(threads)) for board, threads in board_threads.items()]
 
-async def get_post_replies(board: str, thread_num: int, post_num: int):
-    comment = f'%>>{int(post_num)}%'
-    SELECT_POST_REPLIES = get_selector(board) + f"FROM {board} WHERE comment LIKE %(comment)s AND thread_num = %(thread_num)s;"
-    return await query_dict(SELECT_POST_REPLIES, params={'thread_num': thread_num, 'comment': comment})
+    board_qls = await asyncio.gather(*(
+        get_board_thread_quotelinks(board, threads)
+        for board, threads in boards_threads
+    ))
+    board_quotelinks = {
+        b_threads[0]: ql_lookup
+        for b_threads, ql_lookup in zip(board_threads, board_qls)
+    }
+    return board_quotelinks
+
+async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
+    rows = await query_dict(f'''
+        select num, comment
+        from {board}
+        where
+            comment is not null
+            and thread_num in ({Phg().size(thread_nums)})''',
+        params=thread_nums
+    )
+    return get_quotelink_lookup(rows)
 
 
-async def get_op_thread_count(board_shortname) -> int:
-    return (await query_dict(f"select count(*) as op_thread_count from {board_shortname} where OP=1;", fetchone=True))['op_thread_count']
-
-
-def get_text_quotelinks(text: str):
-    """Given some escaped post/comment, `text`, returns a list of all the quotelinks (>>123456) in it."""
-    quotelinks = []
-    lines = html.escape(text).split("\n")  # text = '>>20074095\n>>20074101\nYou may be buying the wrong eggs'
-
-    GTGT = "&gt;&gt;"
-    for i, line in enumerate(lines):
-
-        if line.startswith(GTGT):
-            tokens = line.split(" ")
-            for token in tokens:
-                if token[:8] == GTGT and token[8:].isdigit():
-                    quotelinks.append(token[8:])
-
-    return quotelinks  # quotelinks = ['20074095', '20074101']
-
+async def get_op_thread_count(board: str) -> int:
+    rows = await query_tuple(f'select count(*) from {board}_threads;')
+    return rows[0][0]
 
 square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
 spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL)  # with re.DOTALL, the dot matches any character, including newline characters.
@@ -336,7 +319,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str):
 
             for j, token in enumerate(tokens):
                 if token[:8] == GTGT and token[8:].isdigit():
-                    quotelinks.append(token[8:])
+                    quotelinks.append(int(token[8:]))
                     tokens[j] = f"""<a href="/{board_shortname}/thread/{op_num}#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
 
             lines[i] = " ".join(tokens)
@@ -413,14 +396,13 @@ async def generate_index(board: str, page_num: int=1):
     thread_nums = tuple(t['thread_num'] for t in threads)
     thread_nums_d = {t['thread_num']:t for t in threads}
 
-    ops, replies = await asyncio.gather(
+    ops, replies, ql_lookup = await asyncio.gather(
         query_dict(op_query, params=thread_nums),
         query_dict(replies_query, params=thread_nums),
+        get_board_thread_quotelinks(board, thread_nums)
     )
 
-    reply_qls = get_quotelink_lookup(replies)
     for reply in replies:
-        reply['quotelinks'] = reply_qls.get(reply['num'], [])
         _, reply['comment'] = restore_comment(reply['op_num'], reply['comment'], board)
     
     thread_posts = defaultdict(list)
@@ -432,26 +414,13 @@ async def generate_index(board: str, page_num: int=1):
     for reply in replies:
         thread_posts[reply['op_num']].append(reply)
 
-    return {
+    threads = {
         'threads': [
             {'posts': thread_posts[thread['thread_num']]}
             for thread in threads
         ]
     }
-
-
-# copied from search/loader.py, temporary
-def get_quotelink_lookup(rows: list[dict]) -> dict[int, list]:
-    """Returns a dict of post numbers to reply post numbers."""
-    post_2_quotelinks = defaultdict(list)
-    for row in rows:
-        if not (comment := row.get('comment')):
-            continue
-        num = row['num']
-        for quotelink in get_text_quotelinks(comment):
-            post_2_quotelinks[int(quotelink)].append(num)
-    return post_2_quotelinks
-
+    return threads, ql_lookup
 
 async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
@@ -474,12 +443,8 @@ async def generate_catalog(board: str, page_num: int=1):
     threads = {row[0]: row[1:] for row in rows}
 
     posts_q = f'''
-        {get_selector(board)},
-        {board}.media_hash,
-        {board}_images.media AS media_orig,
-        {board}_images.preview_op AS preview_orig
-    FROM {board}
-        LEFT JOIN {board}_images USING (media_id)
+        {get_selector(board)}
+    from {board}
     where op = 1
     and thread_num in ({Phg().size(threads)})
     '''
@@ -514,48 +479,47 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         - nreplies: int
         - nimages: int
     """
-    # Combine OP and replies into a single query to minimize database calls
-    combined_query = f"""
-        {get_selector(board)},
-            threads.nreplies,
-            threads.nimages,
-            threads.time_bump,
-            images.media_hash,
-            images.media,
-            images.preview_reply,
-            images.preview_op
-        FROM {board}
-            LEFT JOIN {board}_threads AS threads USING (thread_num)
-            LEFT JOIN {board}_images AS images USING (media_id)
-        WHERE thread_num = {Phg()()}
-        ORDER BY num ASC
-    ;"""
-    rows = await query_dict(combined_query, params=(thread_num,))
+    thread_query = f'''
+        select
+            nreplies,
+            nimages,
+            time_bump
+        from {board}_threads
+        where thread_num = {Phg()()}
+    ;'''
+    posts_query = f'''
+        {get_selector(board)}
+        from {board}
+        where thread_num = {Phg()()}
+        order by num asc
+    ;'''
+    threads, posts = await asyncio.gather(
+        query_dict(thread_query, params=(thread_num,)),
+        query_dict(posts_query, params=(thread_num,)),
+    )
+    if not threads:
+        return {}, {'posts': []}
 
-    post_2_quotelinks, posts = await get_qls_and_posts(rows)
-
+    thread_details = threads[0]
+    post_2_quotelinks, posts = get_qls_and_posts(posts)
+    
+    posts[0].update(thread_details)
     results = {'posts': posts}
-
+    
     return post_2_quotelinks, results
 
 
 async def generate_post(board: str, post_id: int) -> tuple[dict]:
     """Returns {thread_num: 123, comment: 'hello', ...}"""
     sql = f"""
-        {get_selector(board)},
-            images.media_hash,
-            images.media,
-            images.preview_reply,
-            images.preview_op
+        {get_selector(board)}
         FROM {board}
-            LEFT JOIN {board}_images AS images USING (media_id)
         WHERE num = {Phg()()}
     ;"""
-    post = await query_dict(sql, params=(post_id,), fetchone=True)
+    posts = await query_dict(sql, params=(post_id,))
 
-    if not post:
+    if not posts:
         return None, None
 
-    post_2_quotelinks, posts = await get_qls_and_posts([post])
-    post = posts[0]
-    return post_2_quotelinks, post
+    post_2_quotelinks, posts = get_qls_and_posts(posts)
+    return post_2_quotelinks, posts[0]

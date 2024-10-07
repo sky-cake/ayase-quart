@@ -101,7 +101,7 @@
     {% endif %}
     <div id="bl_{{post.num}}" class="backlink">
         {% if quotelinks %}
-            {% for quotelink in quotelinks[post.num|string] %}
+            {% for quotelink in quotelinks[post.num] %}
                 <span class="quotelink">
                     <a href="#p{{ quotelink }}" class="quotelink" data-board_shortname="{{post.board_shortname}}">&gt;&gt;{{ quotelink }}</a>
                 </span>

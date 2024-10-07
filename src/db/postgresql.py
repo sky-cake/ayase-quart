@@ -1,6 +1,6 @@
 import asyncpg
 
-from configs2 import db_conf
+from configs import db_conf
 
 from .base_db import BasePlaceHolderGen
 
@@ -26,7 +26,7 @@ async def _run_query_fast(query: str, params: tuple=None):
         await conn.execute(query, params)
         return await conn.fetchall()
 
-async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+async def _run_query_dict(query: str, params=None, commit=False):
     pool = await _get_pool()
     async with pool.acquire() as conn:
         if sql_echo:
@@ -38,8 +38,6 @@ async def _run_query_dict(query: str, params=None, fetchone=False, commit=False)
         if commit:
             return conn.commit()
 
-        if fetchone:
-            return await conn.fetchone()
         return await conn.fetchall()
 
 
@@ -47,7 +45,7 @@ async def _close_pool():
     if not hasattr(_get_pool, 'pool'):
         return
     await _get_pool.pool.close()
-    delattr(_get_pool, 'pool')
+    del _get_pool.pool
 
 
 class PostgresqlPlaceholderGen(BasePlaceHolderGen):

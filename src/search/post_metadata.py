@@ -5,7 +5,6 @@ from pybase64 import b64decode, b64encode
 from zlib_ng.zlib_ng import compress, decompress  # avx-512
 
 from posts.capcodes import id_2_capcode
-from utils.timestamps import ts_2_formatted
 
 """
 To avoid frequent mysql/sqlite database lookups for random search queries, we store records in the search engine using generated, static PKs, and optimize for space using the following compression pipeline:

@@ -5,14 +5,11 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import get_posts_filtered, restore_comment
-from configs import CONSTS
+from configs import SITE_NAME
 from enums import SearchMode
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
-from render import (
-    render_controller,
-    validate_board_shortname,
-)
+from render import render_controller
 from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
 from search.highlighting import get_term_re, mark_highlight, highlight_search_results
 from search.pagination import template_pagination_links, total_pages
@@ -27,6 +24,8 @@ from templates import (
     template_search,
 )
 from utils import Perf
+from utils.validation import validate_board
+from boards import board_shortnames
 
 search_log = getLogger('search')
 
@@ -37,9 +36,8 @@ blueprint_search = Blueprint("blueprint_search", __name__)
 async def index_search_config():
     return await render_controller(
         template_index_search_config,
-        **CONSTS.render_constants,
-        tab_title=CONSTS.site_name,
-        board_list=' '.join(CONSTS.board_shortnames),
+        tab_title=SITE_NAME,
+        board_list=' '.join(board_shortnames),
     )
 
 
@@ -51,13 +49,13 @@ async def index_search_stats():
 
 @blueprint_search.errorhandler(404)
 async def error_not_found(e):
-    return await render_controller(template_error_404, message='404 Not Found', **CONSTS.render_constants, tab_title=f'Error')
+    return await render_controller(template_error_404, message='404 Not Found', tab_title=f'Error')
 
 
 @blueprint_search.errorhandler(400)
 async def error_invalid(e):
     return await render_controller(
-        template_error_404, e=e.description, message='The search parameters will result in 0 records.', **CONSTS.render_constants, tab_title=f'Invalid search'
+        template_error_404, e=e.description, message='The search parameters will result in 0 records.', tab_title=f'Invalid search'
     )
 
 
@@ -95,7 +93,7 @@ async def v_index_search():
         if not form.boards.data:
             raise BadRequest('select a board')
         for board in form.boards.data:
-            validate_board_shortname(board)
+            validate_board(board)
 
         if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
             raise BadRequest("search mode SearchMode.gallery only shows files")
@@ -154,7 +152,7 @@ async def v_index_search():
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
-        tab_title=CONSTS.site_name,
+        tab_title=SITE_NAME,
         cur_page=cur_page,
         pages=pages,
         total_hits=total_hits,
@@ -182,7 +180,7 @@ async def v_search():
         if not form.boards.data:
             raise BadRequest('select a board')
         for board in form.boards.data:
-            validate_board_shortname(board)
+            validate_board(board)
 
         if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
             raise BadRequest("search mode SearchMode.gallery only shows files")
@@ -220,6 +218,5 @@ async def v_search():
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
-        tab_title=CONSTS.site_name,
-        **CONSTS.render_constants,
+        tab_title=SITE_NAME,
     )
