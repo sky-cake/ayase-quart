@@ -18,34 +18,34 @@ from db import query_tuple, query_dict, Phg
 # see the API docs for more info
 # https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
 selector_columns = (
-    'thread_num', # an archiver construct. The OP post ID.
     'num', # `no` - The numeric post ID
-    'board_shortname', # board acronym
+    'thread_num', # an archiver construct. The OP post ID.
+    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
+    'ts_unix', # `time` - UNIX timestamp the post was created
     'ts_expired', # an archiver construct. Could also be `archvied_on` - UNIX timestamp the post was archived
-    'name', # `name` - Name user posted with. Defaults to Anonymous
-    'sticky', # `sticky`- If the thread is being pinned to the top of the page
-    'title', # `sub` - OP Subject text
-    'media_w', # `w` - Image width dimension
-    'media_h', # `h` - Image height dimension
+    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
     'preview_w', # `tn_w` - Thumbnail image width dimension 	
     'preview_h', # `tn_h` - Thumbnail image height dimension
-    'ts_unix', # `time` - UNIX timestamp the post was created
-    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
-    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
-    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
-    'media_size', # `fsize` - Size of uploaded file in bytes
     'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
-    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
-    'op_num', # thread_num
-    'capcode', # `capcode` - The capcode identifier for a post
-    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'media_w', # `w` - Image width dimension
+    'media_h', # `h` - Image height dimension
+    'media_size', # `fsize` - Size of uploaded file in bytes
+    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
+    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
     'spoiler', # `spoiler` - If the image was spoilered or not
-    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-    'poster_hash', # an archiver construct
-    'locked', # `closed` - if the thread is closed to replies
     'deleted', # `filedeleted` - if post had attachment and attachment is deleted
-    'exif', # an archiver construct
+    'capcode', # `capcode` - The capcode identifier for a post
+    'name', # `name` - Name user posted with. Defaults to Anonymous
+    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'title', # `sub` - OP Subject text
     'comment', # `com` - Comment (HTML escaped)
+    'sticky', # `sticky`- If the thread is being pinned to the top of the page
+    'locked', # `closed` - if the thread is closed to replies
+    'poster_hash', # an archiver construct
+    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+    'exif', # an archiver construct
+    'op_num', # thread_num
+    'board_shortname', # board acronym
     # 'tim', # `tim` - Unix timestamp + microtime that an image was uploaded. AQ does not use this.
 )
 
@@ -53,39 +53,39 @@ selector_columns = (
 def get_selector(board: str) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
-    SELECTOR = f"""
-    SELECT
-    {board}.thread_num,
-    num,
-    '{board}' AS board_shortname,
-    timestamp_expired AS ts_expired,
-    name,
-    {board}.sticky AS sticky,
-    coalesce(title, '') AS title,
-    media_w AS media_w,
-    media_h AS media_h,
-    preview_w AS preview_w,
-    preview_h AS preview_h,
-    timestamp AS ts_unix,
-    preview_orig,
-    media_orig,
-    {board}.media_hash,
-    media_size AS media_size,
-    media_filename AS media_filename,
+    selector = f"""
+    select
+    num as num,
+    {board}.thread_num as thread_num,
     op as op,
-    CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
-    capcode AS capcode,
-    trip,
+    timestamp as ts_unix,
+    timestamp_expired as ts_expired,
+    preview_orig as preview_orig,
+    preview_w as preview_w,
+    preview_h as preview_h,
+    media_filename as media_filename,
+    media_w as media_w,
+    media_h as media_h,
+    media_size as media_size,
+    {board}.media_hash as media_hash,
+    media_orig as media_orig,
     spoiler as spoiler,
-    poster_country,
-    poster_hash,
-    {board}.locked AS locked,
-    deleted AS deleted,
-    exif,
-    comment
+    deleted as deleted,
+    capcode as capcode,
+    name as name,
+    trip as trip,
+    coalesce(title, '') as title,
+    comment as comment,
+    {board}.sticky as sticky,
+    {board}.locked as locked,
+    poster_hash as poster_hash,
+    poster_country as poster_country,
+    exif as exif,
+    case when op=1 then num else {board}.thread_num end as op_num,
+    '{board}' as board_shortname
     """
 
-    return dedent(SELECTOR)
+    return dedent(selector)
 
 
 def validate_and_generate_params(form_data):
