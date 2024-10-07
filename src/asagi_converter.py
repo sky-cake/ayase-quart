@@ -483,28 +483,33 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         - nreplies: int
         - nimages: int
     """
-    # Combine OP and replies into a single query to minimize database calls
-    combined_query = f"""
-        {get_selector(board)},
-            threads.nreplies,
-            threads.nimages,
-            threads.time_bump,
-            images.media_hash,
-            images.media,
-            images.preview_reply,
-            images.preview_op
-        FROM {board}
-            LEFT JOIN {board}_threads AS threads USING (thread_num)
-            LEFT JOIN {board}_images AS images USING (media_id)
-        WHERE thread_num = {Phg()()}
-        ORDER BY num ASC
-    ;"""
-    rows = await query_dict(combined_query, params=(thread_num,))
+    thread_query = f'''
+        select
+            nreplies,
+            nimages,
+            time_bump
+        from {board}_threads
+        where thread_num = {Phg()()}
+    ;'''
+    posts_query = f'''
+        {get_selector(board)}
+        from {board}
+        where thread_num = {Phg()()}
+        order by num asc
+    ;'''
+    threads, posts = await asyncio.gather(
+        query_dict(thread_query, params=(thread_num,)),
+        query_dict(posts_query, params=(thread_num,)),
+    )
+    if not threads:
+        return {}, {'posts': []}
 
-    post_2_quotelinks, posts = get_qls_and_posts(rows)
-
+    thread_details = threads[0]
+    post_2_quotelinks, posts = get_qls_and_posts(posts)
+    
+    posts[0].update(thread_details)
     results = {'posts': posts}
-
+    
     return post_2_quotelinks, results
 
 
