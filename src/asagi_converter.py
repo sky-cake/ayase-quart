@@ -396,14 +396,13 @@ async def generate_index(board: str, page_num: int=1):
     thread_nums = tuple(t['thread_num'] for t in threads)
     thread_nums_d = {t['thread_num']:t for t in threads}
 
-    ops, replies = await asyncio.gather(
+    ops, replies, ql_lookup = await asyncio.gather(
         query_dict(op_query, params=thread_nums),
         query_dict(replies_query, params=thread_nums),
+        get_board_thread_quotelinks(board, thread_nums)
     )
 
-    reply_qls = get_quotelink_lookup(replies)
     for reply in replies:
-        reply['quotelinks'] = reply_qls.get(reply['num'], [])
         _, reply['comment'] = restore_comment(reply['op_num'], reply['comment'], board)
     
     thread_posts = defaultdict(list)
@@ -415,12 +414,13 @@ async def generate_index(board: str, page_num: int=1):
     for reply in replies:
         thread_posts[reply['op_num']].append(reply)
 
-    return {
+    threads = {
         'threads': [
             {'posts': thread_posts[thread['thread_num']]}
             for thread in threads
         ]
     }
+    return threads, ql_lookup
 
 async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""

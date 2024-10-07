@@ -51,7 +51,7 @@ async def v_board_index(board_shortname: str):
     validate_board(board_shortname)
     p = Perf('index')
     
-    index = await generate_index(board_shortname)
+    index, quotelinks = await generate_index(board_shortname)
     p.check('query')
     
     validate_threads(index['threads'])
@@ -66,7 +66,7 @@ async def v_board_index(board_shortname: str):
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
         threads=index["threads"],
-        quotelinks=[],
+        quotelinks=quotelinks,
         board=board_shortname,
         title=get_title(board_shortname),
     )
@@ -97,7 +97,7 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     validate_board(board_shortname)
     p.check('validate board')
 
-    index = await generate_index(board_shortname, page_num)
+    index, quotelinks = await generate_index(board_shortname, page_num)
     p.check('generate index')
 
     validate_threads(index['threads'])
@@ -110,7 +110,7 @@ async def v_board_index_page(board_shortname: str, page_num: int):
         template_board_index,
         pagination=pagination,
         threads=index["threads"],
-        quotelinks=[],
+        quotelinks=quotelinks,
         board=board_shortname,
         title=get_title(board_shortname),
         tab_title=get_title(board_shortname),

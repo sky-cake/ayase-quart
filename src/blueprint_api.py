@@ -37,7 +37,7 @@ async def board_index(board_shortname: str, page_num: int):
 
     validate_board(board_shortname)
 
-    res = await generate_index(board_shortname, page_num, html=False)
+    res, _quotelinks = await generate_index(board_shortname, page_num, html=False)
     if res and res.get("threads"):
         return res
 
