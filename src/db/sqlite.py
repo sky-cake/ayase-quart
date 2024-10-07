@@ -56,7 +56,7 @@ async def _run_query_fast(query: str, params: tuple=None):
         return await cursor.fetchall()
 
 
-async def _run_query_dict(query: str, params=None, fetchone=False, commit=False):
+async def _run_query_dict(query: str, params=None, commit=False):
     wait_pool = _get_pool(dict_row=True)
     query = patch_query(query) # patch query while waiting for the pool to connect on first connection
     pool = await wait_pool
@@ -69,8 +69,6 @@ async def _run_query_dict(query: str, params=None, fetchone=False, commit=False)
         if commit:
             pool.commit()
             return
-        if fetchone:
-            return await cursor.fetchone()
         return await cursor.fetchall()
 
 
@@ -78,7 +76,7 @@ async def _close_pool():
     if not (pools := getattr(_get_pool, 'pools', None)):
         return
     await asyncio.gather(*(p.close() for p in pools.values()))
-    delattr(_get_pool, 'pools')
+    del _get_pool.pools
 
 
 re_mysql_bind_to_sqlite_bind = re.compile(r'%\((\w+)\)s')
