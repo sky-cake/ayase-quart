@@ -33,3 +33,4 @@ data/
 *.toml
 !*.tpl.toml
 !pyproject.toml
+secret.txt

@@ -21,16 +21,18 @@ if sqlite_db := db_conf.get('sqlite', {}).get('database'):
 if moderation_db := moderation_conf.get('sqlite', {}).get('database'):
     moderation_conf['sqlite']['database'] = make_src_path(moderation_db)
 if ssl_key := app_conf.get('ssl_key'):
-    app_conf['ssl_key'] = make_src_path[ssl_key]
+    app_conf['ssl_key'] = make_src_path(ssl_key)
 if ssl_cert := app_conf.get('ssl_cert'):
-    app_conf['ssl_cert'] = make_src_path[ssl_cert]
+    app_conf['ssl_cert'] = make_src_path(ssl_cert)
 
 class QuartConfig():
     TESTING = app_conf.get('testing', False)
-    if secret_key := app_conf.get('secret', 'DEFAULT_CHANGE_ME') == 'DEFAULT_CHANGE_ME':
+    secret_key = app_conf.get('secret', 'DEFAULT_CHANGE_ME')
+    if secret_key == 'DEFAULT_CHANGE_ME':
         from secrets import token_hex
         print('secret not set, generating random secret') # convert to logging.warning
         secret_key = token_hex(32)
+
     SECRET_KEY = secret_key
 
 SITE_NAME = site_conf.get('name', 'Ayase Quart')

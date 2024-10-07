@@ -7,7 +7,7 @@ autoreload = false
 # quart/hypercorn keys
 port = 9001
 # ssl_key = 'key.pem'
-# ssl_cert = 'cert.pem
+# ssl_cert = 'cert.pem'
 
 [site]
 name = 'Ayase Quart'
@@ -56,6 +56,9 @@ default_result_limit = 100
 max_result_limit = 10000
 provider = 'lnx' # lnx, meili, manticore, typesense, mysql, quickwit
 host = 'http://localhost:8000'
+
+[search.config]
+headers = {	content-type = 'application/json' }
 
 [search.meili]
 
