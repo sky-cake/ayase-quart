@@ -319,7 +319,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str):
 
             for j, token in enumerate(tokens):
                 if token[:8] == GTGT and token[8:].isdigit():
-                    quotelinks.append(token[8:])
+                    quotelinks.append(int(token[8:]))
                     tokens[j] = f"""<a href="/{board_shortname}/thread/{op_num}#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
 
             lines[i] = " ".join(tokens)
