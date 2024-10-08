@@ -6,6 +6,7 @@ from textwrap import dedent
 from itertools import batched
 import asyncio
 from datetime import date, datetime
+from dataclasses import dataclass
 
 from werkzeug.exceptions import BadRequest
 
@@ -188,6 +189,113 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
 
     posts = await query_dict(sql, params=param_values)
 
+    result = {'posts': []}
+    if not posts:
+        return result, {}
+
+    board_quotelinks = await get_post_replies(posts)
+    
+    # TODO: this post_2_quotelinks is wrong
+    # it merges quotelinks from multiple boards together
+    # the error must be fixed downstream
+    # searching from from multiple boards should be allowed
+    post_2_quotelinks = defaultdict(set)
+    for _board, ql_lookup in board_quotelinks.items():
+        for num, quotelinks in ql_lookup.items():
+            post_2_quotelinks[num].update(quotelinks)
+    
+    for num in tuple(post_2_quotelinks.keys()):
+        post_2_quotelinks[num] = list(post_2_quotelinks[num])
+
+    _, posts = get_qls_and_posts(posts, gather_qls=False)
+    result['posts'] = posts
+    return result, post_2_quotelinks
+
+# Temporary, needs testing before removing old get_posts_filtered
+# TODO: transfer all of this (SqlSearchFilter, validate_and_generate_params2, get_posts_filtered2) to search/providers/sql.py
+@dataclass(slots=True)
+class SqlSearchFilter:
+    fragment: str
+    like: bool = False
+    placeholder: bool = True
+
+    def get_fragment(self, phg: Phg):
+        if self.placeholder:
+            return self.fragment.replace('##', phg())
+        return self.fragment
+
+sql_search_filters = dict(
+    title=SqlSearchFilter('title like ##', like=True),
+    comment=SqlSearchFilter('comment like ##', like=True),
+    media_filename=SqlSearchFilter('media_filename like ##', like=True),
+    media_hash=SqlSearchFilter('media_hash = ##'),
+    num=SqlSearchFilter('num = ##'),
+    date_before=SqlSearchFilter('timestamp <= ##'),
+    date_after=SqlSearchFilter('timestamp >= ##'),
+    has_no_file=SqlSearchFilter("(media_filename is null or media_filename = '')", placeholder=False),
+    has_file=SqlSearchFilter("media_filename is not null and media_filename != ''", placeholder=False),
+    is_op=SqlSearchFilter('op = 1', placeholder=False),
+    is_not_op=SqlSearchFilter('op = 0', placeholder=False),
+    is_deleted=SqlSearchFilter('deleted = 1', placeholder=False),
+    is_not_deleted=SqlSearchFilter('', placeholder=False),
+    is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
+    is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
+    width=SqlSearchFilter('media_w = ##'),
+    height=SqlSearchFilter('media_h = ##'),
+    capcode=SqlSearchFilter('capcode = ##'),
+)
+
+def validate_and_generate_params2(form_data: dict, phg: Phg):
+    defaults_to_ignore = {
+        'width': 0,
+        'height': 0,
+        'capcode': Capcode.default.value,
+    }
+    params = []
+    where_parts = []
+    for field, s_filter in sql_search_filters.items():
+        if not (field_val := form_data.get(field)):
+            continue
+        if (field in defaults_to_ignore) and (field_val == defaults_to_ignore[field]):
+            continue
+        if s_filter.like:
+            field_val = f'%{field_val}%'
+        if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
+            field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
+        
+        if s_filter.placeholder:
+            params.append(field_val)
+        where_parts.append(s_filter.get_fragment(phg))
+
+    where_fragment = ' and '.join(where_parts)
+    params = tuple(params)
+    return where_fragment, params
+
+async def get_posts_filtered2(form_data: dict, result_limit: int, order_by: str):
+    if order_by not in ('asc', 'desc'):
+        raise BadRequest('order_by is unknown')
+    if not (boards := form_data['boards']):
+        raise BadRequest('no boards specified')
+    
+    phg = Phg()
+    where_filters, params = validate_and_generate_params2(form_data, phg)
+    where_query = f'where {where_filters}' if where_filters else ''
+
+    board_posts = await asyncio.gather(*(
+        query_dict(f"""
+            {get_selector(board)}
+            from {board}
+            {where_query}
+            order by ts_unix {order_by}
+            limit {int(result_limit)}
+            """, params=params
+        ) for board in boards)
+    )
+    
+    posts = []
+    for board_post in board_posts:
+        posts.extend(board_post)
+    
     result = {'posts': []}
     if not posts:
         return result, {}
