@@ -9,7 +9,7 @@ from asagi_converter import (
 )
 from configs import SITE_NAME
 from posts.template_optimizer import wrap_post_t
-from render import get_title, render_controller
+from render import render_controller
 from templates import (
     template_board_index,
     template_catalog,
@@ -19,6 +19,7 @@ from templates import (
 )
 from utils import Perf
 from utils.validation import validate_threads, validate_board
+from boards import get_title
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 
