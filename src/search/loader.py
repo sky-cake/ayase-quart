@@ -1,7 +1,6 @@
 from asyncio import CancelledError
 from asyncio import Queue as Queue_a
 from asyncio import Task, create_task, gather, wrap_future
-from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor as Executor
 from itertools import batched
 from typing import AsyncGenerator, Callable, List

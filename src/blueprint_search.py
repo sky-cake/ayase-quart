@@ -5,7 +5,6 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
 from asagi_converter import (
-    get_posts_filtered,
     get_posts_filtered2,
     restore_comment
 )
@@ -33,7 +32,6 @@ from templates import (
     template_search
 )
 from utils import Perf
-from utils.validation import validate_board
 
 search_log = getLogger('search')
 
@@ -93,7 +91,7 @@ async def v_index_search():
         params['boards'] = boards
         form: SearchForm = await SearchForm.create_form(meta={'csrf': False}, **params)
 
-    if (await form.validate_on_submit()):
+    if (await form.validate()) and form.boards.data:
         searched = True
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
@@ -167,7 +165,6 @@ async def v_search():
         p.check('validate')
 
         # posts is {'posts': [{...}, {...}, ...]}
-        # posts, quotelinks = await get_posts_filtered(form.data, form.result_limit.data, form.order_by.data)
         posts, quotelinks = await get_posts_filtered2(form.data, form.result_limit.data, form.order_by.data)
         p.check('query')
 
