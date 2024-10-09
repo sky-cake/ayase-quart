@@ -4,7 +4,7 @@ from logging import getLogger
 from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
-from asagi_converter import get_posts_filtered, restore_comment
+from asagi_converter import get_posts_filtered, restore_comment, get_posts_filtered2
 from configs import SITE_NAME
 from enums import SearchMode
 from forms import SearchForm
@@ -175,6 +175,8 @@ async def v_search():
 
     posts = []
     quotelinks = []
+    p = Perf()
+
     if await form.validate_on_submit():
 
         if not form.boards.data:
@@ -196,21 +198,26 @@ async def v_search():
             raise BadRequest('has_file is contradicted')
         if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
             raise BadRequest('the dates are contradicted')
+        p.check('validate')
 
         params = form.data
 
-        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data)  # posts = {'posts': [{...}, {...}, ...]}
+        # posts is {'posts': [{...}, {...}, ...]}
+        # posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data)
+        posts, quotelinks = await get_posts_filtered2(params, form.result_limit.data, form.order_by.data)
+        p.check('query')
 
         if HIGHLIGHT_ENABLED:
             posts = highlight_search_results(form, posts)
+        p.check('highlight')
 
         posts = posts['posts']
         searched = True
 
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
-
-    return await render_controller(
+    
+    rendered = await render_controller(
         template_search,
         search_mode=search_mode,
         form=form,
@@ -220,3 +227,7 @@ async def v_search():
         search_result=True,
         tab_title=SITE_NAME,
     )
+    p.check('render')
+    print(p)
+    
+    return rendered

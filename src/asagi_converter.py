@@ -6,6 +6,7 @@ from textwrap import dedent
 from itertools import batched
 import asyncio
 from datetime import date, datetime
+from dataclasses import dataclass
 
 from werkzeug.exceptions import BadRequest
 
@@ -18,34 +19,34 @@ from db import query_tuple, query_dict, Phg
 # see the API docs for more info
 # https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
 selector_columns = (
-    'thread_num', # an archiver construct. The OP post ID.
     'num', # `no` - The numeric post ID
-    'board_shortname', # board acronym
+    'thread_num', # an archiver construct. The OP post ID.
+    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
+    'ts_unix', # `time` - UNIX timestamp the post was created
     'ts_expired', # an archiver construct. Could also be `archvied_on` - UNIX timestamp the post was archived
-    'name', # `name` - Name user posted with. Defaults to Anonymous
-    'sticky', # `sticky`- If the thread is being pinned to the top of the page
-    'title', # `sub` - OP Subject text
-    'media_w', # `w` - Image width dimension
-    'media_h', # `h` - Image height dimension
+    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
     'preview_w', # `tn_w` - Thumbnail image width dimension 	
     'preview_h', # `tn_h` - Thumbnail image height dimension
-    'ts_unix', # `time` - UNIX timestamp the post was created
-    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
-    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
-    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
-    'media_size', # `fsize` - Size of uploaded file in bytes
     'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
-    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
-    'op_num', # thread_num
-    'capcode', # `capcode` - The capcode identifier for a post
-    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'media_w', # `w` - Image width dimension
+    'media_h', # `h` - Image height dimension
+    'media_size', # `fsize` - Size of uploaded file in bytes
+    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
+    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
     'spoiler', # `spoiler` - If the image was spoilered or not
-    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-    'poster_hash', # an archiver construct
-    'locked', # `closed` - if the thread is closed to replies
     'deleted', # `filedeleted` - if post had attachment and attachment is deleted
-    'exif', # an archiver construct
+    'capcode', # `capcode` - The capcode identifier for a post
+    'name', # `name` - Name user posted with. Defaults to Anonymous
+    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'title', # `sub` - OP Subject text
     'comment', # `com` - Comment (HTML escaped)
+    'sticky', # `sticky`- If the thread is being pinned to the top of the page
+    'locked', # `closed` - if the thread is closed to replies
+    'poster_hash', # an archiver construct
+    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+    'exif', # an archiver construct
+    'op_num', # thread_num
+    'board_shortname', # board acronym
     # 'tim', # `tim` - Unix timestamp + microtime that an image was uploaded. AQ does not use this.
 )
 
@@ -53,39 +54,39 @@ selector_columns = (
 def get_selector(board: str) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
-    SELECTOR = f"""
-    SELECT
-    {board}.thread_num,
-    num,
-    '{board}' AS board_shortname,
-    timestamp_expired AS ts_expired,
-    name,
-    {board}.sticky AS sticky,
-    coalesce(title, '') AS title,
-    media_w AS media_w,
-    media_h AS media_h,
-    preview_w AS preview_w,
-    preview_h AS preview_h,
-    timestamp AS ts_unix,
-    preview_orig,
-    media_orig,
-    {board}.media_hash,
-    media_size AS media_size,
-    media_filename AS media_filename,
+    selector = f"""
+    select
+    num as num,
+    {board}.thread_num as thread_num,
     op as op,
-    CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
-    capcode AS capcode,
-    trip,
+    timestamp as ts_unix,
+    timestamp_expired as ts_expired,
+    preview_orig as preview_orig,
+    preview_w as preview_w,
+    preview_h as preview_h,
+    media_filename as media_filename,
+    media_w as media_w,
+    media_h as media_h,
+    media_size as media_size,
+    {board}.media_hash as media_hash,
+    media_orig as media_orig,
     spoiler as spoiler,
-    poster_country,
-    poster_hash,
-    {board}.locked AS locked,
-    deleted AS deleted,
-    exif,
-    comment
+    deleted as deleted,
+    capcode as capcode,
+    name as name,
+    trip as trip,
+    coalesce(title, '') as title,
+    comment as comment,
+    {board}.sticky as sticky,
+    {board}.locked as locked,
+    poster_hash as poster_hash,
+    poster_country as poster_country,
+    exif as exif,
+    case when op=1 then num else {board}.thread_num end as op_num,
+    '{board}' as board_shortname
     """
 
-    return dedent(SELECTOR)
+    return dedent(selector)
 
 
 def validate_and_generate_params(form_data):
@@ -188,6 +189,113 @@ async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
 
     posts = await query_dict(sql, params=param_values)
 
+    result = {'posts': []}
+    if not posts:
+        return result, {}
+
+    board_quotelinks = await get_post_replies(posts)
+    
+    # TODO: this post_2_quotelinks is wrong
+    # it merges quotelinks from multiple boards together
+    # the error must be fixed downstream
+    # searching from from multiple boards should be allowed
+    post_2_quotelinks = defaultdict(set)
+    for _board, ql_lookup in board_quotelinks.items():
+        for num, quotelinks in ql_lookup.items():
+            post_2_quotelinks[num].update(quotelinks)
+    
+    for num in tuple(post_2_quotelinks.keys()):
+        post_2_quotelinks[num] = list(post_2_quotelinks[num])
+
+    _, posts = get_qls_and_posts(posts, gather_qls=False)
+    result['posts'] = posts
+    return result, post_2_quotelinks
+
+# Temporary, needs testing before removing old get_posts_filtered
+# TODO: transfer all of this (SqlSearchFilter, validate_and_generate_params2, get_posts_filtered2) to search/providers/sql.py
+@dataclass(slots=True)
+class SqlSearchFilter:
+    fragment: str
+    like: bool = False
+    placeholder: bool = True
+
+    def get_fragment(self, phg: Phg):
+        if self.placeholder:
+            return self.fragment.replace('##', phg())
+        return self.fragment
+
+sql_search_filters = dict(
+    title=SqlSearchFilter('title like ##', like=True),
+    comment=SqlSearchFilter('comment like ##', like=True),
+    media_filename=SqlSearchFilter('media_filename like ##', like=True),
+    media_hash=SqlSearchFilter('media_hash = ##'),
+    num=SqlSearchFilter('num = ##'),
+    date_before=SqlSearchFilter('timestamp <= ##'),
+    date_after=SqlSearchFilter('timestamp >= ##'),
+    has_no_file=SqlSearchFilter("(media_filename is null or media_filename = '')", placeholder=False),
+    has_file=SqlSearchFilter("media_filename is not null and media_filename != ''", placeholder=False),
+    is_op=SqlSearchFilter('op = 1', placeholder=False),
+    is_not_op=SqlSearchFilter('op = 0', placeholder=False),
+    is_deleted=SqlSearchFilter('deleted = 1', placeholder=False),
+    is_not_deleted=SqlSearchFilter('', placeholder=False),
+    is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
+    is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
+    width=SqlSearchFilter('media_w = ##'),
+    height=SqlSearchFilter('media_h = ##'),
+    capcode=SqlSearchFilter('capcode = ##'),
+)
+
+def validate_and_generate_params2(form_data: dict, phg: Phg):
+    defaults_to_ignore = {
+        'width': 0,
+        'height': 0,
+        'capcode': Capcode.default.value,
+    }
+    params = []
+    where_parts = []
+    for field, s_filter in sql_search_filters.items():
+        if not (field_val := form_data.get(field)):
+            continue
+        if (field in defaults_to_ignore) and (field_val == defaults_to_ignore[field]):
+            continue
+        if s_filter.like:
+            field_val = f'%{field_val}%'
+        if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
+            field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
+        
+        if s_filter.placeholder:
+            params.append(field_val)
+        where_parts.append(s_filter.get_fragment(phg))
+
+    where_fragment = ' and '.join(where_parts)
+    params = tuple(params)
+    return where_fragment, params
+
+async def get_posts_filtered2(form_data: dict, result_limit: int, order_by: str):
+    if order_by not in ('asc', 'desc'):
+        raise BadRequest('order_by is unknown')
+    if not (boards := form_data['boards']):
+        raise BadRequest('no boards specified')
+    
+    phg = Phg()
+    where_filters, params = validate_and_generate_params2(form_data, phg)
+    where_query = f'where {where_filters}' if where_filters else ''
+
+    board_posts = await asyncio.gather(*(
+        query_dict(f"""
+            {get_selector(board)}
+            from {board}
+            {where_query}
+            order by ts_unix {order_by}
+            limit {int(result_limit)}
+            """, params=params
+        ) for board in boards)
+    )
+    
+    posts = []
+    for board_post in board_posts:
+        posts.extend(board_post)
+    
     result = {'posts': []}
     if not posts:
         return result, {}

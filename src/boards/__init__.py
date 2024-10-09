@@ -1,5 +1,6 @@
 import os
 from tomllib import load
+from functools import cache
 
 from utils import make_src_path
 from configs import app_conf
@@ -47,3 +48,9 @@ def _get_board_views():
     return boards, board_shorts, board_objects
     
 boards, board_shortnames, board_objects = _get_board_views()
+
+@cache
+def get_title(board: str):
+    print(f'here {board}')
+    title = f"/{board}/ - {boards[board]}"
+    return title
