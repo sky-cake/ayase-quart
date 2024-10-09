@@ -5,7 +5,7 @@ from quart import flash
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from configs import moderation_conf
-from db import close_db_pool, query_tuple, DB_TYPE
+from db import DB_TYPE, close_db_pool, query_tuple
 from enums import DbType, UserRole
 
 SQLITE_DB = moderation_conf.get('sqlite').get('database')

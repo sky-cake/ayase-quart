@@ -2,6 +2,7 @@ from werkzeug.exceptions import NotFound
 
 import boards
 
+
 def validate_board(board: str) -> None:
     if not board in boards.boards:
         raise NotFound(board, boards.board_shortnames)

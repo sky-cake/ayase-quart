@@ -1,9 +1,12 @@
 from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import admin_required
+from boards import board_shortnames
+from db import DB_TYPE, Phg, query_dict
+from db.mysql import \
+    mysql_conf  # todo: figure out how to remove this import...
 from enums import DbType
-from db import query_dict, Phg, DB_TYPE
-from db.mysql import mysql_conf # todo: figure out how to remove this import...
+from forms import UserForm
 from moderation.api import (
     create_user,
     delete_user,
@@ -11,7 +14,6 @@ from moderation.api import (
     get_all_users,
     get_user_with_id
 )
-from forms import UserForm
 from render import render_controller
 from templates import (
     template_latest,
@@ -20,7 +22,6 @@ from templates import (
     template_users_delete,
     template_users_edit
 )
-from boards import board_shortnames
 
 blueprint_admin = Blueprint('blueprint_admin', __name__)
 

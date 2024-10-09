@@ -4,14 +4,23 @@ from logging import getLogger
 from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest
 
-from asagi_converter import get_posts_filtered, restore_comment, get_posts_filtered2
+from asagi_converter import (
+    get_posts_filtered,
+    get_posts_filtered2,
+    restore_comment
+)
+from boards import board_shortnames
 from configs import SITE_NAME
 from enums import SearchMode
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from render import render_controller
 from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
-from search.highlighting import get_term_re, mark_highlight, highlight_search_results
+from search.highlighting import (
+    get_term_re,
+    highlight_search_results,
+    mark_highlight
+)
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
@@ -21,11 +30,10 @@ from templates import (
     template_index_search_config,
     template_index_search_gallery_post_t,
     template_index_search_post_t,
-    template_search,
+    template_search
 )
 from utils import Perf
 from utils.validation import validate_board
-from boards import board_shortnames
 
 search_log = getLogger('search')
 
@@ -78,38 +86,15 @@ async def v_index_search():
     search_p = get_search_provider()
 
     if request.method == 'POST':
-        form = await SearchForm.create_form(meta={'csrf': False})
+        form: SearchForm = await SearchForm.create_form(meta={'csrf': False})
     else:
         boards = request.args.getlist('boards')
         params = {**request.args}
         params['boards'] = boards
-        form = await SearchForm.create_form(meta={'csrf': False}, **params)
-    
-    valid = await form.validate()
-    
-    if valid and form.boards.data:
+        form: SearchForm = await SearchForm.create_form(meta={'csrf': False}, **params)
+
+    if (await form.validate_on_submit()):
         searched = True
-
-        if not form.boards.data:
-            raise BadRequest('select a board')
-        for board in form.boards.data:
-            validate_board(board)
-
-        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
-            raise BadRequest("search mode SearchMode.gallery only shows files")
-        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
-            raise BadRequest('search_mode is unknown')
-        if form.order_by.data not in ['asc', 'desc']:
-            raise BadRequest('order_by is unknown')
-        if form.is_op.data and form.is_not_op.data:
-            raise BadRequest('is_op is contradicted')
-        if form.is_deleted.data and form.is_not_deleted.data:
-            raise BadRequest('is_deleted is contradicted')
-        if form.has_file.data and form.has_no_file.data:
-            raise BadRequest('has_file is contradicted')
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
-            raise BadRequest('the dates are contradicted')
-
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
 
@@ -177,34 +162,13 @@ async def v_search():
     quotelinks = []
     p = Perf()
 
-    if await form.validate_on_submit():
-
-        if not form.boards.data:
-            raise BadRequest('select a board')
-        for board in form.boards.data:
-            validate_board(board)
-
-        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
-            raise BadRequest("search mode SearchMode.gallery only shows files")
-        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
-            raise BadRequest('search_mode is unknown')
-        if form.order_by.data not in ['asc', 'desc']:
-            raise BadRequest('order_by is unknown')
-        if form.is_op.data and form.is_not_op.data:
-            raise BadRequest('is_op is contradicted')
-        if form.is_deleted.data and form.is_not_deleted.data:
-            raise BadRequest('is_deleted is contradicted')
-        if form.has_file.data and form.has_no_file.data:
-            raise BadRequest('has_file is contradicted')
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
-            raise BadRequest('the dates are contradicted')
+    if (await form.validate_on_submit()):
+        searched = True
         p.check('validate')
 
-        params = form.data
-
         # posts is {'posts': [{...}, {...}, ...]}
-        # posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data)
-        posts, quotelinks = await get_posts_filtered2(params, form.result_limit.data, form.order_by.data)
+        # posts, quotelinks = await get_posts_filtered(form.data, form.result_limit.data, form.order_by.data)
+        posts, quotelinks = await get_posts_filtered2(form.data, form.result_limit.data, form.order_by.data)
         p.check('query')
 
         if HIGHLIGHT_ENABLED:
@@ -212,7 +176,6 @@ async def v_search():
         p.check('highlight')
 
         posts = posts['posts']
-        searched = True
 
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery

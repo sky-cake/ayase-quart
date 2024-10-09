@@ -1,5 +1,5 @@
-from typing import Callable
 from functools import cache
+from typing import Callable
 
 from configs import db_conf
 from enums import DbType

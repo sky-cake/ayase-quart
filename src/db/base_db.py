@@ -1,5 +1,6 @@
 from typing import Iterable
 
+
 class BasePlaceHolderGen():
     __slots__ = ()
 

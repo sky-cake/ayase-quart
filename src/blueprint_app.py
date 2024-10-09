@@ -7,6 +7,7 @@ from asagi_converter import (
     generate_thread,
     get_op_thread_count
 )
+from boards import get_title
 from configs import SITE_NAME
 from posts.template_optimizer import wrap_post_t
 from render import render_controller
@@ -18,8 +19,7 @@ from templates import (
     template_thread
 )
 from utils import Perf
-from utils.validation import validate_threads, validate_board
-from boards import get_title
+from utils.validation import validate_board, validate_threads
 
 blueprint_app = Blueprint("blueprint_app", __name__)
 

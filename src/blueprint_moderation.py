@@ -1,13 +1,13 @@
 from quart import Blueprint, redirect, request, url_for
 
 from blueprint_auth import moderator_required
+from forms import ReportForm
 from moderation.api import (
     delete_report,
     edit_report,
     get_open_reports,
     get_report_with_id
 )
-from forms import ReportForm
 from render import render_controller
 from templates import (
     template_reports_delete,

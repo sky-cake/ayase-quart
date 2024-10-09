@@ -2,8 +2,8 @@ from enum import StrEnum
 from html import escape
 
 from configs import media_conf
-from utils.timestamps import ts_2_formatted
 from posts.capcodes import Capcode
+from utils.timestamps import ts_2_formatted
 
 IMAGE_URI = media_conf.get('image_uri')
 THUMB_URI = media_conf.get('thumb_uri')

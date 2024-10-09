@@ -1,19 +1,20 @@
+import asyncio
 import html
 import re
 from collections import defaultdict
-from functools import cache
-from textwrap import dedent
-from itertools import batched
-import asyncio
-from datetime import date, datetime
 from dataclasses import dataclass
+from datetime import date, datetime
+from functools import cache
+from itertools import batched
+from textwrap import dedent
 
 from werkzeug.exceptions import BadRequest
 
+from db import Phg, query_dict, query_tuple
+from db.base_db import BasePlaceHolderGen
 from posts.capcodes import Capcode
 from posts.quotelinks import get_quotelink_lookup
 from search.highlighting import html_highlight
-from db import query_tuple, query_dict, Phg
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -219,33 +220,33 @@ class SqlSearchFilter:
     like: bool = False
     placeholder: bool = True
 
-    def get_fragment(self, phg: Phg):
+    def get_fragment(self, phg: BasePlaceHolderGen):
         if self.placeholder:
-            return self.fragment.replace('##', phg())
+            return self.fragment.replace('∆', phg())
         return self.fragment
 
 sql_search_filters = dict(
-    title=SqlSearchFilter('title like ##', like=True),
-    comment=SqlSearchFilter('comment like ##', like=True),
-    media_filename=SqlSearchFilter('media_filename like ##', like=True),
-    media_hash=SqlSearchFilter('media_hash = ##'),
-    num=SqlSearchFilter('num = ##'),
-    date_before=SqlSearchFilter('timestamp <= ##'),
-    date_after=SqlSearchFilter('timestamp >= ##'),
+    title=SqlSearchFilter('title like ∆', like=True),
+    comment=SqlSearchFilter('comment like ∆', like=True),
+    media_filename=SqlSearchFilter('media_filename like ∆', like=True),
+    media_hash=SqlSearchFilter('media_hash = ∆'),
+    num=SqlSearchFilter('num = ∆'),
+    date_before=SqlSearchFilter('timestamp <= ∆'),
+    date_after=SqlSearchFilter('timestamp >= ∆'),
     has_no_file=SqlSearchFilter("(media_filename is null or media_filename = '')", placeholder=False),
     has_file=SqlSearchFilter("media_filename is not null and media_filename != ''", placeholder=False),
     is_op=SqlSearchFilter('op = 1', placeholder=False),
     is_not_op=SqlSearchFilter('op = 0', placeholder=False),
     is_deleted=SqlSearchFilter('deleted = 1', placeholder=False),
-    is_not_deleted=SqlSearchFilter('', placeholder=False),
+    is_not_deleted=SqlSearchFilter('deleted = 0', placeholder=False),
     is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
     is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
-    width=SqlSearchFilter('media_w = ##'),
-    height=SqlSearchFilter('media_h = ##'),
-    capcode=SqlSearchFilter('capcode = ##'),
+    width=SqlSearchFilter('media_w = ∆'),
+    height=SqlSearchFilter('media_h = ∆'),
+    capcode=SqlSearchFilter('capcode = ∆'),
 )
 
-def validate_and_generate_params2(form_data: dict, phg: Phg):
+def validate_and_generate_params2(form_data: dict, phg: BasePlaceHolderGen):
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
@@ -267,7 +268,7 @@ def validate_and_generate_params2(form_data: dict, phg: Phg):
             params.append(field_val)
         where_parts.append(s_filter.get_fragment(phg))
 
-    where_fragment = ' and '.join(where_parts)
+    where_fragment = '(' + ') and ('.join(where_parts) + ')'
     params = tuple(params)
     return where_fragment, params
 
