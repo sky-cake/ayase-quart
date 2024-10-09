@@ -78,7 +78,7 @@ async def v_index_search():
     total_hits = None
 
     posts_t = []
-    results = []
+    posts = []
     quotelinks = []
     page_links = ''
     p = Perf('index search')
@@ -101,7 +101,7 @@ async def v_index_search():
 
         p.check('parsed query')
 
-        results, total_hits = await search_p.search_posts(q)
+        posts, total_hits = await search_p.search_posts(q)
         pages = total_pages(total_hits, q.result_limit)
         cur_page = q.page
         page_links = template_pagination_links('/index_search', form.data, pages, cur_page)
@@ -110,7 +110,7 @@ async def v_index_search():
 
         if search_mode == SearchMode.index:
             hl_re = get_term_re(q.terms) if q.terms else None
-            for post in results:
+            for post in posts:
                 if post['comment']:
                     if hl_re:
                         post['comment'] = mark_highlight(hl_re, post['comment'])
@@ -123,7 +123,7 @@ async def v_index_search():
         if search_mode == SearchMode.index:
             posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
         else:
-            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
 
         p.check('render posts')
 
@@ -132,7 +132,7 @@ async def v_index_search():
         form=form,
         posts_t=posts_t,
         page_links=page_links,
-        res_count=len(results),
+        res_count=len(posts),
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
@@ -153,7 +153,6 @@ async def v_search():
     if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
-    search_mode = SearchMode.index
     searched = False
 
     cur_page = None
@@ -162,7 +161,6 @@ async def v_search():
 
     posts = []
     posts_t = []
-    results = []
     quotelinks = []
     page_links = ''
     p = Perf()
@@ -176,6 +174,9 @@ async def v_search():
         form: SearchForm = await SearchForm.create_form(meta={'csrf': False}, **params)
 
     if form.boards.data and (await form.validate()):
+        search_mode = form.search_mode.data
+        if not search_mode:
+            search_mode = SearchMode.index
 
         searched = True
         p.check('validate')
@@ -222,7 +223,7 @@ async def v_search():
         if search_mode == SearchMode.index:
             posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
         else:
-            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
 
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
