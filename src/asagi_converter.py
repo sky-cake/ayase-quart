@@ -268,7 +268,7 @@ def validate_and_generate_params2(form_data: dict, phg: BasePlaceHolderGen):
             params.append(field_val)
         where_parts.append(s_filter.get_fragment(phg))
 
-    where_fragment = '(' + ') and ('.join(where_parts) + ')'
+    where_fragment = '(' + ') and ('.join(where_parts) + ')' if where_parts else []
     params = tuple(params)
     return where_fragment, params
 
