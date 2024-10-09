@@ -147,9 +147,9 @@ async def v_index_search():
 
     return rend
 
-# need to get gallery mode working before dropping "2"
-@blueprint_search.route("/search2", methods=['GET', 'POST'])
-async def v_search2():
+# need to get gallery mode working
+@blueprint_search.route("/search", methods=['GET', 'POST'])
+async def v_search():
     if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
