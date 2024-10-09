@@ -25,7 +25,12 @@ def total_pages(total: int, per_page: int) -> int:
 
 def get_page_link(base_link: str, page: int, active: bool=False, text: str=None):
     text = page if text is None else text
-    active = ' class="active"' if active else ''
+
+    if active:
+        active = ' class="active"'
+        text = f'[{text}]'
+    else:
+        active = ''
 
     link = f'<a href="{base_link}&page={page}">{text}</a>'
     wrapped = f'<li{active}>{link}</li>'

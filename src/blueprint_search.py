@@ -6,7 +6,8 @@ from werkzeug.exceptions import BadRequest
 
 from asagi_converter import (
     get_posts_filtered2,
-    restore_comment
+    restore_comment,
+    html_highlight,
 )
 from boards import board_shortnames
 from configs import SITE_NAME
@@ -17,7 +18,6 @@ from render import render_controller
 from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
 from search.highlighting import (
     get_term_re,
-    highlight_search_results,
     mark_highlight
 )
 from search.pagination import template_pagination_links, total_pages
@@ -32,6 +32,7 @@ from templates import (
     template_search
 )
 from utils import Perf
+from html import escape
 
 search_log = getLogger('search')
 
@@ -91,7 +92,7 @@ async def v_index_search():
         params['boards'] = boards
         form: SearchForm = await SearchForm.create_form(meta={'csrf': False}, **params)
 
-    if (await form.validate()) and form.boards.data:
+    if form.boards.data and (await form.validate()):
         searched = True
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
@@ -146,46 +147,99 @@ async def v_index_search():
 
     return rend
 
-
-@blueprint_search.route("/search", methods=['GET', 'POST'])
-async def v_search():
+# need to get gallery mode working before dropping "2"
+@blueprint_search.route("/search2", methods=['GET', 'POST'])
+async def v_search2():
     if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
-    form = await SearchForm.create_form(meta={'csrf': False})
     search_mode = SearchMode.index
     searched = False
 
+    cur_page = None
+    pages = None
+    total_hits = None
+
     posts = []
+    posts_t = []
+    results = []
     quotelinks = []
+    page_links = ''
     p = Perf()
 
-    if (await form.validate_on_submit()):
+    if request.method == 'POST':
+        form: SearchForm = await SearchForm.create_form(meta={'csrf': False})
+    else:
+        boards = request.args.getlist('boards')
+        params = {**request.args}
+        params['boards'] = boards
+        form: SearchForm = await SearchForm.create_form(meta={'csrf': False}, **params)
+
+    if form.boards.data and (await form.validate()):
+
         searched = True
         p.check('validate')
 
         # posts is {'posts': [{...}, {...}, ...]}
         posts, quotelinks = await get_posts_filtered2(form.data, form.result_limit.data, form.order_by.data)
+        posts = posts['posts']
         p.check('query')
 
-        if HIGHLIGHT_ENABLED:
-            posts = highlight_search_results(form, posts)
-        p.check('highlight')
+        per_page = 50
+        total_hits = len(posts)
+        pages = total_pages(total_hits, per_page) - 1
+        cur_page = min(int(request.args.get('page', 0)), pages)
+        page_links = template_pagination_links('/search', form.data, pages, cur_page)
 
-        posts = posts['posts']
+        # should send this off to the db
+        posts = posts[(cur_page * per_page):(cur_page * per_page) + per_page]
+
+        if search_mode == SearchMode.index:
+            terms_comment = form.comment.data
+            terms_title = form.title.data
+            hl_re_comment = get_term_re(terms_comment) if terms_comment else None
+            hl_re_title = get_term_re(terms_title) if terms_title else None
+
+            for post in posts:
+                post['quotelinks'] = quotelinks.get(post['num'], [])
+
+                if post['comment']:
+                    # this is not needed here, comments are restored by the `get_posts_filtered2()` rabbit hole
+                    # _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
+
+                    if hl_re_comment:
+                        post['comment'] = mark_highlight(hl_re_comment, post['comment'])
+                        post['comment'] = html_highlight(post['comment'])
+
+                if post['title'] and hl_re_title:
+                    post['title'] = mark_highlight(hl_re_title, post['title'])
+                    post['title'] = html_highlight(post['title'])
+
+                posts_t.append(wrap_post_t(post))
+
+        p.check('patch posts')
+
+        if search_mode == SearchMode.index:
+            posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+        else:
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
 
         if form.search_mode.data == SearchMode.gallery:
             search_mode = SearchMode.gallery
     
-    rendered = await render_controller(
-        template_search,
+    rendered = template_index_search.render(
         search_mode=search_mode,
         form=form,
-        posts=posts,
+        posts_t=posts_t,
+        res_count=len(posts),
+        page_links=page_links,
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
         tab_title=SITE_NAME,
+        cur_page=cur_page,
+        pages=pages,
+        total_hits=total_hits,
     )
     p.check('render')
     print(p)
