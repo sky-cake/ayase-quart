@@ -233,11 +233,11 @@ div.form-check {
     padding-bottom: 6px;
 }
 
-.search_highlight_title {
+.hl_cyan {
     background-color: #397070;
 }
 
-.search_highlight_comment {
+.hl_magenta {
     background-color: #70396c;
 }
 

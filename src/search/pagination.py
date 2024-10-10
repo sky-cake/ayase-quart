@@ -98,7 +98,7 @@ def template_pagination_links(path: str, params: dict, total_pages: int, cur_pag
     lower = 1
     upper = total_pages
     if total_pages > page_range * 2:
-        lower = max(0, cur_page - page_range)
+        lower = max(1, cur_page - page_range)
         upper = min(total_pages, cur_page + page_range)
 
     for page_i in range(lower, upper + 1): # numbered links

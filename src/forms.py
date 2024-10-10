@@ -26,7 +26,7 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import ReportCategory, ReportStatus, SearchMode, UserRole
+from enums import ReportCategory, ReportStatus, SearchResultMode, UserRole
 from moderation.api import get_user_with_username, is_correct_password
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
@@ -56,10 +56,10 @@ def validate_search_form(form):
     for board in form.boards.data:
         validate_board(board)
 
-    if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
+    if form.search_mode.data == SearchResultMode.gallery and form.has_no_file.data:
         raise BadRequest("search mode SearchMode.gallery only shows files")
 
-    if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
+    if form.search_mode.data not in [SearchResultMode.index, SearchResultMode.gallery]:
         raise BadRequest('search_mode is unknown')
 
     if form.order_by.data not in ['asc', 'desc']:
@@ -84,7 +84,7 @@ def validate_search_form(form):
 class SearchForm(StripForm):
     do_not_strip = ('comment',)
 
-    search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
+    search_mode = RadioField('Search Mode', choices=[(SearchResultMode.index, SearchResultMode.index), (SearchResultMode.gallery, SearchResultMode.gallery)], default=SearchResultMode.index)
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=board_shortnames)
     result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
@@ -104,7 +104,7 @@ class SearchForm(StripForm):
     is_not_deleted = BooleanField('Not deleted', default=False, validators=[Optional()])
     is_sticky = BooleanField('Sticky', default=False, validators=[Optional()])
     is_not_sticky = BooleanField('Not sticky', default=False, validators=[Optional()])
-    page = IntegerField(default=1, validators=[Optional()])
+    page = IntegerField(default=1, validators=[NumberRange(min=1)])
     width = IntegerField('Width', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution width')
     height = IntegerField('Height', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution height')
     capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
