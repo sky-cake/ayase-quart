@@ -2,16 +2,21 @@
 from logging import getLogger
 
 from quart import Blueprint, request
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
-from asagi_converter import get_posts_filtered, restore_comment
+from asagi_converter import (
+    search_posts,
+    html_highlight,
+    restore_comment,
+)
+from boards import board_shortnames
 from configs import SITE_NAME
-from enums import SearchMode
+from enums import SearchResultMode, SearchType
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from render import render_controller
-from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
-from search.highlighting import get_term_re, mark_highlight, highlight_search_results
+from search import HIGHLIGHT_ENABLED, MAX_RESULTS_LIMIT, SEARCH_ENABLED
+from search.highlighting import get_term_re, mark_highlight
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
@@ -21,11 +26,9 @@ from templates import (
     template_index_search_config,
     template_index_search_gallery_post_t,
     template_index_search_post_t,
-    template_search,
 )
 from utils import Perf
-from utils.validation import validate_board
-from boards import board_shortnames
+from utils.validation import positive_int
 
 search_log = getLogger('search')
 
@@ -59,96 +62,106 @@ async def error_invalid(e):
     )
 
 
-@blueprint_search.route("/index_search", methods=['GET', 'POST'])
-async def v_index_search():
+async def search_handler(search_type: SearchType) -> str:
     if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
-    search_mode = SearchMode.index
+    search_result_mode = SearchResultMode.index
     searched = False
     cur_page = None
     pages = None
     total_hits = None
-
     posts_t = []
-    results = []
+    posts = []
     quotelinks = []
     page_links = ''
-    p = Perf('index search')
-    search_p = get_search_provider()
+
+    p = Perf(f'{search_type.value} search')
 
     if request.method == 'POST':
-        form = await SearchForm.create_form(meta={'csrf': False})
-    else:
+        form: SearchForm = await SearchForm.create_form(meta={'csrf': False})
+    elif request.method == 'GET':
         boards = request.args.getlist('boards')
         params = {**request.args}
         params['boards'] = boards
-        form = await SearchForm.create_form(meta={'csrf': False}, **params)
-    
-    valid = await form.validate()
-    
-    if valid and form.boards.data:
+        form: SearchForm = await SearchForm.create_form(meta={'csrf': False}, **params)
+    else:
+        raise MethodNotAllowed()
+
+    is_search_request = bool(form.boards.data) and form.submit.data
+
+    if is_search_request and (await form.validate()):
         searched = True
+        if form.search_mode.data == SearchResultMode.gallery:
+            search_result_mode = SearchResultMode.gallery
+            form.has_file.data = True
+            form.has_no_file.data = False
 
-        if not form.boards.data:
-            raise BadRequest('select a board')
-        for board in form.boards.data:
-            validate_board(board)
-
-        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
-            raise BadRequest("search mode SearchMode.gallery only shows files")
-        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
-            raise BadRequest('search_mode is unknown')
-        if form.order_by.data not in ['asc', 'desc']:
-            raise BadRequest('order_by is unknown')
-        if form.is_op.data and form.is_not_op.data:
-            raise BadRequest('is_op is contradicted')
-        if form.is_deleted.data and form.is_not_deleted.data:
-            raise BadRequest('is_deleted is contradicted')
-        if form.has_file.data and form.has_no_file.data:
-            raise BadRequest('has_file is contradicted')
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
-            raise BadRequest('the dates are contradicted')
-
-        if form.search_mode.data == SearchMode.gallery:
-            search_mode = SearchMode.gallery
-
-        q = get_search_query(form.data)
-
+        query = get_search_query(form.data)
         p.check('parsed query')
 
-        results, total_hits = await search_p.search_posts(q)
-        pages = total_pages(total_hits, q.result_limit)
-        cur_page = q.page
-        page_links = template_pagination_links('/index_search', form.data, pages, cur_page)
+        query.page = positive_int(form.page.data, lower=1)
+        cur_page = query.page
+        per_page = positive_int(query.result_limit, 1, MAX_RESULTS_LIMIT)
 
-        p.check('search done')
+        if search_type == SearchType.idx:
+            search_p = get_search_provider()
+            posts, total_hits = await search_p.search_posts(query)
+            p.check('search done')
 
-        if search_mode == SearchMode.index:
-            hl_re = get_term_re(q.terms) if q.terms else None
-            for post in results:
-                if post['comment']:
-                    if hl_re:
-                        post['comment'] = mark_highlight(hl_re, post['comment'])
-                    _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
+            pages = total_pages(total_hits, per_page)
+            cur_page = positive_int(cur_page, 1, pages)
+            endpoint_path = '/index_search'
 
-                posts_t.append(wrap_post_t(post))
+            if search_result_mode == SearchResultMode.index:
+                hl_re = get_term_re(query.terms) if HIGHLIGHT_ENABLED and query.terms else None
+                for post in posts:
+                    if post['comment']:
+                        if hl_re:
+                            post['comment'] = mark_highlight(hl_re, post['comment'])
+                        _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
 
-        p.check('patch posts')
+                    posts_t.append(wrap_post_t(post))
 
-        if search_mode == SearchMode.index:
+        else:
+            posts, total_hits = await search_posts(form.data, form.result_limit.data, form.order_by.data)
+            p.check('search done')
+
+            pages = total_pages(total_hits, per_page)
+            cur_page = positive_int(cur_page, 1, pages)
+            endpoint_path = '/search'
+
+            posts = posts[((cur_page-1) * per_page):((cur_page-1) * per_page) + per_page] # TODO: offload paging to db
+
+            if search_result_mode == SearchResultMode.index:
+                hl_re_comment = get_term_re(form.comment.data) if HIGHLIGHT_ENABLED and form.comment.data else None
+                hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
+
+                for post in posts:
+                    if post['comment'] and hl_re_comment:
+                        post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
+
+                    if post['title'] and hl_re_title:
+                        post['title'] = html_highlight(mark_highlight(hl_re_title, post['title']), magenta=False)
+
+                    posts_t.append(wrap_post_t(post))
+
+        page_links = template_pagination_links(endpoint_path, form.data, pages, cur_page)
+        p.check('patched posts')
+
+        if search_result_mode == SearchResultMode.index:
             posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
         else:
-            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in results)
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
 
-        p.check('render posts')
+        p.check('rendered posts')
 
-    rend = template_index_search.render(
-        search_mode=search_mode,
+    rendered_page = template_index_search.render(
+        search_mode=search_result_mode,
         form=form,
         posts_t=posts_t,
         page_links=page_links,
-        res_count=len(results),
+        res_count=len(posts),
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
@@ -158,65 +171,17 @@ async def v_index_search():
         total_hits=total_hits,
     )
 
-    p.check('render page')
+    p.check('rendered page')
     print(p)
 
-    return rend
+    return rendered_page
+
+
+@blueprint_search.route("/index_search", methods=['GET', 'POST'])
+async def v_index_search():
+    return await search_handler(SearchType.idx)
 
 
 @blueprint_search.route("/search", methods=['GET', 'POST'])
 async def v_search():
-    if not SEARCH_ENABLED:
-        raise BadRequest('search is disabled')
-
-    form = await SearchForm.create_form(meta={'csrf': False})
-    search_mode = SearchMode.index
-    searched = False
-
-    posts = []
-    quotelinks = []
-    if await form.validate_on_submit():
-
-        if not form.boards.data:
-            raise BadRequest('select a board')
-        for board in form.boards.data:
-            validate_board(board)
-
-        if form.search_mode.data == SearchMode.gallery and form.has_no_file.data:
-            raise BadRequest("search mode SearchMode.gallery only shows files")
-        if form.search_mode.data not in [SearchMode.index, SearchMode.gallery]:
-            raise BadRequest('search_mode is unknown')
-        if form.order_by.data not in ['asc', 'desc']:
-            raise BadRequest('order_by is unknown')
-        if form.is_op.data and form.is_not_op.data:
-            raise BadRequest('is_op is contradicted')
-        if form.is_deleted.data and form.is_not_deleted.data:
-            raise BadRequest('is_deleted is contradicted')
-        if form.has_file.data and form.has_no_file.data:
-            raise BadRequest('has_file is contradicted')
-        if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
-            raise BadRequest('the dates are contradicted')
-
-        params = form.data
-
-        posts, quotelinks = await get_posts_filtered(params, form.result_limit.data, form.order_by.data)  # posts = {'posts': [{...}, {...}, ...]}
-
-        if HIGHLIGHT_ENABLED:
-            posts = highlight_search_results(form, posts)
-
-        posts = posts['posts']
-        searched = True
-
-        if form.search_mode.data == SearchMode.gallery:
-            search_mode = SearchMode.gallery
-
-    return await render_controller(
-        template_search,
-        search_mode=search_mode,
-        form=form,
-        posts=posts,
-        searched=searched,
-        quotelinks=quotelinks,
-        search_result=True,
-        tab_title=SITE_NAME,
-    )
+    return await search_handler(SearchType.sql)

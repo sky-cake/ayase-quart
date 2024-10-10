@@ -5,8 +5,8 @@ from typing import Optional
 from posts.capcodes import Capcode, capcode_2_id
 from utils.validation import positive_int
 
-from .post_metadata import board_2_int
 from . import DEFAULT_RESULTS_LIMIT, MAX_RESULTS_LIMIT
+from .post_metadata import board_2_int
 
 
 @dataclass(slots=True)
@@ -36,8 +36,18 @@ class SearchQuery:
 
 common_words = set('the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us'.split())
 
+
+def strip_2_none(s: str) -> str|None:
+    if s and s.strip() == '':
+        return None
+    return s
+
+
 def get_search_query(params: dict) -> SearchQuery:
-    terms = params['title'] or params['comment']
+    params['comment'] = strip_2_none(params['comment'])
+    params['title'] = strip_2_none(params['title'])
+
+    terms = params['comment'] or params['title'] # since we only search one or the other, let's make comments precede titles
 
     q = SearchQuery(
         terms=terms,

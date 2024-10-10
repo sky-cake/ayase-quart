@@ -1,11 +1,11 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 
-from configs import app_conf, site_conf, search_conf, media_conf
+from boards import board_objects
+from configs import app_conf, media_conf, search_conf, site_conf
+from enums import IndexSearchType
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
-from enums import IndexSearchType
-from boards import board_objects
 
 render_constants = dict(
     site_name=site_conf.get('name'),

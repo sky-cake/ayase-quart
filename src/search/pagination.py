@@ -25,7 +25,12 @@ def total_pages(total: int, per_page: int) -> int:
 
 def get_page_link(base_link: str, page: int, active: bool=False, text: str=None):
     text = page if text is None else text
-    active = ' class="active"' if active else ''
+
+    if active:
+        active = ' class="active"'
+        text = f'[{text}]'
+    else:
+        active = ''
 
     link = f'<a href="{base_link}&page={page}">{text}</a>'
     wrapped = f'<li{active}>{link}</li>'
@@ -89,9 +94,16 @@ def template_pagination_links(path: str, params: dict, total_pages: int, cur_pag
         links.append(get_page_link(base_link, cur_page - 1, text='Previous'))
         links.append('<br>')
 
-    for page in range(1, total_pages + 1): # numbered links
-        active = page == cur_page
-        links.append(get_page_link(base_link, page, active=active))
+    page_range = 10 # 0, 1, 2, ..., (10 - cur), 11, 12, ..., 20
+    lower = 1
+    upper = total_pages
+    if total_pages > page_range * 2:
+        lower = max(1, cur_page - page_range)
+        upper = min(total_pages, cur_page + page_range)
+
+    for page_i in range(lower, upper + 1): # numbered links
+        active = page_i == cur_page
+        links.append(get_page_link(base_link, page_i, active=active))
 
     if cur_page < total_pages: # not last page
         links.append('<br>')

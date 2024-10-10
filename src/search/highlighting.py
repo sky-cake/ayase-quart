@@ -11,7 +11,8 @@ post_mark_esc = re.escape(mark_post)
 hl_mark_sub = f'{mark_pre}\\1{mark_post}'
 
 hl_mark_re = re.compile(f'{pre_mark_esc}(.+?){post_mark_esc}')
-hl_html_sub = r'<span class="search_highlight_comment">\1</span>'
+hl_html_sub_magenta = r'<span class="hl_magenta">\1</span>'
+hl_html_sub_cyan = r'<span class="hl_cyan">\1</span>'
 
 
 # first stage, mark plain text
@@ -22,8 +23,11 @@ def mark_highlight(term_re: re.Pattern, value: str):
 
 
 # second stage, convert html text with marks to html with html marks
-def html_highlight(value: str):
-    return hl_mark_re.sub(hl_html_sub, value)
+def html_highlight(text: str, magenta=True):
+    """If not magenta, then cyan."""
+    if magenta:
+        return hl_mark_re.sub(hl_html_sub_magenta, text)
+    return hl_mark_re.sub(hl_html_sub_cyan, text)
 
 
 def get_term_re(terms: str):

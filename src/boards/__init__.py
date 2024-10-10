@@ -1,8 +1,9 @@
 import os
+from functools import cache
 from tomllib import load
 
-from utils import make_src_path
 from configs import app_conf
+from utils import make_src_path
 
 BOARDS_FILE = make_src_path('boards.toml')
 DEFAULT_BOARDS_FILE = make_src_path('boards.tpl.toml')
@@ -32,6 +33,7 @@ def _get_board_views():
     boards = _load_boards_toml()
     if app_conf.get('validate_boards_db', True):
         from asyncio import run
+
         from moderation.api import get_db_tables
     
 
@@ -47,3 +49,9 @@ def _get_board_views():
     return boards, board_shorts, board_objects
     
 boards, board_shortnames, board_objects = _get_board_views()
+
+@cache
+def get_title(board: str):
+    print(f'here {board}')
+    title = f"/{board}/ - {boards[board]}"
+    return title

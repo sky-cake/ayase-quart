@@ -1,17 +1,9 @@
-from functools import cache
-
 from jinja2 import Template
 from quart import render_template
 
 from configs import app_conf
-import boards
 
 TESTING = app_conf.get('testing', False)
-
-@cache
-def get_title(board_shortname: str):
-    title = f"/{board_shortname}/ - {boards.boards[board_shortname]}"
-    return title
 
 
 async def render_controller(template: str | Template, **kwargs):

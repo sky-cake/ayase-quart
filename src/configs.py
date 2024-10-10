@@ -1,5 +1,7 @@
 import tomllib
+
 from utils import make_src_path
+
 
 def _load_config_toml():
     if not hasattr(_load_config_toml, 'conf'):

@@ -54,11 +54,11 @@ enabled = true
 highlight = true
 default_result_limit = 100
 max_result_limit = 10000
-provider = 'lnx' # lnx, meili, manticore, typesense, mysql, quickwit
+provider = 'lnx' # lnx, meili, manticore, typesense, quickwit
 host = 'http://localhost:8000'
 
 [search.config]
-headers = {	content-type = 'application/json' }
+headers = { content-type = 'application/json' }
 
 [search.meili]
 

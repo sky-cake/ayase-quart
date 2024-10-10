@@ -1,51 +1,53 @@
+import asyncio
 import html
 import re
 from collections import defaultdict
-from functools import cache
-from textwrap import dedent
-from itertools import batched
-import asyncio
+from dataclasses import dataclass
 from datetime import date, datetime
+from functools import cache
+from itertools import batched
+from textwrap import dedent
 
 from werkzeug.exceptions import BadRequest
 
+from db import Phg, query_dict, query_tuple
+from db.base_db import BasePlaceHolderGen
 from posts.capcodes import Capcode
 from posts.quotelinks import get_quotelink_lookup
 from search.highlighting import html_highlight
-from db import query_tuple, query_dict, Phg
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
 # https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
 selector_columns = (
-    'thread_num', # an archiver construct. The OP post ID.
     'num', # `no` - The numeric post ID
-    'board_shortname', # board acronym
+    'thread_num', # an archiver construct. The OP post ID.
+    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
+    'ts_unix', # `time` - UNIX timestamp the post was created
     'ts_expired', # an archiver construct. Could also be `archvied_on` - UNIX timestamp the post was archived
-    'name', # `name` - Name user posted with. Defaults to Anonymous
-    'sticky', # `sticky`- If the thread is being pinned to the top of the page
-    'title', # `sub` - OP Subject text
-    'media_w', # `w` - Image width dimension
-    'media_h', # `h` - Image height dimension
+    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
     'preview_w', # `tn_w` - Thumbnail image width dimension 	
     'preview_h', # `tn_h` - Thumbnail image height dimension
-    'ts_unix', # `time` - UNIX timestamp the post was created
-    'preview_orig', # an archiver construct. Thumbnail name, e.g. 1696291733998594s.jpg (an added 's')
-    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
-    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
-    'media_size', # `fsize` - Size of uploaded file in bytes
     'media_filename', # `filename` - Filename as it appeared on the poster's device, e.g. IMG_3697.jpg
-    'op', # whether or not the post is the thread op (1 == yes, 0 == no)
-    'op_num', # thread_num
-    'capcode', # `capcode` - The capcode identifier for a post
-    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'media_w', # `w` - Image width dimension
+    'media_h', # `h` - Image height dimension
+    'media_size', # `fsize` - Size of uploaded file in bytes
+    'media_hash', # `md5` - 24 character, packed base64 MD5 hash of file
+    'media_orig', # an archiver construct. Full media name, e.g. 1696291733998594.jpg
     'spoiler', # `spoiler` - If the image was spoilered or not
-    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-    'poster_hash', # an archiver construct
-    'locked', # `closed` - if the thread is closed to replies
     'deleted', # `filedeleted` - if post had attachment and attachment is deleted
-    'exif', # an archiver construct
+    'capcode', # `capcode` - The capcode identifier for a post
+    'name', # `name` - Name user posted with. Defaults to Anonymous
+    'trip', # `trip` - the user's tripcode, in format: !tripcode or !!securetripcode
+    'title', # `sub` - OP Subject text
     'comment', # `com` - Comment (HTML escaped)
+    'sticky', # `sticky`- If the thread is being pinned to the top of the page
+    'locked', # `closed` - if the thread is closed to replies
+    'poster_hash', # an archiver construct
+    'poster_country', # country - Poster's ISO 3166-1 alpha-2 country code, https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+    'exif', # an archiver construct
+    'op_num', # thread_num
+    'board_shortname', # board acronym
     # 'tim', # `tim` - Unix timestamp + microtime that an image was uploaded. AQ does not use this.
 )
 
@@ -53,173 +55,145 @@ selector_columns = (
 def get_selector(board: str) -> str:
     """Remember to update `selector_columns` variable above when you modify these selectors.
     """
-    SELECTOR = f"""
-    SELECT
-    {board}.thread_num,
-    num,
-    '{board}' AS board_shortname,
-    timestamp_expired AS ts_expired,
-    name,
-    {board}.sticky AS sticky,
-    coalesce(title, '') AS title,
-    media_w AS media_w,
-    media_h AS media_h,
-    preview_w AS preview_w,
-    preview_h AS preview_h,
-    timestamp AS ts_unix,
-    preview_orig,
-    media_orig,
-    {board}.media_hash,
-    media_size AS media_size,
-    media_filename AS media_filename,
+    selector = f"""
+    select
+    num as num,
+    {board}.thread_num as thread_num,
     op as op,
-    CASE WHEN op=1 THEN num ELSE {board}.thread_num END AS op_num,
-    capcode AS capcode,
-    trip,
+    timestamp as ts_unix,
+    timestamp_expired as ts_expired,
+    preview_orig as preview_orig,
+    preview_w as preview_w,
+    preview_h as preview_h,
+    media_filename as media_filename,
+    media_w as media_w,
+    media_h as media_h,
+    media_size as media_size,
+    {board}.media_hash as media_hash,
+    media_orig as media_orig,
     spoiler as spoiler,
-    poster_country,
-    poster_hash,
-    {board}.locked AS locked,
-    deleted AS deleted,
-    exif,
-    comment
+    deleted as deleted,
+    capcode as capcode,
+    name as name,
+    trip as trip,
+    coalesce(title, '') as title,
+    comment as comment,
+    {board}.sticky as sticky,
+    {board}.locked as locked,
+    poster_hash as poster_hash,
+    poster_country as poster_country,
+    exif as exif,
+    case when op=1 then num else {board}.thread_num end as op_num,
+    '{board}' as board_shortname
     """
 
-    return dedent(SELECTOR)
+    return dedent(selector)
 
 
-def validate_and_generate_params(form_data):
-    """
-    Removes inauthentic/non-form data (malicious POST fields, CSRF tags, etc.)
-    Specifies the filters for each valid field.
-    """
-    param_filters = {
-        'title': {'like': True, 's': 'title LIKE %(title)s'},
-        'comment': {'like': True, 's': 'comment LIKE %(comment)s'},
-        'media_filename': {'like': True, 's': 'media_filename LIKE %(media_filename)s'},
-        'media_hash': {'s': 'media_hash = %(media_hash)s'},
-        'num': {'s': 'num = %(num)s'},
-        'date_before': {'s': 'timestamp <= %(date_before)s'},
-        'date_after': {'s': 'timestamp >= %(date_after)s'},
-        'has_no_file': {'s': 'media_filename is null or media_filename = ""'},
-        'has_file': {'s': 'media_filename is not null and media_filename != ""'},
-        'is_op': {'s': 'op = 1'},
-        'is_not_op': {'s': 'op != 1'},
-        'is_deleted': {'s': 'deleted = 1'},
-        'is_not_deleted': {'s': 'deleted != 1'},
-        'is_sticky': {'s': 'sticky = 1'},
-        'is_not_sticky': {'s': 'sticky != 1'},
-        'width': {'s': 'media_w = %(width)s'},
-        'height': {'s': 'media_h = %(height)s'},
-        'capcode': {'s': 'capcode = %(capcode)s'},
-    }
+# Temporary, needs testing before removing old get_posts_filtered
+# TODO: transfer all of this (SqlSearchFilter, validate_and_generate_params, search_posts) to search/providers/sql.py
+@dataclass(slots=True)
+class SqlSearchFilter:
+    fragment: str
+    like: bool = False
+    placeholder: bool = True
 
+    def get_fragment(self, phg: BasePlaceHolderGen):
+        if self.placeholder:
+            return self.fragment.replace('∆', phg())
+        return self.fragment
+
+sql_search_filters = dict(
+    title=SqlSearchFilter('title like ∆', like=True),
+    comment=SqlSearchFilter('comment like ∆', like=True),
+    media_filename=SqlSearchFilter('media_filename like ∆', like=True),
+    media_hash=SqlSearchFilter('media_hash = ∆'),
+    num=SqlSearchFilter('num = ∆'),
+    date_before=SqlSearchFilter('timestamp <= ∆'),
+    date_after=SqlSearchFilter('timestamp >= ∆'),
+    has_no_file=SqlSearchFilter("(media_filename is null or media_filename = '')", placeholder=False),
+    has_file=SqlSearchFilter("media_filename is not null and media_filename != ''", placeholder=False),
+    is_op=SqlSearchFilter('op = 1', placeholder=False),
+    is_not_op=SqlSearchFilter('op = 0', placeholder=False),
+    is_deleted=SqlSearchFilter('deleted = 1', placeholder=False),
+    is_not_deleted=SqlSearchFilter('deleted = 0', placeholder=False),
+    is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
+    is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
+    width=SqlSearchFilter('media_w = ∆'),
+    height=SqlSearchFilter('media_h = ∆'),
+    capcode=SqlSearchFilter('capcode = ∆'),
+)
+
+def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
         'capcode': Capcode.default.value,
     }
+    params = []
+    where_parts = []
+    for field, s_filter in sql_search_filters.items():
+        if not (field_val := form_data.get(field)):
+            continue
+        if (field in defaults_to_ignore) and (field_val == defaults_to_ignore[field]):
+            continue
+        if s_filter.like:
+            field_val = f'%{field_val}%'
+        if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
+            field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
+        
+        if s_filter.placeholder:
+            params.append(field_val)
+        where_parts.append(s_filter.get_fragment(phg))
 
-    param_values = {}
-
-    for field in param_filters:
-
-        if 'like' in param_filters[field] and param_filters[field]['like'] and form_data[field]:
-            param_values[field] = f'%{form_data[field]}%'
-
-        elif form_data[field]:
-            if (field in defaults_to_ignore) and (form_data[field] != defaults_to_ignore[field]):
-                param_values[field] = form_data[field]
-            elif field not in defaults_to_ignore:
-                field_val = form_data[field]
-                if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
-                    field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
-                param_values[field] = field_val
-
-    return param_values, param_filters
+    where_fragment = '(' + ') and ('.join(where_parts) + ')' if where_parts else []
+    params = tuple(params)
+    return where_fragment, params
 
 
-async def get_posts_filtered(form_data: dict, result_limit: int, order_by: str):
-    """form_data e.g.
-    ```
-        form_data = dict(
-            boards=['ck', 'mu'],
-            title=None,
-            comment='skill issue',
-            media_filename=None,
-            media_hash=None,
-            has_file=False,
-            is_op=False,
-            ...
-        )
-    ```
-    !IMPORTANT!
-        form_data['boards'] is assumed to be validated before arriving here,
-            like all other referenced to boards in this file.
-    """
-
-    if order_by not in ['asc', 'desc']:
+async def search_posts(form_data: dict, result_limit: int, order_by: str):
+    if order_by not in ('asc', 'desc'):
         raise BadRequest('order_by is unknown')
-    param_values, param_filters = validate_and_generate_params(form_data)
+    if not (boards := form_data['boards']):
+        raise BadRequest('no boards specified')
 
-    sqls = []
+    phg: BasePlaceHolderGen = Phg()
+    where_filters, params = validate_and_generate_params(form_data, phg)
+    where_query = f'where {where_filters}' if where_filters else ''
 
-    # With the Asagi schema, each board has its own table, so we loop over boards and do UNION ALLs to get multi-board sql results
-    for board_shortname in form_data['boards']:
-
-        s = f"""
-            {get_selector(board_shortname)}
-            FROM {board_shortname}
-        """
-        s += ' \n WHERE 1=1 '
-
-        for field in param_values:
-            s += f" \n and {param_filters[field]['s']} "
-
-        sqls.append(s)
-
-    sql = ' \n UNION ALL \n '.join(sqls)
-
-    if sql.strip() == '':
-        return {'posts': []}, {}  # no boards specified
-
-    sql += f' \n ORDER BY ts_unix {order_by}'
-    sql += f" \n LIMIT {int(result_limit) * len(form_data['boards'])} \n ;"
-
-    posts = await query_dict(sql, params=param_values)
-
-    result = {'posts': []}
+    board_posts = await asyncio.gather(*(
+        query_dict(f"""
+            {get_selector(board)}
+            from {board}
+            {where_query}
+            order by ts_unix {order_by}
+            limit {int(result_limit)}
+            """, params=params
+        ) for board in boards)
+    )
+    
+    posts = []
+    for board_post in board_posts:
+        posts.extend(board_post)
+    
     if not posts:
-        return result, {}
+        return [], 0  # posts, total_hits
 
-    board_quotelinks = await get_post_replies(posts)
-    
-    # TODO: this post_2_quotelinks is wrong
-    # it merges quotelinks from multiple boards together
-    # the error must be fixed downstream
-    # searching from from multiple boards should be allowed
-    post_2_quotelinks = defaultdict(set)
-    for _board, ql_lookup in board_quotelinks.items():
-        for num, quotelinks in ql_lookup.items():
-            post_2_quotelinks[num].update(quotelinks)
-    
-    for num in tuple(post_2_quotelinks.keys()):
-        post_2_quotelinks[num] = list(post_2_quotelinks[num])
+    board_quotelinks = await get_board_2_ql_lookup(posts)
 
-    _, posts = get_qls_and_posts(posts, gather_qls=False)
-    result['posts'] = posts
-    return result, post_2_quotelinks
+    for post in posts:
+        board = post['board_shortname']
+        post['quotelinks'] = board_quotelinks.get(board, {}).get(post['num'], set())
+        _, post['comment'] = restore_comment(post['thread_num'], post['comment'], board)
+
+    return posts, len(posts)
 
 
 def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, list]:
     post_2_quotelinks = defaultdict(list)
     posts = []
     for row in rows:
-        row_quotelinks, row['comment'] = restore_comment(
-            row['thread_num'],
-            row['comment'],
-            row['board_shortname']
-        )
+        row_quotelinks, row['comment'] = restore_comment(row['thread_num'], row['comment'], row['board_shortname'])
 
         if gather_qls:
             for row_quotelink in row_quotelinks:
@@ -232,38 +206,37 @@ def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, li
 
     return post_2_quotelinks, posts
 
-async def get_post_replies(posts: list[dict]) -> dict[str, dict[int, list[int]]]:
-    board_threads = defaultdict(set)
-    
+
+async def get_board_2_ql_lookup(posts: list[dict]) -> dict[str, dict[int, list[int]]]:
+    board_op_nums = defaultdict(set)
     for post in posts:
-        board_threads[post['board_shortname']].add(post['op_num'])
-    boards_threads = [(board, tuple(threads)) for board, threads in board_threads.items()]
+        board_op_nums[post['board_shortname']].add(post['op_num'])
+
+    board_op_nums = [(board, tuple(op_nums)) for board, op_nums in board_op_nums.items()]
 
     board_qls = await asyncio.gather(*(
-        get_board_thread_quotelinks(board, threads)
-        for board, threads in boards_threads
+        get_board_thread_quotelinks(board, op_nums)
+        for board, op_nums in board_op_nums
     ))
-    board_quotelinks = {
-        b_threads[0]: ql_lookup
-        for b_threads, ql_lookup in zip(board_threads, board_qls)
-    }
-    return board_quotelinks
+
+    return {board: ql_lookup for (board, _op_nums), ql_lookup in zip(board_op_nums, board_qls)}
+
 
 async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
-    rows = await query_dict(f'''
+    query = f'''
         select num, comment
         from {board}
-        where
-            comment is not null
-            and thread_num in ({Phg().size(thread_nums)})''',
-        params=thread_nums
-    )
+        where comment is not null
+        and thread_num in ({Phg().size(thread_nums)})
+    '''
+    rows = await query_dict(query, params=thread_nums)
     return get_quotelink_lookup(rows)
 
 
 async def get_op_thread_count(board: str) -> int:
     rows = await query_tuple(f'select count(*) from {board}_threads;')
     return rows[0][0]
+
 
 square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
 spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL)  # with re.DOTALL, the dot matches any character, including newline characters.

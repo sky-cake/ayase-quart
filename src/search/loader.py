@@ -1,7 +1,6 @@
 from asyncio import CancelledError
 from asyncio import Queue as Queue_a
 from asyncio import Task, create_task, gather, wrap_future
-from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor as Executor
 from itertools import batched
 from typing import AsyncGenerator, Callable, List
@@ -10,13 +9,13 @@ from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
 from asagi_converter import get_selector, selector_columns
-from db import close_db_pool, query_tuple, prime_db_pool, Phg
+from db import Phg, close_db_pool, prime_db_pool, query_tuple
 from posts.capcodes import capcode_2_id
+from posts.quotelinks import get_quotelink_lookup
 
 from .post_metadata import board_2_int, board_int_num_2_pk, pack_metadata
 from .providers import search_index_fields
 from .providers.baseprovider import BaseSearch
-from posts.quotelinks import get_quotelink_lookup
 
 """
 Hard to find the sweetspot for THREAD_BATCH, goldilocks zone is anywhere between 20-100, also it affects everything downchain.

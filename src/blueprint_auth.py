@@ -4,13 +4,13 @@ from quart import Blueprint, current_app, flash, redirect, session, url_for
 from werkzeug.security import check_password_hash
 
 from captcha import MathCaptcha
+from enums import AuthActions
+from forms import LoginForm
 from moderation.api import (
     get_user_with_username,
     is_user_admin,
-    is_user_moderator,
+    is_user_moderator
 )
-from enums import AuthActions
-from forms import LoginForm
 from render import render_controller
 from templates import template_login
 

@@ -1,9 +1,11 @@
 from quart import flash, session
 from quart_wtf import QuartForm
+from werkzeug.exceptions import BadRequest
 from wtforms import widgets
 from wtforms.fields import (
     BooleanField,
     DateField,
+    Field,
     HiddenField,
     IntegerField,
     PasswordField,
@@ -23,11 +25,12 @@ from wtforms.validators import (
     ValidationError
 )
 
-from search import DEFAULT_RESULTS_LIMIT
-from moderation.api import get_user_with_username, is_correct_password
-from enums import ReportCategory, ReportStatus, SearchMode, UserRole
-from posts.capcodes import Capcode
 from boards import board_shortnames
+from enums import ReportCategory, ReportStatus, SearchResultMode, UserRole
+from moderation.api import get_user_with_username, is_correct_password
+from posts.capcodes import Capcode
+from search import DEFAULT_RESULTS_LIMIT
+from utils.validation import validate_board
 
 LENGTH_MD5_HASH = 32
 
@@ -37,14 +40,57 @@ class MultiCheckboxField(SelectMultipleField):
     option_widget = widgets.CheckboxInput()
 
 
-class SearchForm(QuartForm):
-    search_mode = RadioField('Search Mode', choices=[(SearchMode.index, SearchMode.index), (SearchMode.gallery, SearchMode.gallery)], default=SearchMode.index)
+class StripForm(QuartForm):
+    """Strips whitespace from all submitted `str` fields unless in `do_not_strip`."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self._fields.values():
+            if isinstance(field, Field) and hasattr(field.data, 'strip') and (field.name not in self.do_not_strip):
+                field.data = field.data.strip()
+
+
+def validate_search_form(form):
+    if not form.boards.data:
+        raise BadRequest('select a board')
+
+    for board in form.boards.data:
+        validate_board(board)
+
+    if form.search_mode.data == SearchResultMode.gallery and form.has_no_file.data:
+        raise BadRequest("search mode SearchMode.gallery only shows files")
+
+    if form.search_mode.data not in [SearchResultMode.index, SearchResultMode.gallery]:
+        raise BadRequest('search_mode is unknown')
+
+    if form.order_by.data not in ['asc', 'desc']:
+        raise BadRequest('order_by is unknown')
+
+    if form.is_op.data and form.is_not_op.data:
+        raise BadRequest('is_op is contradicted')
+
+    if form.is_deleted.data and form.is_not_deleted.data:
+        raise BadRequest('is_deleted is contradicted')
+
+    if form.is_sticky.data and form.is_not_sticky.data:
+        raise BadRequest('is_sticky is contradicted')
+
+    if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
+        raise BadRequest('the dates are contradicted')
+
+    if form.comment.data and form.comment.data.strip() == '':
+        form.comment.data = None
+
+
+class SearchForm(StripForm):
+    do_not_strip = ('comment',)
+
+    search_mode = RadioField('Search Mode', choices=[(SearchResultMode.index, SearchResultMode.index), (SearchResultMode.gallery, SearchResultMode.gallery)], default=SearchResultMode.index)
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=board_shortnames)
     result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
-    num = StringField("Post Number", validators=[Optional(), Length(2, 20)])
+    num = IntegerField("Post Number", validators=[Optional(), NumberRange(min=0)])
     media_filename = StringField("Filename", validators=[Optional(), Length(2, 256)])
     media_hash = StringField("File Hash", validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
     tripcode = StringField("Tripcode", validators=[Optional(), Length(8, 15)])
@@ -58,11 +104,23 @@ class SearchForm(QuartForm):
     is_not_deleted = BooleanField('Not deleted', default=False, validators=[Optional()])
     is_sticky = BooleanField('Sticky', default=False, validators=[Optional()])
     is_not_sticky = BooleanField('Not sticky', default=False, validators=[Optional()])
-    page = IntegerField(default=1, validators=[Optional()])
+    page = IntegerField(default=1, validators=[NumberRange(min=1)])
     width = IntegerField('Width', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution width')
     height = IntegerField('Height', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution height')
     capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
+
+    async def validate(self, extra_validators=None) -> bool:
+        """Overriding this definition allows us to validate fields in a specific order, and halt on a validation error."""
+        
+        validate_search_form(self) # call our custom validation
+
+        item_order = self._fields.keys()
+        for item in item_order:
+            field = self._fields[item]
+            if not field.validate(self, tuple()):
+                return False
+        return True
 
 
 class IndexSearchConfigForm(QuartForm):

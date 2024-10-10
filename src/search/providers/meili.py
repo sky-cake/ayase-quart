@@ -2,7 +2,7 @@ from orjson import dumps, loads
 
 from search.highlighting import mark_post, mark_pre
 
-from . import POST_PK, SearchQuery, search_index_fields, MAX_RESULTS_LIMIT
+from . import MAX_RESULTS_LIMIT, POST_PK, SearchQuery, search_index_fields
 from .baseprovider import INDEXES, BaseSearch
 
 pk = POST_PK

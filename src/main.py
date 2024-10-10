@@ -13,7 +13,7 @@ from blueprint_auth import blueprint_auth
 from blueprint_moderation import blueprint_moderation
 from blueprint_search import blueprint_search
 from configs import QuartConfig, app_conf
-from db import prime_db_pool, close_db_pool
+from db import close_db_pool, prime_db_pool
 from moderation.api import init_moderation_db
 # from limiter import limiter
 from templates import render_constants
