@@ -91,7 +91,7 @@ def get_selector(board: str) -> str:
 
 
 # Temporary, needs testing before removing old get_posts_filtered
-# TODO: transfer all of this (SqlSearchFilter, validate_and_generate_params2, get_posts_filtered2) to search/providers/sql.py
+# TODO: transfer all of this (SqlSearchFilter, validate_and_generate_params, search_posts) to search/providers/sql.py
 @dataclass(slots=True)
 class SqlSearchFilter:
     fragment: str
@@ -124,7 +124,7 @@ sql_search_filters = dict(
     capcode=SqlSearchFilter('capcode = ∆'),
 )
 
-def validate_and_generate_params2(form_data: dict, phg: BasePlaceHolderGen):
+def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
@@ -150,14 +150,15 @@ def validate_and_generate_params2(form_data: dict, phg: BasePlaceHolderGen):
     params = tuple(params)
     return where_fragment, params
 
-async def get_posts_filtered2(form_data: dict, result_limit: int, order_by: str):
+
+async def search_posts(form_data: dict, result_limit: int, order_by: str):
     if order_by not in ('asc', 'desc'):
         raise BadRequest('order_by is unknown')
     if not (boards := form_data['boards']):
         raise BadRequest('no boards specified')
-    
-    phg = Phg()
-    where_filters, params = validate_and_generate_params2(form_data, phg)
+
+    phg: BasePlaceHolderGen = Phg()
+    where_filters, params = validate_and_generate_params(form_data, phg)
     where_query = f'where {where_filters}' if where_filters else ''
 
     board_posts = await asyncio.gather(*(
@@ -175,38 +176,24 @@ async def get_posts_filtered2(form_data: dict, result_limit: int, order_by: str)
     for board_post in board_posts:
         posts.extend(board_post)
     
-    result = {'posts': []}
     if not posts:
-        return result, {}
+        return [], 0  # posts, total_hits
 
-    board_quotelinks = await get_post_replies(posts)
-    
-    # TODO: this post_2_quotelinks is wrong
-    # it merges quotelinks from multiple boards together
-    # the error must be fixed downstream
-    # searching from from multiple boards should be allowed
-    post_2_quotelinks = defaultdict(set)
-    for _board, ql_lookup in board_quotelinks.items():
-        for num, quotelinks in ql_lookup.items():
-            post_2_quotelinks[num].update(quotelinks)
-    
-    for num in tuple(post_2_quotelinks.keys()):
-        post_2_quotelinks[num] = list(post_2_quotelinks[num])
+    board_quotelinks = await get_board_2_ql_lookup(posts)
 
-    _, posts = get_qls_and_posts(posts, gather_qls=False)
-    result['posts'] = posts
-    return result, post_2_quotelinks
+    for post in posts:
+        board = post['board_shortname']
+        post['quotelinks'] = board_quotelinks.get(board, {}).get(post['num'], set())
+        _, post['comment'] = restore_comment(post['thread_num'], post['comment'], board)
+
+    return posts, len(posts)
 
 
 def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, list]:
     post_2_quotelinks = defaultdict(list)
     posts = []
     for row in rows:
-        row_quotelinks, row['comment'] = restore_comment(
-            row['thread_num'],
-            row['comment'],
-            row['board_shortname']
-        )
+        row_quotelinks, row['comment'] = restore_comment(row['thread_num'], row['comment'], row['board_shortname'])
 
         if gather_qls:
             for row_quotelink in row_quotelinks:
@@ -219,38 +206,37 @@ def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, li
 
     return post_2_quotelinks, posts
 
-async def get_post_replies(posts: list[dict]) -> dict[str, dict[int, list[int]]]:
-    board_threads = defaultdict(set)
-    
+
+async def get_board_2_ql_lookup(posts: list[dict]) -> dict[str, dict[int, list[int]]]:
+    board_op_nums = defaultdict(set)
     for post in posts:
-        board_threads[post['board_shortname']].add(post['op_num'])
-    boards_threads = [(board, tuple(threads)) for board, threads in board_threads.items()]
+        board_op_nums[post['board_shortname']].add(post['op_num'])
+
+    board_op_nums = [(board, tuple(op_nums)) for board, op_nums in board_op_nums.items()]
 
     board_qls = await asyncio.gather(*(
-        get_board_thread_quotelinks(board, threads)
-        for board, threads in boards_threads
+        get_board_thread_quotelinks(board, op_nums)
+        for board, op_nums in board_op_nums
     ))
-    board_quotelinks = {
-        b_threads[0]: ql_lookup
-        for b_threads, ql_lookup in zip(board_threads, board_qls)
-    }
-    return board_quotelinks
+
+    return {board: ql_lookup for (board, _op_nums), ql_lookup in zip(board_op_nums, board_qls)}
+
 
 async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
-    rows = await query_dict(f'''
+    query = f'''
         select num, comment
         from {board}
-        where
-            comment is not null
-            and thread_num in ({Phg().size(thread_nums)})''',
-        params=thread_nums
-    )
+        where comment is not null
+        and thread_num in ({Phg().size(thread_nums)})
+    '''
+    rows = await query_dict(query, params=thread_nums)
     return get_quotelink_lookup(rows)
 
 
 async def get_op_thread_count(board: str) -> int:
     rows = await query_tuple(f'select count(*) from {board}_threads;')
     return rows[0][0]
+
 
 square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
 spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL)  # with re.DOTALL, the dot matches any character, including newline characters.

@@ -5,7 +5,7 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from asagi_converter import (
-    get_posts_filtered2,
+    search_posts,
     html_highlight,
     restore_comment,
 )
@@ -124,12 +124,9 @@ async def search_handler(search_type: SearchType) -> str:
                     posts_t.append(wrap_post_t(post))
 
         else:
-            # posts is {'posts': [{...}, {...}, ...]}
-            posts, quotelinks = (await get_posts_filtered2(form.data, form.result_limit.data, form.order_by.data))
-            posts = posts['posts']
+            posts, total_hits = await search_posts(form.data, form.result_limit.data, form.order_by.data)
             p.check('search done')
 
-            total_hits = len(posts)
             pages = total_pages(total_hits, per_page)
             cur_page = positive_int(cur_page, 1, pages)
             endpoint_path = '/search'
@@ -141,8 +138,6 @@ async def search_handler(search_type: SearchType) -> str:
                 hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
 
                 for post in posts:
-                    post['quotelinks'] = quotelinks.get(post['num'], [])
-
                     if post['comment'] and hl_re_comment:
                         post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
 
