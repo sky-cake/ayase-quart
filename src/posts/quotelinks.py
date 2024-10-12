@@ -1,5 +1,6 @@
 from collections import defaultdict
 from html import escape
+import re
 
 
 def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
@@ -36,3 +37,19 @@ def extract_quotelinks(comment: str, html=False) -> list[int]:
                 quotelinks.append(int(token[8:]))
 
     return quotelinks  # quotelinks = [20074095, 20074101]
+
+# TODO: perhaps we don't need esc version, rename to extract_quotelinks in the future
+raw_ql_re = re.compile(r'[^>]?>>(\d+)')
+def extract_quotelinks_raw(comment: str) -> list[int]:
+    return [
+        int(match)
+        for match in raw_ql_re.findall(comment)
+    ]
+
+
+esc_ql_re = re.compile(r'[^;]?&gt;&gt;(\d+)')
+def extract_quotelinks_esc(comment: str) -> list[int]:
+    return [
+        int(match)
+        for match in esc_ql_re.findall(comment)
+    ]
