@@ -10,7 +10,7 @@ from blueprints import blueprints
 from configs import QuartConfig, app_conf
 from db import close_db_pool, prime_db_pool
 from moderation.api import init_moderation_db
-# from limiter import limiter
+# from security.limiter import limiter
 from templates import render_constants
 
 if app_conf.get('testing', False):

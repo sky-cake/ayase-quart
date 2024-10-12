@@ -3,7 +3,7 @@ from functools import wraps
 from quart import Blueprint, current_app, flash, redirect, session, url_for
 from werkzeug.security import check_password_hash
 
-from captcha import MathCaptcha
+from security.captcha import MathCaptcha
 from enums import AuthActions
 from forms import LoginForm
 from moderation.api import (
