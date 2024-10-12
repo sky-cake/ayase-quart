@@ -32,7 +32,7 @@ from utils.validation import positive_int
 
 search_log = getLogger('search')
 
-bp = Blueprint("blueprint_search", __name__)
+bp = Blueprint("bp_search", __name__)
 
 
 @bp.route("/index_search_config", methods=['GET', 'POST'])

@@ -23,7 +23,7 @@ from templates import (
     template_users_edit
 )
 
-bp = Blueprint('blueprint_admin', __name__)
+bp = Blueprint('bp_admin', __name__)
 
 
 placeholders = Phg().size(board_shortnames)
@@ -105,7 +105,7 @@ async def users_create():
         role = form.role.data
         notes = form.notes.data
         await create_user(username, password, role, notes)
-        return redirect(url_for('blueprint_admin.users_index'))
+        return redirect(url_for('bp_admin.users_index'))
 
     return await render_controller(
         template_users_create,
@@ -127,7 +127,7 @@ async def users_edit(user_id):
         notes = form.notes.data
         await edit_user(username, password, role, active, notes)
 
-        return redirect(url_for('blueprint_admin.users_edit', user_id=user_id))
+        return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
     user = get_user_with_id(user_id)
     return await render_controller(
@@ -143,7 +143,7 @@ async def users_edit(user_id):
 async def users_delete(user_id):
     if request.method == 'POST':
         await delete_user(user_id)
-        return redirect(url_for('blueprint_admin.users_index'))
+        return redirect(url_for('bp_admin.users_index'))
 
     return await render_controller(
         template_users_delete,

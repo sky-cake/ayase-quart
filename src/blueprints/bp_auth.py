@@ -14,7 +14,7 @@ from moderation.api import (
 from render import render_controller
 from templates import template_login
 
-bp = Blueprint("blueprint_auth", __name__, template_folder="templates")
+bp = Blueprint("bp_auth", __name__, template_folder="templates")
 
 
 async def auth(action: AuthActions, user_id=None):
@@ -58,7 +58,7 @@ def login_required(WRAPPED_FUNC):
     async def decorated_function(*args, **kwargs):
         if not (await auth(AuthActions.is_logged_in)):
             await flash("Login required", "danger")
-            return redirect(url_for("blueprint_auth.login"))
+            return redirect(url_for("bp_auth.login"))
         return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
@@ -69,7 +69,7 @@ def logout_required(WRAPPED_FUNC):
     async def decorated_function(*args, **kwargs):
         if (await auth(AuthActions.is_admin)) or (await auth(AuthActions.is_logged_in)):
             await flash("Logout required", "danger")
-            return redirect(url_for("blueprint_auth.logout"))
+            return redirect(url_for("bp_auth.logout"))
         return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
@@ -80,7 +80,7 @@ def admin_required(WRAPPED_FUNC):
     async def decorated_function(*args, **kwargs):
         if not (await auth(AuthActions.is_admin)):
             await flash("Admin permission required", "danger")
-            return redirect(url_for("blueprint_app.v_index"))
+            return redirect(url_for("bp_app.v_index"))
         return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
@@ -91,7 +91,7 @@ def moderator_required(WRAPPED_FUNC):
     async def decorated_function(*args, **kwargs):
         if (not (await auth(AuthActions.is_moderator))) and (not (await auth(AuthActions.is_admin))):
             await flash("Moderator or Admin permission required", "danger")
-            return redirect(url_for("blueprint_app.v_index"))
+            return redirect(url_for("bp_app.v_index"))
         return await WRAPPED_FUNC(*args, **kwargs)
 
     return decorated_function
@@ -113,7 +113,7 @@ async def login():
                     await auth(AuthActions.log_in, user_id=user.user_id)
 
                     await flash("Login successful.", "success")
-                    return redirect(url_for("blueprint_moderation.reports_index"))
+                    return redirect(url_for("bp_moderation.reports_index"))
 
             await flash("Incorrect username or password.", "danger")
         await flash("Wrong math captcha answer", "danger")
@@ -128,4 +128,4 @@ async def login():
 async def logout():
     await auth(AuthActions.log_out)
     await flash("Logout successful.", "success")
-    return redirect(url_for("blueprint_auth.login"))
+    return redirect(url_for("bp_auth.login"))

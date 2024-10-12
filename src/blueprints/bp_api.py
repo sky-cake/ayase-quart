@@ -11,7 +11,7 @@ from templates import template_post
 from utils import Perf
 from utils.validation import validate_board, validate_post
 
-bp = Blueprint("blueprint_api", __name__)
+bp = Blueprint("bp_api", __name__)
 
 
 @bp.get("/<string:board_shortname>/catalog.json")

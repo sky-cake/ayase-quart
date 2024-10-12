@@ -7,8 +7,8 @@
     <p><strong>Reason:</strong> {{ report.reason }}</p>
     <p><strong>Status:</strong> {{ report.status }}</p>
     <p><strong>Created At:</strong> {{ report.created_datetime }}</p>
-    <a href="{{ url_for('blueprint_moderation.reports_edit', report_id=report.report_id) }}">Edit</a> |
-    <a href="{{ url_for('blueprint_moderation.reports_delete', report_id=report.report_id) }}">Delete</a> |
-    <a href="{{ url_for('blueprint_moderation.reports_index') }}">Back to Reports</a>
+    <a href="{{ url_for('bp_moderation.reports_edit', report_id=report.report_id) }}">Edit</a> |
+    <a href="{{ url_for('bp_moderation.reports_delete', report_id=report.report_id) }}">Delete</a> |
+    <a href="{{ url_for('bp_moderation.reports_index') }}">Back to Reports</a>
 
 {% endblock %}

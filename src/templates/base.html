@@ -23,12 +23,12 @@
     <body>
         <script type="text/javascript" src="/static/js/index.js"></script>
 
-        {% if request.endpoint in ['blueprint_app.v_thread', 'blueprint_app.v_board_index', 'blueprint_search.v_search', 'blueprint_search.v_index_search'] %}
+        {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_search.v_search', 'bp_search.v_index_search'] %}
             <script type="text/javascript" src="/static/js/thread.js"></script>
         {% endif %}
 
         <div id="body">
-            {% if request.endpoint in ['blueprint_app.v_thread', 'blueprint_app.v_board_index', 'blueprint_app.v_catalog', 'blueprint_search.v_search', 'blueprint_search.v_index_search'] %}
+            {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_app.v_catalog', 'bp_search.v_search', 'bp_search.v_index_search'] %}
                 <span id="top">[<a href="#top_hidden">Top</a>] [<a href="#bottom_hidden">Bottom</a>]</span>
                 <span id="top_hidden"></span>
                 <br>
@@ -72,24 +72,24 @@
                         Admin: [
 
                         {% if is_admin %}
-                            <a href="{{ url_for('blueprint_admin.users_index') }}">Users</a>
+                            <a href="{{ url_for('bp_admin.users_index') }}">Users</a>
                             /
                         {% endif %}
 
-                        <a href="{{ url_for('blueprint_moderation.reports_index') }}">Reports</a>
+                        <a href="{{ url_for('bp_moderation.reports_index') }}">Reports</a>
                         /
-                        <a href="{{ url_for('blueprint_admin.stats') }}">Stats</a>
+                        <a href="{{ url_for('bp_admin.stats') }}">Stats</a>
                         /
-                        <a href="{{ url_for('blueprint_admin.latest') }}">Latest OPs</a>
+                        <a href="{{ url_for('bp_admin.latest') }}">Latest OPs</a>
                         ]
                     {% endif %}
 
                     <br>
                     Profile: [
                     {% if is_admin or is_moderator %}
-                        <a href="{{ url_for('blueprint_auth.logout') }}">Logout</a>
+                        <a href="{{ url_for('bp_auth.logout') }}">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('blueprint_auth.login') }}">Login</a>
+                        <a href="{{ url_for('bp_auth.login') }}">Login</a>
                     {% endif %}
                     ]
                 </div>
@@ -115,7 +115,7 @@
                 {% endblock %}
             </div>
 
-            {% if request.endpoint in ['blueprint_app.v_thread', 'blueprint_app.v_board_index', 'blueprint_app.v_catalog', 'blueprint_search.v_search', 'blueprint_search.v_index_search'] %}
+            {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_app.v_catalog', 'bp_search.v_search', 'bp_search.v_index_search'] %}
                 <span id="bottom_hidden"></span>
             {% endif %}
 

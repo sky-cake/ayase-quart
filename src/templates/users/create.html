@@ -3,7 +3,7 @@
 {% block body %}
 
     <h1>Create User</h1>
-    <form action="{{ url_for('blueprint_admin.users_create') }}" method="post">
+    <form action="{{ url_for('bp_admin.users_create') }}" method="post">
         <p><label>Username: <input type="text" name="username" value="" required></label></p>
         <p><label>Password: <input type="password" name="password"></label></p>
         <p><label>Role: <input type="text" name="role" value="moderator" required></label></p>
@@ -11,6 +11,6 @@
         <p><label>Preferences: <textarea name="preferences"></textarea></label></p>
         <button type="submit">Create</button>
     </form>
-    <a href="{{ url_for('blueprint_admin.users_index') }}">Back to Users</a>
+    <a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a>
 
 {% endblock %}

@@ -16,7 +16,7 @@ from templates import (
     template_reports_view
 )
 
-bp = Blueprint('blueprint_moderation', __name__)
+bp = Blueprint('bp_moderation', __name__)
 
 
 @bp.route('/reports')
@@ -58,7 +58,7 @@ async def reports_edit(report_id):
         details = form.details.data
         status = form.status.data
         edit_report(post_no, category, details, status)
-        return redirect(url_for('blueprint_moderation.reports_edit', report_id=report.report_id))
+        return redirect(url_for('bp_moderation.reports_edit', report_id=report.report_id))
 
     return await render_controller(
         template_reports_edit,
@@ -73,7 +73,7 @@ async def reports_edit(report_id):
 async def reports_delete(report_id):
     if request.method == 'POST':
         delete_report(report_id)
-        return redirect(url_for('blueprint_moderation.reports_index'))
+        return redirect(url_for('bp_moderation.reports_index'))
 
     return await render_controller(
         template_reports_delete,

@@ -21,7 +21,7 @@ from templates import (
 from utils import Perf
 from utils.validation import validate_board, validate_threads
 
-bp = Blueprint("blueprint_app", __name__)
+bp = Blueprint("bp_app", __name__)
 
 
 async def make_pagination_board_index(board_shortname, index, page_num):
