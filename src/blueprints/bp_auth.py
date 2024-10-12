@@ -14,7 +14,7 @@ from moderation.api import (
 from render import render_controller
 from templates import template_login
 
-blueprint_auth = Blueprint("blueprint_auth", __name__, template_folder="templates")
+bp = Blueprint("blueprint_auth", __name__, template_folder="templates")
 
 
 async def auth(action: AuthActions, user_id=None):
@@ -97,7 +97,7 @@ def moderator_required(WRAPPED_FUNC):
     return decorated_function
 
 
-@blueprint_auth.route("/login", methods=["GET", "POST"])
+@bp.route("/login", methods=["GET", "POST"])
 async def login():
     form: LoginForm = await LoginForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
@@ -123,7 +123,7 @@ async def login():
     return await render_controller(template_login, form=form, is_admin=is_admin)
 
 
-@blueprint_auth.route("/logout", methods=["GET"])
+@bp.route("/logout", methods=["GET"])
 @login_required
 async def logout():
     await auth(AuthActions.log_out)

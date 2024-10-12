@@ -1,6 +1,6 @@
 from quart import Blueprint, redirect, request, url_for
 
-from blueprint_auth import admin_required
+from .bp_auth import admin_required
 from boards import board_shortnames
 from db import DB_TYPE, Phg, query_dict
 from db.mysql import \
@@ -23,7 +23,7 @@ from templates import (
     template_users_edit
 )
 
-blueprint_admin = Blueprint('blueprint_admin', __name__)
+bp = Blueprint('blueprint_admin', __name__)
 
 
 placeholders = Phg().size(board_shortnames)
@@ -42,7 +42,7 @@ def get_sql_latest_ops(board_shortname):
     return f"""select '{board_shortname}' as board_shortname, timestamp, num, case when title is null then '' else title end as title, comment from {board_shortname} where op=1 order by num desc limit 5;"""
 
 
-@blueprint_admin.route("/stats")
+@bp.route("/stats")
 @admin_required
 async def stats():
     database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': mysql_conf.get('db', '')})
@@ -63,7 +63,7 @@ async def stats():
     )
 
 
-@blueprint_admin.route("/latest")
+@bp.route("/latest")
 @admin_required
 async def latest():
     threads = []
@@ -80,21 +80,21 @@ async def latest():
     )
 
 
-@blueprint_admin.route('/users')
+@bp.route('/users')
 @admin_required
 async def users_index():
     users = get_all_users()
     return await render_controller('users/index.html', users=users)
 
 
-@blueprint_admin.route('/users/<int:user_id>')
+@bp.route('/users/<int:user_id>')
 @admin_required
 async def users_view(user_id):
     user = get_user_with_id(user_id)
     return await render_controller('users/view.html', user=user)
 
 
-@blueprint_admin.route('/users/create', methods=['GET', 'POST'])
+@bp.route('/users/create', methods=['GET', 'POST'])
 @admin_required
 async def users_create():
     form: UserForm = await UserForm.create_form()
@@ -114,7 +114,7 @@ async def users_create():
     )
 
 
-@blueprint_admin.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @admin_required
 async def users_edit(user_id):
     form: UserForm = await UserForm.create_form()
@@ -138,7 +138,7 @@ async def users_edit(user_id):
     )
 
 
-@blueprint_admin.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
+@bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
 @admin_required
 async def users_delete(user_id):
     if request.method == 'POST':

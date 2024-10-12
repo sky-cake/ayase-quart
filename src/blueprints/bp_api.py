@@ -11,17 +11,17 @@ from templates import template_post
 from utils import Perf
 from utils.validation import validate_board, validate_post
 
-blueprint_api = Blueprint("blueprint_api", __name__)
+bp = Blueprint("blueprint_api", __name__)
 
 
-@blueprint_api.get("/<string:board_shortname>/catalog.json")
+@bp.get("/<string:board_shortname>/catalog.json")
 async def catalog(board_shortname: str):
     validate_board(board_shortname)
 
     return await generate_catalog(board_shortname)
 
 
-@blueprint_api.get("/<string:board_shortname>/thread/<int:thread_id>.json")
+@bp.get("/<string:board_shortname>/thread/<int:thread_id>.json")
 async def thread(board_shortname: str, thread_id: int):
 
     validate_board(board_shortname)
@@ -32,7 +32,7 @@ async def thread(board_shortname: str, thread_id: int):
         return results
 
 
-@blueprint_api.get("/<string:board_shortname>/<int:page_num>.json")
+@bp.get("/<string:board_shortname>/<int:page_num>.json")
 async def board_index(board_shortname: str, page_num: int):
 
     validate_board(board_shortname)
@@ -42,7 +42,7 @@ async def board_index(board_shortname: str, page_num: int):
         return res
 
 
-@blueprint_api.get("/<string:board_shortname>/post/<int:post_id>")
+@bp.get("/<string:board_shortname>/post/<int:post_id>")
 async def v_post(board_shortname: str, post_id: int):
     """Called by the client to generate posts not on the page - e.g. when viewing search results.
 

@@ -32,10 +32,10 @@ from utils.validation import positive_int
 
 search_log = getLogger('search')
 
-blueprint_search = Blueprint("blueprint_search", __name__)
+bp = Blueprint("blueprint_search", __name__)
 
 
-@blueprint_search.route("/index_search_config", methods=['GET', 'POST'])
+@bp.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
     return await render_controller(
         template_index_search_config,
@@ -44,18 +44,18 @@ async def index_search_config():
     )
 
 
-@blueprint_search.route("/index_stats", methods=['GET'])
+@bp.route("/index_stats", methods=['GET'])
 async def index_search_stats():
     search_p = get_search_provider()
     return await search_p.post_stats()
 
 
-@blueprint_search.errorhandler(404)
+@bp.errorhandler(404)
 async def error_not_found(e):
     return await render_controller(template_error_404, message='404 Not Found', tab_title=f'Error')
 
 
-@blueprint_search.errorhandler(400)
+@bp.errorhandler(400)
 async def error_invalid(e):
     return await render_controller(
         template_error_404, e=e.description, message='The search parameters will result in 0 records.', tab_title=f'Invalid search'
@@ -177,11 +177,11 @@ async def search_handler(search_type: SearchType) -> str:
     return rendered_page
 
 
-@blueprint_search.route("/index_search", methods=['GET', 'POST'])
+@bp.route("/index_search", methods=['GET', 'POST'])
 async def v_index_search():
     return await search_handler(SearchType.idx)
 
 
-@blueprint_search.route("/search", methods=['GET', 'POST'])
+@bp.route("/search", methods=['GET', 'POST'])
 async def v_search():
     return await search_handler(SearchType.sql)

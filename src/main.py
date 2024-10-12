@@ -6,12 +6,7 @@ import os
 from flask_bootstrap import Bootstrap5
 from quart import Quart
 
-from blueprint_admin import blueprint_admin
-from blueprint_api import blueprint_api
-from blueprint_app import blueprint_app
-from blueprint_auth import blueprint_auth
-from blueprint_moderation import blueprint_moderation
-from blueprint_search import blueprint_search
+from blueprints import blueprints
 from configs import QuartConfig, app_conf
 from db import close_db_pool, prime_db_pool
 from moderation.api import init_moderation_db
@@ -39,12 +34,8 @@ async def create_app():
     app.jinja_env.auto_reload = False
     app.jinja_env.globals.update(render_constants)
 
-    app.register_blueprint(blueprint_api)
-    app.register_blueprint(blueprint_app)
-    app.register_blueprint(blueprint_admin)
-    app.register_blueprint(blueprint_auth)
-    app.register_blueprint(blueprint_search)
-    app.register_blueprint(blueprint_moderation)
+    for bp in blueprints:
+        app.register_blueprint(bp)
 
     await init_moderation_db()
 

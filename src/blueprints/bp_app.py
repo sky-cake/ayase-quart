@@ -21,7 +21,7 @@ from templates import (
 from utils import Perf
 from utils.validation import validate_board, validate_threads
 
-blueprint_app = Blueprint("blueprint_app", __name__)
+bp = Blueprint("blueprint_app", __name__)
 
 
 async def make_pagination_board_index(board_shortname, index, page_num):
@@ -40,12 +40,12 @@ async def make_pagination_board_index(board_shortname, index, page_num):
         show_single_page=True,
     )
 
-@blueprint_app.get("/")
+@bp.get("/")
 async def v_index():
     return await render_controller(template_index, tab_title=SITE_NAME)
 
 
-@blueprint_app.get("/<string:board_shortname>")
+@bp.get("/<string:board_shortname>")
 async def v_board_index(board_shortname: str):
     """See `v_board_index_page()` for benchmarks.
     """
@@ -77,7 +77,7 @@ async def v_board_index(board_shortname: str):
     return rendered
 
 
-@blueprint_app.get("/<string:board_shortname>/page/<int:page_num>")
+@bp.get("/<string:board_shortname>/page/<int:page_num>")
 async def v_board_index_page(board_shortname: str, page_num: int):
     """
     Benchmarked with SQLite (local), 150 OPs, 8th gen i7.
@@ -142,7 +142,7 @@ async def make_pagination_catalog(board_shortname, catalog, page_num):
     )
 
 
-@blueprint_app.get("/<string:board_shortname>/catalog")
+@bp.get("/<string:board_shortname>/catalog")
 async def v_catalog(board_shortname: str):
     """
     Benchmarked with SQLite, page 0, 8th gen i7.
@@ -178,7 +178,7 @@ async def v_catalog(board_shortname: str):
     return render
 
 
-@blueprint_app.get("/<string:board_shortname>/catalog/<int:page_num>")
+@bp.get("/<string:board_shortname>/catalog/<int:page_num>")
 async def v_catalog_page(board_shortname: str, page_num: int):
     """
     Benchmarked with SQLite, page 129, 5700X.
@@ -231,7 +231,7 @@ def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     return nreplies, nimages
 
 
-@blueprint_app.get("/<string:board_shortname>/thread/<int:thread_id>")
+@bp.get("/<string:board_shortname>/thread/<int:thread_id>")
 async def v_thread(board_shortname: str, thread_id: int):
     """
     Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.

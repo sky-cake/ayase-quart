@@ -1,6 +1,6 @@
 from quart import Blueprint, redirect, request, url_for
 
-from blueprint_auth import moderator_required
+from .bp_auth import moderator_required
 from forms import ReportForm
 from moderation.api import (
     delete_report,
@@ -16,10 +16,10 @@ from templates import (
     template_reports_view
 )
 
-blueprint_moderation = Blueprint('blueprint_moderation', __name__)
+bp = Blueprint('blueprint_moderation', __name__)
 
 
-@blueprint_moderation.route('/reports')
+@bp.route('/reports')
 @moderator_required
 async def reports_index():
     reports_open = get_open_reports()
@@ -32,7 +32,7 @@ async def reports_index():
     )
 
 
-@blueprint_moderation.route('/reports/<int:report_id>')
+@bp.route('/reports/<int:report_id>')
 @moderator_required
 async def reports_view(report_id):
     report = get_report_with_id(report_id)
@@ -45,7 +45,7 @@ async def reports_view(report_id):
     )
 
 
-@blueprint_moderation.route('/reports/<int:report_id>/edit', methods=['GET', 'POST'])
+@bp.route('/reports/<int:report_id>/edit', methods=['GET', 'POST'])
 @moderator_required
 async def reports_edit(report_id):
     form: ReportForm = await ReportForm.create_form()
@@ -68,7 +68,7 @@ async def reports_edit(report_id):
     )
 
 
-@blueprint_moderation.route('/reports/<int:report_id>/delete', methods=['GET', 'POST'])
+@bp.route('/reports/<int:report_id>/delete', methods=['GET', 'POST'])
 @moderator_required
 async def reports_delete(report_id):
     if request.method == 'POST':
