@@ -2,6 +2,21 @@ from collections import defaultdict
 from html import escape
 import re
 
+def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
+    # key is num, value is list of nums quoting it
+    lookup = defaultdict(list)
+    
+    for post in posts:
+        # asagi comments are nullable
+        if not (comment := post.get('comment')):
+            continue
+        
+        num = post['num']
+        for quotelink in extract_quotelinks_raw(comment):
+            lookup[quotelink].append(num)
+
+    return lookup
+
 
 def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
     """
