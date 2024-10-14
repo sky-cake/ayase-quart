@@ -132,7 +132,7 @@ def get_media_path(media_filename: str, board: str, media_type: MediaType) -> st
 def get_gallery_media_t(post: dict):
     if not (media_filename := post['media_filename']):
         return ''
-    ext = media_filename.rsplit(',', 1)[-1]
+    ext = media_filename.rsplit('.', 1)[-1]
     media_orig = post['media_orig']
     preview_orig = post['preview_orig']
     md5h = post['media_hash']
@@ -163,7 +163,7 @@ def get_gallery_media_t(post: dict):
 def get_media_t(post: dict):
     if not (media_filename := post['media_filename']):
         return ''
-    ext = media_filename.rsplit(',', 1)[-1]
+    ext = media_filename.rsplit('.', 1)[-1]
     media_orig = post['media_orig']
     preview_orig = post['preview_orig']
     num = post['num']
