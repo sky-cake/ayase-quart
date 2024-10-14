@@ -146,7 +146,7 @@ def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
             params.append(field_val)
         where_parts.append(s_filter.get_fragment(phg))
 
-    where_fragment = '(' + ') and ('.join(where_parts) + ')' if where_parts else []
+    where_fragment = ' and '.join(where_parts)
     params = tuple(params)
     return where_fragment, params
 
@@ -161,13 +161,18 @@ async def search_posts(form_data: dict, result_limit: int, order_by: str):
     where_filters, params = validate_and_generate_params(form_data, phg)
     where_query = f'where {where_filters}' if where_filters else ''
 
+    # extract int cast from query
+    # not sure if we needed it in the first place, typing indcates its an int
+    # the limits are changeable by the user, but should have been validated by the form
+    result_limit = int(result_limit)
+
     board_posts = await asyncio.gather(*(
         query_dict(f"""
             {get_selector(board)}
             from {board}
             {where_query}
             order by ts_unix {order_by}
-            limit {int(result_limit)}
+            limit {result_limit}
             """, params=params
         ) for board in boards)
     )
@@ -330,9 +335,9 @@ async def generate_index(board: str, page_num: int=1):
             nimages,
             time_bump
         from {board}_threads
-        ORDER BY time_bump DESC
-        LIMIT 10
-        OFFSET {Phg()()}
+        order by time_bump desc
+        limit 10
+        offset {Phg()()}
     '''
     if not (threads := await query_dict(threads_q, params=(page_num,))):
         return {'threads': []}
@@ -348,12 +353,12 @@ async def generate_index(board: str, page_num: int=1):
     '''
     
     replies_query = f'''
-    with latest_replies AS (
+    with latest_replies as (
         select
             num as reply_num,
-            ROW_NUMBER() OVER (
-                PARTITION BY {board}.thread_num order by {board}.num desc
-            ) AS reply_number
+            row_number() over (
+                partition by {board}.thread_num order by {board}.num desc
+            ) as reply_number
         from {board}
         where
             op = 0
@@ -406,9 +411,9 @@ async def generate_catalog(board: str, page_num: int=1):
             nreplies,
             nimages
         from {board}_threads
-        ORDER BY time_bump DESC
-        LIMIT 150
-        OFFSET {phg()}
+        order by time_bump desc
+        limit 150
+        offset {phg()}
     '''
     if not (rows := await query_tuple(threads_q, (page_num,))):
         return []
@@ -486,8 +491,8 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
     """Returns {thread_num: 123, comment: 'hello', ...}"""
     sql = f"""
         {get_selector(board)}
-        FROM {board}
-        WHERE num = {Phg()()}
+        from {board}
+        where num = {Phg()()}
     ;"""
     posts = await query_dict(sql, params=(post_id,))
 

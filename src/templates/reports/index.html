@@ -20,9 +20,9 @@
                 <td>{{ report.status }}</td>
                 <td>{{ report.created_datetime }}</td>
                 <td>
-                    <a href="{{ url_for('blueprint_moderation.reports_view', report_id=report.report_id) }}">View</a> |
-                    <a href="{{ url_for('blueprint_moderation.reports_edit', report_id=report.report_id) }}">Edit</a> |
-                    <a href="{{ url_for('blueprint_moderation.reports_delete', report_id=report.report_id) }}">Delete</a>
+                    <a href="{{ url_for('bp_moderation.reports_view', report_id=report.report_id) }}">View</a> |
+                    <a href="{{ url_for('bp_moderation.reports_edit', report_id=report.report_id) }}">Edit</a> |
+                    <a href="{{ url_for('bp_moderation.reports_delete', report_id=report.report_id) }}">Delete</a>
                 </td>
             </tr>
         {% endfor %}
