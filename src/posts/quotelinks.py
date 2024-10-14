@@ -1,5 +1,21 @@
 from collections import defaultdict
 from html import escape
+import re
+
+def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
+    # key is num, value is list of nums quoting it
+    lookup = defaultdict(list)
+    
+    for post in posts:
+        # asagi comments are nullable
+        if not (comment := post.get('comment')):
+            continue
+        
+        num = post['num']
+        for quotelink in extract_quotelinks_raw(comment):
+            lookup[quotelink].append(num)
+
+    return lookup
 
 
 def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
@@ -36,3 +52,23 @@ def extract_quotelinks(comment: str, html=False) -> list[int]:
                 quotelinks.append(int(token[8:]))
 
     return quotelinks  # quotelinks = [20074095, 20074101]
+
+# TODO: perhaps we don't need esc version, rename to extract_quotelinks in the future
+raw_ql_re = re.compile(r'[^>]?>>(\d+)')
+def extract_quotelinks_raw(comment: str) -> list[int]:
+    return [
+        int(match)
+        for match in raw_ql_re.findall(comment)
+    ]
+
+
+esc_ql_re = re.compile(r'[^;]?&gt;&gt;(\d+)')
+def extract_quotelinks_esc(comment: str) -> list[int]:
+    return [
+        int(match)
+        for match in esc_ql_re.findall(comment)
+    ]
+
+def html_quotelinks(comment: str, board: str, op_num: int):
+    subs = rf'<a href="/{board}/thread/{op_num}#p\1" class="quotelink" data-board_shortname="{board}">&gt;&gt;\1</a>'
+    return esc_ql_re.sub(subs, comment)
