@@ -36,7 +36,7 @@ def get_page_link(base_link: str, page: int, active: bool=False, text: str=None)
     wrapped = f'<li{active}>{link}</li>'
     return wrapped
 
-def template_pagination_links(path: str, params: dict, total_pages: int, cur_page: int):
+def template_pagination_links(path: str, params: dict, total_pages: int):
     """
     Given
         total_pages:int
@@ -66,6 +66,8 @@ def template_pagination_links(path: str, params: dict, total_pages: int, cur_pag
 
     # no results or only 1 page of results
     if total_pages <= 1: return ''
+
+    cur_page = params['page']
 
     # clamp
     if cur_page < 1:

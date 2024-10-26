@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from posts.capcodes import Capcode, capcode_2_id
-from utils.validation import positive_int
+from utils.validation import clamp_positive_int
 
 from . import DEFAULT_RESULTS_LIMIT, MAX_RESULTS_LIMIT
 from .post_metadata import board_2_int
@@ -11,9 +11,11 @@ from .post_metadata import board_2_int
 
 @dataclass(slots=True)
 class SearchQuery:
-    terms: str
     boards: list[int]
+    comment: Optional[str] = None
+    title: Optional[str] = None
     num: Optional[int] = None
+    thread_nums: Optional[list[int]] = None
     media_file: Optional[str] = None
     media_hash: Optional[str] = None
     trip: Optional[str] = None
@@ -37,27 +39,20 @@ class SearchQuery:
 common_words = set('the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us'.split())
 
 
-def strip_2_none(s: str) -> str|None:
-    if s and s.strip() == '':
-        return None
-    return s
-
-
 def get_search_query(params: dict) -> SearchQuery:
-    params['comment'] = strip_2_none(params['comment'])
-    params['title'] = strip_2_none(params['title'])
-
-    terms = params['comment'] or params['title'] # since we only search one or the other, let's make comments precede titles
-
     q = SearchQuery(
-        terms=terms,
+        comment=params['comment'],
+        title=params['title'],
         boards=[board_2_int(board) for board in params['boards']],
     )
+
+    if params.get('thread_nums'):
+        q.thread_nums = params['thread_nums']
 
     if params['num']:
         q.num = int(params['num'])
     if params['result_limit']:
-        q.result_limit = positive_int(params['result_limit'], upper=MAX_RESULTS_LIMIT)
+        q.result_limit = clamp_positive_int(params['result_limit'], 1, MAX_RESULTS_LIMIT)
     if params['media_filename']:
         q.media_file = params['media_filename']
     if params['media_hash']:
@@ -67,9 +62,9 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['has_no_file']:
         q.has_no_file = True
     if params['width']:
-        q.width = positive_int(params['width'])
+        q.width = clamp_positive_int(params['width'])
     if params['height']:
-        q.height = positive_int(params['height'])
+        q.height = clamp_positive_int(params['height'])
     if params['capcode'] != Capcode.default.value:
         q.capcode = capcode_2_id(params['capcode'])
     if params['tripcode']:
@@ -95,6 +90,6 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['order_by'] in ('asc', 'desc'):
         q.sort = params['order_by']
     if page := params.get('page'):
-        if type(page) in (int, float, str):
-            q.page = positive_int(page, 1)
+        q.page = page
+
     return q

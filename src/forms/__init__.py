@@ -26,11 +26,11 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import ReportCategory, ReportStatus, SearchResultMode, UserRole
+from enums import ReportCategory, ReportStatus, UserRole
 from moderation.api import get_user_with_username, is_correct_password
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
-from utils.validation import validate_board
+from utils.validation import validate_board, clamp_positive_int
 
 LENGTH_MD5_HASH = 32
 
@@ -49,47 +49,17 @@ class StripForm(QuartForm):
                 field.data = field.data.strip()
 
 
-def validate_search_form(form):
-    if not form.boards.data:
-        raise BadRequest('select a board')
-
-    for board in form.boards.data:
-        validate_board(board)
-
-    if form.search_mode.data == SearchResultMode.gallery and form.has_no_file.data:
-        raise BadRequest("search mode SearchMode.gallery only shows files")
-
-    if form.search_mode.data not in [SearchResultMode.index, SearchResultMode.gallery]:
-        raise BadRequest('search_mode is unknown')
-
-    if form.order_by.data not in ['asc', 'desc']:
-        raise BadRequest('order_by is unknown')
-
-    if form.is_op.data and form.is_not_op.data:
-        raise BadRequest('is_op is contradicted')
-
-    if form.is_deleted.data and form.is_not_deleted.data:
-        raise BadRequest('is_deleted is contradicted')
-
-    if form.is_sticky.data and form.is_not_sticky.data:
-        raise BadRequest('is_sticky is contradicted')
-
-    if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
-        raise BadRequest('the dates are contradicted')
-
-    if form.comment.data and form.comment.data.strip() == '':
-        form.comment.data = None
-
-
 class SearchForm(StripForm):
     do_not_strip = ('comment',)
 
-    search_mode = RadioField('Search Mode', choices=[(SearchResultMode.index, SearchResultMode.index), (SearchResultMode.gallery, SearchResultMode.gallery)], default=SearchResultMode.index)
+    gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=board_shortnames)
     result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
+    op_title = StringField("Facet OP Subject", validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
+    op_comment = TextAreaField("Facet OP Comment", validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
     num = IntegerField("Post Number", validators=[Optional(), NumberRange(min=0)])
     media_filename = StringField("Filename", validators=[Optional(), Length(2, 256)])
     media_hash = StringField("File Hash", validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
@@ -121,6 +91,52 @@ class SearchForm(StripForm):
             if not field.validate(self, tuple()):
                 return False
         return True
+
+
+def strip_2_none(s: str) -> str|None:
+    if isinstance(s, str) and s.strip() == '':
+        return None
+    return s
+
+
+def validate_search_form(form: SearchForm):
+    if not form.boards.data:
+        raise BadRequest('select a board')
+
+    for board in form.boards.data:
+        validate_board(board)
+
+    if form.gallery_mode.data and form.has_no_file.data:
+        raise BadRequest("search gallery mode only shows files")
+
+    if form.order_by.data not in ['asc', 'desc']:
+        raise BadRequest('order_by is unknown')
+
+    if form.is_op.data and form.is_not_op.data:
+        raise BadRequest('is_op is contradicted')
+
+    if form.is_deleted.data and form.is_not_deleted.data:
+        raise BadRequest('is_deleted is contradicted')
+
+    if form.is_sticky.data and form.is_not_sticky.data:
+        raise BadRequest('is_sticky is contradicted')
+
+    if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
+        raise BadRequest('the dates are contradicted')
+
+    form.comment.data = strip_2_none(form.comment.data)
+    form.title.data = strip_2_none(form.title.data)
+    form.op_comment.data = strip_2_none(form.op_comment.data)
+    form.op_title.data = strip_2_none(form.op_title.data)
+
+    form.page.data = clamp_positive_int(form.page.data, 1)
+
+    if form.gallery_mode.data:
+        form.has_file.data = True
+        form.has_no_file.data = False
+
+    # if (form.op_comment.data or form.op_title.data) and (len(form.boards.data) > 1):
+    #     raise BadRequest('faceted search is only available for a single board per search query at the moment')
 
 
 class IndexSearchConfigForm(QuartForm):

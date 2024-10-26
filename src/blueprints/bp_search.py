@@ -8,14 +8,15 @@ from asagi_converter import (
     search_posts,
     html_highlight,
     restore_comment,
+    search_posts_get_thread_nums,
 )
 from boards import board_shortnames
 from configs import SITE_NAME
-from enums import SearchResultMode, SearchType
+from enums import SearchType
 from forms import SearchForm
 from posts.template_optimizer import get_gallery_media_t, wrap_post_t
 from render import render_controller
-from search import HIGHLIGHT_ENABLED, MAX_RESULTS_LIMIT, SEARCH_ENABLED
+from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
 from search.highlighting import get_term_re, mark_highlight
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
@@ -28,7 +29,6 @@ from templates import (
     template_index_search_post_t,
 )
 from utils import Perf
-from utils.validation import positive_int
 
 search_log = getLogger('search')
 
@@ -62,13 +62,48 @@ async def error_invalid(e):
     )
 
 
+async def get_posts_and_total_hits(search_type: SearchType, form_data: dict, p: Perf) -> tuple[list[dict], int]:
+    if search_type == SearchType.idx:
+        query = get_search_query(form_data)
+        p.check('parsed query')
+        return await get_search_provider().search_posts(query)
+
+    return await search_posts(form_data)
+
+
+async def get_posts_and_total_hits_faceted(search_type: SearchType, form_data: dict, p: Perf) -> tuple[list[dict], int]:
+    query = get_search_query(form_data)
+    p.check('parsed facet query')
+
+    if search_type == SearchType.idx:
+        board_2_op_nums = await get_search_provider().search_posts_get_thread_nums(query, form_data)
+    else:
+        board_2_op_nums = await search_posts_get_thread_nums(form_data)
+
+    p.check('facet search done')
+
+    posts = []
+    total_hits = 0
+    for board, op_nums in board_2_op_nums.items():
+        # must go one board at a time to maintain board:op_num integrity
+        # if we want, we can limit faceted search to 1 board in the form validation
+        form_data['boards'] = [board]
+        form_data['thread_nums'] = op_nums
+        _posts, _total_hits = await get_posts_and_total_hits(search_type, form_data, p)
+        posts.extend(_posts)
+        total_hits += _total_hits
+        p.check(f'f-search done on {board}')
+
+    return posts, total_hits
+
+
 async def search_handler(search_type: SearchType) -> str:
     if not SEARCH_ENABLED:
         raise BadRequest('search is disabled')
 
-    search_result_mode = SearchResultMode.index
+    gallery_mode = False
     searched = False
-    cur_page = None
+    cur_page = 1
     pages = None
     total_hits = None
     posts_t = []
@@ -92,72 +127,51 @@ async def search_handler(search_type: SearchType) -> str:
 
     if is_search_request and (await form.validate()):
         searched = True
-        if form.search_mode.data == SearchResultMode.gallery:
-            search_result_mode = SearchResultMode.gallery
-            form.has_file.data = True
-            form.has_no_file.data = False
+        if form.gallery_mode.data:
+            gallery_mode = True
 
-        query = get_search_query(form.data)
-        p.check('parsed query')
+        form_data = form.data
 
-        query.page = positive_int(form.page.data, lower=1)
-        cur_page = query.page
-        per_page = positive_int(query.result_limit, 1, MAX_RESULTS_LIMIT)
-
-        if search_type == SearchType.idx:
-            search_p = get_search_provider()
-            posts, total_hits = await search_p.search_posts(query)
-            p.check('search done')
-
-            pages = total_pages(total_hits, per_page)
-            cur_page = positive_int(cur_page, 1, pages)
-            endpoint_path = '/index_search'
-
-            if search_result_mode == SearchResultMode.index:
-                hl_re = get_term_re(query.terms) if HIGHLIGHT_ENABLED and query.terms else None
-                for post in posts:
-                    if post['comment']:
-                        if hl_re:
-                            post['comment'] = mark_highlight(hl_re, post['comment'])
-                        _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
-
-                    posts_t.append(wrap_post_t(post))
-
+        is_facet_search = bool(form_data['op_title'] or form_data['op_comment'])
+        if is_facet_search:
+            posts, total_hits = await get_posts_and_total_hits_faceted(search_type, form_data, p)
         else:
-            posts, total_hits = await search_posts(form.data, form.result_limit.data, form.order_by.data)
-            p.check('search done')
+            posts, total_hits = await get_posts_and_total_hits(search_type, form_data, p)
 
-            pages = total_pages(total_hits, per_page)
-            cur_page = positive_int(cur_page, 1, pages)
-            endpoint_path = '/search'
+        p.check('search done')
 
-            posts = posts[((cur_page-1) * per_page):((cur_page-1) * per_page) + per_page] # TODO: offload paging to db
+        if not gallery_mode:
+            hl_re_comment = get_term_re(form.comment.data) if HIGHLIGHT_ENABLED and form.comment.data else None
+            hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
 
-            if search_result_mode == SearchResultMode.index:
-                hl_re_comment = get_term_re(form.comment.data) if HIGHLIGHT_ENABLED and form.comment.data else None
-                hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
+            for post in posts:
+                _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
 
-                for post in posts:
-                    if post['comment'] and hl_re_comment:
-                        post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
+                if post['comment'] and hl_re_comment:
+                    post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
 
-                    if post['title'] and hl_re_title:
-                        post['title'] = html_highlight(mark_highlight(hl_re_title, post['title']), magenta=False)
+                if post['title'] and hl_re_title:
+                    post['title'] = html_highlight(mark_highlight(hl_re_title, post['title']), magenta=False)
 
-                    posts_t.append(wrap_post_t(post))
+                posts_t.append(wrap_post_t(post))
 
-        page_links = template_pagination_links(endpoint_path, form.data, pages, cur_page)
-        p.check('patched posts')
-
-        if search_result_mode == SearchResultMode.index:
             posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
-        else:
-            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
 
-        p.check('rendered posts')
+        else:
+            # doesn't require restored comments because it's just a gallery
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
+        
+        p.check('templated posts')
+
+        endpoint_path = '/index_search' if search_type == SearchType.idx else '/search'
+        pages = total_pages(total_hits, form_data['result_limit'])
+        page_links = template_pagination_links(endpoint_path, form_data, pages)
+
+        p.check('templated links')
+        cur_page = form_data.get('page', cur_page)
 
     rendered_page = template_index_search.render(
-        search_mode=search_result_mode,
+        gallery_mode=gallery_mode,
         form=form,
         posts_t=posts_t,
         page_links=page_links,

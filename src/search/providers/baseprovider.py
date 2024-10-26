@@ -1,5 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
+from collections import defaultdict
 from enum import StrEnum
 from typing import Any, Callable, Generator
 
@@ -79,12 +80,28 @@ class BaseSearch(ABC):
 
     async def search_posts(self, q: SearchQuery) -> tuple[list[dict], int]:
         """Returns search results and num hits.
-        Upstream calculates pages from cur_page and limits.
+        Downstream calculates pages from cur_page and limits.
+        Comments have not been restored using `restore_comment()`.
         """
         results, total_hits = await self._search_index(INDEXES.posts.value, q)
         # results = [{'comment':r['comment'], **unpack_metadata(r['data'])} for r in results]
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
+
+    async def search_posts_get_thread_nums(self, q: SearchQuery, form_data: dict) -> dict:
+        """Returns {board_shortname: thread_nums} mappings.
+        Used for faceted search.
+        """
+        q.op = True
+        q.comment = form_data['op_comment']
+        q.title = form_data['op_title']
+
+        results, _ = await self._search_index(INDEXES.posts.value, q)
+        results = [unpack_metadata(r['data'], '') for r in results] # must unpack everything to get op_nums
+        d = defaultdict(list)
+        for p in results:
+            d[p['board_shortname']].append(p['num'])
+        return d
 
     async def add_posts(self, posts: list[dict]):
         await self._add_docs(INDEXES.posts.value, posts)
