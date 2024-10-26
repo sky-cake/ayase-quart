@@ -26,7 +26,7 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import ReportCategory, ReportStatus, SearchResultMode, UserRole
+from enums import ReportCategory, ReportStatus, UserRole
 from moderation.api import get_user_with_username, is_correct_password
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
@@ -52,7 +52,7 @@ class StripForm(QuartForm):
 class SearchForm(StripForm):
     do_not_strip = ('comment',)
 
-    search_mode = RadioField('Search Mode', choices=[(SearchResultMode.index, SearchResultMode.index), (SearchResultMode.gallery, SearchResultMode.gallery)], default=SearchResultMode.index)
+    gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=board_shortnames)
     result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
@@ -100,11 +100,8 @@ def validate_search_form(form: SearchForm):
     for board in form.boards.data:
         validate_board(board)
 
-    if form.search_mode.data == SearchResultMode.gallery and form.has_no_file.data:
-        raise BadRequest("search mode SearchMode.gallery only shows files")
-
-    if form.search_mode.data not in [SearchResultMode.index, SearchResultMode.gallery]:
-        raise BadRequest('search_mode is unknown')
+    if form.gallery_mode.data and form.has_no_file.data:
+        raise BadRequest("search gallery mode only shows files")
 
     if form.order_by.data not in ['asc', 'desc']:
         raise BadRequest('order_by is unknown')
@@ -123,6 +120,9 @@ def validate_search_form(form: SearchForm):
 
     if form.comment.data and form.comment.data.strip() == '':
         form.comment.data = None
+
+    # if (form.op_comment.data or form.op_title.data) and (len(form.boards.data) > 1):
+    #     raise BadRequest('faceted search is only available for a single board per search query at the moment')
 
 
 class IndexSearchConfigForm(QuartForm):

@@ -8,8 +8,6 @@ from functools import cache
 from itertools import batched
 from textwrap import dedent
 
-from werkzeug.exceptions import BadRequest
-
 from db import Phg, query_dict, query_tuple
 from db.base_db import BasePlaceHolderGen
 from posts.capcodes import Capcode
@@ -97,6 +95,8 @@ class SqlSearchFilter:
     fragment: str
     like: bool = False
     placeholder: bool = True
+    in_list: bool = False
+    fieldname: str|None = None # added due to possible key overlap in `sql_search_filters`
 
     def get_fragment(self, phg: BasePlaceHolderGen):
         if self.placeholder:
@@ -122,6 +122,7 @@ sql_search_filters = dict(
     width=SqlSearchFilter('media_w = ∆'),
     height=SqlSearchFilter('media_h = ∆'),
     capcode=SqlSearchFilter('capcode = ∆'),
+    thread_nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='thread_num'),
 )
 
 def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
@@ -135,15 +136,22 @@ def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
     for field, s_filter in sql_search_filters.items():
         if not (field_val := form_data.get(field)):
             continue
+
         if (field in defaults_to_ignore) and (field_val == defaults_to_ignore[field]):
             continue
+
         if s_filter.like:
             field_val = f'%{field_val}%'
+
         if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
             field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
-        
+
+        if s_filter.in_list and isinstance(field_val, list) and len(field_val) > 0 and s_filter.fieldname:
+            s_filter.fragment = f'{s_filter.fieldname} in ({phg.size(field_val)})'
+
         if s_filter.placeholder:
-            params.append(field_val)
+            params.extend(field_val) if isinstance(field_val, list) else params.append(field_val)
+
         where_parts.append(s_filter.get_fragment(phg))
 
     where_fragment = ' and '.join(where_parts)
@@ -151,22 +159,17 @@ def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
     return where_fragment, params
 
 
-async def search_posts(form_data: dict, result_limit: int, order_by: str, cur_page: int):
+async def search_posts(form_data: dict) -> tuple[list[dict], int]:
     """Returns posts that not been restored with `restore_comment()`."""
 
-    if order_by not in ('asc', 'desc'):
-        raise BadRequest('order_by is unknown')
-    if not (boards := form_data['boards']):
-        raise BadRequest('no boards specified')
+    boards = form_data['boards']
+    result_limit = form_data['result_limit']
+    order_by = form_data['order_by']
+    cur_page = form_data['page']
 
     phg: BasePlaceHolderGen = Phg()
     where_filters, params = validate_and_generate_params(form_data, phg)
     where_query = f'where {where_filters}' if where_filters else ''
-
-    # extract int cast from query
-    # not sure if we needed it in the first place, typing indcates its an int
-    # the limits are changeable by the user, but should have been validated by the form
-    result_limit = int(result_limit)
 
     offset = f'offset {cur_page}' if cur_page > 1 else ''
 
@@ -176,7 +179,8 @@ async def search_posts(form_data: dict, result_limit: int, order_by: str, cur_pa
             from {board}
             {where_query}
             order by ts_unix {order_by}
-            limit {result_limit} {offset}
+            limit {result_limit}
+            {offset}
             """, params=params
         ) for board in boards)
     )
@@ -195,6 +199,46 @@ async def search_posts(form_data: dict, result_limit: int, order_by: str, cur_pa
         post['quotelinks'] = board_quotelinks.get(board, {}).get(post['num'], set())
 
     return posts, len(posts)
+
+
+async def search_posts_get_thread_nums(form_data: dict) -> dict:
+    """Returns {board_shortname: thread_nums} mappings.
+    Used for faceted search.
+    """
+
+    boards = form_data['boards']
+    result_limit = form_data['result_limit']
+    cur_page = form_data['page']
+    form_d = {'is_op': 1, 'title': form_data['op_title'], 'comment': form_data['op_comment']}
+
+    phg: BasePlaceHolderGen = Phg()
+    where_filters, params = validate_and_generate_params(form_d, phg)
+    where_query = f'where {where_filters}' if where_filters else ''
+
+    offset = f'offset {cur_page}' if cur_page > 1 else ''
+
+    board_posts = await asyncio.gather(*(
+        query_dict(f"""
+            {f"select '{board}' as board_shortname, num as thread_num"}
+            from {board}
+            {where_query}
+            limit {result_limit}
+            {offset}
+            """, params=params
+        ) for board in boards)
+    )
+
+    posts = []
+    for board_post in board_posts:
+        posts.extend(board_post)
+
+    if not posts:
+        return {}
+
+    d = defaultdict(list)
+    for p in posts:
+        d[p.board_shortname].append(p.thread_num)
+    return d
 
 
 def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, list]:

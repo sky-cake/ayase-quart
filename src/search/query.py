@@ -14,6 +14,7 @@ class SearchQuery:
     terms: str
     boards: list[int]
     num: Optional[int] = None
+    thread_nums: Optional[list[int]] = None
     media_file: Optional[str] = None
     media_hash: Optional[str] = None
     trip: Optional[str] = None
@@ -38,7 +39,7 @@ common_words = set('the be to of and a in that have I it for not on with he as y
 
 
 def strip_2_none(s: str) -> str|None:
-    if s and s.strip() == '':
+    if isinstance(s, str) and s.strip() == '':
         return None
     return s
 
@@ -54,16 +55,8 @@ def get_search_query(params: dict) -> SearchQuery:
         boards=[board_2_int(board) for board in params['boards']],
     )
 
-    # op_nums is not a part of the form, it's being put here for faceted search
-    if op_nums := params.get('op_nums'):
-        q.op_nums = [int(n) for n in op_nums]
-
     if params['num']:
         q.num = int(params['num'])
-    if params['op_title']:
-        q.op_title = params['op_title']
-    if params['op_comment']:
-        q.op_comment = params['op_comment']
     if params['result_limit']:
         q.result_limit = clamp_positive_int(params['result_limit'], 1, MAX_RESULTS_LIMIT)
     if params['media_filename']:
@@ -103,8 +96,6 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['order_by'] in ('asc', 'desc'):
         q.sort = params['order_by']
     if page := params.get('page'):
-        if type(page) in (int, float, str):
-            q.page = clamp_positive_int(page, lower=1)
-        else:
-            q.page = 1
+        q.page = clamp_positive_int(page, lower=1)
+
     return q

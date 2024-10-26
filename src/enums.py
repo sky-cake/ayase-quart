@@ -6,11 +6,6 @@ class DbType(Enum):
     sqlite = 2
 
 
-class SearchResultMode(StrEnum):
-    index = 'index'
-    gallery = 'gallery'
-
-
 class SearchType(StrEnum):
     sql = 'sql'
     idx = 'idx'

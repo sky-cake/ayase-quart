@@ -4,6 +4,7 @@ from orjson import dumps, loads
 
 from . import POST_PK, SearchIndexField, SearchQuery, search_index_fields
 from .baseprovider import BaseSearch
+from werkzeug.exceptions import InternalServerError
 
 pk = POST_PK
 
@@ -125,6 +126,8 @@ class LnxSearch(BaseSearch):
             print(parsed)
 
         parsed = parsed['data']
+        if isinstance(parsed, str):
+            raise InternalServerError(parsed)
 
         total = parsed.get('count', 0)
         hits = (_restore_result(r['doc']) for r in parsed['hits'])
@@ -134,6 +137,15 @@ class LnxSearch(BaseSearch):
         query = []
         if q.terms:
             query.append({'occur': 'must', 'term': {'ctx': q.terms.lower(), 'fields': ['comment', 'title']}}) # bug, Titlecase terms won't match anything
+        if q.thread_nums:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'{" OR ".join(f"num:{thread_num}" for thread_num in q.thread_nums)}',
+                    },
+                }
+            )
         if q.boards:
             query.append(
                 {

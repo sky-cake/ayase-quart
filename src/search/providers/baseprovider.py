@@ -1,5 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
+from collections import defaultdict
 from enum import StrEnum
 from typing import Any, Callable, Generator
 
@@ -86,6 +87,20 @@ class BaseSearch(ABC):
         # results = [{'comment':r['comment'], **unpack_metadata(r['data'])} for r in results]
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
+
+    async def search_posts_get_thread_nums(self, q: SearchQuery, form_data: dict) -> dict:
+        """Returns {board_shortname: thread_nums} mappings.
+        Used for faceted search.
+        """
+        q.op = True
+        q.terms = (form_data['op_title'] + ' ' + form_data['op_comment']).strip()
+
+        results, _ = await self._search_index(INDEXES.posts.value, q)
+        results = [unpack_metadata(r['data'], '') for r in results] # must unpack everything to get op_nums
+        d = defaultdict(list)
+        for p in results:
+            d[p['board_shortname']].append(p['num'])
+        return d
 
     async def add_posts(self, posts: list[dict]):
         await self._add_docs(INDEXES.posts.value, posts)
