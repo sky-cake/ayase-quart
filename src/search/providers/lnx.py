@@ -1,4 +1,5 @@
 from typing import Any
+import shlex
 
 from orjson import dumps, loads
 
@@ -132,8 +133,29 @@ class LnxSearch(BaseSearch):
 
     def _query_builder(self, q: SearchQuery):
         query = []
-        if q.terms:
-            query.append({'occur': 'must', 'term': {'ctx': q.terms.lower(), 'fields': ['comment', 'title']}}) # bug, Titlecase terms won't match anything
+        if terms := q.terms:
+            # lower() because lnx bug, Titlecase terms won't match anything
+            terms = terms.lower()
+            
+            # split and loop because lnx 0.9.0 uses tantivy 0.19 https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html
+            # require format for "barack obama": ["title:barack", "body:barack", "title:obama", "body:obama"]
+            term_parts = shlex.split(terms, posix=False) # keep the quotes
+            for part in term_parts:
+                if part.startswith('"') and part.endswith('"'):
+                    query.append({ # quoted terms can't use the fields: [] combo, must OR search fields
+                        'occur': 'must',
+                        'normal': {
+                            'ctx': f'comment:{part} OR title:{part}',
+                        },
+                    })
+                else:
+                    query.append({
+                        'occur': 'must',
+                        'term': {
+                            'ctx': part,
+                            'fields': ['comment', 'title'],
+                        }
+                    })
         if q.boards:
             query.append(
                 {
