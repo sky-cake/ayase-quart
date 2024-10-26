@@ -90,6 +90,6 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['order_by'] in ('asc', 'desc'):
         q.sort = params['order_by']
     if page := params.get('page'):
-        q.page = clamp_positive_int(page, lower=1)
+        q.page = page
 
     return q

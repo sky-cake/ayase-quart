@@ -62,13 +62,39 @@ async def error_invalid(e):
     )
 
 
-async def get_posts_and_total_hits(search_type: str, form_data: dict, p: Perf) -> tuple[list[dict], int]:
+async def get_posts_and_total_hits(search_type: SearchType, form_data: dict, p: Perf) -> tuple[list[dict], int]:
     if search_type == SearchType.idx:
         query = get_search_query(form_data)
         p.check('parsed query')
         return await get_search_provider().search_posts(query)
 
     return await search_posts(form_data)
+
+
+async def get_posts_and_total_hits_faceted(search_type: SearchType, form_data: dict, p: Perf) -> tuple[list[dict], int]:
+    query = get_search_query(form_data)
+    p.check('parsed facet query')
+
+    if search_type == SearchType.idx:
+        board_2_op_nums = await get_search_provider().search_posts_get_thread_nums(query, form_data)
+    else:
+        board_2_op_nums = await search_posts_get_thread_nums(form_data)
+
+    p.check('facet search done')
+
+    posts = []
+    total_hits = 0
+    for board, op_nums in board_2_op_nums.items():
+        # must go one board at a time to maintain board:op_num integrity
+        # if we want, we can limit faceted search to 1 board in the form validation
+        form_data['boards'] = [board]
+        form_data['thread_nums'] = op_nums
+        _posts, _total_hits = await get_posts_and_total_hits(search_type, form_data, p)
+        posts.extend(_posts)
+        total_hits += _total_hits
+        p.check(f'f-search done on {board}')
+
+    return posts, total_hits
 
 
 async def search_handler(search_type: SearchType) -> str:
@@ -103,35 +129,12 @@ async def search_handler(search_type: SearchType) -> str:
         searched = True
         if form.gallery_mode.data:
             gallery_mode = True
-            form.has_file.data = True
-            form.has_no_file.data = False
 
         form_data = form.data
 
-        is_facet_search = bool(form.op_title.data or form.op_comment.data)
+        is_facet_search = bool(form_data['op_title'] or form_data['op_comment'])
         if is_facet_search:
-            query = get_search_query(form_data)
-            form_data['page'] = query.page
-            p.check('parsed facet query')
-
-            if search_type == SearchType.idx:
-                board_2_op_nums = await get_search_provider().search_posts_get_thread_nums(query, form_data)
-            else:
-                board_2_op_nums = await search_posts_get_thread_nums(form_data)
-
-            p.check('facet search done')
-
-            posts = []
-            total_hits = 0
-            for board, op_nums in board_2_op_nums.items():
-                # must go one board at a time to maintain board:op_num integrity
-                # if we want, we can limit faceted search to 1 board in the form validation
-                form_data['boards'] = [board]
-                form_data['thread_nums'] = op_nums
-                _posts, _total_hits = await get_posts_and_total_hits(search_type, form_data, p)
-                posts.extend(_posts)
-                total_hits += _total_hits
-                p.check(f'f-search done on {board}')
+            posts, total_hits = await get_posts_and_total_hits_faceted(search_type, form_data, p)
         else:
             posts, total_hits = await get_posts_and_total_hits(search_type, form_data, p)
 

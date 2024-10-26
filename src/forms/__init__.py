@@ -30,7 +30,7 @@ from enums import ReportCategory, ReportStatus, UserRole
 from moderation.api import get_user_with_username, is_correct_password
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
-from utils.validation import validate_board
+from utils.validation import validate_board, clamp_positive_int
 
 LENGTH_MD5_HASH = 32
 
@@ -128,6 +128,12 @@ def validate_search_form(form: SearchForm):
     form.title.data = strip_2_none(form.title.data)
     form.op_comment.data = strip_2_none(form.op_comment.data)
     form.op_title.data = strip_2_none(form.op_title.data)
+
+    form.page.data = clamp_positive_int(form.page.data, 1)
+
+    if form.gallery_mode.data:
+        form.has_file.data = True
+        form.has_no_file.data = False
 
     # if (form.op_comment.data or form.op_title.data) and (len(form.boards.data) > 1):
     #     raise BadRequest('faceted search is only available for a single board per search query at the moment')
