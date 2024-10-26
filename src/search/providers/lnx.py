@@ -1,4 +1,5 @@
 from typing import Any
+import shlex
 
 from orjson import dumps, loads
 
@@ -7,6 +8,34 @@ from .baseprovider import BaseSearch
 from werkzeug.exceptions import InternalServerError
 
 pk = POST_PK
+
+
+def get_term_query(fieldname: str, terms: str) -> list[dict]:
+    # lower() because lnx bug, Titlecase terms won't match anything
+    terms = terms.lower()
+
+    query = []
+
+    # split and loop because lnx 0.9.0 uses tantivy 0.19 https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html
+    # require format for "barack obama": ["title:barack", "body:barack", "title:obama", "body:obama"]
+    term_parts = shlex.split(terms, posix=False) # keep the quotes
+    for part in term_parts:
+        if part.startswith('"') and part.endswith('"'):
+            query.append({ # quoted terms can't use the fields: [] combo, must OR search fields
+                'occur': 'must',
+                'normal': {
+                    'ctx': f'{fieldname}:{part}',
+                },
+            })
+        else:
+            query.append({
+                'occur': 'must',
+                'term': {
+                    'ctx': part,
+                    'fields': [fieldname],
+                }
+            })
+    return query
 
 
 class LnxSearch(BaseSearch):
@@ -135,14 +164,18 @@ class LnxSearch(BaseSearch):
 
     def _query_builder(self, q: SearchQuery):
         query = []
-        if q.terms:
-            query.append({'occur': 'must', 'term': {'ctx': q.terms.lower(), 'fields': ['comment', 'title']}}) # bug, Titlecase terms won't match anything
+        if comment := q.comment:
+            query.extend(get_term_query('comment', comment))
+
+        if title := q.title:
+            query.extend(get_term_query('title', title))
+
         if q.thread_nums:
             query.append(
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'{" OR ".join(f"num:{thread_num}" for thread_num in q.thread_nums)}',
+                        'ctx': f'{" OR ".join(f"thread_num:{thread_num}" for thread_num in q.thread_nums)}',
                     },
                 }
             )

@@ -93,7 +93,8 @@ class BaseSearch(ABC):
         Used for faceted search.
         """
         q.op = True
-        q.terms = (form_data['op_title'] + ' ' + form_data['op_comment']).strip()
+        q.comment = form_data['op_comment']
+        q.title = form_data['op_title']
 
         results, _ = await self._search_index(INDEXES.posts.value, q)
         results = [unpack_metadata(r['data'], '') for r in results] # must unpack everything to get op_nums

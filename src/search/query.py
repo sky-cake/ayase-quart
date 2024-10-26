@@ -11,8 +11,9 @@ from .post_metadata import board_2_int
 
 @dataclass(slots=True)
 class SearchQuery:
-    terms: str
     boards: list[int]
+    comment: Optional[str] = None
+    title: Optional[str] = None
     num: Optional[int] = None
     thread_nums: Optional[list[int]] = None
     media_file: Optional[str] = None
@@ -38,22 +39,15 @@ class SearchQuery:
 common_words = set('the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us'.split())
 
 
-def strip_2_none(s: str) -> str|None:
-    if isinstance(s, str) and s.strip() == '':
-        return None
-    return s
-
-
 def get_search_query(params: dict) -> SearchQuery:
-    params['comment'] = strip_2_none(params['comment'])
-    params['title'] = strip_2_none(params['title'])
-
-    terms = params['comment'] or params['title'] # since we only search one or the other, let's make comments precede titles
-
     q = SearchQuery(
-        terms=terms,
+        comment=params['comment'],
+        title=params['title'],
         boards=[board_2_int(board) for board in params['boards']],
     )
+
+    if params.get('thread_nums'):
+        q.thread_nums = params['thread_nums']
 
     if params['num']:
         q.num = int(params['num'])

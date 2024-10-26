@@ -63,12 +63,11 @@ async def error_invalid(e):
 
 
 async def get_posts_and_total_hits(search_type: str, form_data: dict, p: Perf) -> tuple[list[dict], int]:
-    query = get_search_query(form_data)
-    p.check('parsed query')
-
     if search_type == SearchType.idx:
+        query = get_search_query(form_data)
+        p.check('parsed query')
         return await get_search_provider().search_posts(query)
-    
+
     return await search_posts(form_data)
 
 

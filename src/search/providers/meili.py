@@ -119,8 +119,8 @@ class MeiliSearch(BaseSearch):
             'page': q.page,
         }
 
-        if q.terms:
-            payload['q'] = q.terms
+        if q.comment or q.title:
+            payload['q'] = q.comment or q.title # can we separate these?
 
         if q.highlight:
             payload.update(

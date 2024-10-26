@@ -93,6 +93,12 @@ class SearchForm(StripForm):
         return True
 
 
+def strip_2_none(s: str) -> str|None:
+    if isinstance(s, str) and s.strip() == '':
+        return None
+    return s
+
+
 def validate_search_form(form: SearchForm):
     if not form.boards.data:
         raise BadRequest('select a board')
@@ -118,8 +124,10 @@ def validate_search_form(form: SearchForm):
     if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
         raise BadRequest('the dates are contradicted')
 
-    if form.comment.data and form.comment.data.strip() == '':
-        form.comment.data = None
+    form.comment.data = strip_2_none(form.comment.data)
+    form.title.data = strip_2_none(form.title.data)
+    form.op_comment.data = strip_2_none(form.op_comment.data)
+    form.op_title.data = strip_2_none(form.op_title.data)
 
     # if (form.op_comment.data or form.op_title.data) and (len(form.boards.data) > 1):
     #     raise BadRequest('faceted search is only available for a single board per search query at the moment')

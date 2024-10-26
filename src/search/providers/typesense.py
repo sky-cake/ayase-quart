@@ -90,8 +90,10 @@ class TypesenseSearch(BaseSearch):
             # use_cache=True,
             # cache_ttl=60,
         )
-        if q.terms:
-            params['q'] = q.terms
+
+        if q.comment or q.title:
+            params['q'] = q.comment or q.title # can we separate these?
+
         if q.highlight:
             params.update(
                 dict(

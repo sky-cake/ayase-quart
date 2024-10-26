@@ -117,9 +117,12 @@ class QuickwitSearch(BaseSearch):
 
 def get_qw_query(q: SearchQuery):
     qb = []
-    if q.terms is not None and q.terms:
-        terms = esc_term(q.terms)
-        qb.append(f'(comment:{terms} OR title:{terms})')
+    if q.comment:
+        comment = esc_term(q.comment)
+        qb.append(f'comment:{comment}')
+    if q.title:
+        title = esc_term(q.title)
+        qb.append(f'comment:{title}')
     if q.boards is not None:
         qb.append(f'board:IN [{" ".join(q.boards)}]')
     if q.num is not None:
