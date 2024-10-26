@@ -105,7 +105,6 @@ ul {
 }
 
 .column {
-    margin-left: 1em;
     flex-direction: column;
 }
 
@@ -139,14 +138,21 @@ code {
     list-style: none;
     margin-bottom: 3px;
     display: flex;
-    max-width: 90vw;
 }
+
+@media (max-width: 420px) {
+    .form-control {
+      list-style: none;
+      margin-bottom: 3px;
+      display: table;
+    }
+  }
 
 .field_label {
     background-color: #414141;
     color: inherit;
     padding: 2px;
-    width: 100px;
+    width: 90px;
     border-radius: 4px;
 }
 
@@ -212,7 +218,7 @@ input[type=password] {
 
 textarea {
     width: 240px;
-    height: 6em;
+    height: 4em;
     max-width: 90vw;
     max-height: 40vh;
     min-width: 2ch;
@@ -306,12 +312,21 @@ input:focus {
     margin: 0.5em;
 }
 
+.mt-1 {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
 .d-flex {
     display: flex;
 }
 
 .rounded {
     border-radius: 4px;
+}
+
+.border {
+    border: #8583ff solid 1px;
 }
 
 input[type="number"] {
