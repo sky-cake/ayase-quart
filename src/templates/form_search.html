@@ -17,8 +17,11 @@
 
     <div class="row">
         <div class="column">
-            {{ render_field(form.op_title, placeholder='Facet OP Subject') }}
-            {{ render_field(form.op_comment, placeholder='Facet OP Comment') }}
+            <div class="border mt-1">
+                Search results must have OPs where...
+                {{ render_field(form.op_title, placeholder='OP Subject') }}
+                {{ render_field(form.op_comment, placeholder='OP Comment') }}
+            </div>
         </div>
     </div>
 
