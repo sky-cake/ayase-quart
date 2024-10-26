@@ -151,7 +151,9 @@ def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
     return where_fragment, params
 
 
-async def search_posts(form_data: dict, result_limit: int, order_by: str):
+async def search_posts(form_data: dict, result_limit: int, order_by: str, cur_page: int):
+    """Returns posts that not been restored with `restore_comment()`."""
+
     if order_by not in ('asc', 'desc'):
         raise BadRequest('order_by is unknown')
     if not (boards := form_data['boards']):
@@ -166,17 +168,19 @@ async def search_posts(form_data: dict, result_limit: int, order_by: str):
     # the limits are changeable by the user, but should have been validated by the form
     result_limit = int(result_limit)
 
+    offset = f'offset {cur_page}' if cur_page > 1 else ''
+
     board_posts = await asyncio.gather(*(
         query_dict(f"""
             {get_selector(board)}
             from {board}
             {where_query}
             order by ts_unix {order_by}
-            limit {result_limit}
+            limit {result_limit} {offset}
             """, params=params
         ) for board in boards)
     )
-    
+
     posts = []
     for board_post in board_posts:
         posts.extend(board_post)
@@ -189,7 +193,6 @@ async def search_posts(form_data: dict, result_limit: int, order_by: str):
     for post in posts:
         board = post['board_shortname']
         post['quotelinks'] = board_quotelinks.get(board, {}).get(post['num'], set())
-        _, post['comment'] = restore_comment(post['thread_num'], post['comment'], board)
 
     return posts, len(posts)
 

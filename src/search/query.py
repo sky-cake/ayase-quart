@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from posts.capcodes import Capcode, capcode_2_id
-from utils.validation import positive_int
+from utils.validation import clamp_positive_int
 
 from . import DEFAULT_RESULTS_LIMIT, MAX_RESULTS_LIMIT
 from .post_metadata import board_2_int
@@ -54,10 +54,18 @@ def get_search_query(params: dict) -> SearchQuery:
         boards=[board_2_int(board) for board in params['boards']],
     )
 
+    # op_nums is not a part of the form, it's being put here for faceted search
+    if op_nums := params.get('op_nums'):
+        q.op_nums = [int(n) for n in op_nums]
+
     if params['num']:
         q.num = int(params['num'])
+    if params['op_title']:
+        q.op_title = params['op_title']
+    if params['op_comment']:
+        q.op_comment = params['op_comment']
     if params['result_limit']:
-        q.result_limit = positive_int(params['result_limit'], upper=MAX_RESULTS_LIMIT)
+        q.result_limit = clamp_positive_int(params['result_limit'], 1, MAX_RESULTS_LIMIT)
     if params['media_filename']:
         q.media_file = params['media_filename']
     if params['media_hash']:
@@ -67,9 +75,9 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['has_no_file']:
         q.has_no_file = True
     if params['width']:
-        q.width = positive_int(params['width'])
+        q.width = clamp_positive_int(params['width'])
     if params['height']:
-        q.height = positive_int(params['height'])
+        q.height = clamp_positive_int(params['height'])
     if params['capcode'] != Capcode.default.value:
         q.capcode = capcode_2_id(params['capcode'])
     if params['tripcode']:
@@ -96,5 +104,7 @@ def get_search_query(params: dict) -> SearchQuery:
         q.sort = params['order_by']
     if page := params.get('page'):
         if type(page) in (int, float, str):
-            q.page = positive_int(page, 1)
+            q.page = clamp_positive_int(page, lower=1)
+        else:
+            q.page = 1
     return q

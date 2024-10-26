@@ -28,7 +28,7 @@ from templates import (
     template_index_search_post_t,
 )
 from utils import Perf
-from utils.validation import positive_int
+from utils.validation import clamp_positive_int
 
 search_log = getLogger('search')
 
@@ -100,61 +100,43 @@ async def search_handler(search_type: SearchType) -> str:
         query = get_search_query(form.data)
         p.check('parsed query')
 
-        query.page = positive_int(form.page.data, lower=1)
-        cur_page = query.page
-        per_page = positive_int(query.result_limit, 1, MAX_RESULTS_LIMIT)
-
         if search_type == SearchType.idx:
-            search_p = get_search_provider()
-            posts, total_hits = await search_p.search_posts(query)
-            p.check('search done')
-
-            pages = total_pages(total_hits, per_page)
-            cur_page = positive_int(cur_page, 1, pages)
+            posts, total_hits = await get_search_provider().search_posts(query)
             endpoint_path = '/index_search'
-
-            if search_result_mode == SearchResultMode.index:
-                hl_re = get_term_re(query.terms) if HIGHLIGHT_ENABLED and query.terms else None
-                for post in posts:
-                    if post['comment']:
-                        if hl_re:
-                            post['comment'] = mark_highlight(hl_re, post['comment'])
-                        _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
-
-                    posts_t.append(wrap_post_t(post))
-
         else:
-            posts, total_hits = await search_posts(form.data, form.result_limit.data, form.order_by.data)
-            p.check('search done')
-
-            pages = total_pages(total_hits, per_page)
-            cur_page = positive_int(cur_page, 1, pages)
+            posts, total_hits = await search_posts(form.data, form.result_limit.data, form.order_by.data, query.page)
             endpoint_path = '/search'
 
-            posts = posts[((cur_page-1) * per_page):((cur_page-1) * per_page) + per_page] # TODO: offload paging to db
-
-            if search_result_mode == SearchResultMode.index:
-                hl_re_comment = get_term_re(form.comment.data) if HIGHLIGHT_ENABLED and form.comment.data else None
-                hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
-
-                for post in posts:
-                    if post['comment'] and hl_re_comment:
-                        post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
-
-                    if post['title'] and hl_re_title:
-                        post['title'] = html_highlight(mark_highlight(hl_re_title, post['title']), magenta=False)
-
-                    posts_t.append(wrap_post_t(post))
-
-        page_links = template_pagination_links(endpoint_path, form.data, pages, cur_page)
-        p.check('patched posts')
+        p.check('search done')
 
         if search_result_mode == SearchResultMode.index:
-            posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
-        else:
-            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
+            hl_re_comment = get_term_re(form.comment.data) if HIGHLIGHT_ENABLED and form.comment.data else None
+            hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
 
-        p.check('rendered posts')
+            for post in posts:
+                _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
+
+                if post['comment'] and hl_re_comment:
+                    post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
+
+                if post['title'] and hl_re_title:
+                    post['title'] = html_highlight(mark_highlight(hl_re_title, post['title']), magenta=False)
+
+                posts_t.append(wrap_post_t(post))
+
+            posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+
+        else:
+            # doesn't require restored comments because it's just a gallery
+            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
+        
+        p.check('templated posts')
+
+        pages = total_pages(total_hits, query.result_limit)
+        page_links = template_pagination_links(endpoint_path, form.data, pages, query.page)
+
+        p.check('templated links')
+        cur_page = query.page
 
     rendered_page = template_index_search.render(
         search_mode=search_result_mode,

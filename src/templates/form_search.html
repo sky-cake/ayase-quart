@@ -17,6 +17,13 @@
 
     <div class="row">
         <div class="column">
+            {{ render_field(form.op_title, placeholder='Facet OP Subject') }}
+            {{ render_field(form.op_comment, placeholder='Facet OP Comment') }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="column">
             {{ render_field(form.has_file) }}
             {{ render_field(form.has_no_file) }}
         </div>
