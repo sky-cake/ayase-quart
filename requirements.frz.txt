@@ -19,7 +19,7 @@ MarkupSafe==2.1.4
 priority==2.0.0
 pycparser==2.21
 pymysql>=1.1.1
-Quart==0.19.5
+Quart>=0.19.7
 quart-flask-patch==0.3.0
 quart-uploads==0.0.2
 quart-wtforms==1.0.1
