@@ -247,6 +247,10 @@ div.form-check {
     background-color: #70396c;
 }
 
+.hl_dark {
+    background-color: #17191b;
+}
+
 textarea:focus,
 input:focus {
     outline: 0;

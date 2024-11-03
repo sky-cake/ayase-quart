@@ -41,6 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const board_shortname = quotelink.getAttribute('data-board_shortname');
 
         quotelink.addEventListener("mouseover", (e) => {
+            let backlink = e.target.parentElement.parentElement.id;
+            let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
+            
             const id_post_num = "#p" + post_num;
             let target_post = document.querySelector(id_post_num);
 
@@ -55,15 +58,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         let previewContent = data ? data.html_content : get_quotelink_preview_default_string();
                         target_post = document.createElement("div");
                         target_post.innerHTML = previewContent;
-                        quotelink_preview_show(target_post, quotelink);
+                        quotelink_preview_show(target_post, quotelink, backlink_num);
                     })
                     .catch(() => {
                         let default_preview = document.createElement("div");
                         default_preview.innerHTML = get_quotelink_preview_default_string();
-                        quotelink_preview_show(default_preview, quotelink);
+                        quotelink_preview_show(default_preview, quotelink, backlink_num);
                     });
             } else {
-                quotelink_preview_show(target_post, quotelink);
+                quotelink_preview_show(target_post, quotelink, backlink_num);
             }
         });
 
@@ -99,9 +102,23 @@ function quotelink_preview_hide(){
     });
 }
 
-function quotelink_preview_show(target_post, quotelink) {
+
+function quotelink_preview_show(target_post, quotelink, backlink_num) {
     let preview = target_post.cloneNode(true);
     preview.id = "quote-preview";
+
+    // highlight the recipient of the reply to help when there are multiple quotelinks
+    const board_shortname = quotelink.getAttribute("data-board_shortname");
+    const recipients = preview.querySelectorAll(`a.quotelink`);
+    for (const recipient of recipients) {
+        const recipient_post_num = recipient.getAttribute("href").split("#p")[1];
+        const recipient_board_shortname = recipient.getAttribute("data-board_shortname");
+    
+        if (recipient_post_num === backlink_num && recipient_board_shortname === board_shortname) {
+            recipient.classList.add("hl_dark");
+            break;
+        }
+    }
 
     document.body.appendChild(preview);
 
