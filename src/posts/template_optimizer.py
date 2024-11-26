@@ -209,8 +209,10 @@ def set_links(post: dict):
     board = post['board_shortname']
     num = post['num']
     thread = post['op_num']
-    post['t_thread_link'] = f'/{board}/thread/{thread}'
-    post['t_post_link'] = f'/{board}/thread/{thread}#p{num}'
+    post['t_thread_link_rel'] = f'/{board}/thread/{thread}'
+    post['t_thread_link_src'] = f'https://boards.4chan.org/{board}/thread/{thread}'
+    post['t_post_link_rel'] = f'/{board}/thread/{thread}#p{num}'
+    post['t_post_link_src'] = f'https://boards.4chan.org/{board}/thread/{thread}#p{num}'
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'

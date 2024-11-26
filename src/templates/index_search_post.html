@@ -74,8 +74,10 @@
             <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
             {% if post.op_num != 0 %}
                 [<a href="/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}" target="{{html_link_target}}">View</a>]
+                [<a href="https://boards.4chan.org/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}" rel="noreferrer" target="_blank">Source</a>]
             {% else %}
                 [<a href="/{{post.board_shortname}}/thread/{{post.num}}" target="{{html_link_target}}">View</a>]
+                [<a href="https://boards.4chan.org/{{post.board_shortname}}/thread/{{post.num}}" rel="noreferrer" target="_blank">Source</a>]
             {% endif %}
             <div id="bl_{{post.num}}" class="backlink">
                 {% for quotelink in post.quotelinks %}

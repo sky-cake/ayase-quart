@@ -23,14 +23,15 @@
     {{ t_troll_country }}
     <span class="dateTime" data-utc="{{ts_unix}}">{{format_ts(ts_unix)}}</span>
     <span class="postNum desktop">
-        <a href="{{t_post_link}}">No.{{num}}</a>
+        <a href="{{t_post_link_rel}}">No.{{num}}</a>
         {% if op_num == 0 %}
             {{ t_sticky }}
             {{ t_closed }}
         {% endif %}
     </span>
     <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
-    [<a href="{{t_post_link if op_num else t_thread_link}}">View</a>]
+    [<a href="{{t_post_link_rel if op_num else t_thread_link_rel}}" target="{{html_link_target}}">View</a>]
+    [<a href="{{t_post_link_src if op_num else t_thread_link_src}}" rel="noreferrer" target="_blank">Source</a>]
     {{ t_quotelink }}
 </div>
 {% if op_num %}

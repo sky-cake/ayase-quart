@@ -63,7 +63,6 @@ async def v_board_index(board_shortname: str):
 
     rendered = await render_controller(
         template_board_index,
-        board_index_page=True,
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
         threads=index["threads"],

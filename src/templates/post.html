@@ -87,17 +87,12 @@
         {% endif %}
     </span>
     <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
-    {% if search_result and post.op_num != 0 %}
+    {% if post.op_num != 0 %}
         [<a href="/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}" target="{{html_link_target}}">View</a>]
-    {% endif %}
-    {% if search_result and post.op_num == 0 %}
+        [<a href="https://boards.4chan.org/{{post.board_shortname}}/thread/{{post.op_num}}#p{{post.num}}" target="_blank">Source</a>]
+    {% elif post.op_num == 0 %}
         [<a href="/{{post.board_shortname}}/thread/{{post.num}}" target="{{html_link_target}}">View</a>]
-    {% endif %}
-    {% if not search_result and post.op_num == 0 %}
-        {% if board_index_page %}
-            [<a href="/{{post.board_shortname}}/thread/{{post.num}}" target="{{html_link_target}}">View</a>]
-        {% endif %}
-        [<a href="https://boards.4chan.org/{{ post.board_shortname }}/thread/{{ post.num }}" rel="noreferrer" target="_blank">Source</a>]
+        [<a href="https://boards.4chan.org/{{post.board_shortname}}/thread/{{post.num}}" rel="noreferrer" target="_blank">Source</a>]
     {% endif %}
     <div id="bl_{{post.num}}" class="backlink">
         {% if quotelinks %}
