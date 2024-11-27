@@ -3,15 +3,15 @@ from functools import wraps
 from quart import Blueprint, current_app, flash, redirect, session, url_for
 from werkzeug.security import check_password_hash
 
-from security.captcha import MathCaptcha
 from enums import AuthActions
 from forms import LoginForm
-from moderation.api import (
+from moderation.user import (
     get_user_with_username,
     is_user_admin,
     is_user_moderator
 )
 from render import render_controller
+from security.captcha import MathCaptcha
 from templates import template_login
 
 bp = Blueprint("bp_auth", __name__, template_folder="templates")

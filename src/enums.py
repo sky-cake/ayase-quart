@@ -4,6 +4,7 @@ from enum import Enum, StrEnum
 class DbType(Enum):
     mysql = 1
     sqlite = 2
+    postgres = 3
 
 
 class SearchType(StrEnum):

@@ -27,10 +27,10 @@ from wtforms.validators import (
 
 from boards import board_shortnames
 from enums import ReportCategory, ReportStatus, UserRole
-from moderation.api import get_user_with_username, is_correct_password
+from moderation.user import get_user_with_username, is_correct_password
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
-from utils.validation import validate_board, clamp_positive_int
+from utils.validation import clamp_positive_int, validate_board
 
 LENGTH_MD5_HASH = 32
 

@@ -1,13 +1,10 @@
 from quart import Blueprint, redirect, request, url_for
 
-from .bp_auth import admin_required
 from boards import board_shortnames
-from db import DB_TYPE, Phg, query_dict
-from db.mysql import \
-    mysql_conf  # todo: figure out how to remove this import...
+from db import db_q
 from enums import DbType
 from forms import UserForm
-from moderation.api import (
+from moderation.user import (
     create_user,
     delete_user,
     edit_user,
@@ -23,19 +20,22 @@ from templates import (
     template_users_edit
 )
 
+from .bp_auth import admin_required
+from configs import db_conf
+
 bp = Blueprint('bp_admin', __name__)
 
 
-placeholders = Phg().size(board_shortnames)
+placeholders = db_q.phg().size(board_shortnames)
 
-if DB_TYPE == DbType.mysql:
+if db_conf['db_type'] == DbType.mysql:
     DATABASE_TABLE_STORAGE_SIZES = f"""select table_name as "Table Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) as "Size in MB" from information_schema.tables where TABLE_SCHEMA = %s and table_name in ({placeholders}) group by table_name;"""
     DATABASE_STORAGE_SIZE = """select table_schema "DB Name", ROUND(SUM(data_length + index_length) / power(1024, 2), 1) "Size in MB" from information_schema.tables where table_schema = %(db)s group by table_schema;"""
-elif DB_TYPE == DbType.sqlite:
+elif db_conf['db_type'] == DbType.sqlite:
     DATABASE_TABLE_STORAGE_SIZES = f"""SELECT name as "Table Name", ROUND(SUM("pgsize") / (1024. * 1024), 2) as "Size in MB" FROM "dbstat" where name in ({placeholders}) GROUP BY name;"""
     DATABASE_STORAGE_SIZE = """SELECT ROUND((page_count * page_size) / (1024.0 * 1024.0), 1) as "Size in MB" FROM pragma_page_count(), pragma_page_size();"""
 else:
-    raise ValueError(DB_TYPE)
+    raise ValueError(db_conf['db_type'])
 
 
 def get_sql_latest_ops(board_shortname):
@@ -45,14 +45,14 @@ def get_sql_latest_ops(board_shortname):
 @bp.route("/stats")
 @admin_required
 async def stats():
-    database_storage_size = await query_dict(DATABASE_STORAGE_SIZE, params={'db': mysql_conf.get('db', '')})
+    database_storage_size = await db_q.query_dict(DATABASE_STORAGE_SIZE)
 
-    if DB_TYPE == DbType.mysql:
-        params = [mysql_conf.get('db', ''), *board_shortnames]
-    elif DB_TYPE == DbType.sqlite:
+    if db_conf['db_type'] == DbType.mysql:
+        params = [*board_shortnames]
+    elif db_conf['db_type'] == DbType.sqlite:
         params = [*board_shortnames]
 
-    database_table_storage_sizes = await query_dict(DATABASE_TABLE_STORAGE_SIZES, params=params)
+    database_table_storage_sizes = await db_q.query_dict(DATABASE_TABLE_STORAGE_SIZES, params=params)
 
     return await render_controller(
         template_stats,
@@ -69,7 +69,7 @@ async def latest():
     threads = []
     for board_shortname in board_shortnames:
         sql = get_sql_latest_ops(board_shortname)
-        latest_ops = await query_dict(sql)
+        latest_ops = await db_q.query_dict(sql)
         threads.extend(latest_ops)
 
     return await render_controller(

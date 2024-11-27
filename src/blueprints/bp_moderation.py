@@ -1,8 +1,7 @@
 from quart import Blueprint, redirect, request, url_for
 
-from .bp_auth import moderator_required
 from forms import ReportForm
-from moderation.api import (
+from moderation.user import (
     delete_report,
     edit_report,
     get_open_reports,
@@ -15,6 +14,8 @@ from templates import (
     template_reports_index,
     template_reports_view
 )
+
+from .bp_auth import moderator_required
 
 bp = Blueprint('bp_moderation', __name__)
 

@@ -1,7 +1,7 @@
 import tomllib
 
 from utils import make_src_path
-
+from enums import DbType
 
 def _load_config_toml():
     if not hasattr(_load_config_toml, 'conf'):
@@ -12,16 +12,20 @@ def _load_config_toml():
 conf = _load_config_toml()
 app_conf = conf.get('app', {})
 site_conf = conf.get('site', {})
+
 db_conf = conf.get('db', {})
+db_conf['db_type'] = DbType[db_conf['db_type']]
+
 search_conf = conf.get('search', {})
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 moderation_conf = conf.get('moderation', {})
 
+
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
-    db_conf['sqlite']['database'] = make_src_path(sqlite_db)
+    db_conf['database'] = make_src_path(sqlite_db)
 if moderation_db := moderation_conf.get('sqlite', {}).get('database'):
-    moderation_conf['sqlite']['database'] = make_src_path(moderation_db)
+    moderation_conf['database'] = make_src_path(moderation_db)
 if ssl_key := app_conf.get('ssl_key'):
     app_conf['ssl_key'] = make_src_path(ssl_key)
 if ssl_cert := app_conf.get('ssl_cert'):

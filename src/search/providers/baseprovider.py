@@ -1,6 +1,6 @@
 from abc import ABC
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Callable, Generator
 

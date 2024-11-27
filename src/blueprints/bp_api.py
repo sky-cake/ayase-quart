@@ -1,4 +1,5 @@
 from quart import Blueprint, jsonify
+
 from asagi_converter import (
     generate_catalog,
     generate_index,
