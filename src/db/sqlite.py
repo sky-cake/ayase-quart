@@ -1,5 +1,5 @@
 import aiosqlite
-
+from enums import DbPool
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
@@ -20,29 +20,29 @@ class SqlitePoolManager(BasePoolManager):
         keys = [col[0] for col in cursor.description]
         return DotDict({k: v for k, v in zip(keys, row)})
 
-    async def create_pool(self, identifier='id1', dict_row=False):
+    async def create_pool(self, p_id=DbPool.main, dict_row=False):
         pool = await aiosqlite.connect(self.sqlite_conf['database'])
 
         pool.row_factory = self.row_factory if dict_row else None
 
-        self.pools[identifier] = pool
+        self.pools[p_id] = pool
         return pool
 
-    async def get_pool(self, identifier='id1', store=True, dict_row=False):
+    async def get_pool(self, p_id=DbPool.main, store=True, dict_row=False):
         if not store:
-            return await self.create_pool(identifier, dict_row=dict_row)
+            return await self.create_pool(p_id, dict_row=dict_row)
 
-        if identifier in self.pools:
+        if p_id in self.pools:
             # assuming this is cheap to toggle
-            # we avoid having to juggle identifier codes this way
+            # we avoid having to juggle p_id codes this way
             # still get to have multiple pools for asagi, moderation, etc. if we want
-            self.pools[identifier].row_factory = self.row_factory if dict_row else None
-            return self.pools[identifier]
+            self.pools[p_id].row_factory = self.row_factory if dict_row else None
+            return self.pools[p_id]
 
-        return await self.create_pool(identifier, dict_row=dict_row)
+        return await self.create_pool(p_id, dict_row=dict_row)
 
-    async def close_pool(self, identifier='id1'):
-        if pool := self.pools.pop(identifier, None):
+    async def close_pool(self, p_id=DbPool.main):
+        if pool := self.pools.pop(p_id, None):
             await pool.close()
 
     async def close_all_pools(self):
@@ -56,8 +56,8 @@ class SqliteQueryRunner(BaseQueryRunner):
         self.pool_manager = pool_manager
         self.sql_echo = sql_echo
 
-    async def run_query(self, query: str, params=None, commit=False, identifier='id1', dict_row=True):
-        pool = await self.pool_manager.get_pool(identifier, dict_row=dict_row)
+    async def run_query(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
+        pool = await self.pool_manager.get_pool(p_id, dict_row=dict_row)
 
         if self.sql_echo:
             print('::SQL::', query)
@@ -69,8 +69,8 @@ class SqliteQueryRunner(BaseQueryRunner):
                 return
             return await cursor.fetchall()
 
-    async def run_query_fast(self, query: str, params=None, identifier='id1'):
-        return await self.run_query(query, params, identifier=identifier, dict_row=False)
+    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
+        return await self.run_query(query, params, p_id=p_id, dict_row=False)
 
 
 class SqlitePlaceholderGen(BasePlaceHolderGen):

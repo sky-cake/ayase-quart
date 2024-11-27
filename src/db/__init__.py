@@ -1,7 +1,7 @@
 from functools import cache
 
 from configs import db_conf
-from enums import DbType
+from enums import DbType, DbPool
 from db.base_db import BaseQueryRunner, BasePoolManager, BasePlaceHolderGen
 
 
@@ -68,11 +68,11 @@ class DbHandler:
     async def close_db_pool(self):
         await self.pool_manager.close_pool()
 
-    async def query_tuple(self, query: str, params=None, identifier='id1'):
-        return await self.query_runner.run_query_fast(query, params=params, identifier=identifier)
+    async def query_tuple(self, query: str, params=None, p_id=DbPool.main):
+        return await self.query_runner.run_query_fast(query, params=params, p_id=p_id)
 
-    async def query_dict(self, query: str, params=None, identifier='id1', dict_row=True):
-        return await self.query_runner.run_query(query, params=params, identifier=identifier, dict_row=dict_row)
+    async def query_dict(self, query: str, params=None, p_id=DbPool.main, dict_row=True):
+        return await self.query_runner.run_query(query, params=params, p_id=p_id, dict_row=dict_row)
 
 
 db_q = DbHandler(db_conf['db_type']) # query

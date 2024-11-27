@@ -1,6 +1,6 @@
 import aiomysql
 from aiomysql.pool import _PoolContextManager
-
+from enums import DbPool
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
@@ -19,9 +19,9 @@ class MysqlPoolManager(BasePoolManager):
         self.mysql_conf = mysql_conf or {}
         self.pools = {}
 
-    async def create_pool(self, identifier='id1'):
-        if identifier in self.pools:
-            return self.pools[identifier]
+    async def create_pool(self, p_id=DbPool.main):
+        if p_id in self.pools:
+            return self.pools[p_id]
         d = dict(
             host=self.mysql_conf['mysql']['host'],
             port=self.mysql_conf['mysql']['port'],
@@ -32,23 +32,23 @@ class MysqlPoolManager(BasePoolManager):
             maxsize=self.mysql_conf['mysql']['maxsize'],
         )
         pool = await aiomysql.create_pool(**d, autocommit=True)
-        self.pools[identifier] = pool
+        self.pools[p_id] = pool
         return pool
 
-    async def get_pool(self, identifier='id1', store=True):
+    async def get_pool(self, p_id=DbPool.main, store=True):
         if not store:
-            return await self.create_pool(self, identifier=identifier)
-        return await self.create_pool(identifier)
+            return await self.create_pool(self, p_id=p_id)
+        return await self.create_pool(p_id)
 
-    async def close_pool(self, identifier='id1'):
-        if identifier in self.pools:
-            self.pools[identifier].close()
-            await self.pools[identifier].wait_closed()
-            del self.pools[identifier]
+    async def close_pool(self, p_id=DbPool.main):
+        if p_id in self.pools:
+            self.pools[p_id].close()
+            await self.pools[p_id].wait_closed()
+            del self.pools[p_id]
 
     async def close_all_pools(self):
-        for identifier in list(self.pools.keys()):
-            await self.close_pool(identifier)
+        for p_id in list(self.pools.keys()):
+            await self.close_pool(p_id)
 
 
 class MysqlQueryRunner(BaseQueryRunner):
@@ -56,8 +56,8 @@ class MysqlQueryRunner(BaseQueryRunner):
         self.pool_manager = pool_manager
         self.sql_echo = sql_echo
 
-    async def run_query(self, query: str, params=None, commit=False, identifier='id1', dict_row=True):
-        pool: _PoolContextManager = await self.pool_manager.get_pool(identifier)
+    async def run_query(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
+        pool: _PoolContextManager = await self.pool_manager.get_pool(p_id)
         cursor_class = AttrDictCursor if dict_row else aiomysql.Cursor
 
         async with pool.acquire() as conn:
@@ -78,8 +78,8 @@ class MysqlQueryRunner(BaseQueryRunner):
 
                 return results[0] if len(results) == 1 else results # prone to issues ?
 
-    async def run_query_fast(self, query: str, params=None, identifier='id1'):
-        return await self.run_query(query, params, identifier=identifier, dict_row=False)
+    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
+        return await self.run_query(query, params, p_id=p_id, dict_row=False)
 
 
 class MysqlPlaceholderGen(BasePlaceHolderGen):

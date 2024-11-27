@@ -54,3 +54,8 @@ class ReportCategory(StrEnum):
     impersonation = 'Impersonation'
     bots = 'Bots or scrapers'
     other = 'Other'
+
+
+class DbPool(Enum):
+    main = 1
+    mod = 2

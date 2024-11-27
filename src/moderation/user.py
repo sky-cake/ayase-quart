@@ -3,19 +3,19 @@ from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import db_m
-from enums import UserRole
+from enums import UserRole, DbPool
 
 
 async def get_all_users():
-    return await db_m.query_dict("SELECT * FROM users;", identifier='id1')
+    return await db_m.query_dict("SELECT * FROM users;", p_id=DbPool.mod)
 
 
 async def get_user_with_id(user_id):
-    return await db_m.query_dict("SELECT * FROM users WHERE user_id=?", params=(user_id,), identifier='id1')
+    return await db_m.query_dict("SELECT * FROM users WHERE user_id=?", params=(user_id,), p_id=DbPool.mod)
 
 
 async def get_user_with_username(username):
-    return await db_m.query_dict("SELECT * FROM users WHERE username=?", params=(username,), identifier='id1')
+    return await db_m.query_dict("SELECT * FROM users WHERE username=?", params=(username,), p_id=DbPool.mod)
 
 
 async def create_user(username: str, password: str, role: UserRole, active: bool, notes: str=None):
@@ -28,7 +28,7 @@ async def create_user(username: str, password: str, role: UserRole, active: bool
     VALUES (?, ?, ?, ?, ?, ?, ?);
     """
     params = (username, generate_password_hash(password, 'scrypt', 16), active, role.value, datetime.now(), datetime.now(), notes)
-    await db_m.query_dict(sql_string, params=params, commit=True, identifier='id1')
+    await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
 
 
 async def edit_user(username, password, role, active, notes):
@@ -42,7 +42,7 @@ async def edit_user(username, password, role, active, notes):
     WHERE username=?;
     """
     params = (password, role, active, notes, datetime.now(), username)
-    await db_m.query_dict(sql_string, params=params, commit=True, identifier='id1')
+    await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
     # await flash('User updated.', 'success')
 
 
@@ -50,7 +50,7 @@ async def delete_user(user_id: int):
     if get_user_with_id(user_id):
         # await flash(f'User does not exist.', 'danger')
         return
-    await db_m.query_dict("DELETE FROM users WHERE user_id=?", params=(user_id,), commit=True, identifier='id1')
+    await db_m.query_dict("DELETE FROM users WHERE user_id=?", params=(user_id,), commit=True, p_id=DbPool.mod)
 
 
 async def is_correct_password(user_record, password_candidate):
@@ -61,7 +61,7 @@ async def is_user_credentials_valid(username, password_candidate):
     sql_string = """select * from users where username=?;"""
 
     params = (username,)
-    user = await db_m.query_dict(sql_string, params=params, identifier='id1')
+    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
 
     if not user or not user.username or not user.password:
         return False
@@ -72,7 +72,7 @@ async def is_user_credentials_valid(username, password_candidate):
 async def is_user_admin(user_id):
     sql_string = """select * from users where user_id=? and role=?;"""
     params=(user_id, UserRole.admin.value)
-    user = await db_m.query_dict(sql_string, params=params, identifier='id1')
+    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
 
     if not user or not user.user_id or not user.password:
         return False
@@ -83,7 +83,7 @@ async def is_user_admin(user_id):
 async def is_user_moderator(user_id):
     sql_string = """select * from users where user_id=? and role=?;"""
     params=(user_id, UserRole.moderator.value)
-    user = await db_m.query_dict(sql_string, params=params, identifier='id1')
+    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
 
     if not user or not user.user_id or not user.password:
         return False
