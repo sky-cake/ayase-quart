@@ -1,4 +1,3 @@
-from quart import flash
 from enums import DbPool
 from db import db_m
 from enums import UserRole
@@ -16,4 +15,3 @@ async def init_moderation_db():
         admin_username = moderation_conf.get('admin_user')
         admin_password = moderation_conf.get('admin_password')
         await create_user(admin_username, admin_password, UserRole.admin, True, 'Remember to change your default password.')
-        # await flash('Initial admin user created.')

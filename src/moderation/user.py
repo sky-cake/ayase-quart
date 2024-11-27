@@ -20,7 +20,6 @@ async def get_user_with_username(username):
 
 async def create_user(username: str, password: str, role: UserRole, active: bool, notes: str=None):
     if await get_user_with_username(username):
-        # await flash(f'User {username} already exists. User was not created.', 'danger')
         return
 
     sql_string = """
@@ -33,7 +32,6 @@ async def create_user(username: str, password: str, role: UserRole, active: bool
 
 async def edit_user(username, password, role, active, notes):
     if not get_user_with_username(username):
-        # await flash(f'User {username} does not exist. User was not modified.')
         return
 
     sql_string = """
@@ -43,12 +41,10 @@ async def edit_user(username, password, role, active, notes):
     """
     params = (password, role, active, notes, datetime.now(), username)
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
-    # await flash('User updated.', 'success')
 
 
 async def delete_user(user_id: int):
     if get_user_with_id(user_id):
-        # await flash(f'User does not exist.', 'danger')
         return
     await db_m.query_dict("DELETE FROM users WHERE user_id=?", params=(user_id,), commit=True, p_id=DbPool.mod)
 
