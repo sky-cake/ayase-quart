@@ -8,10 +8,12 @@ from quart import Quart
 
 from blueprints import blueprints
 from configs import QuartConfig, app_conf
-from db import close_db_pool, prime_db_pool
-from moderation.api import init_moderation_db
-# from security.limiter import limiter
+from db import db_q
+from moderation.mod import init_moderation_db
 from templates import render_constants
+
+# from security.limiter import limiter
+
 
 if app_conf.get('testing', False):
     import tracemalloc
@@ -40,8 +42,8 @@ async def create_app():
     await init_moderation_db()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
-    app.before_serving(prime_db_pool)
-    app.after_serving(close_db_pool)
+    app.before_serving(db_q.prime_db_pool)
+    app.after_serving(db_q.close_db_pool)
 
     return app
 

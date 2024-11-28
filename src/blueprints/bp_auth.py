@@ -3,15 +3,15 @@ from functools import wraps
 from quart import Blueprint, current_app, flash, redirect, session, url_for
 from werkzeug.security import check_password_hash
 
-from security.captcha import MathCaptcha
 from enums import AuthActions
 from forms import LoginForm
-from moderation.api import (
+from moderation.user import (
     get_user_with_username,
     is_user_admin,
     is_user_moderator
 )
 from render import render_controller
+from security.captcha import MathCaptcha
 from templates import template_login
 
 bp = Blueprint("bp_auth", __name__, template_folder="templates")
@@ -37,7 +37,7 @@ async def auth(action: AuthActions, user_id=None):
         if action == AuthActions.is_admin:
             user_id = session.get("user_id", None)
             if user_id:
-                is_admin = is_user_admin(user_id)
+                is_admin = await is_user_admin(user_id)
                 if is_admin:
                     return True
             return False
@@ -45,7 +45,7 @@ async def auth(action: AuthActions, user_id=None):
         if action == AuthActions.is_moderator:
             user_id = session.get("user_id", None)
             if user_id:
-                is_admin = is_user_moderator(user_id)
+                is_admin = await is_user_moderator(user_id)
                 if is_admin:
                     return True
             return False
@@ -107,8 +107,9 @@ async def login():
             username = form.username.data
             password_candidate = form.password.data
 
-            user = get_user_with_username(username)
-            if user:
+            user = await get_user_with_username(username)
+            if user != []:
+                user = user[0]
                 if check_password_hash(user.password, password_candidate):
                     await auth(AuthActions.log_in, user_id=user.user_id)
 

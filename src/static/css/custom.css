@@ -78,7 +78,13 @@ footer {
 }
 
 table {
+    display: table;
+    border-collapse: collapse;
     margin: 2px;
+}
+
+td, th {
+    padding: 1em;
 }
 
 .mt {

@@ -4,6 +4,7 @@ from enum import Enum, StrEnum
 class DbType(Enum):
     mysql = 1
     sqlite = 2
+    postgres = 3
 
 
 class SearchType(StrEnum):
@@ -40,7 +41,21 @@ class ReportStatus(StrEnum):
     pending = "pending"
     closed = "closed"
 
+
 class ReportCategory(StrEnum):
-    doxxing = "doxxing"
-    low_quality_content = "low_quality_content"
-    illegal_content = "illegal_content"
+    illegal_content = 'Illegal content'
+    dcma = 'DCMA'
+    underage = '18+ only'
+    embedded_data = 'Media with embedded data'
+    doxxing = 'Doxxing'
+    work_safe = 'NSFW content on a SFW board'
+    spamming = 'Spam or flooding'
+    advertising = 'Advertising'
+    impersonation = 'Impersonation'
+    bots = 'Bots or scrapers'
+    other = 'Other'
+
+
+class DbPool(Enum):
+    main = 1
+    mod = 2

@@ -1,11 +1,10 @@
-from typing import Any
 import shlex
+from typing import Any
 
 from orjson import dumps, loads
 
 from . import POST_PK, SearchIndexField, SearchQuery, search_index_fields
 from .baseprovider import BaseSearch
-from werkzeug.exceptions import InternalServerError
 
 pk = POST_PK
 
@@ -156,7 +155,7 @@ class LnxSearch(BaseSearch):
 
         parsed = parsed['data']
         if isinstance(parsed, str):
-            raise InternalServerError(parsed)
+            raise ValueError(parsed)
 
         total = parsed.get('count', 0)
         hits = (_restore_result(r['doc']) for r in parsed['hits'])

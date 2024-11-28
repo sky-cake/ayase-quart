@@ -1,53 +1,92 @@
 from functools import cache
-from typing import Callable
 
-from configs import db_conf
-from enums import DbType
+from configs import db_conf, db_mod_conf
+from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
+from enums import DbPool, DbType
 
-DB_TYPE = DbType[db_conf['db_type']]
 
 @cache
 def _get_db_module(db_type: DbType):
     match db_type:
         case DbType.mysql:
-            from . import mysql
-            return mysql
+            from .mysql import (
+                MysqlPlaceholderGen,
+                MysqlPoolManager,
+                MysqlQueryRunner
+            )
+            return {
+                'PoolManager': MysqlPoolManager,
+                'QueryRunner': MysqlQueryRunner,
+                'PlaceholderGenerator': MysqlPlaceholderGen,
+            }
         case DbType.sqlite:
-            from . import sqlite
-            return sqlite
+            from .sqlite import (
+                SqlitePlaceholderGen,
+                SqlitePoolManager,
+                SqliteQueryRunner
+            )
+            return {
+                'PoolManager': SqlitePoolManager,
+                'QueryRunner': SqliteQueryRunner,
+                'PlaceholderGenerator': SqlitePlaceholderGen,
+            }
+        case DbType.postgresql:
+            from .postgresql import (
+                PostgresqlPlaceholderGen,
+                PostgresqlPoolManager,
+                PostgresqlQueryRunner
+            )
+            return {
+                'PoolManager': PostgresqlPoolManager,
+                'QueryRunner': PostgresqlQueryRunner,
+                'PlaceholderGenerator': PostgresqlPlaceholderGen,
+            }
         case _:
             raise ValueError("Unsupported database type")
 
 
-# pre connect so the first hit doesn't have connection latency
-async def prime_db_pool():
-    db_module = _get_db_module(DB_TYPE)
-    await db_module._get_pool()
+async def get_db_tables(db_conf: dict, db_type: DbType, close_pool_after=False) -> list[str]:
+    '''Set `close_pool_after=True` if calling from a runtime that won't close the DB pool later.'''
+    if not hasattr(get_db_tables, 'tables'):
+        match db_type:
+            case DbType.mysql:
+                sql_string = 'SHOW TABLES;'
+            case DbType.sqlite:
+                sql_string = "SELECT name FROM sqlite_master WHERE type='table';"
+            case DbType.postgres:
+                sql_string = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
+            case _:
+                return []
+        
+        db_h = DbHandler(db_conf, db_type)
+        rows = await db_h.query_tuple(sql_string)
+        get_db_tables.tables = [row[0] for row in rows]
+
+        if close_pool_after:
+            await db_h.close_db_pool()
+    return get_db_tables.tables
 
 
-async def close_db_pool():
-    db_module = _get_db_module(DB_TYPE)
-    await db_module._close_pool()
+class DbHandler:
+    def __init__(self, db_conf: dict, db_type: DbType, pool_manager: BasePoolManager = None, query_runner: BaseQueryRunner = None):
+        self.db_type = db_type
+        self.db_module: dict = _get_db_module(db_type)
+        self.pool_manager: BasePoolManager = pool_manager or self.db_module['PoolManager'](db_conf)
+        self.query_runner: BaseQueryRunner = query_runner or self.db_module['QueryRunner'](self.pool_manager)
+        self.phg: BasePlaceHolderGen = self.db_module['PlaceholderGenerator']() # "Place Holder Generator"
+
+    async def prime_db_pool(self):
+        await self.pool_manager.create_pool()
+
+    async def close_db_pool(self):
+        await self.pool_manager.close_pool()
+
+    async def query_tuple(self, query: str, params=None, p_id=DbPool.main):
+        return await self.query_runner.run_query_fast(query.replace('∆', self.phg()), params=params, p_id=p_id)
+
+    async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
+        return await self.query_runner.run_query(query.replace('∆', self.phg()), params=params, commit=commit, p_id=p_id, dict_row=dict_row)
 
 
-def _get_tuple_query_fn() -> Callable:
-    db_module = _get_db_module(DB_TYPE)
-    return db_module._run_query_fast
-
-
-def _get_dict_query_fn() -> Callable:
-    db_module = _get_db_module(DB_TYPE)
-    return db_module._run_query_dict
-
-
-def _get_placeholder_generator():
-    db_module = _get_db_module(DB_TYPE)
-    return db_module.PlaceHolderGenerator
-
-# only tuples for speed, no AttrDict/dotdicts
-query_tuple: Callable = _get_tuple_query_fn()
-
-query_dict: Callable = _get_dict_query_fn()
-
-# shortnened for placeholder_generator
-Phg = _get_placeholder_generator()
+db_q = DbHandler(db_conf, db_conf['db_type']) # query
+db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm

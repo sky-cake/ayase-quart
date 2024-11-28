@@ -67,7 +67,7 @@
                         ]
                     {% endif %}
 
-                    {% if is_admin or is_moderator %}
+                    {% if is_admin or is_moderator or is_logged_in %}
                         <br>
                         Admin: [
 
@@ -84,14 +84,16 @@
                         ]
                     {% endif %}
 
-                    <br>
-                    Profile: [
-                    {% if is_admin or is_moderator %}
-                        <a href="{{ url_for('bp_auth.logout') }}">Logout</a>
-                    {% else %}
-                        <a href="{{ url_for('bp_auth.login') }}">Login</a>
+                    {% if request.path != '/login' %}
+                        <br>
+                        Profile: [
+                        {% if is_admin or is_moderator or is_logged_in %}
+                            <a href="{{ url_for('bp_auth.logout') }}">Logout</a>
+                        {% else %}
+                            <a href="{{ url_for('bp_auth.login') }}">Login</a>
+                        {% endif %}
+                        ]
                     {% endif %}
-                    ]
                 </div>
             {% endif %}
 

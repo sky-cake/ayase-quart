@@ -1,12 +1,16 @@
 import os
 from time import perf_counter
 
-from werkzeug.exceptions import NotFound
+
+def read_file(path: str) -> str:
+    with open(path) as f:
+        return f.read()
 
 
 def make_src_path(*file_path):
     """Make a file path starting from src/."""
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', *file_path))
+
 
 class Perf:
     __slots__ = ('previous', 'checkpoints', 'topic')

@@ -5,10 +5,10 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from asagi_converter import (
-    search_posts,
     html_highlight,
     restore_comment,
-    search_posts_get_thread_nums,
+    search_posts,
+    search_posts_get_thread_nums
 )
 from boards import board_shortnames
 from configs import SITE_NAME
@@ -26,7 +26,7 @@ from templates import (
     template_index_search,
     template_index_search_config,
     template_index_search_gallery_post_t,
-    template_index_search_post_t,
+    template_index_search_post_t
 )
 from utils import Perf
 

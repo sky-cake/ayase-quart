@@ -1,6 +1,7 @@
+import re
 from collections import defaultdict
 from html import escape
-import re
+
 
 def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
     # key is num, value is list of nums quoting it

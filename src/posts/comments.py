@@ -1,8 +1,8 @@
 from html import escape
-from re import compile, DOTALL
+from re import DOTALL, compile
 
-from search.highlighting import html_highlight
 from posts.quotelinks import html_quotelinks
+from search.highlighting import html_highlight
 
 '''
 html_comment to replace restore_comment

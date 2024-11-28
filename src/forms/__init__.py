@@ -18,7 +18,6 @@ from wtforms.fields import (
 )
 from wtforms.validators import (
     DataRequired,
-    InputRequired,
     Length,
     NumberRange,
     Optional,
@@ -27,10 +26,10 @@ from wtforms.validators import (
 
 from boards import board_shortnames
 from enums import ReportCategory, ReportStatus, UserRole
-from moderation.api import get_user_with_username, is_correct_password
+from moderation.user import get_user_with_username, is_correct_password
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
-from utils.validation import validate_board, clamp_positive_int
+from utils.validation import clamp_positive_int, validate_board
 
 LENGTH_MD5_HASH = 32
 
@@ -154,11 +153,11 @@ class IndexSearchConfigForm(QuartForm):
 
 
 class LoginForm(QuartForm):
-    username = StringField(validators=[InputRequired(), Length(min=2, max=128)])
-    password = PasswordField(validators=[InputRequired(), Length(min=2, max=128)])
+    username = StringField(validators=[DataRequired(), Length(min=1, max=128)])
+    password = PasswordField(validators=[DataRequired(), Length(min=1, max=128)])
 
-    captcha_id = HiddenField(validators=[InputRequired()])
-    captcha_answer = IntegerField("", validators=[InputRequired()])
+    captcha_id = HiddenField(validators=[DataRequired()])
+    captcha_answer = IntegerField("", validators=[DataRequired()])
 
     submit = SubmitField("Submit")
 
@@ -191,11 +190,11 @@ async def validate_login_user(form, field):
 
 
 class UserForm(QuartForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=1, max=512), validate_username_is_provided], render_kw={'placeholder': 'Username'})
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=1, max=512), validate_login_user], render_kw={'placeholder': 'Password'})
-    active = BooleanField('Active', validators=[InputRequired()])
-    role = RadioField('Role', validators=[DataRequired()], choices=((r, r) for r in UserRole))
-    notes = TextAreaField('Notes', validators=[DataRequired()])
+    username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512), validate_username_is_provided], render_kw={'placeholder': 'Username'})
+    password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512), validate_login_user], render_kw={'placeholder': 'Password'})
+    active = BooleanField('Active', validators=[DataRequired()])
+    role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
+    notes = TextAreaField('Notes', validators=[Optional()])
     # created_datetime
     # last_login_datetime
     submit = SubmitField('Submit')
@@ -203,9 +202,9 @@ class UserForm(QuartForm):
 
 class ReportForm(QuartForm):
     post_no = IntegerField('Post No.', validators=[NumberRange(min=0)])
-    category = RadioField('Report Category', choices=((c, c) for c in ReportCategory))
+    category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory])
     details = TextAreaField('Details', validators=[Optional()])
-    status = RadioField('Status', choices=((s, s) for s in ReportStatus))
+    status = RadioField('Status', choices=[(s, s) for s in ReportStatus])
     # created_datetime
     # last_updated_datetime
     submit = SubmitField('Submit')

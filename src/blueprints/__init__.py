@@ -1,13 +1,15 @@
-from .bp_admin import bp as admin_bp
-from .bp_api import bp as api_bp
-from .bp_app import bp as app_bp
-from .bp_auth import bp as auth_bp
-from .bp_search import bp as search_bp
+from .bp_admin import bp as bp_admin
+from .bp_api import bp as bp_api
+from .bp_app import bp as bp_app
+from .bp_auth import bp as bp_auth
+from .bp_search import bp as bp_search
+from .bp_moderation import bp as bp_moderation
 
 blueprints = [
-    admin_bp,
-    api_bp,
-    app_bp,
-    auth_bp,
-    search_bp,
+    bp_admin,
+    bp_api,
+    bp_app,
+    bp_auth,
+    bp_search,
+    bp_moderation,
 ]

@@ -8,7 +8,7 @@ from functools import cache
 from itertools import batched
 from textwrap import dedent
 
-from db import Phg, query_dict, query_tuple
+from db import db_q
 from db.base_db import BasePlaceHolderGen
 from posts.capcodes import Capcode
 from posts.quotelinks import get_quotelink_lookup
@@ -98,10 +98,6 @@ class SqlSearchFilter:
     in_list: bool = False
     fieldname: str|None = None # added due to possible key overlap in `sql_search_filters`
 
-    def get_fragment(self, phg: BasePlaceHolderGen):
-        if self.placeholder:
-            return self.fragment.replace('∆', phg())
-        return self.fragment
 
 sql_search_filters = dict(
     title=SqlSearchFilter('title like ∆', like=True),
@@ -125,7 +121,7 @@ sql_search_filters = dict(
     thread_nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='thread_num'),
 )
 
-def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
+def validate_and_generate_params(form_data: dict):
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
@@ -147,12 +143,12 @@ def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen):
             field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
 
         if s_filter.in_list and isinstance(field_val, list) and len(field_val) > 0 and s_filter.fieldname:
-            s_filter.fragment = f'{s_filter.fieldname} in ({phg.size(field_val)})'
+            s_filter.fragment = f'{s_filter.fieldname} in ({db_q.phg.size(field_val)})'
 
         if s_filter.placeholder:
             params.extend(field_val) if isinstance(field_val, list) else params.append(field_val)
 
-        where_parts.append(s_filter.get_fragment(phg))
+        where_parts.append(s_filter.fragment)
 
     where_fragment = ' and '.join(where_parts)
     params = tuple(params)
@@ -167,14 +163,13 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
     order_by = form_data['order_by']
     cur_page = form_data['page']
 
-    phg: BasePlaceHolderGen = Phg()
-    where_filters, params = validate_and_generate_params(form_data, phg)
+    where_filters, params = validate_and_generate_params(form_data)
     where_query = f'where {where_filters}' if where_filters else ''
 
     offset = f'offset {cur_page}' if cur_page > 1 else ''
 
     board_posts = await asyncio.gather(*(
-        query_dict(f"""
+        db_q.query_dict(f"""
             {get_selector(board)}
             from {board}
             {where_query}
@@ -211,14 +206,13 @@ async def search_posts_get_thread_nums(form_data: dict) -> dict:
     cur_page = form_data['page']
     form_d = {'is_op': 1, 'title': form_data['op_title'], 'comment': form_data['op_comment']}
 
-    phg: BasePlaceHolderGen = Phg()
-    where_filters, params = validate_and_generate_params(form_d, phg)
+    where_filters, params = validate_and_generate_params(form_d)
     where_query = f'where {where_filters}' if where_filters else ''
 
     offset = f'offset {cur_page}' if cur_page > 1 else ''
 
     board_posts = await asyncio.gather(*(
-        query_dict(f"""
+        db_q.query_dict(f"""
             {f"select '{board}' as board_shortname, num as thread_num"}
             from {board}
             {where_query}
@@ -279,14 +273,14 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
         select num, comment
         from {board}
         where comment is not null
-        and thread_num in ({Phg().size(thread_nums)})
+        and thread_num in ({db_q.phg.size(thread_nums)})
     '''
-    rows = await query_dict(query, params=thread_nums)
+    rows = await db_q.query_dict(query, params=thread_nums)
     return get_quotelink_lookup(rows)
 
 
 async def get_op_thread_count(board: str) -> int:
-    rows = await query_tuple(f'select count(*) from {board}_threads;')
+    rows = await db_q.query_tuple(f'select count(*) from {board}_threads;')
     return rows[0][0]
 
 
@@ -384,12 +378,12 @@ async def generate_index(board: str, page_num: int=1):
         from {board}_threads
         order by time_bump desc
         limit 10
-        offset {Phg()()}
+        offset ∆
     '''
-    if not (threads := await query_dict(threads_q, params=(page_num,))):
+    if not (threads := await db_q.query_dict(threads_q, params=(page_num,))):
         return {'threads': []}
 
-    thread_phs = Phg().size(threads)
+    thread_phs = db_q.phg.size(threads)
     
     op_query = f'''
     {get_selector(board)}
@@ -422,8 +416,8 @@ async def generate_index(board: str, page_num: int=1):
     thread_nums_d = {t['thread_num']:t for t in threads}
 
     ops, replies, ql_lookup = await asyncio.gather(
-        query_dict(op_query, params=thread_nums),
-        query_dict(replies_query, params=thread_nums),
+        db_q.query_dict(op_query, params=thread_nums),
+        db_q.query_dict(replies_query, params=thread_nums),
         get_board_thread_quotelinks(board, thread_nums)
     )
 
@@ -451,7 +445,6 @@ async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
     page_num -= 1  # start page number at 1
 
-    phg = Phg()
     threads_q = f'''
         select
             thread_num,
@@ -460,9 +453,9 @@ async def generate_catalog(board: str, page_num: int=1):
         from {board}_threads
         order by time_bump desc
         limit 150
-        offset {phg()}
+        offset ∆
     '''
-    if not (rows := await query_tuple(threads_q, (page_num,))):
+    if not (rows := await db_q.query_tuple(threads_q, (page_num,))):
         return []
 
     threads = {row[0]: row[1:] for row in rows}
@@ -471,9 +464,9 @@ async def generate_catalog(board: str, page_num: int=1):
         {get_selector(board)}
     from {board}
     where op = 1
-    and thread_num in ({Phg().size(threads)})
+    and thread_num in ({db_q.phg.size(threads)})
     '''
-    rows = await query_dict(posts_q, params=tuple(threads.keys()))
+    rows = await db_q.query_dict(posts_q, params=tuple(threads.keys()))
     
     batch_size = 15
     return [
@@ -510,25 +503,24 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
             nimages,
             time_bump
         from {board}_threads
-        where thread_num = {Phg()()}
+        where thread_num = ∆
     ;'''
     posts_query = f'''
         {get_selector(board)}
         from {board}
-        where thread_num = {Phg()()}
+        where thread_num = ∆
         order by num asc
     ;'''
-    threads, posts = await asyncio.gather(
-        query_dict(thread_query, params=(thread_num,)),
-        query_dict(posts_query, params=(thread_num,)),
+    threads_details, posts = await asyncio.gather(
+        db_q.query_dict(thread_query, params=(thread_num,)),
+        db_q.query_dict(posts_query, params=(thread_num,)),
     )
-    if not threads:
+    if not threads_details:
         return {}, {'posts': []}
 
-    thread_details = threads[0]
     post_2_quotelinks, posts = get_qls_and_posts(posts)
     
-    posts[0].update(thread_details)
+    posts[0].update(threads_details[0])
     results = {'posts': posts}
     
     return post_2_quotelinks, results
@@ -539,9 +531,9 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
     sql = f"""
         {get_selector(board)}
         from {board}
-        where num = {Phg()()}
+        where num = ∆
     ;"""
-    posts = await query_dict(sql, params=(post_id,))
+    posts = await db_q.query_dict(sql, params=(post_id,))
 
     if not posts:
         return None, None

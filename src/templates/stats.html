@@ -5,29 +5,17 @@
 {% block body %}
 
   <div>
-    <h2>Archive Stats</h2>
+    <h2>Archive Metrics</h2>
 
     <div>
-      <h3>Database</h3>
-      <p>
-        Entire database
-        {{ table(database_storage_size) }}
-      </p>
-      <p>
-        Per database table
-        {{ table(database_table_storage_sizes) }}
-      </p>
+      <h4>Filesystem</h4>
+      <p>We officially endorse the use of the tool <a href="https://en.wikipedia.org/wiki/Ncdu" rel="noreferrer" target="_blank">ncdu</a> for inspecting your archived media.</p>
     </div>
 
     <div>
-      <h3>Filesystem</h3>
-
-      <h4>Directory Size</h4>
-      <p>You can run the following on your media directory: <code>du -h -d 1</code></p>
-
-      <h4>File Count</h4>
-      <p >You can run the following on your media directory: <code>du -a | cut -d/ -f2 | sort | uniq -c | sort -nr</code></p>
-
+      <h4>Db Records</h4>
+      <p>{{table(table_row_counts)}}</p>
     </div>
+  
   </div>
 {% endblock %}
