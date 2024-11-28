@@ -1,5 +1,7 @@
 import aiosqlite
+
 from enums import DbPool
+
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
@@ -67,7 +69,10 @@ class SqliteQueryRunner(BaseQueryRunner):
             if commit:
                 await pool.commit()
                 return
-            return await cursor.fetchall()
+            results = await cursor.fetchall()
+            # if len(results) == 1: # need to clean this up amonst all dbs
+            #     return results[0]
+            return results
 
     async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
         return await self.run_query(query, params, p_id=p_id, dict_row=False)

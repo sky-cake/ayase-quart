@@ -1,7 +1,7 @@
 from quart import Blueprint, redirect, request, url_for
 
 from forms import ReportForm
-from moderation.user import (
+from moderation.report import (
     delete_report,
     edit_report,
     get_open_reports,

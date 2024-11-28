@@ -1,9 +1,9 @@
-from enums import DbPool
+from configs import db_mod_conf
 from db import db_m
-from enums import UserRole
-from configs import moderation_conf
+from enums import DbPool, UserRole
 from moderation.user import create_user
 from utils import make_src_path, read_file
+
 
 async def init_moderation_db():
     moderation_scripts = ['users.sql', 'reports.sql']
@@ -12,6 +12,6 @@ async def init_moderation_db():
 
     user_count = (await db_m.query_dict('select count(*) user_count from users;', p_id=DbPool.mod))[0].user_count
     if not user_count:
-        admin_username = moderation_conf.get('admin_user')
-        admin_password = moderation_conf.get('admin_password')
+        admin_username = db_mod_conf['admin_user']
+        admin_password = db_mod_conf['admin_password']
         await create_user(admin_username, admin_password, UserRole.admin, True, 'Remember to change your default password.')

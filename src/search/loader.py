@@ -211,10 +211,10 @@ async def index_board(board: str, search_provider: BaseSearch):
     await board_loader.run()
 
 
-max_placeholders = db_m.phg().qty(THREAD_BATCH)
+max_placeholders = db_m.phg.qty(THREAD_BATCH)
 async def get_post_rows(board: str, thread_nums: list[int]):
     # don't rebuild the placeholders when they will always be the same except the last one
-    placeholders = max_placeholders if len(thread_nums) == THREAD_BATCH else db_m.phg().size(thread_nums)
+    placeholders = max_placeholders if len(thread_nums) == THREAD_BATCH else db_m.phg.size(thread_nums)
 
     # you may need to update `row_keys` (below) if you modify this query's selectors.
     q = f"""

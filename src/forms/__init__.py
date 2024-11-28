@@ -154,8 +154,8 @@ class IndexSearchConfigForm(QuartForm):
 
 
 class LoginForm(QuartForm):
-    username = StringField(validators=[InputRequired(), Length(min=2, max=128)])
-    password = PasswordField(validators=[InputRequired(), Length(min=2, max=128)])
+    username = StringField(validators=[InputRequired(), Length(min=1, max=128)])
+    password = PasswordField(validators=[InputRequired(), Length(min=1, max=128)])
 
     captcha_id = HiddenField(validators=[InputRequired()])
     captcha_answer = IntegerField("", validators=[InputRequired()])
@@ -192,7 +192,7 @@ async def validate_login_user(form, field):
 
 class UserForm(QuartForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=1, max=512), validate_username_is_provided], render_kw={'placeholder': 'Username'})
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=1, max=512), validate_login_user], render_kw={'placeholder': 'Password'})
+    password = PasswordField('Password', validators=[Optional()], render_kw={'placeholder': 'Password'})
     active = BooleanField('Active', validators=[InputRequired()])
     role = RadioField('Role', validators=[DataRequired()], choices=((r, r) for r in UserRole))
     notes = TextAreaField('Notes', validators=[DataRequired()])

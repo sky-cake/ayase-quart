@@ -35,9 +35,10 @@ def _get_board_views():
     boards = _load_boards_toml()
     if app_conf.get('validate_boards_db', True):
         from asyncio import run
+
         from db import get_db_tables
 
-        db_tables = run(get_db_tables(db_conf['db_type'], close_pool_after=True))
+        db_tables = run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
         valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
         if removals := [board for board in boards if board not in valid_boards]:
             print(f'Boards not found in database:\n\t[{", ".join(removals)}]\nWill be ignored.')

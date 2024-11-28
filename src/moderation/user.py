@@ -3,7 +3,7 @@ from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import db_m
-from enums import UserRole, DbPool
+from enums import DbPool, UserRole
 
 
 async def get_all_users():
@@ -11,22 +11,22 @@ async def get_all_users():
 
 
 async def get_user_with_id(user_id):
-    return await db_m.query_dict("SELECT * FROM users WHERE user_id=?", params=(user_id,), p_id=DbPool.mod)
+    return await db_m.query_dict(f"SELECT * FROM users WHERE user_id=∆", params=(user_id,), p_id=DbPool.mod)
 
 
 async def get_user_with_username(username):
-    return await db_m.query_dict("SELECT * FROM users WHERE username=?", params=(username,), p_id=DbPool.mod)
+    return await db_m.query_dict(f"SELECT * FROM users WHERE username=∆", params=(username,), p_id=DbPool.mod)
 
 
 async def create_user(username: str, password: str, role: UserRole, active: bool, notes: str=None):
     if await get_user_with_username(username):
         return
 
-    sql_string = """
-    INSERT INTO users (username, password, active, role, created_datetime, last_login_datetime, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?);
-    """
     params = (username, generate_password_hash(password, 'scrypt', 16), active, role.value, datetime.now(), datetime.now(), notes)
+    sql_string = f"""
+    INSERT INTO users (username, password, active, role, created_datetime, last_login_datetime, notes)
+    VALUES ({db_m.phg.size(params)});
+    """
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
 
 
@@ -34,10 +34,10 @@ async def edit_user(username, password, role, active, notes):
     if not get_user_with_username(username):
         return
 
-    sql_string = """
+    sql_string = f"""
     UPDATE users
-    SET password=?, role=?, active=?, notes=?, last_login_datetime=?
-    WHERE username=?;
+    SET password=∆, role=∆, active=∆, notes=∆, last_login_datetime=∆
+    WHERE username=∆;
     """
     params = (password, role, active, notes, datetime.now(), username)
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
@@ -46,7 +46,7 @@ async def edit_user(username, password, role, active, notes):
 async def delete_user(user_id: int):
     if get_user_with_id(user_id):
         return
-    await db_m.query_dict("DELETE FROM users WHERE user_id=?", params=(user_id,), commit=True, p_id=DbPool.mod)
+    await db_m.query_dict("DELETE FROM users WHERE user_id=∆", params=(user_id,), commit=True, p_id=DbPool.mod)
 
 
 async def is_correct_password(user_record, password_candidate):
@@ -54,10 +54,10 @@ async def is_correct_password(user_record, password_candidate):
 
 
 async def is_user_credentials_valid(username, password_candidate):
-    sql_string = """select * from users where username=?;"""
+    sql_string = """select * from users where username=∆;"""
 
     params = (username,)
-    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
+    user = (await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod))[0]
 
     if not user or not user.username or not user.password:
         return False
@@ -66,9 +66,9 @@ async def is_user_credentials_valid(username, password_candidate):
 
 
 async def is_user_admin(user_id):
-    sql_string = """select * from users where user_id=? and role=?;"""
+    sql_string = """select * from users where user_id=∆ and role=∆;"""
     params=(user_id, UserRole.admin.value)
-    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
+    user = (await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod))[0]
 
     if not user or not user.user_id or not user.password:
         return False
@@ -77,9 +77,9 @@ async def is_user_admin(user_id):
 
 
 async def is_user_moderator(user_id):
-    sql_string = """select * from users where user_id=? and role=?;"""
+    sql_string = """select * from users where user_id=∆ and role=∆;"""
     params=(user_id, UserRole.moderator.value)
-    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
+    user = (await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod))[0]
 
     if not user or not user.user_id or not user.password:
         return False
