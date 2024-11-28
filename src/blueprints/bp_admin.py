@@ -71,6 +71,7 @@ async def stats():
         table_row_counts=table_row_counts,
         title='Stats',
         tab_title='Stats',
+        is_admin=True,
     )
 
 
@@ -83,6 +84,7 @@ async def latest():
         catalog=catalog,
         title='Latest Threads',
         tab_title='Latest Threads',
+        is_admin=True,
     )
 
 
@@ -90,14 +92,14 @@ async def latest():
 @admin_required
 async def users_index():
     users = await get_all_users()
-    return await render_controller(template_users_index, users=users)
+    return await render_controller(template_users_index, users=users, is_admin=True)
 
 
 @bp.route('/users/<int:user_id>')
 @admin_required
 async def users_view(user_id):
     user = (await get_user_with_id(user_id))[0]
-    return await render_controller(template_users_view, user=user)
+    return await render_controller(template_users_view, user=user, is_admin=True)
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
@@ -115,8 +117,10 @@ async def users_create():
 
     return await render_controller(
         template_users_create,
+        form=form,
         title='Admin',
         tab_title='Admin',
+        is_admin=True,
     )
 
 
@@ -136,14 +140,25 @@ async def users_edit(user_id):
         return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
     if request.method == 'POST':
-        await flash('Invalid form submission')
+        await flash(f'Invalid form submission due to {form.errors}')
 
-    user = (await get_user_with_id(user_id))[0]
+    user = await get_user_with_id(user_id)
+    if not user:
+        redirect(url_for('bp_admin.users_index'))
+    user = user[0]
+
+    form.username.data = user.username
+    form.password.data = user.password
+    form.role.data = user.role
+    form.active.data = user.active
+    form.notes.data = user.notes
     return await render_controller(
         template_users_edit,
+        form=form,
         user=user,
         title='Admin',
         tab_title='Admin',
+        is_admin=True,
     )
 
 
@@ -153,10 +168,17 @@ async def users_delete(user_id):
     if request.method == 'POST':
         await delete_user(user_id)
         return redirect(url_for('bp_admin.users_index'))
+    
+    user = await get_user_with_id(user_id)
+    if not user:
+        redirect(url_for('bp_admin.users_index'))
+    user = user[0]
 
     return await render_controller(
         template_users_delete,
+        user=user,
         user_id=user_id,
         title='Admin',
         tab_title='Admin',
+        is_admin=True,
     )

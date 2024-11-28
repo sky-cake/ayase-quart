@@ -14,8 +14,8 @@ from templates import (
     template_reports_index,
     template_reports_view
 )
-
-from .bp_auth import moderator_required
+from enums import AuthActions
+from .bp_auth import moderator_required, auth
 
 bp = Blueprint('bp_moderation', __name__)
 
@@ -30,6 +30,8 @@ async def reports_index():
         reports_open=reports_open,
         title='Reports',
         tab_title='Reports',
+        is_logged_in=True,
+        is_admin=await auth(AuthActions.is_admin),
     )
 
 
@@ -43,6 +45,8 @@ async def reports_view(report_id):
         report=report,
         title='Reports',
         tab_title='Reports',
+        is_logged_in=True,
+        is_admin=await auth(AuthActions.is_admin),
     )
 
 
@@ -66,6 +70,8 @@ async def reports_edit(report_id):
         report=report,
         title='Reports',
         tab_title='Reports',
+        is_logged_in=True,
+        is_admin=await auth(AuthActions.is_admin),
     )
 
 
@@ -81,5 +87,7 @@ async def reports_delete(report_id):
         report_id=report_id,
         title='Reports',
         tab_title='Reports',
+        is_logged_in=True,
+        is_admin=await auth(AuthActions.is_admin),
     )
 

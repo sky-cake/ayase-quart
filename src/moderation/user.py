@@ -31,7 +31,7 @@ async def create_user(username: str, password: str, role: UserRole, active: bool
 
 
 async def edit_user(username, password, role, active, notes):
-    if not get_user_with_username(username):
+    if not await get_user_with_username(username):
         return
 
     sql_string = f"""
@@ -44,7 +44,8 @@ async def edit_user(username, password, role, active, notes):
 
 
 async def delete_user(user_id: int):
-    if get_user_with_id(user_id):
+    # can't delete admins
+    if not (await get_user_with_id(user_id)) or (await is_user_admin(user_id)):
         return
     await db_m.query_dict("DELETE FROM users WHERE user_id=∆", params=(user_id,), commit=True, p_id=DbPool.mod)
 
@@ -57,20 +58,20 @@ async def is_user_credentials_valid(username, password_candidate):
     sql_string = """select * from users where username=∆;"""
 
     params = (username,)
-    user = (await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod))[0]
+    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
 
-    if not user or not user.username or not user.password:
+    if not user or not user[0].user_id or not user[0].password:
         return False
 
-    return check_password_hash(user.password, password_candidate)
+    return check_password_hash(user[0].password, password_candidate)
 
 
 async def is_user_admin(user_id):
     sql_string = """select * from users where user_id=∆ and role=∆;"""
     params=(user_id, UserRole.admin.value)
-    user = (await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod))[0]
+    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
 
-    if not user or not user.user_id or not user.password:
+    if not user or not user[0].user_id or not user[0].password:
         return False
 
     return True
@@ -79,9 +80,9 @@ async def is_user_admin(user_id):
 async def is_user_moderator(user_id):
     sql_string = """select * from users where user_id=∆ and role=∆;"""
     params=(user_id, UserRole.moderator.value)
-    user = (await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod))[0]
+    user = await db_m.query_dict(sql_string, params=params, p_id=DbPool.mod)
 
-    if not user or not user.user_id or not user.password:
+    if not user or not user[0].user_id or not user[0].password:
         return False
 
     return True
