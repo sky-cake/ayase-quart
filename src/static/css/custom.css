@@ -380,3 +380,10 @@ img {
     background-color: #1d1f21;
     padding: 4px;
 }
+
+#captcha_answer {
+    width: 60px;
+    padding: 2px;
+    margin: 10px;
+    text-align: center;
+}

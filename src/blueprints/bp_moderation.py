@@ -1,11 +1,13 @@
 from quart import Blueprint, redirect, request, url_for
 
-from forms import ReportForm
+from enums import AuthActions, ReportStatus
+from forms import ReportModForm
+
 from moderation.report import (
     delete_report,
     edit_report,
-    get_open_reports,
-    get_report_with_id
+    get_report_by_id,
+    get_reports_by_report_status
 )
 from render import render_controller
 from templates import (
@@ -17,13 +19,15 @@ from templates import (
 from enums import AuthActions
 from .bp_auth import moderator_required, auth
 
+from .bp_auth import auth, authorization_required
+
 bp = Blueprint('bp_moderation', __name__)
 
 
 @bp.route('/reports')
-@moderator_required
+@authorization_required
 async def reports_index():
-    reports_open = get_open_reports()
+    reports_open = get_reports_by_report_status(ReportStatus.open)
 
     return await render_controller(
         template_reports_index,
@@ -36,9 +40,9 @@ async def reports_index():
 
 
 @bp.route('/reports/<int:report_id>')
-@moderator_required
+@authorization_required
 async def reports_view(report_id):
-    report = get_report_with_id(report_id)
+    report = get_report_by_id(report_id)
 
     return await render_controller(
         template_reports_view,
@@ -51,11 +55,11 @@ async def reports_view(report_id):
 
 
 @bp.route('/reports/<int:report_id>/edit', methods=['GET', 'POST'])
-@moderator_required
+@authorization_required
 async def reports_edit(report_id):
-    form: ReportForm = await ReportForm.create_form()
+    form: ReportModForm = await ReportModForm.create_form()
 
-    report = get_report_with_id(report_id)
+    report = get_report_by_id(report_id)
 
     if report and form.validate_on_submit():
         post_no = form.post_no.data
@@ -76,7 +80,7 @@ async def reports_edit(report_id):
 
 
 @bp.route('/reports/<int:report_id>/delete', methods=['GET', 'POST'])
-@moderator_required
+@authorization_required
 async def reports_delete(report_id):
     if request.method == 'POST':
         delete_report(report_id)

@@ -1,6 +1,7 @@
 import asyncio
 
-from quart import Blueprint, redirect, request, url_for, flash
+from quart import Blueprint, flash, redirect, request, url_for
+
 from asagi_converter import get_selector
 from boards import board_shortnames
 from db import db_q
@@ -9,9 +10,9 @@ from forms import UserForm
 from moderation.user import (
     create_user,
     delete_user,
-    edit_user,
+    edit_user_by_username,
     get_all_users,
-    get_user_with_id
+    get_user_by_id
 )
 from render import render_controller
 from templates import (
@@ -98,7 +99,7 @@ async def users_index():
 @bp.route('/users/<int:user_id>')
 @admin_required
 async def users_view(user_id):
-    user = (await get_user_with_id(user_id))[0]
+    user = await get_user_by_id(user_id)
     return await render_controller(template_users_view, user=user, is_admin=True)
 
 
@@ -135,17 +136,16 @@ async def users_edit(user_id):
         role = form.role.data
         active = form.active.data
         notes = form.notes.data
-        await edit_user(username, password, role, active, notes)
+        await edit_user_by_username(username, password, role, active, notes)
 
         return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
     if request.method == 'POST':
         await flash(f'Invalid form submission due to {form.errors}')
 
-    user = await get_user_with_id(user_id)
+    user = await get_user_by_id(user_id)
     if not user:
         redirect(url_for('bp_admin.users_index'))
-    user = user[0]
 
     form.username.data = user.username
     form.password.data = user.password
@@ -173,6 +173,10 @@ async def users_delete(user_id):
     if not user:
         redirect(url_for('bp_admin.users_index'))
     user = user[0]
+
+    user = await get_user_by_id(user_id)
+    if not user:
+        redirect(url_for('bp_admin.users_index'))
 
     return await render_controller(
         template_users_delete,

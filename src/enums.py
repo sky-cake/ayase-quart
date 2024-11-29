@@ -21,8 +21,8 @@ class IndexSearchType(StrEnum):
 
 
 class UserRole(StrEnum):
-    admin = "admin"
-    moderator = "moderator"
+    admin = 'admin'
+    moderator = 'moderator'
 
 
 class AuthActions(Enum):
@@ -34,12 +34,20 @@ class AuthActions(Enum):
 
     is_admin = 5
     is_moderator = 6
+    is_authority = 7
 
 
 class ReportStatus(StrEnum):
-    open = "open"
-    pending = "pending"
-    closed = "closed"
+    open = 'open'
+    pending = 'pending'
+    closed = 'closed'
+
+
+class PostStatus(StrEnum):
+    visible = 'visible'
+    hidden = 'hidden'
+    deleted = 'deleted'
+
 
 
 class ReportCategory(StrEnum):

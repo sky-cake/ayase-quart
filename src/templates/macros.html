@@ -100,7 +100,7 @@
 
 {% macro render_field(field) %}
   <div class="form-control">
-    {% if field.name not in ['submit', 'captcha_id'] %}
+    {% if field.name not in ['submit', 'captcha_id', 'captcha_answer'] %}
       <div class="field_label">{{ field.label }}</div>
     {% endif %}
 

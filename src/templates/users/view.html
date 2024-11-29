@@ -2,15 +2,20 @@
 
 {% block body %}
 
+    <p>
+        [
+        <a href="{{ url_for('bp_admin.users_edit', user_id=user.user_id) }}">Edit</a> |
+        <a href="{{ url_for('bp_admin.users_delete', user_id=user.user_id) }}">Delete</a> |
+        <a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a>
+        ]
+    </p>
+
     <h1>View User</h1>
     <p><strong>Username:</strong> {{ user.username }}</p>
     <p><strong>Role:</strong> {{ user.role }}</p>
     <p><strong>Active:</strong> {{ 'Yes' if user.active else 'No' }}</p>
-    <p><strong>Created At:</strong> {{ user.created_datetime }}</p>
-    <p><strong>Last Login:</strong> {{ user.last_login_datetime }}</p>
+    <p><strong>Created At:</strong> {{ user.created_at }}</p>
+    <p><strong>Last Login:</strong> {{ user.last_login_at }}</p>
     <p><strong>Notes:</strong> {{ user.notes }}</p>
-    <a href="{{ url_for('bp_admin.users_edit', user_id=user.user_id) }}">Edit</a> |
-    <a href="{{ url_for('bp_admin.users_delete', user_id=user.user_id) }}">Delete</a> |
-    <a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a>
 
 {% endblock %}
