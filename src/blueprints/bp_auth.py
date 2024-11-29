@@ -1,14 +1,14 @@
 from functools import wraps
 
 from quart import Blueprint, current_app, flash, redirect, session, url_for
-from werkzeug.security import check_password_hash
 
 from enums import AuthActions
 from forms import LoginForm
 from moderation.user import (
-    get_user_with_username,
     is_user_admin,
-    is_user_moderator
+    is_user_authority,
+    is_user_moderator,
+    is_user_valid
 )
 from render import render_controller
 from security.captcha import MathCaptcha
@@ -37,17 +37,19 @@ async def auth(action: AuthActions, user_id=None):
         if action == AuthActions.is_admin:
             user_id = session.get("user_id", None)
             if user_id:
-                is_admin = await is_user_admin(user_id)
-                if is_admin:
-                    return True
+                return await is_user_admin(user_id)
             return False
 
         if action == AuthActions.is_moderator:
             user_id = session.get("user_id", None)
             if user_id:
-                is_admin = await is_user_moderator(user_id)
-                if is_admin:
-                    return True
+                return await is_user_moderator(user_id)
+            return False
+        
+        if action == AuthActions.is_authority:
+            user_id = session.get("user_id", None)
+            if user_id:
+                return await is_user_authority(user_id)
             return False
 
     raise ValueError(action, user_id)
@@ -56,7 +58,7 @@ async def auth(action: AuthActions, user_id=None):
 def login_required(WRAPPED_FUNC):
     @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if not (await auth(AuthActions.is_logged_in)):
+        if not await auth(AuthActions.is_logged_in):
             await flash("Login required", "danger")
             return redirect(url_for("bp_auth.login"))
         return await WRAPPED_FUNC(*args, **kwargs)
@@ -67,7 +69,7 @@ def login_required(WRAPPED_FUNC):
 def logout_required(WRAPPED_FUNC):
     @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if (await auth(AuthActions.is_admin)) or (await auth(AuthActions.is_logged_in)):
+        if await auth(AuthActions.is_logged_in):
             await flash("Logout required", "danger")
             return redirect(url_for("bp_auth.logout"))
         return await WRAPPED_FUNC(*args, **kwargs)
@@ -78,7 +80,7 @@ def logout_required(WRAPPED_FUNC):
 def admin_required(WRAPPED_FUNC):
     @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if not (await auth(AuthActions.is_admin)):
+        if not await auth(AuthActions.is_admin):
             await flash("Admin permission required", "danger")
             return redirect(url_for("bp_app.v_index"))
         return await WRAPPED_FUNC(*args, **kwargs)
@@ -86,11 +88,11 @@ def admin_required(WRAPPED_FUNC):
     return decorated_function
 
 
-def moderator_required(WRAPPED_FUNC):
+def authorization_required(WRAPPED_FUNC):
     @wraps(WRAPPED_FUNC)
     async def decorated_function(*args, **kwargs):
-        if (not (await auth(AuthActions.is_moderator))) and (not (await auth(AuthActions.is_admin))):
-            await flash("Moderator or Admin permission required", "danger")
+        if not await auth(AuthActions.is_authority):
+            await flash("Authorization required", "danger")
             return redirect(url_for("bp_app.v_index"))
         return await WRAPPED_FUNC(*args, **kwargs)
 
@@ -107,14 +109,10 @@ async def login():
             username = form.username.data
             password_candidate = form.password.data
 
-            user = await get_user_with_username(username)
-            if user != []:
-                user = user[0]
-                if check_password_hash(user.password, password_candidate):
-                    await auth(AuthActions.log_in, user_id=user.user_id)
-
-                    await flash("Login successful.", "success")
-                    return redirect(url_for("bp_moderation.reports_index"))
+            if user := await is_user_valid(username, password_candidate):
+                await auth(AuthActions.log_in, user_id=user.user_id)
+                await flash("Login successful.", "success")
+                return redirect(url_for("bp_moderation.reports_index"))
 
             await flash("Incorrect username or password.", "danger")
         await flash("Wrong math captcha answer", "danger")

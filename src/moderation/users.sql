@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS users (
     password TEXT,
     active BOOLEAN NOT NULL DEFAULT 1,
     role TEXT NOT NULL,
-    created_datetime TIMESTAMP NOT NULL,
-    last_login_datetime TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    last_update_at TIMESTAMP NOT NULL,
+    last_login_at TIMESTAMP,
     notes TEXT
 );

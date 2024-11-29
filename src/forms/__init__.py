@@ -25,8 +25,8 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import ReportCategory, ReportStatus, UserRole
-from moderation.user import get_user_with_username, is_correct_password
+from enums import PostStatus, ReportCategory, ReportStatus, UserRole
+from moderation.user import is_user_valid
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
 from utils.validation import clamp_positive_int, validate_board
@@ -179,14 +179,12 @@ async def validate_login_user(form, field):
     username = form.username.data
     password_candidate = form.password.data
 
-    user_record = get_user_with_username(username)
-
-    if not user_record or not is_correct_password(user_record, password_candidate):
+    if not (user := await is_user_valid(username, password_candidate)):
         await flash('Incorrect username or password.', 'warning')
         raise ValidationError()
 
     await flash('User logged in.', 'success')
-    session['user_id'] = user_record['user_id']
+    session['user_id'] = user['user_id']
 
 
 class UserForm(QuartForm):
@@ -195,16 +193,18 @@ class UserForm(QuartForm):
     active = BooleanField('Active', validators=[DataRequired()])
     role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
     notes = TextAreaField('Notes', validators=[Optional()])
-    # created_datetime
-    # last_login_datetime
     submit = SubmitField('Submit')
 
 
-class ReportForm(QuartForm):
-    post_no = IntegerField('Post No.', validators=[NumberRange(min=0)])
-    category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory])
-    details = TextAreaField('Details', validators=[Optional()])
-    status = RadioField('Status', choices=[(s, s) for s in ReportStatus])
-    # created_datetime
-    # last_updated_datetime
+class ReportUserForm(QuartForm):
+    report_category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory], validators=[DataRequired()])
+    submitter_notes = TextAreaField('Submitter Notes', validators=[Optional()])
+    submit = SubmitField('Submit')
+
+
+class ReportModForm(QuartForm):
+    post_status = RadioField('Post Status', choices=[(s, s) for s in PostStatus], validators=[DataRequired()])
+    report_status = RadioField('Report Status', choices=[(s, s) for s in ReportStatus], validators=[DataRequired()])
+    report_category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory], validators=[DataRequired()])
+    moderator_notes = TextAreaField('Moderator Notes', validators=[Optional()])
     submit = SubmitField('Submit')

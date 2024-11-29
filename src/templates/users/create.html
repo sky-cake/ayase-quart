@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block body %}
+    <p><a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a></p>
 
     <h1>Create User</h1>
     <form action="{{ url_for('bp_admin.users_create') }}" method="post">
@@ -12,6 +13,5 @@
         <p><label for="{{ form.notes.id }}">{{ form.notes.label }}</label>{{ form.notes() }}</p>
         <button type="submit">Create</button>
     </form>
-    <a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a>
 
 {% endblock %}
