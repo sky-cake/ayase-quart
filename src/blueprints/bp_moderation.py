@@ -2,6 +2,7 @@ from quart import Blueprint, redirect, request, url_for
 
 from enums import AuthActions, ReportStatus
 from forms import ReportModForm
+
 from moderation.report import (
     delete_report,
     edit_report,
@@ -15,6 +16,8 @@ from templates import (
     template_reports_index,
     template_reports_view
 )
+from enums import AuthActions
+from .bp_auth import moderator_required, auth
 
 from .bp_auth import auth, authorization_required
 

@@ -22,7 +22,7 @@ from templates import (
     template_users_delete,
     template_users_edit,
     template_users_index,
-    template_users_view
+    template_users_view,
 )
 
 from .bp_auth import admin_required
@@ -168,6 +168,11 @@ async def users_delete(user_id):
     if request.method == 'POST':
         await delete_user(user_id)
         return redirect(url_for('bp_admin.users_index'))
+    
+    user = await get_user_with_id(user_id)
+    if not user:
+        redirect(url_for('bp_admin.users_index'))
+    user = user[0]
 
     user = await get_user_by_id(user_id)
     if not user:

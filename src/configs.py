@@ -27,6 +27,7 @@ db_mod_conf = mod_conf.get('sqlite', {}) # only supports sqlite atm
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)
 if moderation_db := db_mod_conf.get('database'):
+
     db_mod_conf['database'] = make_src_path(moderation_db)
 if ssl_key := app_conf.get('ssl_key'):
     app_conf['ssl_key'] = make_src_path(ssl_key)

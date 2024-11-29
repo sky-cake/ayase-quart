@@ -27,6 +27,7 @@ from wtforms.validators import (
 from boards import board_shortnames
 from enums import PostStatus, ReportCategory, ReportStatus, UserRole
 from moderation.user import is_user_valid
+
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
 from utils.validation import clamp_positive_int, validate_board
@@ -207,4 +208,5 @@ class ReportModForm(QuartForm):
     report_status = RadioField('Report Status', choices=[(s, s) for s in ReportStatus], validators=[DataRequired()])
     report_category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory], validators=[DataRequired()])
     moderator_notes = TextAreaField('Moderator Notes', validators=[Optional()])
+
     submit = SubmitField('Submit')

@@ -49,6 +49,7 @@ class PostStatus(StrEnum):
     deleted = 'deleted'
 
 
+
 class ReportCategory(StrEnum):
     illegal_content = 'Illegal content'
     dcma = 'DCMA'

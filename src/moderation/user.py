@@ -114,7 +114,6 @@ async def set_user_password(user_id: int, new_password: str):
         datetime.now(),
         user_id,
     )
-    await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
 
 
 async def delete_user(user_id: int):
@@ -169,3 +168,4 @@ async def is_user_role(user_id: int, role: UserRole) -> bool:
 
 def is_valid_role(role: str) -> bool:
     return role in {r.value for r in UserRole}
+

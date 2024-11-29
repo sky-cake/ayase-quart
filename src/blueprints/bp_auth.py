@@ -38,6 +38,7 @@ async def auth(action: AuthActions, user_id=None):
             user_id = session.get("user_id", None)
             if user_id:
                 return await is_user_admin(user_id)
+
             return False
 
         if action == AuthActions.is_moderator:
@@ -50,6 +51,7 @@ async def auth(action: AuthActions, user_id=None):
             user_id = session.get("user_id", None)
             if user_id:
                 return await is_user_authority(user_id)
+
             return False
 
     raise ValueError(action, user_id)
@@ -113,6 +115,7 @@ async def login():
                 await auth(AuthActions.log_in, user_id=user.user_id)
                 await flash("Login successful.", "success")
                 return redirect(url_for("bp_moderation.reports_index"))
+
 
             await flash("Incorrect username or password.", "danger")
         await flash("Wrong math captcha answer", "danger")

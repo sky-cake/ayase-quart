@@ -12,4 +12,5 @@ CREATE TABLE IF NOT EXISTS reports (
     created_at TIMESTAMP NOT NULL,
     last_updated_at TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
+
 );
