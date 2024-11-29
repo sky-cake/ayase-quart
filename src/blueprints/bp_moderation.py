@@ -17,7 +17,7 @@ from templates import (
     template_reports_view
 )
 from enums import AuthActions
-from .bp_auth import moderator_required, auth
+from .bp_auth import authorization_required, auth
 
 from .bp_auth import auth, authorization_required
 

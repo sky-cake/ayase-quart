@@ -169,10 +169,9 @@ async def users_delete(user_id):
         await delete_user(user_id)
         return redirect(url_for('bp_admin.users_index'))
     
-    user = await get_user_with_id(user_id)
+    user = await get_user_by_id(user_id)
     if not user:
         redirect(url_for('bp_admin.users_index'))
-    user = user[0]
 
     user = await get_user_by_id(user_id)
     if not user:
