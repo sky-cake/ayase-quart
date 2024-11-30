@@ -1,5 +1,4 @@
-from configs import db_mod_conf, mod_conf
-
+from configs import mod_conf
 from db import db_m
 from enums import DbPool, UserRole
 from moderation.user import create_user

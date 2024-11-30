@@ -88,9 +88,9 @@
                         <br>
                         Profile: [
                         {% if is_admin or is_moderator or is_logged_in %}
-                            <a href="{{ url_for('bp_auth.logout') }}">Logout</a>
+                            <a href="{{ url_for('bp_auth.logout') }}">Sign Out</a>
                         {% else %}
-                            <a href="{{ url_for('bp_auth.login') }}">Login</a>
+                            <a href="{{ url_for('bp_auth.login') }}">Moderation</a>
                         {% endif %}
                         ]
                     {% endif %}
@@ -115,6 +115,11 @@
 
                 {% block body %}
                 {% endblock %}
+
+                {% if report_modal_t %}
+                    {{ report_modal_t | safe }}
+                    <script type="text/javascript" src="/static/js/reports.js"></script>
+                {% endif %}
             </div>
 
             {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_app.v_catalog', 'bp_search.v_search', 'bp_search.v_index_search'] %}

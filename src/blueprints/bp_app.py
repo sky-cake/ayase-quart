@@ -9,7 +9,7 @@ from asagi_converter import (
 )
 from boards import get_title
 from configs import SITE_NAME
-from posts.template_optimizer import wrap_post_t
+from posts.template_optimizer import report_modal_t, wrap_post_t
 from render import render_controller
 from templates import (
     template_board_index,
@@ -265,6 +265,7 @@ async def v_thread(board_shortname: str, thread_id: int):
     render = await render_controller(
         template_thread,
         posts_t=posts_t,
+        report_modal_t=report_modal_t,
         nreplies=nreplies,
         nimages=nimages,
         board=board_shortname,

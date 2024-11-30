@@ -3,12 +3,19 @@
 {% block body %}
 
     <h1>Edit Report</h1>
+    <p><a href="{{ url_for('bp_moderation.reports_index') }}">Back to Reports</a></p>
+
     <form action="{{ url_for('bp_moderation.reports_edit', report_id=report.report_id) }}" method="post">
-        <p><label>Post No: <input type="number" name="post_no" value="{{ report.post_no }}" required></label></p>
-        <p><label>Reason: <textarea name="reason" required>{{ report.reason }}</textarea></label></p>
-        <p><label>Status: <input type="text" name="status" value="{{ report.status }}" required></label></p>
-        <button type="submit">Save Changes</button>
+        {{ form.csrf_token() }}
+        <p>Report Id:       {{report.id}}</p>
+        <p>Board:           {{report.board_shortname}}</p>
+        <p>Post Num:        {{report.post_num}}</p>
+        <p>Category:        {{ report.report_category }}</p>
+        <p>Submitter Notes: {{ report.submitter_notes }}</p>
+        <p><label for="{{ form.post_status.id }}">{{ form.post_status.label }}</label>{{ form.post_status() }}</p>
+        <p><label for="{{ form.report_status.id }}">{{ form.report_status.label }}</label>{{ form.report_status() }}</p>
+        <p><label for="{{ form.moderator_notes.id }}">{{ form.moderator_notes.label }}</label>{{ form.moderator_notes() }}</p>
+        <button type="submit">Save</button>
     </form>
-    <a href="{{ url_for('bp_moderation.reports_index') }}">Back to Reports</a>
 
 {% endblock %}

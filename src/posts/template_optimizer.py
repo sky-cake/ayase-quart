@@ -2,6 +2,7 @@ from enum import StrEnum
 from html import escape
 
 from configs import media_conf
+from enums import ReportCategory
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
 
@@ -51,9 +52,16 @@ def wrap_post_t(post: dict):
             t_filedeleted=get_filedeleted_t(post),
             t_header=get_header_t(post),
             t_quotelink=get_quotelink_t(post),
+            t_report=get_report_t(post),
         )
     )
     return post
+
+
+def get_report_t(post):
+    return f"""<button class="btn" report_url="/report/{post['board_shortname']}/{post['num']}">
+        Report
+    </button>"""
 
 
 def get_sub_t(post: dict):
@@ -327,3 +335,42 @@ def email_wrap(post: dict, val: str):
     if (not (email := post.get('email'))) or email == 'noko':
         return val
     return f'<a href="mailto:{ email }">{val}</a>'
+
+
+
+def generate_report_modal():
+    category_options = "\n".join(
+        f"""
+        <div>
+          <input type="radio" id="{category.name}" name="report_category" value="{category.value}" required>
+          <label for="{category.name}">{category.value}</label>
+        </div>
+        """ for category in ReportCategory
+    )
+    modal_html = f"""
+    <div id="modal_overlay" hidden>
+        <div id="report_modal" class="form" hidden>
+            <div class="modal_header">
+                <div class="modal_title">Report</div>
+                <div id="report_close" class="btn">Close</div>
+            </div>
+            <form id="report_form" action="" method="POST">
+                <div>
+                    <label for="report_category">Category:</label>
+                    {category_options}
+                </div>
+                <br>
+                <div>
+                    <label for="submitter_notes">Details:</label>
+                    <textarea id="submitter_notes" name="submitter_notes" cols="48" rows="8" maxlength="512" placeholder="Provide details about the issue."></textarea>
+                </div>
+                <br>
+                <div id="feedback_report"></div>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+    </div>
+    """
+    return modal_html
+
+report_modal_t = generate_report_modal()

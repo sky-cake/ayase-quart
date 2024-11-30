@@ -14,7 +14,11 @@ from boards import board_shortnames
 from configs import SITE_NAME
 from enums import SearchType
 from forms import SearchForm
-from posts.template_optimizer import get_gallery_media_t, wrap_post_t
+from posts.template_optimizer import (
+    get_gallery_media_t,
+    report_modal_t,
+    wrap_post_t
+)
 from render import render_controller
 from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
 from search.highlighting import get_term_re, mark_highlight
@@ -174,6 +178,7 @@ async def search_handler(search_type: SearchType) -> str:
         gallery_mode=gallery_mode,
         form=form,
         posts_t=posts_t,
+        report_modal_t=report_modal_t,
         page_links=page_links,
         res_count=len(posts),
         searched=searched,

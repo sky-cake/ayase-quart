@@ -1,4 +1,4 @@
-{%- macro table(list_of_dicts) -%}
+{%- macro table(list_of_dicts, safe_cols=None) -%}
   <table style="border-collapse: collapse; font-family: Arial, sans-serif;">
     <thead>
       <tr>
@@ -11,7 +11,13 @@
       {%- for row in list_of_dicts -%}
         <tr>
           {%- for col in row.keys() -%}
-            <td style="border: 0.5px solid #585858; padding: 8px; max-width: 80ch; word-wrap: break-word; text-align: left;">{{ row[col] }}</td>
+            <td style="border: 0.5px solid #585858; padding: 8px; max-width: 80ch; word-wrap: break-word; text-align: left;">
+              {% if safe_cols and col in safe_cols %}
+                {{ row[col] | safe}}
+              {% else %}
+                {{ row[col] }}
+              {% endif %}
+            </td>
           {%- endfor -%}
         </tr>
       {%- endfor -%}

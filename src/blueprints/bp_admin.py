@@ -22,7 +22,7 @@ from templates import (
     template_users_delete,
     template_users_edit,
     template_users_index,
-    template_users_view,
+    template_users_view
 )
 
 from .bp_auth import admin_required

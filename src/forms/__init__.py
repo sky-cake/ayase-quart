@@ -1,3 +1,5 @@
+from enum import Enum
+
 from quart import flash, session
 from quart_wtf import QuartForm
 from werkzeug.exceptions import BadRequest
@@ -27,7 +29,6 @@ from wtforms.validators import (
 from boards import board_shortnames
 from enums import PostStatus, ReportCategory, ReportStatus, UserRole
 from moderation.user import is_user_valid
-
 from posts.capcodes import Capcode
 from search import DEFAULT_RESULTS_LIMIT
 from utils.validation import clamp_positive_int, validate_board
@@ -188,25 +189,36 @@ async def validate_login_user(form, field):
     session['user_id'] = user['user_id']
 
 
+def enum_choices(enum_cls: Enum):
+    return [(member.value, member.name) for member in enum_cls]
+
+
+def enum_validator(enum_cls: Enum):
+    def validator(form: QuartForm, field: Field):
+        try:
+            enum_cls(field.data)
+        except ValueError:
+            raise ValidationError(f"Invalid choice. Must be one of: {', '.join([e.value for e in enum_cls])}")
+    return validator
+
+
 class UserForm(QuartForm):
     username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512), validate_username_is_provided], render_kw={'placeholder': 'Username'})
     password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512), validate_login_user], render_kw={'placeholder': 'Password'})
     active = BooleanField('Active', validators=[DataRequired()])
     role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
-    notes = TextAreaField('Notes', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
     submit = SubmitField('Submit')
 
 
 class ReportUserForm(QuartForm):
-    report_category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory], validators=[DataRequired()])
-    submitter_notes = TextAreaField('Submitter Notes', validators=[Optional()])
+    report_category = RadioField('Report Category', choices=enum_choices(ReportCategory), validators=[DataRequired(), enum_validator(ReportCategory)])
+    submitter_notes = TextAreaField('Submitter Notes', validators=[Optional(), Length(min=0, max=512)])
     submit = SubmitField('Submit')
 
 
 class ReportModForm(QuartForm):
-    post_status = RadioField('Post Status', choices=[(s, s) for s in PostStatus], validators=[DataRequired()])
-    report_status = RadioField('Report Status', choices=[(s, s) for s in ReportStatus], validators=[DataRequired()])
-    report_category = RadioField('Report Category', choices=[(c, c) for c in ReportCategory], validators=[DataRequired()])
-    moderator_notes = TextAreaField('Moderator Notes', validators=[Optional()])
-
+    post_status = RadioField('Post Status', choices=enum_choices(PostStatus), validators=[DataRequired(), enum_validator(PostStatus)])
+    report_status = RadioField('Report Status', choices=enum_choices(ReportStatus), validators=[DataRequired(), enum_validator(ReportStatus)])
+    moderator_notes = TextAreaField('Moderator Notes', validators=[Optional(), Length(min=0, max=512)])
     submit = SubmitField('Submit')
