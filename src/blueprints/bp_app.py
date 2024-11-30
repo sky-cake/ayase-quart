@@ -208,15 +208,12 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     return render
 
 
-def get_posts_t(thread_dict: dict, post_2_quotelinks: dict[int, list[int]]) -> str:
-    posts_t = []
-    for post in thread_dict:
+def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+    for post in posts:
         post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
-        posts_t.append(wrap_post_t(post))
-
-    posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+    
+    posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
-
 
 def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     """Returns (nreplies, nimages)"""
