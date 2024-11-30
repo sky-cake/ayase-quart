@@ -54,6 +54,5 @@ boards, board_shortnames, board_objects = _get_board_views()
 
 @cache
 def get_title(board: str):
-    print(f'here {board}')
     title = f"/{board}/ - {boards[board]}"
     return title

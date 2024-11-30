@@ -474,6 +474,7 @@ async def generate_catalog(board: str, page_num: int=1):
             "page": i,
             'threads': [{
                     **row,
+                    'quotelinks': [],
                     'nreplies': (thread:=threads[row['num']])[0],
                     'nimages': thread[1]
                 }
