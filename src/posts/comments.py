@@ -37,36 +37,23 @@ def html_comment(comment: str, op_num: int, board: str, highlight=False):
     return comment
 
 
+
 def html_comment(comment: str, op_num: int, board: str, highlight=False):
-    has_angle_r = False
-    has_angle_l = False
-    has_square_l = False
-
-    for c in comment:
-        if c == '>':
-            has_angle_r = True
-        elif c == '<':
-            has_angle_l = True
-        elif c == '[':
-            has_square_l = True
-
-        if has_angle_r and has_angle_l and has_square_l:
-            break
-
-    if has_angle_r or has_angle_l:
+    """Yes, there are multiple `in comment` statements, but this is 1-2ms faster than looping over `comment` once, believe it or not."""
+    has_angle_r = '>' in comment
+    has_square_l = '[' in comment
+    if has_angle_r or '<' in comment:
         comment = escape(comment)
-
     if highlight:
         comment = html_highlight(comment)
-
     if has_angle_r:
         comment = html_quotelinks(comment, board, op_num)
-        comment = html_greentext(comment)
-
     if has_square_l:
         comment = html_bbcode(comment)
-
-    return comment.replace('\n', '<br>')
+    if has_angle_r:
+        comment = html_greentext(comment)
+    comment = comment.replace('\n', '<br>')
+    return comment
 
 
 bbcode_re = compile(r'.*\[(spoiler|code|banned)\].+\[/(spoiler|code|banned)\].*')
