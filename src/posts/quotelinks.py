@@ -59,7 +59,7 @@ def extract_quotelinks(comment: str, html=False) -> list[int]:
 raw_ql_re = re.compile(r'[^>]?>>(\d+)')
 def extract_quotelinks_raw(comment: str) -> Generator[int, None, None]:
     for match in raw_ql_re.findall(comment):
-        yield match
+        yield int(match)
 
 
 esc_ql_re = re.compile(r'[^;]?&gt;&gt;(\d+)')
