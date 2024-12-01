@@ -35,25 +35,23 @@ def wrap_post_t(post: dict):
     esc_user_data(post)
     set_links(post)
     post.update(
-        dict(
-            t_sub=get_sub_t(post),
-            t_cc=get_capcode_t(post),
-            t_cc_class=get_cc_class_t(post),
-            t_media=get_media_t(post),
-            t_sticky=get_sticky_t(post),
-            t_closed=get_closed_t(post),
-            t_country=get_country_t(post),
-            t_troll_country=get_troll_country_t(post),
-            t_trip=get_trip_t(post),
-            t_mobile=get_mobile_t(post),
-            t_name=get_name_t(post),
-            t_poster_hash=get_poster_hash_t(post),
-            t_since4pass=get_since4pass_t(post),
-            t_filedeleted=get_filedeleted_t(post),
-            t_header=get_header_t(post),
-            t_quotelink=get_quotelink_t(post),
-            t_report=get_report_t(post),
-        )
+        t_sub=get_sub_t(post),
+        t_cc=get_capcode_t(post),
+        t_cc_class=get_cc_class_t(post),
+        t_media=get_media_t(post),
+        t_sticky=get_sticky_t(post),
+        t_closed=get_closed_t(post),
+        t_country=get_country_t(post),
+        t_troll_country=get_troll_country_t(post),
+        t_trip=get_trip_t(post),
+        t_mobile=get_mobile_t(post),
+        t_name=get_name_t(post),
+        t_poster_hash=get_poster_hash_t(post),
+        t_since4pass=get_since4pass_t(post),
+        t_filedeleted=get_filedeleted_t(post),
+        t_header=get_header_t(post),
+        t_quotelink=get_quotelink_t(post),
+        t_report=get_report_t(post),
     )
     return post
 
