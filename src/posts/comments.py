@@ -37,6 +37,38 @@ def html_comment(comment: str, op_num: int, board: str, highlight=False):
     return comment
 
 
+def html_comment(comment: str, op_num: int, board: str, highlight=False):
+    has_angle_r = False
+    has_angle_l = False
+    has_square_l = False
+
+    for c in comment:
+        if c == '>':
+            has_angle_r = True
+        elif c == '<':
+            has_angle_l = True
+        elif c == '[':
+            has_square_l = True
+
+        if has_angle_r and has_angle_l and has_square_l:
+            break
+
+    if has_angle_r or has_angle_l:
+        comment = escape(comment)
+
+    if highlight:
+        comment = html_highlight(comment)
+
+    if has_angle_r:
+        comment = html_quotelinks(comment, board, op_num)
+        comment = html_greentext(comment)
+
+    if has_square_l:
+        comment = html_bbcode(comment)
+
+    return comment.replace('\n', '<br>')
+
+
 bbcode_re = compile(r'.*\[(spoiler|code|banned)\].+\[/(spoiler|code|banned)\].*')
 
 spoiler_re = compile(r'\[spoiler\](.*?)\[/spoiler\]', DOTALL)
