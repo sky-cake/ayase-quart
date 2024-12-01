@@ -48,7 +48,7 @@ def html_bbcode(comment: str):
     return comment
 
 
-greentext_re = compile(r'^&gt;(?!&gt;)(.*)$')
-greentext_sub = r'<span class="quote">\1</span>'
+greentext_re = compile(r'^&gt;(?!&gt;\d)(.*)$', MULTILINE)
+greentext_sub = r'<span class="quote">&gt;\1</span>'
 def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)
