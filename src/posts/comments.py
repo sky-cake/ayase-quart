@@ -1,5 +1,5 @@
 from html import escape
-from re import DOTALL, compile
+from re import DOTALL, compile, MULTILINE
 
 from posts.quotelinks import html_quotelinks
 from search.highlighting import html_highlight
@@ -21,12 +21,19 @@ logic:
 '''
 
 def html_comment(comment: str, op_num: int, board: str, highlight=False):
-    comment = escape(comment)
+    """Yes, there are multiple `in comment` statements, but this is 1-2ms faster than looping over `comment` once, believe it or not."""
+    has_angle_r = '>' in comment
+    has_square_l = '[' in comment
+    if has_angle_r or '<' in comment:
+        comment = escape(comment)
     if highlight:
         comment = html_highlight(comment)
-    comment = html_quotelinks(comment, board, op_num)
-    comment = html_bbcode(comment)
-    comment = html_greentext(comment)
+    if has_angle_r:
+        comment = html_quotelinks(comment, board, op_num)
+    if has_square_l:
+        comment = html_bbcode(comment)
+    if has_angle_r:
+        comment = html_greentext(comment)
     comment = comment.replace('\n', '<br>')
     return comment
 
@@ -48,7 +55,7 @@ def html_bbcode(comment: str):
     return comment
 
 
-greentext_re = compile(r'^&gt;(?!&gt;)(.*)$')
-greentext_sub = r'<span class="quote">\1</span>'
+greentext_re = compile(r'^&gt;(?!&gt;\d)(.*)$', MULTILINE)
+greentext_sub = r'<span class="quote">&gt;\1</span>'
 def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)

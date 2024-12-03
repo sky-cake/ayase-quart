@@ -301,8 +301,7 @@ async def v_thread(board_shortname: str, thread_id: int):
 
     title = f"/{board_shortname}/ #{thread_id}"
 
-    render = await render_controller(
-        template_thread,
+    render = template_thread.render(
         posts_t=posts_t,
         report_modal_t=report_modal_t,
         nreplies=nreplies,
