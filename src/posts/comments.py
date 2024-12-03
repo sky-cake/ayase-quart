@@ -21,24 +21,6 @@ logic:
 '''
 
 def html_comment(comment: str, op_num: int, board: str, highlight=False):
-    has_angle_r = '>' in comment
-    has_square_l = '[' in comment
-    if has_angle_r or '<' in comment:
-        comment = escape(comment)
-    if highlight:
-        comment = html_highlight(comment)
-    if has_angle_r:
-        comment = html_quotelinks(comment, board, op_num)
-    if has_square_l:
-        comment = html_bbcode(comment)
-    if has_angle_r:
-        comment = html_greentext(comment)
-    comment = comment.replace('\n', '<br>')
-    return comment
-
-
-
-def html_comment(comment: str, op_num: int, board: str, highlight=False):
     """Yes, there are multiple `in comment` statements, but this is 1-2ms faster than looping over `comment` once, believe it or not."""
     has_angle_r = '>' in comment
     has_square_l = '[' in comment
