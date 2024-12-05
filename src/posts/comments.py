@@ -1,5 +1,10 @@
 from html import escape
-from re import DOTALL, compile, MULTILINE
+from re import (
+    compile,
+    DOTALL,
+    MULTILINE,
+    IGNORECASE,
+)
 
 from posts.quotelinks import html_quotelinks
 from search.highlighting import html_highlight
@@ -17,6 +22,7 @@ logic:
     then wrap the quotelinks with link
     then wrap quotelines to green text
     then convert the bbcode tags
+    then make links clickable
     finally replace all the newlines with <br>
 '''
 
@@ -34,6 +40,8 @@ def html_comment(comment: str, op_num: int, board: str, highlight=False):
         comment = html_bbcode(comment)
     if has_angle_r:
         comment = html_greentext(comment)
+    if 'http' in comment:
+        comment = clickable_links(comment)
     comment = comment.replace('\n', '<br>')
     return comment
 
@@ -59,3 +67,8 @@ greentext_re = compile(r'^&gt;(?!&gt;\d)(.*)$', MULTILINE)
 greentext_sub = r'<span class="quote">&gt;\1</span>'
 def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)
+
+link_re = compile(r'(https?://([a-z0-9]+\.)+[a-z]{2,}[a-z0-9/\?&=\-_\(\)\+\.;,]+)[.,]?', IGNORECASE)
+link_sub = r'<a href="\1">\1</a>'
+def clickable_links(comment: str):
+    return link_re.sub(link_sub, comment)
