@@ -9,7 +9,7 @@ from enums import DbPool, UserRole
 
 async def get_all_users()-> Optional[list[dict]]:
     if not (users := await db_m.query_dict("SELECT * FROM users;", p_id=DbPool.mod)):
-        return
+        return []
     return users
 
 

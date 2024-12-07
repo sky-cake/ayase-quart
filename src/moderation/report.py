@@ -8,7 +8,7 @@ from enums import DbPool, PostStatus, ReportCategory, ReportStatus
 
 async def get_all_reports() -> Optional[list[dict]]:
     if not (reports := await db_m.query_dict('SELECT * FROM reports;', p_id=DbPool.mod)):
-        return
+        return []
     return reports
 
 
