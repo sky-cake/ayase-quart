@@ -35,25 +35,23 @@ def wrap_post_t(post: dict):
     esc_user_data(post)
     set_links(post)
     post.update(
-        dict(
-            t_sub=get_sub_t(post),
-            t_cc=get_capcode_t(post),
-            t_cc_class=get_cc_class_t(post),
-            t_media=get_media_t(post),
-            t_sticky=get_sticky_t(post),
-            t_closed=get_closed_t(post),
-            t_country=get_country_t(post),
-            t_troll_country=get_troll_country_t(post),
-            t_trip=get_trip_t(post),
-            t_mobile=get_mobile_t(post),
-            t_name=get_name_t(post),
-            t_poster_hash=get_poster_hash_t(post),
-            t_since4pass=get_since4pass_t(post),
-            t_filedeleted=get_filedeleted_t(post),
-            t_header=get_header_t(post),
-            t_quotelink=get_quotelink_t(post),
-            t_report=get_report_t(post),
-        )
+        t_sub=get_sub_t(post),
+        t_cc=get_capcode_t(post),
+        t_cc_class=get_cc_class_t(post),
+        t_media=get_media_t(post),
+        t_sticky=get_sticky_t(post),
+        t_closed=get_closed_t(post),
+        t_country=get_country_t(post),
+        t_troll_country=get_troll_country_t(post),
+        t_trip=get_trip_t(post),
+        t_mobile=get_mobile_t(post),
+        t_name=get_name_t(post),
+        t_poster_hash=get_poster_hash_t(post),
+        t_since4pass=get_since4pass_t(post),
+        t_filedeleted=get_filedeleted_t(post),
+        t_header=get_header_t(post),
+        t_quotelink=get_quotelink_t(post),
+        t_report=get_report_t(post),
     )
     return post
 
@@ -374,3 +372,127 @@ def generate_report_modal():
     return modal_html
 
 report_modal_t = generate_report_modal()
+
+
+op_color = '<strong style="color: #4da57c;">OP</strong>'
+def render_wrapped_post_t(wpt: dict): # wrapped_post_t
+    is_op = wpt['op_num']
+    num = wpt['num']
+    ts_unix = wpt['ts_unix']
+    return f"""
+    { wpt['t_header'] }
+    <div class="postInfoM mobile" id="pim{num}">
+        { wpt['t_sub'] }
+        { wpt['t_mobile'] }
+    </div>
+    { wpt['t_media'] if is_op else '' }
+    <div class="postInfo desktop" id="pi{num}">
+        <b>/{wpt['board_shortname']}/</b>
+        { op_color if is_op else '' }
+        { wpt['t_filedeleted'] }
+        { wpt['t_sub'] }
+        <span class="nameBlock { wpt['t_cc_class'] }">
+            { wpt['t_name'] }
+            { wpt['t_cc'] }
+        </span>
+        { wpt['t_poster_hash'] }
+        { wpt['t_since4pass'] }
+        { wpt['t_country'] }
+        { wpt['t_troll_country'] }
+        <span class="dateTime" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="postNum desktop">
+            <a href="{wpt['t_post_link_rel']}">No.{num}</a>
+            { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
+        </span>
+        <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
+        { wpt['t_report'] }
+        [<a href="{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }">View</a>]
+        [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
+        { wpt['t_quotelink'] }
+    </div>
+    { wpt['t_media'] if not is_op else '' }
+    <blockquote class="postMessage" id="m{num}">{wpt.get('comment', '')}</blockquote>
+    </div>
+    </div>
+    """
+
+def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
+    num = wpt['num']
+    board = wpt['board_shortname']
+    title_t = get_title_t(wpt)
+    ts_unix = wpt['ts_unix']
+
+    ext = mf.rsplit('.', 1)[-1] if (mf := wpt['media_filename']) else ''
+    media_orig = wpt['media_orig']
+    preview_orig = wpt['preview_orig']
+    full_src = get_media_path(media_orig, board, MediaType.image)
+    thumb_src = get_media_path(preview_orig, board, MediaType.thumb)
+    return f"""
+    <div id="{ num }" class="thread doc_id_{ num }" tabindex="0">
+        <div class="post_data">
+        /{board}/
+        { title_t }<br>
+        <span class="post_controls">
+            [<a href="/{ board }/thread/{ num }" class="btnr parent" >View</a>]
+            [<a href="https://boards.4chan.org/{ board }/thread/{ num }" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
+        </span>
+        { wpt['t_cc'] }
+        <span class="poster_hash"></span><br/>
+        <time datetime="{ ts_unix }">{ ts_2_formatted(ts_unix) }</time>
+        <span class="post_number">
+            <a href="/{ board }/thread/{ num }#p{ num }" data-function="highlight" data-post="{ num }">No. { num }</a>
+        </span>
+        </div>
+
+    <a href="/{ board }/thread/{ num }" rel="noreferrer" class="thread_image_link" data-expand="true">
+        <img
+            src="{thumb_src}"
+            class="thumb thread_image"
+            data-media_hash="{ wpt['media_hash'] }"
+            width="{ wpt['preview_w'] }"
+            height="{ wpt['preview_h'] }"
+            loading="lazy"
+            data-ext="{ext}"
+            data-thumb_src="{thumb_src}"
+            data-full_media_src="{full_src}"
+            onerror="pointToOtherMediaOnError(this)"
+            data-expanded="false"
+        />
+    </a>
+
+    {get_thread_stats_t(wpt)}
+    <div class="teaser">
+        { title_t }
+        { wpt.get('comment', '')}
+    </div>
+    </div>
+    """
+
+def get_title_t(thread: dict):
+    if not (title := thread.get('title', '')):
+        return ''
+    return f"""
+    <span class="post_title">{ escape(title) }</span>
+    """
+
+# almost same as threads.render_thread_stats...
+def get_thread_stats_t(thread: dict) -> str:
+    return f"""
+    <div class="meta">
+        Replies: <b>{ thread['nreplies'] }</b> / Images: <b>{ thread['nimages'] }</b> / Posters: <b>{ thread.get('posters', '?') }
+        </b>
+    </div>
+    """
+
+def get_thread_sticky_locked_t(thread: dict) -> str:
+    locked = thread['locked']
+    sticky = thread['sticky']
+    if not any((locked, sticky)):
+        return ''
+    sticky_t = '<span title="Sticky" class="threadIcon stickyIconCatalog"></span>' if sticky else ''
+    locked_t = '<span title="Closed" class="threadIcon closedIconCatalog"></span>' if locked else ''
+    return f"""
+    <div class="threadIcons">
+        {sticky_t}{locked_t}
+    </div>
+    """

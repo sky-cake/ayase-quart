@@ -11,7 +11,11 @@ from textwrap import dedent
 from db import db_q
 from db.base_db import BasePlaceHolderGen
 from posts.capcodes import Capcode
-from posts.quotelinks import get_quotelink_lookup
+from posts.quotelinks import (
+    get_quotelink_lookup,
+    get_quotelink_lookup_raw,
+)
+from posts.comments import html_comment
 from search.highlighting import html_highlight
 
 # these comments state the API field names, and descriptions, if applicable
@@ -474,6 +478,7 @@ async def generate_catalog(board: str, page_num: int=1):
             "page": i,
             'threads': [{
                     **row,
+                    'quotelinks': [],
                     'nreplies': (thread:=threads[row['num']])[0],
                     'nimages': thread[1]
                 }
@@ -518,7 +523,12 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
     if not threads_details:
         return {}, {'posts': []}
 
-    post_2_quotelinks, posts = get_qls_and_posts(posts)
+    # post_2_quotelinks, posts = get_qls_and_posts(posts)
+    post_2_quotelinks = get_quotelink_lookup_raw(posts)
+    for post in posts:
+        if not (comment := post['comment']):
+            continue
+        post['comment'] = html_comment(comment, thread_num, board)
     
     posts[0].update(threads_details[0])
     results = {'posts': posts}

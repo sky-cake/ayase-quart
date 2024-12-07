@@ -1,4 +1,5 @@
 import re
+from typing import Generator
 from collections import defaultdict
 from html import escape
 
@@ -56,11 +57,9 @@ def extract_quotelinks(comment: str, html=False) -> list[int]:
 
 # TODO: perhaps we don't need esc version, rename to extract_quotelinks in the future
 raw_ql_re = re.compile(r'[^>]?>>(\d+)')
-def extract_quotelinks_raw(comment: str) -> list[int]:
-    return [
-        int(match)
-        for match in raw_ql_re.findall(comment)
-    ]
+def extract_quotelinks_raw(comment: str) -> Generator[int, None, None]:
+    for match in raw_ql_re.findall(comment):
+        yield int(match)
 
 
 esc_ql_re = re.compile(r'[^;]?&gt;&gt;(\d+)')

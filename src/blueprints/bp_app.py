@@ -9,15 +9,22 @@ from asagi_converter import (
 )
 from boards import get_title
 from configs import SITE_NAME
-from posts.template_optimizer import report_modal_t, wrap_post_t
+from posts.template_optimizer import (
+    report_modal_t,
+    wrap_post_t,
+    render_wrapped_post_t,
+    render_catalog_card,
+)
 from render import render_controller
 from templates import (
     template_board_index,
     template_catalog,
     template_index,
-    template_index_search_post_t,
+    template_board_index_2,
+    template_catalog_2,
     template_thread
 )
+from threads import render_thread_stats
 from utils import Perf
 from utils.validation import validate_board, validate_threads
 
@@ -61,12 +68,17 @@ async def v_board_index(board_shortname: str):
     pagination = await make_pagination_board_index(board_shortname, index, 0)
     p.check('pagination')
 
-    rendered = await render_controller(
-        template_board_index,
+    threads = '<hr>'.join(
+        render_thread_stats(thread['posts'][0]) +
+        get_posts_t(thread['posts'], quotelinks)
+        for thread in index["threads"]
+    )
+    p.check('post_t')
+
+    rendered = template_board_index_2.render(
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
-        threads=index["threads"],
-        quotelinks=quotelinks,
+        threads=threads,
         board=board_shortname,
         title=get_title(board_shortname),
     )
@@ -106,19 +118,25 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     pagination = await make_pagination_board_index(board_shortname, index, page_num)
     p.check('paginate')
 
-    render = await render_controller(
-        template_board_index,
+    threads = '<hr>'.join(
+        render_thread_stats(thread['posts'][0]) +
+        get_posts_t(thread['posts'], quotelinks)
+        for thread in index["threads"]
+    )
+    p.check('post_t')
+
+    title = get_title(board_shortname)
+    rendered = template_board_index_2.render(
         pagination=pagination,
-        threads=index["threads"],
-        quotelinks=quotelinks,
+        threads=threads,
         board=board_shortname,
-        title=get_title(board_shortname),
-        tab_title=get_title(board_shortname),
+        title=title,
+        tab_title=title,
     )
     p.check('rendered')
     print(p)
 
-    return render
+    return rendered
 
 
 async def make_pagination_catalog(board_shortname, catalog, page_num):
@@ -163,14 +181,26 @@ async def v_catalog(board_shortname: str):
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
     p.check('paginate')
 
-    render = await render_controller(
-        template_catalog,
-        catalog=catalog,
+    threads = ''.join(
+        render_catalog_card(wrap_post_t(op))
+        for batch in catalog
+        for op in batch['threads']
+    )
+    render = template_catalog_2.render(
+        threads=threads,
         pagination=pagination,
         board=board_shortname,
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
+    # render = await render_controller(
+    #     template_catalog,
+    #     catalog=catalog,
+    #     pagination=pagination,
+    #     board=board_shortname,
+    #     title=get_title(board_shortname),
+    #     tab_title=f"/{board_shortname}/ Catalog",
+    # )
     p.check('render')
     print(p)
 
@@ -194,29 +224,38 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     pagination = await make_pagination_catalog(board_shortname, catalog, page_num)
     p.check('paginate')
 
-    render = await render_controller(
-        template_catalog,
-        catalog=catalog,
+    threads = ''.join(
+        render_catalog_card(wrap_post_t(op))
+        for batch in catalog
+        for op in batch['threads']
+    )
+    render = template_catalog_2.render(
+        threads=threads,
         pagination=pagination,
         board=board_shortname,
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
+    # render = await render_controller(
+    #     template_catalog,
+    #     catalog=catalog,
+    #     pagination=pagination,
+    #     board=board_shortname,
+    #     title=get_title(board_shortname),
+    #     tab_title=f"/{board_shortname}/ Catalog",
+    # )
     p.check('render')
     print(p)
 
     return render
 
 
-def get_posts_t(thread_dict: dict, post_2_quotelinks: dict[int, list[int]]) -> str:
-    posts_t = []
-    for post in thread_dict:
+def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+    for post in posts:
         post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
-        posts_t.append(wrap_post_t(post))
-
-    posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+    
+    posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
-
 
 def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     """Returns (nreplies, nimages)"""
@@ -262,8 +301,7 @@ async def v_thread(board_shortname: str, thread_id: int):
 
     title = f"/{board_shortname}/ #{thread_id}"
 
-    render = await render_controller(
-        template_thread,
+    render = template_thread.render(
         posts_t=posts_t,
         report_modal_t=report_modal_t,
         nreplies=nreplies,

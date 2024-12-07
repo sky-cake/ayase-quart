@@ -42,6 +42,8 @@ template_search = env.get_template("search.html")
 template_index_search_config = env.get_template('index_search_config.html')
 template_index_search = env.get_template('index_search.html')
 template_login = env.get_template('login.html')
+template_board_index_2 = env.get_template('board_index_2.html')
+template_catalog_2 = env.get_template('catalog_2.html')
 
 template_users_index = env.get_template('users/index.html')
 template_users_view = env.get_template('users/view.html')
