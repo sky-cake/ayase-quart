@@ -17,11 +17,9 @@ from posts.template_optimizer import (
 )
 from render import render_controller
 from templates import (
+    template_index,
     template_board_index,
     template_catalog,
-    template_index,
-    template_board_index_2,
-    template_catalog_2,
     template_thread
 )
 from threads import render_thread_stats
@@ -75,7 +73,7 @@ async def v_board_index(board_shortname: str):
     )
     p.check('post_t')
 
-    rendered = template_board_index_2.render(
+    rendered = template_board_index.render(
         tab_title=f'/{board_shortname}/ Index',
         pagination=pagination,
         threads=threads,
@@ -126,7 +124,7 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     p.check('post_t')
 
     title = get_title(board_shortname)
-    rendered = template_board_index_2.render(
+    rendered = template_board_index.render(
         pagination=pagination,
         threads=threads,
         board=board_shortname,
@@ -186,7 +184,7 @@ async def v_catalog(board_shortname: str):
         for batch in catalog
         for op in batch['threads']
     )
-    render = template_catalog_2.render(
+    render = template_catalog.render(
         threads=threads,
         pagination=pagination,
         board=board_shortname,
@@ -229,7 +227,7 @@ async def v_catalog_page(board_shortname: str, page_num: int):
         for batch in catalog
         for op in batch['threads']
     )
-    render = template_catalog_2.render(
+    render = template_catalog.render(
         threads=threads,
         pagination=pagination,
         board=board_shortname,
