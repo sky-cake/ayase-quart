@@ -447,7 +447,8 @@ async def generate_index(board: str, page_num: int=1):
 
 async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
-    page_num -= 1  # start page number at 1
+    page_num = max(page_num - 1, 0)  # start page number at 1
+    catalog_post_count = 150
 
     threads_q = f'''
         select
@@ -455,11 +456,11 @@ async def generate_catalog(board: str, page_num: int=1):
             nreplies,
             nimages
         from {board}_threads
-        order by time_bump desc
+        order by time_op desc
         limit 150
         offset ∆
     '''
-    if not (rows := await db_q.query_tuple(threads_q, (page_num,))):
+    if not (rows := await db_q.query_tuple(threads_q, (page_num * catalog_post_count,))):
         return []
 
     threads = {row[0]: row[1:] for row in rows}
@@ -469,9 +470,10 @@ async def generate_catalog(board: str, page_num: int=1):
     from {board}
     where op = 1
     and thread_num in ({db_q.phg.size(threads)})
+    order by thread_num desc
     '''
     rows = await db_q.query_dict(posts_q, params=tuple(threads.keys()))
-    
+
     batch_size = 15
     return [
         {
