@@ -1,3 +1,4 @@
+import os
 import tomllib
 
 from enums import DbType
@@ -21,13 +22,24 @@ search_conf = conf.get('search', {})
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 
+if media_conf and media_conf.get('serve_outside_static'):
+    if not all(os.path.isdir(p) for p in media_conf.get('media_root_paths')):
+        raise ValueError(media_conf.get('media_root_paths'))
+    media_conf['media_root_paths'] = tuple(media_conf.get('media_root_paths'))
+
+    if not all(e for e in media_conf.get('valid_extensions')):
+        raise ValueError(media_conf.get('valid_extensions'))
+    media_conf['valid_extensions'] = tuple(media_conf.get('valid_extensions'))
+
+    media_conf['endpoint'] = media_conf['endpoint'].strip().strip('/')
+
+
 mod_conf = conf.get('moderation', {})
 db_mod_conf = mod_conf.get('sqlite', {}) # only supports sqlite atm
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)
 if moderation_db := db_mod_conf.get('database'):
-
     db_mod_conf['database'] = make_src_path(moderation_db)
 if ssl_key := app_conf.get('ssl_key'):
     app_conf['ssl_key'] = make_src_path(ssl_key)

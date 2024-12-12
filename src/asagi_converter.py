@@ -10,11 +10,8 @@ from textwrap import dedent
 
 from db import db_q
 from posts.capcodes import Capcode
-from posts.quotelinks import (
-    get_quotelink_lookup,
-    get_quotelink_lookup_raw,
-)
 from posts.comments import html_comment
+from posts.quotelinks import get_quotelink_lookup, get_quotelink_lookup_raw
 from search.highlighting import html_highlight
 
 # these comments state the API field names, and descriptions, if applicable

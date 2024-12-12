@@ -1,10 +1,5 @@
 from html import escape
-from re import (
-    compile,
-    DOTALL,
-    MULTILINE,
-    IGNORECASE,
-)
+from re import DOTALL, IGNORECASE, MULTILINE, compile
 
 from posts.quotelinks import html_quotelinks
 from search.highlighting import html_highlight

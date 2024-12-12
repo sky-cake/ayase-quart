@@ -10,16 +10,16 @@ from asagi_converter import (
 from boards import get_title
 from configs import SITE_NAME
 from posts.template_optimizer import (
-    report_modal_t,
-    wrap_post_t,
-    render_wrapped_post_t,
     render_catalog_card,
+    render_wrapped_post_t,
+    report_modal_t,
+    wrap_post_t
 )
 from render import render_controller
 from templates import (
-    template_index,
     template_board_index,
     template_catalog,
+    template_index,
     template_thread
 )
 from threads import render_thread_stats

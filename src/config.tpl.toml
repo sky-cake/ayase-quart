@@ -44,10 +44,25 @@ host = "127.0.0.1"
 port = 6379
 db = 0
 
+
 [media]
-root = '/static/neo'
-image_uri = "/static/neo/{board_shortname}/image" # must contain {board_shortname}
-thumb_uri = "/static/neo/{board_shortname}/thumb" # must contain {board_shortname}
+image_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/image" # must contain {board_shortname}
+thumb_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/thumb" # must contain {board_shortname}
+
+# these optional settings are for serving media outside the quart app static path
+# i.e. outside of '/path/to/ayase_quart/src/static'
+serve_outside_static = false # true, false
+media_root_paths = ['/'] # the full path(s) to the root media directory(ies) on your server e.g. ['/home/aq'] where there exists paths like '/home/aq/<board_shortname>/image'
+valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
+endpoint = '/serve/abc/' # serves content from filesystem at endpoint /serve/abc/<board_shortname>/image
+# if you use this, the following must be done:
+# image_uri = "/<endpoint>/{board_shortname}/image" # must contain {board_shortname}
+# thumb_uri = "/<endpoint>/{board_shortname}/thumb" # must contain {board_shortname}
+# e.g.
+# image_uri = "/serve/abc/{board_shortname}/image" # must contain {board_shortname}
+# thumb_uri = "/serve/abc/{board_shortname}/thumb" # must contain {board_shortname}
+# and comment out the other image_uri, thumb_uri configs.
+
 
 [search]
 enabled = true
