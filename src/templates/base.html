@@ -23,7 +23,13 @@
     <body>
         <script type="text/javascript" src="/static/js/index.js"></script>
 
-        {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_search.v_search', 'bp_search.v_index_search'] %}
+        {% if request.endpoint in [
+            'bp_app.v_thread',
+            'bp_app.v_board_index',
+            'bp_app.v_board_index_page',
+            'bp_search.v_search',
+            'bp_search.v_index_search',
+        ] %}
             <script type="text/javascript" src="/static/js/thread.js"></script>
         {% endif %}
 

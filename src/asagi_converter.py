@@ -9,7 +9,6 @@ from itertools import batched
 from textwrap import dedent
 
 from db import db_q
-from db.base_db import BasePlaceHolderGen
 from posts.capcodes import Capcode
 from posts.quotelinks import (
     get_quotelink_lookup,
@@ -159,18 +158,20 @@ def validate_and_generate_params(form_data: dict):
     return where_fragment, params
 
 
+def get_offset(page_num: int, page_size: int) -> str:
+    return f'offset {page_num * page_size}' if page_num > 0 and page_size > 0 else ''
+
+
 async def search_posts(form_data: dict) -> tuple[list[dict], int]:
     """Returns posts that not been restored with `restore_comment()`."""
 
     boards = form_data['boards']
     result_limit = form_data['result_limit']
     order_by = form_data['order_by']
-    cur_page = form_data['page']
+    page_num = form_data['page']
 
     where_filters, params = validate_and_generate_params(form_data)
     where_query = f'where {where_filters}' if where_filters else ''
-
-    offset = f'offset {cur_page}' if cur_page > 1 else ''
 
     board_posts = await asyncio.gather(*(
         db_q.query_dict(f"""
@@ -179,7 +180,7 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
             {where_query}
             order by ts_unix {order_by}
             limit {result_limit}
-            {offset}
+            {get_offset(page_num - 1, result_limit)}
             """, params=params
         ) for board in boards)
     )
@@ -207,13 +208,11 @@ async def search_posts_get_thread_nums(form_data: dict) -> dict:
 
     boards = form_data['boards']
     result_limit = form_data['result_limit']
-    cur_page = form_data['page']
+    page_num = form_data['page']
     form_d = {'is_op': 1, 'title': form_data['op_title'], 'comment': form_data['op_comment']}
 
     where_filters, params = validate_and_generate_params(form_d)
     where_query = f'where {where_filters}' if where_filters else ''
-
-    offset = f'offset {cur_page}' if cur_page > 1 else ''
 
     board_posts = await asyncio.gather(*(
         db_q.query_dict(f"""
@@ -221,7 +220,7 @@ async def search_posts_get_thread_nums(form_data: dict) -> dict:
             from {board}
             {where_query}
             limit {result_limit}
-            {offset}
+            {get_offset(page_num - 1, result_limit)}
             """, params=params
         ) for board in boards)
     )
@@ -371,24 +370,23 @@ async def generate_index(board: str, page_num: int=1):
         # - omitted_posts: int (to be implemented)
         # - omitted_images: int (to be implemented)
     """
-    page_num -= 1  # start from 0 offset when running queries
+    index_post_count = 10
 
     threads_q = f'''
         select
             thread_num,
             nreplies,
-            nimages,
-            time_bump
+            nimages
         from {board}_threads
-        order by time_bump desc
-        limit 10
-        offset ∆
+        order by time_op desc
+        limit {index_post_count}
+        {get_offset(page_num - 1, index_post_count)}
     '''
-    if not (threads := await db_q.query_dict(threads_q, params=(page_num,))):
-        return {'threads': []}
+    if not (threads := await db_q.query_dict(threads_q)):
+        return {'threads': []}, {}
 
     thread_phs = db_q.phg.size(threads)
-    
+
     op_query = f'''
     {get_selector(board)}
     from {board}
@@ -396,7 +394,7 @@ async def generate_index(board: str, page_num: int=1):
         op = 1
         and thread_num in ({thread_phs})
     '''
-    
+
     replies_query = f'''
     with latest_replies as (
         select
@@ -427,7 +425,7 @@ async def generate_index(board: str, page_num: int=1):
 
     for reply in replies:
         _, reply['comment'] = restore_comment(reply['op_num'], reply['comment'], board)
-    
+
     thread_posts = defaultdict(list)
     for op in ops:
         op_num = op['num']
@@ -445,9 +443,9 @@ async def generate_index(board: str, page_num: int=1):
     }
     return threads, ql_lookup
 
+
 async def generate_catalog(board: str, page_num: int=1):
     """Generates the catalog structure"""
-    page_num = max(page_num - 1, 0)  # start page number at 1
     catalog_post_count = 150
 
     threads_q = f'''
@@ -457,10 +455,10 @@ async def generate_catalog(board: str, page_num: int=1):
             nimages
         from {board}_threads
         order by time_op desc
-        limit 150
-        offset ∆
+        limit {catalog_post_count}
+        {get_offset(page_num - 1, catalog_post_count)}
     '''
-    if not (rows := await db_q.query_tuple(threads_q, (page_num * catalog_post_count,))):
+    if not (rows := await db_q.query_tuple(threads_q)):
         return []
 
     threads = {row[0]: row[1:] for row in rows}
@@ -507,8 +505,7 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
     thread_query = f'''
         select
             nreplies,
-            nimages,
-            time_bump
+            nimages
         from {board}_threads
         where thread_num = ∆
     ;'''
