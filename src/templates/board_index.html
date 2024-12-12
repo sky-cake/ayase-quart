@@ -2,22 +2,7 @@
 {% block body %}
     <div id="main">
         <div class="board">
-            {% for i in threads %}
-
-                {% set thread = i['posts'] %}
-
-                {% set post = thread[0] %}
-
-                {% include 'post.html' %}
-
-                {% for post in thread[1:] %}
-                    {% include 'post.html' %}
-                {% endfor %}
-
-                <hr>
-            {% endfor %}
+			{{ threads|safe }}
         </div>
-
         {% include 'pagination.html' %}
-
 {% endblock %}
