@@ -9,7 +9,8 @@ bp = Blueprint("bp_media", __name__)
 
 @bp.route(f'/{media_conf['endpoint']}/<path:file_path>')
 async def serve(file_path: str):
-    file_path = os.path.abspath(safe_join('/', file_path))
+    file_path = safe_join(media_conf['media_root_path'], file_path)
+    print(file_path)
 
     if not file_path:
         abort(404)
@@ -17,7 +18,7 @@ async def serve(file_path: str):
     if not file_path.split('.')[-1].lower().endswith(media_conf['valid_extensions']):
         abort(404)
 
-    if not file_path.startswith(media_conf['media_root_paths']):
+    if not file_path.startswith(media_conf['media_root_path']):
         abort(404)
 
     if not os.path.isfile(file_path):

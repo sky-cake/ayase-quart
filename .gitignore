@@ -9,6 +9,7 @@ build/
 sdist/
 target/
 *.log
+secret.txt
 
 # Virtualenvs
 .env
@@ -18,9 +19,7 @@ venv/
 env.bak/
 venv.bak/
 
-# images and search
-neo/
-hayden_asagi/
+# full text search
 data/
 
 # sqlite databases

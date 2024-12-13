@@ -23,9 +23,8 @@ redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 
 if media_conf and media_conf.get('serve_outside_static'):
-    if not all(os.path.isdir(p) for p in media_conf.get('media_root_paths')):
-        raise ValueError(media_conf.get('media_root_paths'))
-    media_conf['media_root_paths'] = tuple(media_conf.get('media_root_paths'))
+    if not os.path.isdir(media_conf.get('media_root_path')):
+        raise ValueError(media_conf.get('media_root_path'))
 
     if not all(e for e in media_conf.get('valid_extensions')):
         raise ValueError(media_conf.get('valid_extensions'))
