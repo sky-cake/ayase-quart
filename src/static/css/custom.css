@@ -435,3 +435,7 @@ img {
     font-size: 18px;
     font-weight: bold;
 }
+
+.op_label {
+    color: #4da57c;
+}

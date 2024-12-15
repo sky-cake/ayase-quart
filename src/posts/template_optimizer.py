@@ -374,9 +374,9 @@ def generate_report_modal():
 report_modal_t = generate_report_modal()
 
 
-op_color = '<strong style="color: #4da57c;">OP</strong>'
+op_label = '<strong class="op_label">OP</strong>'
 def render_wrapped_post_t(wpt: dict): # wrapped_post_t
-    is_op = wpt['op_num']
+    is_op = wpt['op']
     num = wpt['num']
     ts_unix = wpt['ts_unix']
     return f"""
@@ -388,7 +388,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
     { wpt['t_media'] if is_op else '' }
     <div class="postInfo desktop" id="pi{num}">
         <b>/{wpt['board_shortname']}/</b>
-        { op_color if is_op else '' }
+        { op_label if is_op else '' }
         { wpt['t_filedeleted'] }
         { wpt['t_sub'] }
         <span class="nameBlock { wpt['t_cc_class'] }">

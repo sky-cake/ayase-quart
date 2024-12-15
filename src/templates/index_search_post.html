@@ -35,7 +35,7 @@
         <div class="postInfo desktop" id="pi{{post.num}}">
             <b>/{{post.board_shortname}}/</b>
             {% if post.op_num == 0 %}
-                <strong style="color: #4da57c;">OP</strong>
+                <strong class="op_label">OP</strong>
             {% endif %}
             {% if post.deleted and not post.ts_expired %}
                 <strong class="warning" title="This post was prematurely deleted.">[Deleted]</strong>
