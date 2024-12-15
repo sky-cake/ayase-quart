@@ -34,11 +34,13 @@ def get_term_re(terms: str):
     if not terms:
         return None
 
-    tokens = [re.escape(t) for t in terms.split()]
-    if len(tokens) > 1:
-        return re.compile(f"({'|'.join(tokens)})", re.IGNORECASE)
+    # tokens = [re.escape(t) for t in terms.split()]
+    # if len(tokens) > 1:
+    #     return re.compile(f"({'|'.join(tokens)})", re.IGNORECASE)
 
-    return re.compile(f"({tokens[0]})", re.IGNORECASE)
+    # return re.compile(f"({tokens[0]})", re.IGNORECASE)
+    return re.compile(f"({re.escape(terms)})", re.IGNORECASE)
+
 
 # used for non-index search
 def highlight_search_results(form, posts: list[dict]):

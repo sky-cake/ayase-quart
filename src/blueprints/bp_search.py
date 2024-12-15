@@ -33,6 +33,7 @@ from templates import (
     template_index_search_post_t
 )
 from utils import Perf
+import html
 
 search_log = getLogger('search')
 
@@ -145,8 +146,8 @@ async def search_handler(search_type: SearchType) -> str:
         p.check('search done')
 
         if not gallery_mode:
-            hl_re_comment = get_term_re(form.comment.data) if HIGHLIGHT_ENABLED and form.comment.data else None
-            hl_re_title = get_term_re(form.title.data) if HIGHLIGHT_ENABLED and form.title.data else None
+            hl_re_comment = get_term_re(html.escape(form.comment.data)) if HIGHLIGHT_ENABLED and form.comment.data else None
+            hl_re_title = get_term_re(html.escape(form.title.data)) if HIGHLIGHT_ENABLED and form.title.data else None
 
             for post in posts:
                 _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
