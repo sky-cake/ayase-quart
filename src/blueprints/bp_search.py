@@ -169,7 +169,7 @@ async def search_handler(search_type: SearchType) -> str:
         p.check('templated posts')
 
         endpoint_path = '/index_search' if search_type == SearchType.idx else '/search'
-        pages = total_pages(total_hits, form_data['result_limit'])
+        pages = total_pages(total_hits, form_data['hits_per_page'])
         page_links = template_pagination_links(endpoint_path, form_data, pages)
 
         p.check('templated links')

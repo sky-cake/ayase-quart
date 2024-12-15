@@ -43,28 +43,16 @@ def get_term_re(terms: str):
 
 
 # used for non-index search
-def highlight_search_results(form, posts: list[dict]):
-    """`posts = {'posts': [{...}, {...}, ...]}`"""
+def highlight_search_results(text: str, search_term: str, post_type: str) -> str:
+    escaped_field = escape(search_term)
 
-    field_names = []
-    if form.comment.data:
-        field_names.append('comment')
-    if form.title.data:
-        field_names.append('title')
+    indices = [m.start() for m in re.finditer(escaped_field.lower(), text.lower())]
 
-    for i, post in enumerate(posts['posts']):
+    for j in indices[::-1]:
+        original_str = text[j : j + len(escaped_field)]
 
-        for field_name in field_names:
+        highlight_str = f'<span class="{'hl_magenta' if post_type == 'comment' else 'hl_cyan'}">{original_str}</span>'
 
-            escaped_field = escape(form[field_name].data)
+        text = text[:j] + highlight_str + text[j + len(escaped_field) :]
 
-            indices = [m.start() for m in re.finditer(escaped_field.lower(), post[field_name].lower())]
-
-            for j in indices[::-1]:
-                original_str = post[field_name][j : j + len(escaped_field)]
-
-                highlight_str = f'<span class="search_highlight_{field_name}">{original_str}</span>'
-
-                posts['posts'][i][field_name] = post[field_name][:j] + highlight_str + post[field_name][j + len(escaped_field) :]
-
-    return posts
+    return text

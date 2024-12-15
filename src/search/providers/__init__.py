@@ -4,9 +4,9 @@ from configs import search_conf
 from enums import IndexSearchType
 
 from ..query import SearchQuery  # re-export
+from search import MAX_HITS
 
 POST_PK = 'pk'
-MAX_RESULTS_LIMIT = search_conf.get('max_result_limit', 10000)
 
 @dataclass(slots=True)
 class SearchIndexField:

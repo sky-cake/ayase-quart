@@ -4,7 +4,7 @@ from typing import Any
 from orjson import dumps, loads
 
 from . import (
-    MAX_RESULTS_LIMIT,
+    MAX_HITS,
     POST_PK,
     SearchIndexField,
     SearchQuery,
@@ -95,10 +95,10 @@ class QuickwitSearch(BaseSearch):
     async def _search_index(self, index: str, q: SearchQuery):
         url = self._get_index_url2(index) + '/search'
         params = {
-            'max_hits': q.result_limit,
+            'max_hits': MAX_HITS,
             'sort_by': ('-' if q.sort == 'asc' else '+') + 'timestamp',
             'format': 'json',
-            'start_offset': 0 if q.page <= 1 else q.page * q.result_limit,
+            'start_offset': 0 if q.page <= 1 else q.page * q.hits_per_page,
             'query': get_qw_query(q),
         }
         print(get_qw_query(q))

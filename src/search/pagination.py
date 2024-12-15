@@ -14,7 +14,7 @@ def total_pages(total: int, per_page: int) -> int:
     if there are 11 results
         2 pages
     """
-    # -(-total // q.result_limit) # https://stackoverflow.com/a/35125872
+    # -(-total // q.hits_per_page) # https://stackoverflow.com/a/35125872
     if not total:
         return 0
     d, m = divmod(total, per_page)

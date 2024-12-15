@@ -2,7 +2,7 @@ from orjson import dumps, loads
 
 from search.highlighting import mark_post, mark_pre
 
-from . import MAX_RESULTS_LIMIT, POST_PK, SearchQuery, search_index_fields
+from . import MAX_HITS, POST_PK, SearchQuery, search_index_fields
 from .baseprovider import INDEXES, BaseSearch
 
 pk = POST_PK
@@ -93,7 +93,7 @@ class MeiliSearch(BaseSearch):
             searchCutoffMs=20_000,  # time before search gives up
             typoTolerance=dict(enabled=False),  # disable typo
             pagination=dict(
-                maxTotalHits=MAX_RESULTS_LIMIT,
+                maxTotalHits=MAX_HITS,
             ),
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))
@@ -115,7 +115,7 @@ class MeiliSearch(BaseSearch):
             # 'attributesToCrop': ["data:1"],
             'filter': filters,
             'sort': [f'timestamp:{q.sort}'],
-            'hitsPerPage': q.result_limit,
+            'hitsPerPage': q.hits_per_page,
             'page': q.page,
         }
 

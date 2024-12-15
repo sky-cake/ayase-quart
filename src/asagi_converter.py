@@ -163,7 +163,7 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
     """Returns posts that not been restored with `restore_comment()`."""
 
     boards = form_data['boards']
-    result_limit = form_data['result_limit']
+    hits_per_page = form_data['hits_per_page']
     order_by = form_data['order_by']
     page_num = form_data['page']
 
@@ -176,8 +176,8 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
             from {board}
             {where_query}
             order by ts_unix {order_by}
-            limit {result_limit}
-            {get_offset(page_num - 1, result_limit)}
+            limit {hits_per_page}
+            {get_offset(page_num - 1, hits_per_page)}
             """, params=params
         ) for board in boards)
     )
@@ -204,7 +204,7 @@ async def search_posts_get_thread_nums(form_data: dict) -> dict:
     """
 
     boards = form_data['boards']
-    result_limit = form_data['result_limit']
+    hits_per_page = form_data['hits_per_page']
     page_num = form_data['page']
     form_d = {'is_op': 1, 'title': form_data['op_title'], 'comment': form_data['op_comment']}
 
@@ -216,8 +216,8 @@ async def search_posts_get_thread_nums(form_data: dict) -> dict:
             {f"select '{board}' as board_shortname, num as thread_num"}
             from {board}
             {where_query}
-            limit {result_limit}
-            {get_offset(page_num - 1, result_limit)}
+            limit {hits_per_page}
+            {get_offset(page_num - 1, hits_per_page)}
             """, params=params
         ) for board in boards)
     )
@@ -301,7 +301,7 @@ def substitute_square_brackets(text):
     return text
 
 
-def restore_comment(op_num: int, comment: str, board_shortname: str):
+def restore_comment(op_num: int, comment: str, board_shortname: str, highlight: str=None):
     """
     Re-convert asagi stripped comment into clean html.
     Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.

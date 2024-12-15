@@ -4,7 +4,7 @@ import aiomysql
 from orjson import loads
 
 from . import (
-    MAX_RESULTS_LIMIT,
+    MAX_HITS,
     POST_PK,
     SearchIndexField,
     SearchQuery,
@@ -107,9 +107,9 @@ class ManticoreSearch(BaseSearch):
         page_q = []
         if q.sort_by:
             page_q.append(f'order_by {q.sort_by} {q.sort}')
-        page_q.append(f'limit {q.result_limit}')
+        page_q.append(f'limit {q.hits_per_page}')
         if q.page > 1:
-            page_q.append(f'offset {q.result_limit * q.page}')
+            page_q.append(f'offset {q.hits_per_page * q.page}')
         return f"{' and '.join(where_q)} {' '.join(page_q)}"
 
 

@@ -5,7 +5,7 @@ from typing import Optional
 from posts.capcodes import Capcode, capcode_2_id
 from utils.validation import clamp_positive_int
 
-from . import DEFAULT_RESULTS_LIMIT, MAX_RESULTS_LIMIT
+from . import HITS_PER_PAGE, MAX_HITS
 from .post_metadata import board_2_int
 
 
@@ -29,7 +29,7 @@ class SearchQuery:
     deleted: Optional[bool] = None
     op: Optional[bool] = None
     sticky: Optional[bool] = None
-    result_limit: int = DEFAULT_RESULTS_LIMIT
+    hits_per_page: int = HITS_PER_PAGE
     page: Optional[int] = 1
     sort: str = 'asc'
     sort_by: Optional[str] = 'timestamp'
@@ -51,8 +51,8 @@ def get_search_query(params: dict) -> SearchQuery:
 
     if params['num']:
         q.num = int(params['num'])
-    if params['result_limit']:
-        q.result_limit = clamp_positive_int(params['result_limit'], 1, MAX_RESULTS_LIMIT)
+    if params['hits_per_page']:
+        q.hits_per_page = clamp_positive_int(params['hits_per_page'], 1, MAX_HITS)
     if params['media_filename']:
         q.media_file = params['media_filename']
     if params['media_hash']:

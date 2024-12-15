@@ -62,8 +62,8 @@ endpoint = '/srv/' # serves content from filesystem at endpoint /srv/<board_shor
 [search]
 enabled = true
 highlight = true
-default_result_limit = 100
-max_result_limit = 10000
+hits_per_page = 100
+max_hits = 10000
 provider = 'lnx' # lnx, meili, manticore, typesense, quickwit
 host = 'http://localhost:8000'
 

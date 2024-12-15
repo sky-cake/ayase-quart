@@ -30,7 +30,7 @@ from boards import board_shortnames
 from enums import PostStatus, ReportCategory, ReportStatus, UserRole
 from moderation.user import is_user_valid
 from posts.capcodes import Capcode
-from search import DEFAULT_RESULTS_LIMIT
+from search import HITS_PER_PAGE
 from utils.validation import clamp_positive_int, validate_board
 
 LENGTH_MD5_HASH = 32
@@ -56,7 +56,7 @@ class SearchForm(StripForm):
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=board_shortnames)
-    result_limit = IntegerField('Result Limit', default=DEFAULT_RESULTS_LIMIT, validators=[NumberRange(1, DEFAULT_RESULTS_LIMIT)], description='Per board')
+    hits_per_page = IntegerField('Hits per page', default=HITS_PER_PAGE, validators=[NumberRange(1, HITS_PER_PAGE)], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     op_title = StringField("OP Subject", validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')

@@ -142,8 +142,8 @@ class LnxSearch(BaseSearch):
         url = self._get_index_url(index) + '/search'
         payload = {
             'query': self._query_builder(q),
-            'limit': q.result_limit,
-            'offset': 0 if q.page == 1 else (q.page - 1) * q.result_limit,
+            'limit': q.hits_per_page,
+            'offset': 0 if q.page == 1 else (q.page - 1) * q.hits_per_page,
             'order_by': q.sort_by,
             'sort': q.sort,
         }
