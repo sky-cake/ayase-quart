@@ -12,7 +12,7 @@ from db import db_q
 from posts.capcodes import Capcode
 from posts.comments import html_comment
 from posts.quotelinks import get_quotelink_lookup, get_quotelink_lookup_raw
-from search.highlighting import html_highlight
+from search.highlighting import highlight_search_results
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -301,7 +301,7 @@ def substitute_square_brackets(text):
     return text
 
 
-def restore_comment(op_num: int, comment: str, board_shortname: str, highlight: str=None):
+def restore_comment(op_num: int, comment: str, board_shortname: str, hl_search_term: str=None):
     """
     Re-convert asagi stripped comment into clean html.
     Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
@@ -325,15 +325,16 @@ def restore_comment(op_num: int, comment: str, board_shortname: str, highlight: 
     if comment is None:
         return [], ''
 
-    lines = html_highlight(html.escape(comment)).split("\n")
+    lines = html.escape(comment).split("\n")
+    hl_search_term = html.escape(hl_search_term) if hl_search_term else None
     for i, line in enumerate(lines):
         # >green text
         if GT == line[:4] and GT != line[4:8]:
-            lines[i] = f"""<span class="quote">{line}</span>"""
+            lines[i] = f"""<span class="quote">{highlight_search_results(line, hl_search_term)}</span>"""
             continue
 
         # >>123456789
-        elif line.startswith(GTGT):
+        elif GTGT in line:
             tokens = line.split(" ")
 
             for j, token in enumerate(tokens):
@@ -342,6 +343,9 @@ def restore_comment(op_num: int, comment: str, board_shortname: str, highlight: 
                     tokens[j] = f"""<a href="/{board_shortname}/thread/{op_num}#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
 
             lines[i] = " ".join(tokens)
+
+        else:
+            lines[i] = highlight_search_results(line, hl_search_term) # will not highlight matches if line has a quotelink for performance
 
     lines = "</br>".join(lines)
     lines = substitute_square_brackets(lines)

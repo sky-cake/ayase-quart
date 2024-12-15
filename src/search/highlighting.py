@@ -43,16 +43,19 @@ def get_term_re(terms: str):
 
 
 # used for non-index search
-def highlight_search_results(text: str, search_term: str, post_type: str) -> str:
-    escaped_field = escape(search_term)
+def highlight_search_results(text: str, search_term: str, is_comment: bool = True) -> str:
+    if not search_term:
+        return text
 
-    indices = [m.start() for m in re.finditer(escaped_field.lower(), text.lower())]
+    search_term = re.escape(search_term)
 
-    for j in indices[::-1]:
-        original_str = text[j : j + len(escaped_field)]
+    color = 'hl_magenta' if is_comment else 'hl_cyan'
 
-        highlight_str = f'<span class="{'hl_magenta' if post_type == 'comment' else 'hl_cyan'}">{original_str}</span>'
+    matches = list(re.finditer(search_term, text, re.IGNORECASE))
 
-        text = text[:j] + highlight_str + text[j + len(escaped_field) :]
+    for m in reversed(matches):
+        original = m.group(0)
+        highlight = f'<span class="{color}">{original}</span>'
+        text = text[:m.start()] + highlight + text[m.end():]
 
     return text

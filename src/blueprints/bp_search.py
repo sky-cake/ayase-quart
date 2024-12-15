@@ -5,7 +5,6 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from asagi_converter import (
-    html_highlight,
     restore_comment,
     search_posts,
     search_posts_get_thread_nums
@@ -21,7 +20,7 @@ from posts.template_optimizer import (
 )
 from render import render_controller
 from search import HIGHLIGHT_ENABLED, SEARCH_ENABLED
-from search.highlighting import get_term_re, mark_highlight
+from search.highlighting import highlight_search_results
 from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
@@ -146,17 +145,12 @@ async def search_handler(search_type: SearchType) -> str:
         p.check('search done')
 
         if not gallery_mode:
-            hl_re_comment = get_term_re(html.escape(form.comment.data)) if HIGHLIGHT_ENABLED and form.comment.data else None
-            hl_re_title = get_term_re(html.escape(form.title.data)) if HIGHLIGHT_ENABLED and form.title.data else None
-
             for post in posts:
-                _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'])
+                hl_search_term_comment = form.comment.data if HIGHLIGHT_ENABLED and form.comment.data else None
+                hl_search_term_title = form.title.data if HIGHLIGHT_ENABLED and form.title.data else None
 
-                if post['comment'] and hl_re_comment:
-                    post['comment'] = html_highlight(mark_highlight(hl_re_comment, post['comment']))
-
-                if post['title'] and hl_re_title:
-                    post['title'] = html_highlight(mark_highlight(hl_re_title, post['title']), magenta=False)
+                _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'], hl_search_term=hl_search_term_comment)
+                post['title'] = highlight_search_results(post['title'], hl_search_term_title, is_comment=False)
 
                 posts_t.append(wrap_post_t(post))
 
