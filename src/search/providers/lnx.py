@@ -258,7 +258,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'mustnot' if q.has_file or (q.has_no_file == False) else 'must',
                     'normal': {
-                        'ctx': f'media_filename:None',
+                        'ctx': 'media_filename:None',
                         # 'ctx': f'{"" if q.has_file else "-"}(media_filename:None)',
                     },
                 }

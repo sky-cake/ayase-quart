@@ -35,7 +35,7 @@ class TypesenseSearch(BaseSearch):
 
     async def _index_clear(self, index: str):
         url = self._get_index_url(index) + '/documents'
-        resp = await self.client.delete(url, params={'filter_by': f'num > 0'})
+        resp = await self.client.delete(url, params={'filter_by': 'num > 0'})
         return loads(await resp.read())
 
     async def _index_delete(self, index: str):

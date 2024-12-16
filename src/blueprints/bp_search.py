@@ -32,7 +32,6 @@ from templates import (
     template_index_search_post_t
 )
 from utils import Perf
-import html
 
 search_log = getLogger('search')
 

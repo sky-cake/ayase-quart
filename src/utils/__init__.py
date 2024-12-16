@@ -2,6 +2,11 @@ import os
 from time import perf_counter
 
 
+def printr(msg):
+    print('\r\033[K', end='') # ANSI escape sequence to clear entire line
+    print(f'\r{msg}', end='', flush=True)
+
+
 def read_file(path: str) -> str:
     with open(path) as f:
         return f.read()
@@ -9,7 +14,10 @@ def read_file(path: str) -> str:
 
 def make_src_path(*file_path):
     """Make a file path starting from src/."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', *file_path))
+    if file_path:
+        return os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), *file_path))
+
+    return os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 
 class Perf:

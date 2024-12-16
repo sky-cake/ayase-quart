@@ -3,7 +3,7 @@ from typing import Optional
 
 from configs import mod_conf
 from db import db_m
-from enums import DbPool, PostStatus, ReportCategory, ReportStatus
+from enums import DbPool, PostStatus, ReportCategory
 
 
 async def get_all_reports() -> Optional[list[dict]]:

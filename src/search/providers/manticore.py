@@ -4,7 +4,6 @@ import aiomysql
 from orjson import loads
 
 from . import (
-    MAX_HITS,
     POST_PK,
     SearchIndexField,
     SearchQuery,

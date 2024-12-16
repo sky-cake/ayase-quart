@@ -1,5 +1,4 @@
 import re
-from html import escape
 
 # should not be change when html escaped
 mark_pre = '||sr_hl_cls_start||'

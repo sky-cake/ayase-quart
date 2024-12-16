@@ -1,4 +1,4 @@
-import quart_flask_patch  # isort: skip
+import quart_flask_patch  # isort: skip  # noqa: F401
 
 import asyncio
 import os

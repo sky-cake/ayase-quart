@@ -10,7 +10,7 @@ from . import (
     SearchQuery,
     search_index_fields
 )
-from .baseprovider import BaseSearch, get_doc_pks
+from .baseprovider import BaseSearch
 
 pk = POST_PK
 
@@ -137,9 +137,9 @@ def get_qw_query(q: SearchQuery):
         qb.append(f'op:{str(q.op).lower()}')
     if q.has_file is not None or q.has_no_file is not None:
         if q.has_file or (not q.has_no_file):
-            qb.append(f'(media_hash:* OR media_file:*)')
+            qb.append('(media_hash:* OR media_file:*)')
         else:
-            qb.append(f'-(media_hash:* AND media_file:*)')
+            qb.append('-(media_hash:* AND media_file:*)')
     return ' AND '.join(qb)
 
 def _get_field_type(field: SearchIndexField):

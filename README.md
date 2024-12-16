@@ -90,6 +90,10 @@ If you want to take debug/dev mode to the next level, you can run the following 
 
 `while true; do hypercorn -w 1 --reload -b 127.0.0.1:9001 'main:app'; done`
 
+Some lint checking.
+
+`flake8 --select F401,F403,F405,E1101,E122,C901,F401,B950 ./src`
+
 ## Production
 
 Here is what a systemctl service unit could look like for Ayase Quart.
