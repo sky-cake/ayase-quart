@@ -550,3 +550,15 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
 
     post_2_quotelinks, posts = get_qls_and_posts(posts)
     return post_2_quotelinks, posts[0]
+
+
+async def get_deleted_ops_by_board(board: str) -> set:
+    """Returns op post nums marked as deleted by 4chan jannies."""
+    sql = f"""select num from {board} where deleted = 1 and op = 1;"""
+    return [row[0] for row in (await db_q.query_tuple(sql))]
+
+
+async def get_deleted_non_ops_by_board(board: str) -> set:
+    """Returns non-op post nums marked as deleted by 4chan jannies."""
+    sql = f"""select num from {board} where deleted = 1 and op = 1;"""
+    return [row[0] for row in (await db_q.query_tuple(sql))]

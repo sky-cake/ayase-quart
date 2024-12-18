@@ -13,6 +13,7 @@ from boards import board_shortnames
 from configs import SITE_NAME
 from enums import SearchType
 from forms import SearchForm
+from moderation.mod import filter_reported_posts
 from posts.template_optimizer import (
     get_gallery_media_t,
     report_modal_t,
@@ -142,6 +143,9 @@ async def search_handler(search_type: SearchType) -> str:
             posts, total_hits = await get_posts_and_total_hits(search_type, form_data, p)
 
         p.check('search done')
+
+        posts = await filter_reported_posts(posts)
+        total_hits = len(posts) 
 
         if not gallery_mode:
             for post in posts:

@@ -2,10 +2,9 @@ from dataclasses import dataclass
 
 from configs import search_conf
 from enums import IndexSearchType
-
-from ..query import SearchQuery  # noqa: F401
 from search import MAX_HITS  # noqa: F401
 
+from ..query import SearchQuery  # noqa: F401
 
 POST_PK = 'pk'
 
