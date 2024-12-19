@@ -304,7 +304,7 @@ def substitute_square_brackets(text):
 def restore_comment(op_num: int, comment: str, board_shortname: str, hl_search_term: str=None):
     """
     Re-convert asagi stripped comment into clean html.
-    Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
+    Also create a dictionary with keys containing the num, which maps to a tuple containing the posts it links to.
 
     Returns a string (the processed comment) and a list of quotelinks in
     the post.
@@ -314,7 +314,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str, hl_search_t
 
     >> (show OP)
     >>>/g/ (board redirect)
-    >>>/g/<post_num> (board post redirect)
+    >>>/g/<num> (board post redirect)
     """
 
     quotelinks = []
@@ -553,12 +553,18 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
 
 
 async def get_deleted_ops_by_board(board: str) -> set:
-    """Returns op post nums marked as deleted by 4chan jannies."""
+    """Returns op post nums marked as deleted by 4chan staff."""
     sql = f"""select num from {board} where deleted = 1 and op = 1;"""
     return [row[0] for row in (await db_q.query_tuple(sql))]
 
 
 async def get_deleted_non_ops_by_board(board: str) -> set:
-    """Returns non-op post nums marked as deleted by 4chan jannies."""
-    sql = f"""select num from {board} where deleted = 1 and op = 1;"""
+    """Returns non-op post nums marked as deleted by 4chan staff."""
+    sql = f"""select num from {board} where deleted = 1 and op = 0;"""
+    return [row[0] for row in (await db_q.query_tuple(sql))]
+
+
+async def get_deleted_nums_by_board(board: str) -> set:
+    """Returns all nums marked as deleted by 4chan staff."""
+    sql = f"""select num from {board} where deleted = 1;"""
     return [row[0] for row in (await db_q.query_tuple(sql))]

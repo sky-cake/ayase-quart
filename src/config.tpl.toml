@@ -54,15 +54,20 @@ thumb_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/thumb" # 
 serve_outside_static = false # true, false
 media_root_path = '' # the full path to the root media directory on your server e.g. '/mnt/dl' where there exists paths like '/mnt/dl/<board_shortname>/image'
 valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
-endpoint = '/srv/' # serves content from filesystem at endpoint /srv/<board_shortname>/image
+endpoint = '/serve/abc/' # serves content from filesystem at endpoint /serve/abc/<board_shortname>/image
+# if you use this, the following must be done:
 # image_uri = "/<endpoint>/{board_shortname}/image" # must contain {board_shortname}
 # thumb_uri = "/<endpoint>/{board_shortname}/thumb" # must contain {board_shortname}
-# lastly, comment out the image_uri, thumb_uri configs from above
+# e.g.
+# image_uri = "/serve/abc/{board_shortname}/image" # must contain {board_shortname}
+# thumb_uri = "/serve/abc/{board_shortname}/thumb" # must contain {board_shortname}
+# and comment out the other image_uri, thumb_uri configs.
+
 
 [search]
 enabled = true
 highlight = true
-hits_per_page = 100
+hits_per_page = 500
 max_hits = 10000
 provider = 'lnx' # lnx, meili, manticore, typesense, quickwit
 host = 'http://localhost:8000'
@@ -75,8 +80,13 @@ headers = { content-type = 'application/json' }
 [search.lnx]
 
 [moderation]
+moderation = true # true, false
 admin_user = 'admin'
 admin_password = 'admin'
+default_reported_post_status = 'hidden' # visible, hidden, deleted
+hide_delete_posts = true # hide 4chan staff deleted posts in archive
+memcache = true # true, false
+memcache_type = 'sqlite' # sqlite, bloom
 
 [moderation.sqlite]
 database = 'moderation.db'

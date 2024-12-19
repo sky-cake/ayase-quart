@@ -24,19 +24,19 @@ async def get_report_by_board(board_shortname: str) -> Optional[list[dict]]:
     return reports
 
 
-async def get_report_by_post_num(board_shortname: str, post_num: int) -> Optional[list[dict]]:
-    if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE board_shortname=∆ and post_num=∆;', params=(board_shortname, post_num,), p_id=DbPool.mod)):
+async def get_report_by_post_num(board_shortname: str, num: int) -> Optional[list[dict]]:
+    if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE board_shortname=∆ and num=∆;', params=(board_shortname, num,), p_id=DbPool.mod)):
         return
     return reports
 
 
-async def create_report(board_shortname: str, post_num: int, submitter_ip: str,
+async def create_report(board_shortname: str, num: int, submitter_ip: str,
                         submitter_notes: str, report_category: str,
                         report_status: str, moderator_notes: str = None) -> None:
     now = datetime.now()
     params = (
         board_shortname,
-        post_num,
+        num,
         mod_conf['default_reported_post_status'],
         submitter_ip,
         submitter_notes,
@@ -48,7 +48,7 @@ async def create_report(board_shortname: str, post_num: int, submitter_ip: str,
     )
     sql_string = f"""
     INSERT INTO reports 
-    (board_shortname, post_num, post_status, submitter_ip, submitter_notes,
+    (board_shortname, num, post_status, submitter_ip, submitter_notes,
     report_category, report_status, moderator_notes, created_at, last_updated_at)
     VALUES ({db_m.phg.size(params)});
     """

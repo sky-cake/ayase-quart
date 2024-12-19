@@ -22,8 +22,8 @@ from .bp_auth import auth, authorization_required
 
 bp = Blueprint('bp_moderation', __name__)
 
-@bp.route('/report/<string:board_shortname>/<int:post_num>', methods=['POST'])
-async def report(board_shortname: str, post_num: int):
+@bp.route('/report/<string:board_shortname>/<int:num>', methods=['POST'])
+async def report(board_shortname: str, num: int):
     form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
 
     validate_board(board_shortname)
@@ -34,7 +34,7 @@ async def report(board_shortname: str, post_num: int):
 
         await create_report(
             board_shortname,
-            post_num,
+            num,
             request.remote_addr,
             submitter_notes,
             report_category,

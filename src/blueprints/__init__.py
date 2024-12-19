@@ -1,4 +1,4 @@
-from configs import media_conf
+from configs import media_conf, mod_conf
 
 from .bp_admin import bp as bp_admin
 from .bp_api import bp as bp_api
@@ -14,8 +14,10 @@ blueprints = [
     bp_app,
     bp_auth,
     bp_search,
-    bp_moderation,
 ]
+
+if mod_conf['moderation']:
+    blueprints += [bp_moderation]
 
 if media_conf.get('serve_outside_static'):
     blueprints += [bp_media]

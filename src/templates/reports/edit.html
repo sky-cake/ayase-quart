@@ -9,7 +9,7 @@
         {{ form.csrf_token() }}
         <p>Report Id:       {{report.id}}</p>
         <p>Board:           {{report.board_shortname}}</p>
-        <p>Post Num:        {{report.post_num}}</p>
+        <p>Post Num:        {{report.num}}</p>
         <p>Category:        {{ report.report_category }}</p>
         <p>Submitter Notes: {{ report.submitter_notes }}</p>
         <p><label for="{{ form.post_status.id }}">{{ form.post_status.label }}</label>{{ form.post_status() }}</p>

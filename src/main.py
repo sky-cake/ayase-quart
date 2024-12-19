@@ -7,9 +7,9 @@ from flask_bootstrap import Bootstrap5
 from quart import Quart
 
 from blueprints import blueprints
-from configs import QuartConfig, app_conf
+from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
-from moderation.mod import init_moderation_db
+from moderation.mod import init_moderation
 from templates import render_constants
 
 # from security.limiter import limiter
@@ -39,7 +39,8 @@ async def create_app():
     for bp in blueprints:
         app.register_blueprint(bp)
 
-    await init_moderation_db()
+    if mod_conf['moderation']:
+        await init_moderation()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
