@@ -1,5 +1,6 @@
 from quart import Blueprint, jsonify, redirect, request, url_for
 
+from asagi_converter import is_post_op
 from enums import AuthActions, ReportStatus
 from forms import ReportModForm, ReportUserForm
 from moderation.report import (
@@ -19,6 +20,8 @@ from templates import (
 from utils.validation import validate_board
 
 from .bp_auth import auth, authorization_required
+from moderation.filter_cache import fc
+
 
 bp = Blueprint('bp_moderation', __name__)
 
@@ -32,15 +35,19 @@ async def report(board_shortname: str, num: int):
         report_category = form.report_category.data
         submitter_notes = form.submitter_notes.data
 
+        op = await is_post_op(board_shortname, num)
         await create_report(
             board_shortname,
             num,
+            op,
             request.remote_addr,
             submitter_notes,
             report_category,
             ReportStatus.open,
             None,
         )
+        await fc.insert_post(board_shortname, num, op)
+
         return jsonify({'message': 'thank you'})
     return jsonify({'message': f'error: {form.data}: {form.errors}'})
 
@@ -125,7 +132,9 @@ async def reports_delete(report_id: int):
         return "Report not found", 404
 
     if request.method == 'POST':
-        await delete_report(report_id)
+        report = await delete_report(report_id)
+        if report:
+            await fc.delete_post(report['board_shortname'], report['num'], report['op'])
         return redirect(url_for('bp_moderation.reports_index'))
 
     return await render_controller(

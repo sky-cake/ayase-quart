@@ -14,6 +14,7 @@ from moderation.user import (
     get_all_users,
     get_user_by_id
 )
+from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
 from templates import (
     template_catalog,
@@ -80,9 +81,14 @@ async def stats():
 @admin_required
 async def latest():
     catalog = await get_latest_ops_as_catalog()
+    threads = ''.join(
+        render_catalog_card(wrap_post_t(op|dict(quotelinks={})))
+        for batch in catalog
+        for op in batch['threads']
+    )
     return await render_controller(
         template_catalog,
-        catalog=catalog,
+        threads=threads,
         title='Latest Threads',
         tab_title='Latest Threads',
         is_admin=True,

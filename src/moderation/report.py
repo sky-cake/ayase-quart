@@ -30,13 +30,14 @@ async def get_report_by_post_num(board_shortname: str, num: int) -> Optional[lis
     return reports
 
 
-async def create_report(board_shortname: str, num: int, submitter_ip: str,
+async def create_report(board_shortname: str, num: int, op: int, submitter_ip: str,
                         submitter_notes: str, report_category: str,
                         report_status: str, moderator_notes: str = None) -> None:
     now = datetime.now()
     params = (
         board_shortname,
         num,
+        op,
         mod_conf['default_reported_post_status'],
         submitter_ip,
         submitter_notes,
@@ -45,14 +46,16 @@ async def create_report(board_shortname: str, num: int, submitter_ip: str,
         moderator_notes,
         now,
         now,
+        0,
     )
     sql_string = f"""
     INSERT INTO reports 
-    (board_shortname, num, post_status, submitter_ip, submitter_notes,
-    report_category, report_status, moderator_notes, created_at, last_updated_at)
+    (board_shortname, num, op, post_status, submitter_ip, submitter_notes,
+    report_category, report_status, moderator_notes, created_at, last_updated_at, user_id)
     VALUES ({db_m.phg.size(params)});
     """
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
+
 
 
 async def edit_report(report_id: int, post_status: str, report_status: str, moderator_notes: str) -> None:
@@ -68,10 +71,11 @@ async def edit_report(report_id: int, post_status: str, report_status: str, mode
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
 
 
-async def delete_report(report_id: int) -> None:
+async def delete_report(report_id: int) -> dict:
     if not (report := await get_report_by_id(report_id)):
         return
     await db_m.query_dict('DELETE FROM reports WHERE report_id=∆;', params=(report_id,), commit=True, p_id=DbPool.mod)
+    return report
 
 
 async def get_reports_by_report_status(report_status: str) -> Optional[list[dict]]:

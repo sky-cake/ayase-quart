@@ -6,7 +6,7 @@ from asagi_converter import (
     generate_post,
     generate_thread
 )
-from moderation.mod import filter_reported_posts, is_post_removed
+from moderation.filter_cache import fc
 from render import render_controller
 from templates import template_post
 from utils import Perf
@@ -29,7 +29,7 @@ async def thread(board_shortname: str, thread_id: int):
 
     post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
 
-    thread_dict['posts'] = await filter_reported_posts(thread_dict['posts'])
+    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'])
 
     return thread_dict
 
@@ -40,7 +40,7 @@ async def board_index(board_shortname: str, page_num: int):
     validate_board(board_shortname)
 
     index = await generate_index(board_shortname, page_num, html=False)
-    index['threads'] = await filter_reported_posts(index['threads'])
+    index['threads'] = await fc.filter_reported_posts(index['threads'])
     return index
 
 
@@ -57,7 +57,7 @@ async def v_post(board_shortname: str, post_id: int):
     if not post:
         return jsonify()
 
-    is_removed = await is_post_removed(post)
+    is_removed = await fc.is_post_removed(post)
     p.check('is_post_removed')
     if is_removed:
         return jsonify()

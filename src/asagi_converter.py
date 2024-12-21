@@ -560,7 +560,7 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:
     """Returns op post nums marked as deleted by 4chan staff."""
-    sql = f"""select num from {board} where deleted = 1 and op = 1;"""
+    sql = f"""select num from {board} where deleted = 1 and op = 1"""
     return [row[0] for row in (await db_q.query_tuple(sql))]
 
 
@@ -574,3 +574,11 @@ async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
     """Returns all nums marked as deleted by 4chan staff in the format [(num, op), ...]"""
     sql = f"""select num, op from {board} where deleted = 1;"""
     return [(row[0], row[1]) for row in (await db_q.query_tuple(sql))]
+
+
+async def is_post_op(board_shortname: str, num: int) -> bool:
+    sql = f"""select num, op from {board_shortname} where num = {db_q.phg()}"""
+    rows = await db_q.query_tuple(sql, params=[num])
+    if not rows:
+        return False
+    return rows[0][1]
