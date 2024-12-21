@@ -85,8 +85,8 @@ admin_user = 'admin'
 admin_password = 'admin'
 default_reported_post_status = 'hidden' # visible, hidden, deleted
 hide_delete_posts = true # hide 4chan staff deleted posts in archive
-memcache = true # true, false
-memcache_type = 'sqlite' # sqlite, bloom
+filter_cache = true # true, false
+filter_cache_type = 'sqlite' # sqlite, bloom
 
 [moderation.sqlite]
 database = 'moderation.db'

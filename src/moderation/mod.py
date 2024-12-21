@@ -12,7 +12,7 @@ from moderation.user import create_user
 from utils import make_src_path, read_file
 
 
-class BaseMemcache(ABC):
+class BaseFilterCache(ABC):
     @classmethod
     async def init(cls):
         instance = cls()
@@ -45,11 +45,11 @@ class BaseMemcache(ABC):
         pass
 
 
-class MemcacheBloom(BaseMemcache):
+class FilterCacheBloom(BaseFilterCache):
     pass
 
 
-class MemcacheCuckoo(BaseMemcache):
+class FilterCacheCuckoo(BaseFilterCache):
     pass
 
 
@@ -66,7 +66,7 @@ async def get_deleted_nums_per_board_iter():
         yield (board, nums)
 
 
-class MemcacheSqlite(BaseMemcache):
+class FilterCacheSqlite(BaseFilterCache):
     """Considered idempotent"""
 
     async def create_cache(self):
@@ -161,14 +161,14 @@ async def init_moderation():
 
         await create_user(admin_username, admin_password, UserRole.admin, True, 'Remember to change your default password.')
 
-    if not mod_conf['memcache']:
+    if not mod_conf['filter_cache']:
         return
     
-    match mod_conf['memcache_type']:
+    match mod_conf['filter_cache_type']:
         case 'sqlite':
-            await MemcacheSqlite.init()
+            await FilterCacheSqlite.init()
         case _:
-            raise NotImplementedError(mod_conf['memcache_type'])
+            raise NotImplementedError(mod_conf['filter_cache_type'])
 
 
 async def filter_reported_posts(posts: list, remove_op_replies=False) -> list:
@@ -182,11 +182,11 @@ async def filter_reported_posts(posts: list, remove_op_replies=False) -> list:
     if not posts:
         return posts
 
-    match mod_conf['memcache_type']:
+    match mod_conf['filter_cache_type']:
         case 'sqlite':
-            board_to_numset = await MemcacheSqlite.get_board_to_numset(posts)
+            board_to_numset = await FilterCacheSqlite.get_board_to_numset(posts)
         case _:
-            raise NotImplementedError(mod_conf['memcache_type'])
+            raise NotImplementedError(mod_conf['filter_cache_type'])
 
     i = 0
     while i < len(posts):
