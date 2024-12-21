@@ -1,10 +1,10 @@
 import os
 import sys
-import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import subprocess
+import unittest
 
 import requests
 
@@ -13,7 +13,7 @@ from configs import app_conf
 from utils import make_src_path, printr
 
 
-class ExistingEndpoints(unittest.IsolatedAsyncioTestCase):
+class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         printr('Hypercorn, starting')
@@ -44,7 +44,14 @@ class ExistingEndpoints(unittest.IsolatedAsyncioTestCase):
 
         for endpoint in endpoints:
             url = f'http://127.0.0.1:{app_conf.get('port')}{endpoint}'
-            response = requests.get(url, timeout=5)
+            try:
+                response = requests.get(url)
+            except:
+                print('Maybe the local hypercorn server needs time to launch')
+                import time
+                time.sleep(2)
+                response = requests.get(url, timeout=5)
+
             self.assertEqual(response.status_code, 200, f'{response.status_code} {endpoint=}')
 
 

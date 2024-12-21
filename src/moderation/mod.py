@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
 
 from aiosqlite import Connection
 
@@ -127,7 +126,7 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     @staticmethod
-    async def get_board_to_numset(posts: list) -> dict:
+    async def get_board_num_pairs(posts: list) -> set[tuple[str, int]]:
         board_and_nums = [(p['board_shortname'], p['num']) for p in posts]
 
         ph = ','.join([f'({db_m.phg()},{db_m.phg()})'] * len(board_and_nums))
@@ -140,13 +139,16 @@ class FilterCacheSqlite(BaseFilterCache):
             where (board_shortname, num) in ({ph})
         """
         rows = await db_m.query_tuple(sql_string, expanded)
-        if not rows:
-            return {}
 
-        board_to_numset = defaultdict(set)
-        for row in rows:
-            board_to_numset[row[0]].add(row[1])
-        return board_to_numset
+        return {(row[0], row[1]) for row in rows}
+
+
+def _get_filter_cache() -> BaseFilterCache:
+    match mod_conf['filter_cache_type']:
+        case 'sqlite':
+            return FilterCacheSqlite
+        case _:
+            raise NotImplementedError(mod_conf['filter_cache_type'])
 
 
 async def init_moderation():
@@ -164,17 +166,11 @@ async def init_moderation():
     if not mod_conf['filter_cache']:
         return
     
-    match mod_conf['filter_cache_type']:
-        case 'sqlite':
-            await FilterCacheSqlite.init()
-        case _:
-            raise NotImplementedError(mod_conf['filter_cache_type'])
+    await f_cache.init()
 
 
 async def filter_reported_posts(posts: list, remove_op_replies=False) -> list:
     """If `remove_op_replies` is true, then replies to deleted OPs are removed."""
-
-    print(f'Init: {len(posts)=}')
 
     if not mod_conf['moderation']:
         return posts
@@ -182,31 +178,15 @@ async def filter_reported_posts(posts: list, remove_op_replies=False) -> list:
     if not posts:
         return posts
 
-    match mod_conf['filter_cache_type']:
-        case 'sqlite':
-            board_to_numset = await FilterCacheSqlite.get_board_to_numset(posts)
-        case _:
-            raise NotImplementedError(mod_conf['filter_cache_type'])
+    board_num_pairs = await f_cache.get_board_num_pairs(posts)
 
-    i = 0
-    while i < len(posts):
-        post = posts[i]
-
-        if post.board_shortname not in board_to_numset:
-            i+=1
-            continue
-
-        bad_nums = board_to_numset[post.board_shortname]
-
-        if post.num in bad_nums:
-            posts.pop(i)
-            continue
-
-        if remove_op_replies and post.thread_num in bad_nums:
-            posts.pop(i)
-            continue
-
-        i+=1
-
-    print(f'Final: {len(posts)=}')
+    posts = [
+        post
+        for post in posts
+        if not (remove_op_replies and (post.board_shortname, post.thread_num) in board_num_pairs)
+        and not ((post.board_shortname, post.num) in board_num_pairs)
+    ]
     return posts
+
+
+f_cache: BaseFilterCache = _get_filter_cache()
