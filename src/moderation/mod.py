@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from aiosqlite import Connection
 
-from asagi_converter import get_deleted_nums_by_board
+from asagi_converter import get_deleted_numops_by_board
 from boards import board_shortnames
 from configs import mod_conf
 from db import db_m
@@ -22,26 +22,39 @@ class BaseFilterCache(ABC):
         await instance.populate_cache()
 
     @abstractmethod
-    async def create_cache(self):
+    async def create_cache(self) -> None:
         """Create the db schema, filter in redis, whatever"""
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
-    async def is_cache_populated(self):
+    async def is_cache_populated(self) -> bool:
         """Check if the population routine must be ran"""
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
-    async def populate_cache(self):
-        pass
+    async def populate_cache(self) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
     async def teardown(self):
         """Remove all inserts"""
-        pass
+        raise NotImplementedError()
 
-    async def print_cache_counts(self, stage: str):
-        pass
+    async def print_cache_counts(self, stage: str) -> None:
+        raise NotImplementedError()
+    
+    @staticmethod
+    async def get_op_thread_removed_count(board_shortname: str) -> int:
+        # if moderation is not activated, return 0
+        raise NotImplementedError()
+    
+    @staticmethod
+    async def get_board_num_pairs() -> set[tuple[str, int]]:
+        raise NotImplementedError()
+    
+    @staticmethod
+    async def is_post_removed(board_shortname: str, num: int) -> bool:
+        raise NotImplementedError()
 
 
 class FilterCacheBloom(BaseFilterCache):
@@ -52,17 +65,21 @@ class FilterCacheCuckoo(BaseFilterCache):
     pass
 
 
-async def get_deleted_nums_per_board_iter():
+async def get_deleted_numops_per_board_iter():
+    """Returns a tuple[str, tuple[int, int]]
+    
+    `(board_shortname, [(num, op), ...])`
+    """
     if not mod_conf['hide_delete_posts']:
         return
-    
+
     if not board_shortnames:
         return
     
     for board in board_shortnames:
-        nums = await get_deleted_nums_by_board(board)
-        print(board, nums)
-        yield (board, nums)
+        numops = await get_deleted_numops_by_board(board)
+        print(board, numops)
+        yield (board, numops)
 
 
 class FilterCacheSqlite(BaseFilterCache):
@@ -90,25 +107,26 @@ class FilterCacheSqlite(BaseFilterCache):
 
         # marked as deleted by 4chan staff
         ph = db_m.phg()
-        async for board_and_nums in get_deleted_nums_per_board_iter():
-            if not board_and_nums[1]:
+        async for board_and_numops in get_deleted_numops_per_board_iter():
+            # board_and_numops -> (board_shortname, [(num, op), ...])
+            if not board_and_numops[1]:
                 continue
 
-            sql = f"""insert or ignore into board_nums_cache (board_shortname, num) values ('{board_and_nums[0]}', {ph})"""
-            await pool.executemany(sql, [(num,) for num in board_and_nums[1]])
+            sql = f"""insert or ignore into board_nums_cache (board_shortname, num, op) values ({ph}, {ph}, {ph})"""
+            await pool.executemany(sql, [(board_and_numops[0], numop[0], numop[1]) for numop in board_and_numops[1]])
             await pool.commit()
-            await self.print_cache_counts(board_and_nums[0])
+            await self.print_cache_counts(board_and_numops[0])
 
         await self.print_cache_counts('beginning archive staff inserts')
 
         # marked as deleted by archive staff
-        sql = 'select board_shortname, group_concat(distinct num) nums from reports group by board_shortname'
+        sql = 'select board_shortname, op, group_concat(distinct num) nums from reports group by board_shortname, op'
         rows = await db_m.query_tuple(sql, p_id=DbPool.mod)
-        for board_and_nums in rows:
-            sql = f"""insert or ignore into board_nums_cache (board_shortname, num) values ('{board_and_nums[0]}', {ph})"""
-            await pool.executemany(sql, [(num,) for num in board_and_nums[1]])
+        for board_op_nums in rows:
+            sql = f"""insert or ignore into board_nums_cache (board_shortname, op, num) values ({ph}, {ph}, {ph})"""
+            await pool.executemany(sql, [(board_op_nums[0], board_op_nums[1], num) for num in board_op_nums[2]])
             await pool.commit()
-            await self.print_cache_counts(board_and_nums[0])
+            await self.print_cache_counts(f'{board_op_nums[0]}, op = {board_op_nums[1]}')
 
         await self.print_cache_counts('done inserts')
 
@@ -123,6 +141,15 @@ class FilterCacheSqlite(BaseFilterCache):
     async def print_cache_counts(self, stage: str):
         count = (await db_m.query_tuple('select count(*) as bn_count from board_nums_cache', p_id=DbPool.mod))[0][0]
         print(f'Counts at {stage}: {count}')
+
+
+    @staticmethod
+    async def get_op_thread_removed_count(board_shortname: str) -> int:
+        if not mod_conf['moderation']:
+            return 0
+
+        rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.phg()} and op = 1', params=[board_shortname])
+        return rows[0][0]
 
 
     @staticmethod
@@ -141,6 +168,16 @@ class FilterCacheSqlite(BaseFilterCache):
         rows = await db_m.query_tuple(sql_string, expanded)
 
         return {(row[0], row[1]) for row in rows}
+    
+
+    @staticmethod
+    async def is_post_removed(board_shortname: str, num: int) -> bool:
+        ph = db_m.phg()
+        sql = f"""select num from board_nums_cache where board_shortname = {ph} and num = {ph}"""
+        row = await db_m.query_tuple(sql, params=[board_shortname, num])
+        if not row:
+            return False
+        return True
 
 
 def _get_filter_cache() -> BaseFilterCache:
@@ -169,8 +206,9 @@ async def init_moderation():
     await f_cache.init()
 
 
-async def filter_reported_posts(posts: list, remove_op_replies=False) -> list:
-    """If `remove_op_replies` is true, then replies to deleted OPs are removed."""
+async def filter_reported_posts(posts: list[dict], remove_op_replies=False) -> list:
+    """If `remove_op_replies` is true, then replies to deleted OPs are removed.
+    """
 
     if not mod_conf['moderation']:
         return posts
@@ -180,13 +218,28 @@ async def filter_reported_posts(posts: list, remove_op_replies=False) -> list:
 
     board_num_pairs = await f_cache.get_board_num_pairs(posts)
 
+    # len_i = len(posts)
     posts = [
         post
         for post in posts
-        if not (remove_op_replies and (post.board_shortname, post.thread_num) in board_num_pairs)
-        and not ((post.board_shortname, post.num) in board_num_pairs)
+        if not (remove_op_replies and (post['board_shortname'], post['thread_num']) in board_num_pairs)
+        and not ((post['board_shortname'], post['num']) in board_num_pairs)
     ]
+    # print(f'[MOD: removed post count /{posts[0]['board_shortname']}/: {len_i - len(posts)}]')
     return posts
+
+
+async def is_post_removed(post: dict) -> bool:
+    """Is the post removed?"""
+
+    if not mod_conf['moderation']:
+        return False
+
+    if not post:
+        raise ValueError(post)
+
+    result = await f_cache.is_post_removed(post['board_shortname'], post['num'])
+    return result
 
 
 f_cache: BaseFilterCache = _get_filter_cache()

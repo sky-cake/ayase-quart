@@ -20,41 +20,41 @@ bp = Blueprint("bp_auth", __name__, template_folder="templates")
 async def auth(action: AuthActions, user_id=None):
     """Handles session actions."""
     async with current_app.app_context():
-        if action == AuthActions.is_logged_in:
-            return "user_id" in session
+        match action:
+            case AuthActions.is_logged_in:
+                return "user_id" in session
 
-        if action == AuthActions.log_in and user_id:
-            session["user_id"] = user_id
-            return
-            
-        if action == AuthActions.log_out:
-            session.clear()
-            return
+            case AuthActions.log_in if user_id:
+                session["user_id"] = user_id
+                return
 
-        if action == AuthActions.get_user_id:
-            return session.get("user_id", None)
+            case AuthActions.log_out:
+                session.clear()
+                return
 
-        if action == AuthActions.is_admin:
-            user_id = session.get("user_id", None)
-            if user_id:
-                return await is_user_admin(user_id)
+            case AuthActions.get_user_id:
+                return session.get("user_id", None)
 
-            return False
+            case AuthActions.is_admin:
+                user_id = session.get("user_id", None)
+                if user_id:
+                    return await is_user_admin(user_id)
+                return False
 
-        if action == AuthActions.is_moderator:
-            user_id = session.get("user_id", None)
-            if user_id:
-                return await is_user_moderator(user_id)
-            return False
-        
-        if action == AuthActions.is_authority:
-            user_id = session.get("user_id", None)
-            if user_id:
-                return await is_user_authority(user_id)
+            case AuthActions.is_moderator:
+                user_id = session.get("user_id", None)
+                if user_id:
+                    return await is_user_moderator(user_id)
+                return False
 
-            return False
+            case AuthActions.is_authority:
+                user_id = session.get("user_id", None)
+                if user_id:
+                    return await is_user_authority(user_id)
+                return False
 
-    raise ValueError(action, user_id)
+            case _:
+                raise ValueError(action, user_id)
 
 
 def login_required(WRAPPED_FUNC):

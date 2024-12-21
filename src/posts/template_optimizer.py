@@ -57,9 +57,9 @@ def wrap_post_t(post: dict):
 
 
 def get_report_t(post):
-    return f"""<button class="btn" report_url="/report/{post['board_shortname']}/{post['num']}">
+    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['num']}">
         Report
-    </button>"""
+    </button>]"""
 
 
 def get_sub_t(post: dict):

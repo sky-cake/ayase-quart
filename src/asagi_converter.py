@@ -182,12 +182,18 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
         ) for board in boards)
     )
 
+    total_hits = await asyncio.gather(*(
+        db_q.query_tuple(f"""select count(*) from {board} {where_query}""", params=params)
+        for board in boards
+    ))
+    total_hits = sum(n[0][0] for n in total_hits)
+
     posts = []
     for board_post in board_posts:
         posts.extend(board_post)
-    
+
     if not posts:
-        return [], 0  # posts, total_hits
+        return [], total_hits  # posts, total_hits
 
     board_quotelinks = await get_board_2_ql_lookup(posts)
 
@@ -195,7 +201,7 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
         board = post['board_shortname']
         post['quotelinks'] = board_quotelinks.get(board, {}).get(post['num'], set())
 
-    return posts, len(posts)
+    return posts, total_hits
 
 
 async def search_posts_get_thread_nums(form_data: dict) -> dict:
@@ -552,19 +558,19 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
     return post_2_quotelinks, posts[0]
 
 
-async def get_deleted_ops_by_board(board: str) -> set:
+async def get_deleted_ops_by_board(board: str) -> list[int]:
     """Returns op post nums marked as deleted by 4chan staff."""
     sql = f"""select num from {board} where deleted = 1 and op = 1;"""
     return [row[0] for row in (await db_q.query_tuple(sql))]
 
 
-async def get_deleted_non_ops_by_board(board: str) -> set:
+async def get_deleted_non_ops_by_board(board: str) -> list[int]:
     """Returns non-op post nums marked as deleted by 4chan staff."""
     sql = f"""select num from {board} where deleted = 1 and op = 0;"""
     return [row[0] for row in (await db_q.query_tuple(sql))]
 
 
-async def get_deleted_nums_by_board(board: str) -> set:
-    """Returns all nums marked as deleted by 4chan staff."""
-    sql = f"""select num from {board} where deleted = 1;"""
-    return [row[0] for row in (await db_q.query_tuple(sql))]
+async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
+    """Returns all nums marked as deleted by 4chan staff in the format [(num, op), ...]"""
+    sql = f"""select num, op from {board} where deleted = 1;"""
+    return [(row[0], row[1]) for row in (await db_q.query_tuple(sql))]

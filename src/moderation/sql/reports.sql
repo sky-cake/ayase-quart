@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS reports (
     report_id INTEGER PRIMARY KEY AUTOINCREMENT,
     board_shortname TEXT NOT NULL,
+    op INTEGER NOT NULL,
     num INTEGER NOT NULL,
     post_status TEXT NOT NULL, -- visible, hidden, deleted
     submitter_ip TEXT,

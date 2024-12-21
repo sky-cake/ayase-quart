@@ -130,6 +130,14 @@ ul {
     cursor: pointer;
 }
 
+.rbtn {
+    background-color: inherit;
+    border: none;
+    color: #99bcd9 !important;
+    cursor: pointer;
+    padding: 0;
+}
+
 hr {
     background-color: #666666;
     height: 1px;

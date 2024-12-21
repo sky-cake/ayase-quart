@@ -145,7 +145,7 @@ async def search_handler(search_type: SearchType) -> str:
         p.check('search done')
 
         posts = await filter_reported_posts(posts)
-        total_hits = len(posts) 
+        p.check('filter_reported_posts')
 
         if not gallery_mode:
             for post in posts:
@@ -178,7 +178,7 @@ async def search_handler(search_type: SearchType) -> str:
         posts_t=posts_t,
         report_modal_t=report_modal_t,
         page_links=page_links,
-        res_count=len(posts),
+        result_count=len(posts),
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,

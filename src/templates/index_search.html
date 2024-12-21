@@ -7,8 +7,16 @@
   {% include 'form_search.html' %}
 
   <div>
-    {% if res_count %}
-      <h3>Showing <b>{{res_count}}</b> / {{total_hits}} results</h3>
+    {% if result_count %}
+      <h3>Showing <b>{{result_count}}</b> / {{total_hits}} results</h3>
+
+      {% if page_links %}
+        <div class="mt">Pages</div>
+        {{ page_links|safe }}
+      {% endif %}
+    {% endif %}
+
+    {% if result_count %}
       <div class="board">
         {% if not gallery_mode %}
           {{ posts_t|safe }}
@@ -24,8 +32,9 @@
       {% endif %}
     {% endif %}
 
+
     {% if page_links %}
-      <div class="mt">Result Pages</div>
+      <div class="mt">Pages</div>
       {{ page_links|safe }}
     {% endif %}
   </div>
