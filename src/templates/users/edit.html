@@ -6,12 +6,18 @@
     <h1>Edit User</h1>
     <form action="{{ url_for('bp_admin.users_edit', user_id=user.user_id) }}" method="post">
         {{ form.csrf_token() }}
-        <p><label for="{{ form.username.id }}">{{ form.username.label }}</label>{{ form.username() }}</p>
-        <p><label for="{{ form.password.id }}">{{ form.password.label }}</label>{{ form.password() }}</p>
+
+        <strong>Username:</strong> {{ user.username }}
+        <p><strong>Role:</strong> {{ user.role }}</p>
+        <p><strong>Created At:</strong> {{ user.created_at }}</p>
+        <p><strong>Last Login:</strong> {{ user.last_login_at }}</p>
+
+        <p><label for="{{ form.password_cur.id }}">{{ form.password_cur.label }}</label>{{ form.password_cur() }}</p>
+        <p><label for="{{ form.password_new.id }}">{{ form.password_new.label }} [Optional]</label>{{ form.password_new() }}</p>
         <p><label for="{{ form.role.id }}">{{ form.role.label }}</label>{{ form.role() }}</p>
         <p><label for="{{ form.active.id }}">{{ form.active.label }}</label>{{ form.active() }}</p>
         <p><label for="{{ form.notes.id }}">{{ form.notes.label }}</label>{{ form.notes() }}</p>
-        <button type="submit">Save Changes</button>
+        <button type="submit">Save</button>
     </form>
 
 {% endblock %}

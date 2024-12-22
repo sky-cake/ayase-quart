@@ -1,7 +1,7 @@
 from configs import mod_conf
 from db import db_m
 from enums import DbPool, UserRole
-from moderation.user import create_user
+from moderation.user import create_user_if_not_exists
 from utils import make_src_path, read_file
 
 
@@ -15,4 +15,4 @@ async def init_moderation():
         admin_username = mod_conf['admin_user']
         admin_password = mod_conf['admin_password']
 
-        await create_user(admin_username, admin_password, UserRole.admin, True, 'Remember to change your default password.')
+        await create_user_if_not_exists(admin_username, admin_password, UserRole.admin, True, 'Remember to change your default password.')

@@ -5,7 +5,7 @@
 
     <h1>Reports</h1>
     {% if reports %}
-        {{table(reports, safe_cols=['actions'])}}
+        {{table(reports, safe_cols=['Actions', 'Link'])}}
     {% else %}
         No reports submitted.
     {% endif %}

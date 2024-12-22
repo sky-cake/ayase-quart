@@ -57,7 +57,7 @@ async def v_post(board_shortname: str, post_id: int):
     if not post:
         return jsonify()
 
-    is_removed = await fc.is_post_removed(post)
+    is_removed = await fc.is_post_removed(post.board_shortname, post.num)
     p.check('is_post_removed')
     if is_removed:
         return jsonify()

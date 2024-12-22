@@ -1,7 +1,7 @@
 import os
 import tomllib
 
-from enums import DbType
+from enums import DbType, PostStatus
 from utils import make_src_path
 
 
@@ -34,6 +34,8 @@ if media_conf and media_conf.get('serve_outside_static'):
 
 
 mod_conf = conf.get('moderation', {})
+mod_conf['default_reported_post_status'] = PostStatus.visible if mod_conf['default_reported_post_status'] == 'visible' else PostStatus.hidden
+
 db_mod_conf = mod_conf.get('sqlite', {}) # only supports sqlite atm
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):

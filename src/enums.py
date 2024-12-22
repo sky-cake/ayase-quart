@@ -38,15 +38,13 @@ class AuthActions(Enum):
 
 
 class ReportStatus(StrEnum):
-    open = 'open'
-    pending = 'pending'
-    closed = 'closed'
+    open = 'o'
+    closed = 'c'
 
 
 class PostStatus(StrEnum):
-    visible = 'visible'
-    hidden = 'hidden'
-    deleted = 'deleted'
+    visible = 'v'
+    hidden = 'h'
 
 
 class ReportCategory(StrEnum):

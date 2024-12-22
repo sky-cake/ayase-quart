@@ -9,8 +9,8 @@ from quart import Quart
 from blueprints import blueprints
 from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
-from moderation.mod import init_moderation
 from moderation.filter_cache import fc
+from moderation.mod import init_moderation
 from templates import render_constants
 
 # from security.limiter import limiter

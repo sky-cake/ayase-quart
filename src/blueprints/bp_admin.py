@@ -6,13 +6,16 @@ from asagi_converter import get_selector
 from boards import board_shortnames
 from db import db_q
 from enums import DbPool
-from forms import UserForm
+from forms import UserCreateForm, UserEditForm
+from moderation.auth import admin_required
 from moderation.user import (
-    create_user,
+    create_user_if_not_exists,
     delete_user,
     edit_user_by_username,
+    edit_user_password_by_username,
     get_all_users,
-    get_user_by_id
+    get_user_by_id,
+    is_user_valid
 )
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
@@ -25,8 +28,6 @@ from templates import (
     template_users_index,
     template_users_view
 )
-
-from .bp_auth import admin_required
 
 bp = Blueprint('bp_admin', __name__)
 
@@ -99,7 +100,21 @@ async def latest():
 @admin_required
 async def users_index():
     users = await get_all_users()
-    return await render_controller(template_users_index, users=users, is_admin=True)
+    ds = []
+    for u in users:
+        d = {}
+        d['Actions'] = f"""
+            <a href="{url_for('bp_admin.users_edit', user_id=u.user_id)}">View</a> |
+            <a href="{url_for('bp_admin.users_delete', user_id=u.user_id)}">Delete</a>
+        """
+        d['Id'] = u['user_id']
+        d['Username'] = u['username']
+        d['Role'] = u['role']
+        d['Active'] = 'Yes' if u['active'] else 'No'
+        d['Notes'] = u['notes']
+        ds.append(d)
+
+    return await render_controller(template_users_index, users=ds, is_admin=True)
 
 
 @bp.route('/users/<int:user_id>')
@@ -112,14 +127,14 @@ async def users_view(user_id):
 @bp.route('/users/create', methods=['GET', 'POST'])
 @admin_required
 async def users_create():
-    form: UserForm = await UserForm.create_form()
+    form: UserCreateForm = await UserCreateForm.create_form()
 
     if await form.validate_on_submit():
         username = form.username.data
         password = form.password.data
         role = form.role.data
         notes = form.notes.data
-        await create_user(username, password, role, notes)
+        await create_user_if_not_exists(username, password, role, notes)
         return redirect(url_for('bp_admin.users_index'))
 
     return await render_controller(
@@ -134,27 +149,36 @@ async def users_create():
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @admin_required
 async def users_edit(user_id):
-    form: UserForm = await UserForm.create_form()
+    form: UserEditForm = await UserEditForm.create_form()
+
+    user = await get_user_by_id(user_id)
+    if not user:
+        redirect(url_for('bp_admin.users_index'))
 
     if (await form.validate_on_submit()):
-        username = form.username.data
-        password = form.password.data
+        password_cur = form.password_cur.data
+
+        if not (await is_user_valid(user['username'], password_cur)):
+            await flash('Wrong current password.')
+            return redirect(url_for('bp_admin.users_edit', user_id=user_id))
+
+        password_new = form.password_new.data
         role = form.role.data
         active = form.active.data
         notes = form.notes.data
-        await edit_user_by_username(username, password, role, active, notes)
+
+        await edit_user_by_username(user['username'], role, active, notes)
+
+        if password_new:
+            await edit_user_password_by_username(user['username'], password_new)
+
+        await flash('User updated.')
 
         return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
     if request.method == 'POST':
         await flash(f'Invalid form submission due to {form.errors}')
 
-    user = await get_user_by_id(user_id)
-    if not user:
-        redirect(url_for('bp_admin.users_index'))
-
-    form.username.data = user.username
-    form.password.data = user.password
     form.role.data = user.role
     form.active.data = user.active
     form.notes.data = user.notes

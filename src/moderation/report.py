@@ -7,7 +7,7 @@ from enums import DbPool, PostStatus, ReportCategory
 
 
 async def get_all_reports() -> Optional[list[dict]]:
-    if not (reports := await db_m.query_dict('SELECT * FROM reports;', p_id=DbPool.mod)):
+    if not (reports := await db_m.query_dict('select * from reports order by created_at desc;', p_id=DbPool.mod)):
         return []
     return reports
 
@@ -30,12 +30,13 @@ async def get_report_by_post_num(board_shortname: str, num: int) -> Optional[lis
     return reports
 
 
-async def create_report(board_shortname: str, num: int, op: int, submitter_ip: str,
+async def create_report(board_shortname: str, thread_num: int, num: int, op: int, submitter_ip: str,
                         submitter_notes: str, report_category: str,
                         report_status: str, moderator_notes: str = None) -> None:
     now = datetime.now()
     params = (
         board_shortname,
+        thread_num,
         num,
         op,
         mod_conf['default_reported_post_status'],
@@ -50,7 +51,7 @@ async def create_report(board_shortname: str, num: int, op: int, submitter_ip: s
     )
     sql_string = f"""
     INSERT INTO reports 
-    (board_shortname, num, op, post_status, submitter_ip, submitter_notes,
+    (board_shortname, thread_num, num, op, post_status, submitter_ip, submitter_notes,
     report_category, report_status, moderator_notes, created_at, last_updated_at, user_id)
     VALUES ({db_m.phg.size(params)});
     """

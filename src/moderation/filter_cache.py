@@ -6,7 +6,8 @@ from asagi_converter import get_deleted_numops_by_board
 from boards import board_shortnames
 from configs import mod_conf
 from db import db_m
-from enums import DbPool
+from enums import AuthActions, DbPool
+from moderation.auth import auth
 from utils import make_src_path, read_file
 
 
@@ -40,7 +41,7 @@ class BaseFilterCache(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def is_post_removed(self, post: dict) -> bool:
+    async def is_post_removed(self, board_shortname: str, num: int) -> bool:
         """Is the post removed?"""
         raise NotImplementedError()
     
@@ -51,16 +52,22 @@ class BaseFilterCache(ABC):
     @abstractmethod
     async def insert_post(self, board_shortname: str, num: int, op: int) -> None:
         raise NotImplementedError()
+    
+    @abstractmethod
+    async def delete_post(self, board_shortname: str, num: int, op: int) -> None:
+        raise NotImplementedError()
 
-    async def filter_reported_posts(self, posts: list[dict], remove_op_replies=False) -> list:
-        """If remove_op_replies is true, then replies to deleted OPs are removed.
-        """
-
+    async def filter_reported_posts(self, posts: list[dict]) -> list:
         if not mod_conf['moderation']:
             return posts
 
         if not posts:
             return posts
+
+        if auth(AuthActions.is_authority):
+            return posts
+
+        remove_op_replies = mod_conf['remove_replies_to_hidden_op']
 
         board_num_pairs = await self.get_board_num_pairs(posts)
 
@@ -185,4 +192,4 @@ def _get_filter_cache() -> BaseFilterCache:
             raise NotImplementedError(f"Unsupported filter cache type: {mod_conf['filter_cache_type']}")
 
 
-fc = _get_filter_cache()
+fc: BaseFilterCache = _get_filter_cache()

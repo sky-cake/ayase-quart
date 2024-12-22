@@ -1,30 +1,15 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import table %}
 
 {% block body %}
 
     <h1>Users</h1>
-    <p><a href="{{ url_for('bp_admin.users_create') }}" class="btn">New User</a></p>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Active</th>
-            <th>Actions</th>
-        </tr>
-        {% for user in users %}
-            <tr>
-                <td>{{ user.user_id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.role }}</td>
-                <td>{{ 'Yes' if user.active else 'No' }}</td>
-                <td>
-                    <a href="{{ url_for('bp_admin.users_view', user_id=user.user_id) }}">View</a> |
-                    <a href="{{ url_for('bp_admin.users_edit', user_id=user.user_id) }}">Edit</a> |
-                    <a href="{{ url_for('bp_admin.users_delete', user_id=user.user_id) }}">Delete</a>
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
+    <p><a href="{{ url_for('bp_admin.users_create') }}" class="rbtn">New User</a></p>
+
+    {% if users %}
+        {{table(users, safe_cols=['Actions'])}}
+    {% else %}
+        No users found.
+    {% endif %}
 
 {% endblock %}
