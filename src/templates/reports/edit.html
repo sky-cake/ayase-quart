@@ -2,8 +2,7 @@
 
 {% block body %}
 
-    <h1>Edit Report</h1>
-    <p><a href="{{ url_for('bp_moderation.reports_index') }}">Back to Reports</a></p>
+    <a href="{{ url_for('bp_moderation.reports_open') }}">Back to Reports</a>
 
     <form action="{{ url_for('bp_moderation.reports_edit', report_id=report.report_id) }}" method="post">
         {{ form.csrf_token() }}
@@ -12,8 +11,8 @@
         <p>Post Num:        {{report.num}}</p>
         <p>Category:        {{ report.report_category }}</p>
         <p>Submitter Notes: {{ report.submitter_notes }}</p>
-        <p><label for="{{ form.post_status.id }}">{{ form.post_status.label }}</label>{{ form.post_status() }}</p>
-        <p><label for="{{ form.report_status.id }}">{{ form.report_status.label }}</label>{{ form.report_status() }}</p>
+        <p><label for="{{ form.public_access.id }}">{{ form.public_access.label }}</label>{{ form.public_access() }}</p>
+        <p><label for="{{ form.mod_status.id }}">{{ form.mod_status.label }}</label>{{ form.mod_status() }}</p>
         <p><label for="{{ form.moderator_notes.id }}">{{ form.moderator_notes.label }}</label>{{ form.moderator_notes() }}</p>
         <button type="submit">Save</button>
     </form>

@@ -1,9 +1,8 @@
 {% extends 'base.html' %}
 
 {% block body %}
-    <p><a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a></p>
+    <a href="{{ url_for('bp_admin.users_index') }}">Back to Users</a>
 
-    <h1>Edit User</h1>
     <form action="{{ url_for('bp_admin.users_edit', user_id=user.user_id) }}" method="post">
         {{ form.csrf_token() }}
 

@@ -138,6 +138,24 @@ ul {
     padding: 0;
 }
 
+.rbtn:disabled {
+    background-color: inherit;
+    border: none;
+    color: #727272 !important;
+    cursor: default;
+    padding: 0;
+}
+
+.actionform {
+    border: none;
+    background-color: none;
+    color: #99bcd9 !important;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    display: inline;
+}
+
 hr {
     background-color: #666666;
     height: 1px;

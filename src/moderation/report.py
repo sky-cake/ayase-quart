@@ -3,11 +3,27 @@ from typing import Optional
 
 from configs import mod_conf
 from db import db_m
-from enums import DbPool, PostStatus, ReportCategory
+from enums import DbPool, ModStatus, PublicAccess, ReportCategory
 
 
-async def get_all_reports() -> Optional[list[dict]]:
-    if not (reports := await db_m.query_dict('select * from reports order by created_at desc;', p_id=DbPool.mod)):
+async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatus=None) -> Optional[list[dict]]:
+    ph = db_m.phg()
+    where = []
+    params = []
+
+    if public_access:
+        where.append(f'public_access = {ph}')
+        params.append(public_access.value)
+
+    if mod_status:
+        where.append(f'mod_status = {ph}')
+        params.append(mod_status.value)
+
+    if where:
+        where = 'where ' + ' and '.join(where)
+
+    sql = f'select * from reports {where} order by created_at desc;'
+    if not (reports := (await db_m.query_dict(sql, params=params, p_id=DbPool.mod))):
         return []
     return reports
 
@@ -32,18 +48,18 @@ async def get_report_by_post_num(board_shortname: str, num: int) -> Optional[lis
 
 async def create_report(board_shortname: str, thread_num: int, num: int, op: int, submitter_ip: str,
                         submitter_notes: str, report_category: str,
-                        report_status: str, moderator_notes: str = None) -> None:
+                        mod_status: str, moderator_notes: str = None) -> None:
     now = datetime.now()
     params = (
         board_shortname,
         thread_num,
         num,
         op,
-        mod_conf['default_reported_post_status'],
+        mod_conf['default_reported_post_public_access'],
         submitter_ip,
         submitter_notes,
         report_category,
-        report_status,
+        mod_status,
         moderator_notes,
         now,
         now,
@@ -51,47 +67,64 @@ async def create_report(board_shortname: str, thread_num: int, num: int, op: int
     )
     sql_string = f"""
     INSERT INTO reports 
-    (board_shortname, thread_num, num, op, post_status, submitter_ip, submitter_notes,
-    report_category, report_status, moderator_notes, created_at, last_updated_at, user_id)
+    (board_shortname, thread_num, num, op, public_access, submitter_ip, submitter_notes,
+    report_category, mod_status, moderator_notes, created_at, last_updated_at, user_id)
     VALUES ({db_m.phg.size(params)});
     """
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
 
 
 
-async def edit_report(report_id: int, post_status: str, report_status: str, moderator_notes: str) -> None:
-    if not await get_report_by_id(report_id):
+async def edit_report_if_exists(report_id: int, public_access: str=None, mod_status: str=None, moderator_notes: str=None) -> dict:
+    if not (report := await get_report_by_id(report_id)):
+        return {}
+
+    s = ''
+    params = []
+
+    if public_access:
+        s += ' public_access=∆, '
+        params.append(public_access)
+    if mod_status:
+        s += ' mod_status=∆, '
+        params.append(mod_status)
+    if moderator_notes:
+        s += ' moderator_notes=∆, '
+        params.append(moderator_notes)
+
+    if not s:
         return
 
-    sql_string = """
+    sql_string = f"""
     UPDATE reports
-    SET post_status=∆, report_status=∆, moderator_notes=∆, last_updated_at=∆
+    SET {s} last_updated_at=∆
     WHERE report_id=∆;
     """
-    params = (post_status, report_status, moderator_notes, datetime.now(), report_id)
+    params = params + [datetime.now(), report_id]
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
+    return report
 
 
-async def delete_report(report_id: int) -> dict:
+async def delete_report_if_exists(report_id: int) -> dict:
     if not (report := await get_report_by_id(report_id)):
-        return
+        return {}
     await db_m.query_dict('DELETE FROM reports WHERE report_id=∆;', params=(report_id,), commit=True, p_id=DbPool.mod)
     return report
 
 
-async def get_reports_by_report_status(report_status: str) -> Optional[list[dict]]:
-    if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE report_status=∆;', params=(report_status,), p_id=DbPool.mod)):
-        return None
+async def get_reports_by_report_status(mod_status: str) -> Optional[list[dict]]:
+    if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE mod_status=∆;', params=(mod_status,), p_id=DbPool.mod)):
+        return
     return reports
 
 
-async def get_reports_by_post_status(post_status: PostStatus) -> Optional[list[dict]]:
-    if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE post_status=∆;', params=(post_status,), p_id=DbPool.mod)):
-        return None
+async def get_reports_by_post_status(public_access: PublicAccess) -> Optional[list[dict]]:
+    if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE public_access=∆;', params=(public_access,), p_id=DbPool.mod)):
+        return
     return reports
 
 
 async def get_reports_by_category(report_category: ReportCategory) -> Optional[list[dict]]:
     if not (reports := await db_m.query_dict('SELECT * FROM reports WHERE report_category=∆;', params=(report_category,), p_id=DbPool.mod)):
-        return None
+        return
     return reports

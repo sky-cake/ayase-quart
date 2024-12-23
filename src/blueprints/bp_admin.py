@@ -72,8 +72,8 @@ async def stats():
     return await render_controller(
         template_stats,
         table_row_counts=table_row_counts,
-        title='Stats',
-        tab_title='Stats',
+        title='Archive Metrics',
+        tab_title='Archive Metrics',
         is_admin=True,
     )
 
@@ -114,14 +114,26 @@ async def users_index():
         d['Notes'] = u['notes']
         ds.append(d)
 
-    return await render_controller(template_users_index, users=ds, is_admin=True)
+    return await render_controller(
+        template_users_index,
+        users=ds,
+        is_admin=True,
+        title='Users',
+        tab_title='Users',
+    )
 
 
 @bp.route('/users/<int:user_id>')
 @admin_required
 async def users_view(user_id):
     user = await get_user_by_id(user_id)
-    return await render_controller(template_users_view, user=user, is_admin=True)
+    return await render_controller(
+        template_users_view,
+        user=user,
+        is_admin=True,
+        title='Users',
+        tab_title='Users',
+    )
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
@@ -140,8 +152,8 @@ async def users_create():
     return await render_controller(
         template_users_create,
         form=form,
-        title='Admin',
-        tab_title='Admin',
+        title='Create User',
+        tab_title='Create User',
         is_admin=True,
     )
 
@@ -184,8 +196,8 @@ async def users_edit(user_id):
         template_users_edit,
         form=form,
         user=user,
-        title='Admin',
-        tab_title='Admin',
+        title='Edit User',
+        tab_title='Edit User',
         is_admin=True,
     )
 
@@ -209,7 +221,7 @@ async def users_delete(user_id):
         template_users_delete,
         user=user,
         user_id=user_id,
-        title='Admin',
-        tab_title='Admin',
+        title='Delete User',
+        tab_title='Delete User',
         is_admin=True,
     )

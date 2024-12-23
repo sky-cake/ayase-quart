@@ -3,7 +3,10 @@
 
 {% block body %}
 
-    <h1>Reports</h1>
+    {{mod_status_link|safe}}
+    <br>
+    <br>
+
     {% if reports %}
         {{table(reports, safe_cols=['Actions', 'Link'])}}
     {% else %}

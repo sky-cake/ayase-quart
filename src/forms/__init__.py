@@ -27,7 +27,7 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import PostStatus, ReportCategory, ReportStatus, UserRole
+from enums import ModStatus, PublicAccess, ReportCategory, UserRole
 from moderation.user import is_user_valid
 from posts.capcodes import Capcode
 from search import HITS_PER_PAGE
@@ -231,7 +231,7 @@ class ReportUserForm(QuartForm):
 
 
 class ReportModForm(QuartForm):
-    post_status = RadioField('Post Status', choices=enum_choices(PostStatus), validators=[DataRequired(), enum_validator(PostStatus)])
-    report_status = RadioField('Report Status', choices=enum_choices(ReportStatus), validators=[DataRequired(), enum_validator(ReportStatus)])
+    public_access = RadioField('Post Status', choices=enum_choices(PublicAccess), validators=[DataRequired(), enum_validator(PublicAccess)])
+    mod_status = RadioField('Report Status', choices=enum_choices(ModStatus), validators=[DataRequired(), enum_validator(ModStatus)])
     moderator_notes = TextAreaField('Moderator Notes', validators=[Optional(), Length(min=0, max=512)])
     submit = SubmitField('Submit')

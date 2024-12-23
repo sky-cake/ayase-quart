@@ -86,7 +86,7 @@
                             /
                         {% endif %}
 
-                        <a href="{{ url_for('bp_moderation.reports_index') }}">Reports</a>
+                        <a href="{{ url_for('bp_moderation.reports_open') }}">Reports</a>
                         /
                         <a href="{{ url_for('bp_admin.stats') }}">Stats</a>
                         /
@@ -107,10 +107,10 @@
                 </div>
             {% endif %}
 
+            <h2 style="display: inline-block;">{{title}}</h2>
             <div class="container-fluid">
                 {% if board %}
                     <div class="container">
-                        <h2 style="display: inline-block;">{{title}}</h2>
                         <br>
                         {% if board %}
                             [

@@ -4,11 +4,11 @@ CREATE TABLE IF NOT EXISTS reports (
     op INTEGER NOT NULL,
     num INTEGER NOT NULL,
     thread_num INTEGER NOT NULL,
-    post_status TEXT NOT NULL, -- visible, hidden
+    public_access TEXT NOT NULL, -- visible (v), hidden (h)
     submitter_ip TEXT,
     submitter_notes TEXT,
     report_category TEXT NOT NULL, -- illegal, spam, dox, etc
-    report_status TEXT NOT NULL, -- open, closed
+    mod_status TEXT NOT NULL, -- open (o), closed (c)
     moderator_notes TEXT,
     created_at TIMESTAMP NOT NULL,
     last_updated_at TIMESTAMP NOT NULL,

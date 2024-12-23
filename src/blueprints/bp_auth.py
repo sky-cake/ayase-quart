@@ -24,7 +24,7 @@ async def login():
             if user := await is_user_valid(username, password_candidate):
                 await auth(AuthActions.log_in, user_id=user.user_id)
                 await flash("Login successful.", "success")
-                return redirect(url_for("bp_moderation.reports_index"))
+                return redirect(url_for("bp_moderation.reports_open"))
 
             await flash("Incorrect username or password.", "danger")
         await flash("Wrong math captcha answer", "danger")
@@ -33,7 +33,7 @@ async def login():
     is_logged_in = await auth(AuthActions.is_logged_in)
 
     if is_logged_in and request.method == 'GET':
-        return redirect(url_for('bp_moderation.reports_index'))
+        return redirect(url_for('bp_moderation.reports_open'))
 
     return await render_controller(template_login, form=form, is_logged_in=is_logged_in)
 

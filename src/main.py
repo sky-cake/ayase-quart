@@ -21,7 +21,7 @@ from utils import Perf
 
 async def app_error(e: HTTPException):
     p = Perf('error')
-    render = await render_controller(template_message, message=e, tab_title=f'Error')
+    render = await render_controller(template_message, message=e, tab_title=f'Error', title='Uh-oh...')
     p.check('render')
     print(p)
     return render

@@ -37,12 +37,12 @@ class AuthActions(Enum):
     is_authority = 7
 
 
-class ReportStatus(StrEnum):
+class ModStatus(StrEnum):
     open = 'o'
     closed = 'c'
 
 
-class PostStatus(StrEnum):
+class PublicAccess(StrEnum):
     visible = 'v'
     hidden = 'h'
 

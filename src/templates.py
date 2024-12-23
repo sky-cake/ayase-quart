@@ -52,7 +52,6 @@ template_users_create = env.get_template('users/create.html')
 template_reports_index = env.get_template('reports/index.html')
 template_reports_view = env.get_template('reports/view.html')
 template_reports_edit = env.get_template('reports/edit.html')
-template_reports_delete = env.get_template('reports/delete.html')
 
 
 safe_env = Environment(
