@@ -3,6 +3,10 @@
 {% block body %}
 
     <a href="{{ url_for('bp_moderation.reports_open') }}">Back to Reports</a>
+    <br>
+    <br>
+
+    {{post|safe}}
 
     <form action="{{ url_for('bp_moderation.reports_edit', report_id=report.report_id) }}" method="post">
         {{ form.csrf_token() }}

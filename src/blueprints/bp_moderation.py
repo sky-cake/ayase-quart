@@ -15,6 +15,8 @@ from moderation.report import (
 from render import render_controller
 from templates import template_reports_edit, template_reports_index
 from utils.validation import validate_board
+from leafs import generate_post_html
+
 
 bp = Blueprint('bp_moderation', __name__)
 
@@ -48,13 +50,14 @@ async def report(board_shortname: str, thread_num: int, num: int):
     return jsonify({'message': f'error: {form.data}: {form.errors}'})
 
 
-def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
+async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
     """We only want a subset of report cols, and we want them formatted."""
     ds = []
     for r in reports:
         d = {}
 
-        d['Actions'] = f"""[
+        d['Action'] = f"""
+        [
             <form class="actionform" action="{url_for('bp_moderation.reports_edit', report_id=r.report_id)}" method="get"><button class="rbtn" type="submit">View</button></form> |
             <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='hide')}" method="post">    <button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Hide</button></form> |
             <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='show')}" method="post">    <button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Show</button></form> |
@@ -63,11 +66,12 @@ def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
             <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='delete')}" method="post">  <button class="rbtn" type="submit">Delete</button></form>
         ]"""
 
-
-        d['Link'] = f'<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}">Visit</a>'
+        d['Link'] = f'<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}"> /{r.board_shortname}/thread/{r.thread_num} </a>'
         d['Category'] = r.report_category
-        d['Public Access'] = 'visible' if r['public_access'] == PublicAccess.visible.value else 'hidden'
-        d['User Notes'] = r.submitter_notes
+        # d['Public Access'] = 'visible' if r['public_access'] == PublicAccess.visible.value else 'hidden'
+        d['Category'] = r.report_category
+        d['User Note'] = r.submitter_notes
+        d['Post'] = await generate_post_html(r.board_shortname, r.num)
         ds.append(d)
     return ds
 
@@ -86,7 +90,7 @@ async def reports_closed():
     return await render_controller(
         template_reports_index,
         mod_status_link=get_report_mod_status_link(ModStatus.closed),
-        reports=formulate_reports_for_html_table(reports),
+        reports=await formulate_reports_for_html_table(reports),
         title='Closed Reports',
         tab_title='Closed Reports',
         is_logged_in=True,
@@ -102,7 +106,7 @@ async def reports_open():
     return await render_controller(
         template_reports_index,
         mod_status_link=get_report_mod_status_link(ModStatus.open),
-        reports=formulate_reports_for_html_table(reports),
+        reports=await formulate_reports_for_html_table(reports),
         title='Reports',
         tab_title='Reports',
         is_logged_in=True,
@@ -139,6 +143,7 @@ async def reports_edit(report_id: int):
         template_reports_edit,
         form=form,
         report=report,
+        post=await generate_post_html(report.board_shortname, report.num),
         title='Edit Report',
         tab_title='Edit Report',
         is_logged_in=True,

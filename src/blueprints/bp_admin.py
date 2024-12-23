@@ -107,7 +107,6 @@ async def users_index():
             <a href="{url_for('bp_admin.users_edit', user_id=u.user_id)}">View</a> |
             <a href="{url_for('bp_admin.users_delete', user_id=u.user_id)}">Delete</a>
         """
-        d['Id'] = u['user_id']
         d['Username'] = u['username']
         d['Role'] = u['role']
         d['Active'] = 'Yes' if u['active'] else 'No'

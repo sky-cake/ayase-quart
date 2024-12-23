@@ -8,9 +8,9 @@
     <br>
 
     {% if reports %}
-        {{table(reports, safe_cols=['Actions', 'Link'])}}
+        {{table(reports, safe_cols=['Action', 'Link', 'Post'])}}
     {% else %}
-        No reports submitted.
+        No reports here.
     {% endif %}
 
 {% endblock %}
