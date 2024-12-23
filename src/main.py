@@ -13,18 +13,18 @@ from db import db_q
 from moderation.filter_cache import fc
 from moderation.mod import init_moderation
 from render import render_controller
-from templates import render_constants, template_error
+from templates import render_constants, template_message
+from utils import Perf
 
 # from security.limiter import limiter
 
 
-if app_conf.get('testing', False):
-    import tracemalloc
-    tracemalloc.start()
-
-
 async def app_error(e: HTTPException):
-    return await render_controller(template_error, e=e, tab_title=f'Error')
+    p = Perf('error')
+    render = await render_controller(template_message, message=e, tab_title=f'Error')
+    p.check('render')
+    print(p)
+    return render
 
 
 async def create_app():

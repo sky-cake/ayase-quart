@@ -38,7 +38,7 @@ template_thread = env.get_template("thread.html")
 template_stats = env.get_template("stats.html")
 template_login = env.get_template('login.html')
 
-template_error = env.get_template("error.html")
+template_message = env.get_template("message.html")
 
 template_search_info = env.get_template('search/info.html')
 template_search = env.get_template('search/search.html')
