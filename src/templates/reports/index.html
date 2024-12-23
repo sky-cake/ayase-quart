@@ -5,10 +5,17 @@
 
     {{mod_status_link|safe}}
     <br>
-    <br>
+    <ul>
+        <li><span class="subject">View</span> - Visit the archive's version of the post.</li>
+        <li><span class="subject">Source</span> - View the post on 4chan.</li>
+        <li><span class="subject">Open</span> - Put the report in the open reports page.</li>
+        <li><span class="subject">Close</span> - Put the report in the closed reports page.</li>
+        <li><span class="subject">Delete</span> - Delete the report from the database.</li>
+        <li><span class="subject">Save</span> - Saves moderation notes.</li>
+    </ul>
 
     {% if reports %}
-        {{table(reports, safe_cols=['Action', 'Link', 'Post'])}}
+        {{table(reports, safe_cols=['About', 'Post'])}}
     {% else %}
         No reports here.
     {% endif %}

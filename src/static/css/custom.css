@@ -87,6 +87,15 @@ td, th {
     padding: 1em;
 }
 
+td {
+    vertical-align: top;
+}
+
+span.subject {
+	color: #b294bb;
+	font-weight: 700;
+}
+
 .mt {
     margin-top: 2em;
 }
@@ -148,7 +157,7 @@ ul {
 
 .actionform {
     border: none;
-    background-color: none;
+    background-color: inherit;
     color: #99bcd9 !important;
     cursor: pointer;
     padding: 0;

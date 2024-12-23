@@ -19,7 +19,7 @@ class TestFilterReportedPosts(unittest.IsolatedAsyncioTestCase):
         self.mock_auth = AsyncMock()
         self.mock_get_board_num_pairs = AsyncMock()
 
-        self.patcher_mod_conf = patch("moderation.mod.mod_conf", self.mock_mod_conf)
+        self.patcher_mod_conf = patch("moderation.mod_conf", self.mock_mod_conf)
         self.patcher_auth = patch("moderation.filter_cache.auth", self.mock_auth)
         self.patcher_get_board_num_pairs = patch("moderation.filter_cache.fc.get_board_num_pairs", self.mock_get_board_num_pairs)
 

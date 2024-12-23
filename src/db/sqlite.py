@@ -66,12 +66,12 @@ class SqliteQueryRunner(BaseQueryRunner):
             print('::PARAMS::', params)
 
         async with pool.execute(query, params) as cursor:
+            results = await cursor.fetchall()
+
+            # commit comes after `fetchall` to support `returing` statements
             if commit:
                 await pool.commit()
-                return
-            results = await cursor.fetchall()
-            # if len(results) == 1: # need to clean this up amonst all dbs
-            #     return results[0]
+
             return results
 
     async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):

@@ -2,7 +2,7 @@ from enum import StrEnum
 from html import escape
 
 from configs import media_conf
-from enums import ReportCategory
+from enums import SubmitterCategory
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
 
@@ -341,10 +341,10 @@ def generate_report_modal():
     category_options = "\n".join(
         f"""
         <div>
-          <input type="radio" id="{category.name}" name="report_category" value="{category.value}" required>
+          <input type="radio" id="{category.name}" name="submitter_category" value="{category.value}" required>
           <label for="{category.name}">{category.value}</label>
         </div>
-        """ for category in ReportCategory
+        """ for category in SubmitterCategory
     )
     modal_html = f"""
     <div id="modal_overlay" hidden>
@@ -355,7 +355,7 @@ def generate_report_modal():
             </div>
             <form id="report_form" action="" method="POST">
                 <div>
-                    <label for="report_category">Category:</label>
+                    <label for="submitter_category">Category:</label>
                     {category_options}
                 </div>
                 <br>

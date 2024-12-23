@@ -1,6 +1,6 @@
 from asagi_converter import generate_post
-from templates import template_search_post_t
 from posts.template_optimizer import wrap_post_t
+from templates import template_search_post_t
 
 
 async def generate_post_html(board_shortname: str, num: int) -> str:

@@ -47,7 +47,7 @@ class PublicAccess(StrEnum):
     hidden = 'h'
 
 
-class ReportCategory(StrEnum):
+class SubmitterCategory(StrEnum):
     illegal_content = 'Illegal content'
     dcma = 'DCMA'
     underage = '18+ only'

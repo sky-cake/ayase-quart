@@ -1,8 +1,9 @@
-from quart import Blueprint, abort, jsonify, redirect, request, url_for
+from quart import Blueprint, abort, flash, jsonify, redirect, request, url_for
 
 from configs import mod_conf
 from enums import AuthActions, ModStatus, PublicAccess
-from forms import ReportModForm, ReportUserForm
+from forms import ReportUserForm
+from leafs import generate_post_html
 from moderation.auth import auth, authorization_required
 from moderation.filter_cache import fc
 from moderation.report import (
@@ -13,10 +14,9 @@ from moderation.report import (
     get_report_by_id
 )
 from render import render_controller
-from templates import template_reports_edit, template_reports_index
+from templates import template_reports_index
 from utils.validation import validate_board
-from leafs import generate_post_html
-
+from html import escape
 
 bp = Blueprint('bp_moderation', __name__)
 
@@ -28,7 +28,7 @@ async def report(board_shortname: str, thread_num: int, num: int):
     validate_board(board_shortname)
 
     if await form.validate_on_submit():
-        report_category = form.report_category.data
+        submitter_category = form.submitter_category.data
         submitter_notes = form.submitter_notes.data
 
         op = thread_num == num
@@ -39,7 +39,7 @@ async def report(board_shortname: str, thread_num: int, num: int):
             op,
             request.remote_addr,
             submitter_notes,
-            report_category,
+            submitter_category,
             ModStatus.open,
             None,
         )
@@ -51,27 +51,44 @@ async def report(board_shortname: str, thread_num: int, num: int):
 
 
 async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
-    """We only want a subset of report cols, and we want them formatted."""
+    """We only want a subset of reporting columns, and we want them formatted."""
     ds = []
     for r in reports:
         d = {}
 
-        d['Action'] = f"""
+        report_parent_id = int(r.report_parent_id)
+        endpoint = f"""<input type="hidden" name="endpoint" value="{request.endpoint}">"""
+        d['About'] = f"""
+        [<a href="/g/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">View</a>]
+        [<a href="https://boards.4chan.org/g/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">Source</a>]
+        <br>
+        <br>
         [
-            <form class="actionform" action="{url_for('bp_moderation.reports_edit', report_id=r.report_id)}" method="get"><button class="rbtn" type="submit">View</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='hide')}" method="post">    <button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Hide</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='show')}" method="post">    <button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Show</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='open')}" method="post">    <button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Open</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='close')}" method="post">   <button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Close</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_id=r.report_id, action='delete')}" method="post">  <button class="rbtn" type="submit">Delete</button></form>
-        ]"""
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='hide')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Hide</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='show')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Show</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='open')}"   method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Open</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='close')}"  method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Close</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='delete')}" method="post">{endpoint}<button class="rbtn" type="submit">Delete</button></form>
+        ]
+        <br>
+        <br>
+        <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='notes')}" method="post">
+            <textarea name="mod_notes" rows="2" cols="20" placeholder="Moderation notes">{escape(r.mod_notes) if r.mod_notes else ''}</textarea>
+            [<button class="rbtn" type="submit">Save</button>]
+        </form>
+        <br>
+        <br>
+        <b>Count:</b> {int(r.report_count)}
+        <br>
+        <b>Category:</b> {escape(r.submitter_category)}
+        <br>
+        <b>Note:</b> {escape(r.submitter_notes)}
+        """
 
-        d['Link'] = f'<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}"> /{r.board_shortname}/thread/{r.thread_num} </a>'
-        d['Category'] = r.report_category
-        # d['Public Access'] = 'visible' if r['public_access'] == PublicAccess.visible.value else 'hidden'
-        d['Category'] = r.report_category
-        d['User Note'] = r.submitter_notes
-        d['Post'] = await generate_post_html(r.board_shortname, r.num)
+        post_html = await generate_post_html(r.board_shortname, r.num)
+        link = f'<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}"> /{r.board_shortname}/thread/{r.thread_num} </a>'
+        d['Post'] = post_html if post_html else link
+
         ds.append(d)
     return ds
 
@@ -114,80 +131,56 @@ async def reports_open():
     )
 
 
-@bp.route('/reports/<int:report_id>/edit', methods=['GET', 'POST'])
+@bp.route('/reports/<int:report_parent_id>/<string:action>', methods=['POST'])
 @authorization_required
-async def reports_edit(report_id: int):
-    report = await get_report_by_id(report_id)
-    if not report:
-        return abort(404)
-
-    form: ReportModForm = await ReportModForm.create_form()
-
-    if (await form.validate_on_submit()) and form.is_submitted:
-        public_access = form.public_access.data
-        mod_status = form.mod_status.data
-        moderator_notes = form.moderator_notes.data
-
-        await edit_report_if_exists(
-            report_id=report_id,
-            public_access=public_access,
-            mod_status=mod_status,
-            title='Edit Report',
-            tab_title='Edit Report',
-            moderator_notes=moderator_notes,
-        )
-        return redirect(url_for('bp_moderation.reports_open', report_id=report_id))
-
-    form.process(data=dict(**report))
-    return await render_controller(
-        template_reports_edit,
-        form=form,
-        report=report,
-        post=await generate_post_html(report.board_shortname, report.num),
-        title='Edit Report',
-        tab_title='Edit Report',
-        is_logged_in=True,
-        is_admin=await auth(AuthActions.is_admin),
-    )
-
-
-@bp.route('/reports/<int:report_id>/<string:action>', methods=['POST'])
-@authorization_required
-async def reports_action(report_id: int, action: str):
+async def reports_action(report_parent_id: int, action: str):
     """Having this endpoint being POST-only is important."""
 
-    if action not in ['open', 'close', 'hide', 'show', 'delete']:
-        abort(404)
-
-    report = await get_report_by_id(report_id)
+    report = await get_report_by_id(report_parent_id)
     if not report:
         abort(404)
 
-    if action == 'delete':
-        report = await delete_report_if_exists(report_id)
-        if report:
+    form = (await request.form)
+    redirect_endpoint = form.get('endpoint', 'bp_moderation.reports_open')
+    flash_msg = ''
+
+    match action:
+        case 'delete':
+            report = await delete_report_if_exists(report_parent_id)
+            flash_msg = 'Report was already deleted.'
+            if report:
+                await fc.delete_post(report['board_shortname'], report['num'], report['op'])
+                flash_msg = 'Report deleted.'
+
+        case 'show':
+            report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
             await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-        return redirect(url_for('bp_moderation.reports_open'))
+            flash_msg = 'Post now publicly visible.'
 
-    if action == 'show':
-        report = await edit_report_if_exists(report_id, public_access=PublicAccess.visible)
-        await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-        if report['mod_status'] == ModStatus.closed:
-            return redirect(url_for('bp_moderation.reports_closed'))
-        return redirect(url_for('bp_moderation.reports_open'))
+        case 'hide':
+            report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.hidden)
+            if report:
+                await fc.insert_post(report['board_shortname'], report['num'], report['op'])
+    
+            flash_msg = 'Post now publicly hidden.'
 
-    if action == 'hide':
-        report = await edit_report_if_exists(report_id, public_access=PublicAccess.hidden)
-        if report:
-            await fc.insert_post(report['board_shortname'], report['num'], report['op'])
-        if report['mod_status'] == ModStatus.closed:
-            return redirect(url_for('bp_moderation.reports_closed'))
-        return redirect(url_for('bp_moderation.reports_open'))
+        case 'close':
+            report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.closed)
+            flash_msg = 'Report moved to closed reports.'
 
-    if action == 'close':
-        report = await edit_report_if_exists(report_id, mod_status=ModStatus.closed)
-        return redirect(url_for('bp_moderation.reports_closed'))
+        case 'open':
+            report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.open)
+            flash_msg = 'Report moved to opened reports.'
 
-    if action == 'open':
-        report = await edit_report_if_exists(report_id, mod_status=ModStatus.open)
-        return redirect(url_for('bp_moderation.reports_open'))
+        case 'notes':
+            mod_notes = form.get('mod_notes')
+            await edit_report_if_exists(report_parent_id, mod_notes=mod_notes)
+            flash_msg = 'Saved moderation notes.'
+
+        case _:
+            abort(404)
+
+    if flash_msg:
+        await flash(flash_msg)
+
+    return redirect(url_for(redirect_endpoint))

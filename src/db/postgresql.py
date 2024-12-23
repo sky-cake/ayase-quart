@@ -43,6 +43,7 @@ class PostgresqlQueryRunner(BaseQueryRunner):
         self.pool_manager = pool_manager
         self.sql_echo = sql_echo
 
+
     async def run_query(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
         pool = await self.pool_manager.get_pool(p_id, dict_row=dict_row)
 
@@ -54,7 +55,8 @@ class PostgresqlQueryRunner(BaseQueryRunner):
             if commit:
                 # this will auto-commit
                 # https://magicstack.github.io/asyncpg/current/usage.html#transactions
-                await conn.execute(query, *params if params else [])
+                async with conn.transaction():
+                    await conn.execute(query, *params if params else [])
                 return
 
             # Record objects always returned
@@ -63,6 +65,7 @@ class PostgresqlQueryRunner(BaseQueryRunner):
             #     results = await conn.fetch(query, *params if params else [])
             #     return [dict(result) for result in results]
             return await conn.fetch(query, *params if params else [])
+
 
     async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
         return await self.run_query(query, params, p_id=p_id, dict_row=False)

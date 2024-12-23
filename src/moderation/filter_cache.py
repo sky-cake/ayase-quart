@@ -129,7 +129,7 @@ class FilterCacheSqlite(BaseFilterCache):
             )
             await pool.commit()
 
-        rows = await db_m.query_tuple("select board_shortname, op, group_concat(distinct num) as nums from reports group by board_shortname, op", p_id=DbPool.mod)
+        rows = await db_m.query_tuple("select board_shortname, op, group_concat(distinct num) as nums from report_parent group by board_shortname, op", p_id=DbPool.mod)
         await pool.executemany("insert or ignore into board_nums_cache (board_shortname, op, num) values (?, ?, ?)", rows)
         await pool.commit()
 

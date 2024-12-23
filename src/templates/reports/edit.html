@@ -8,16 +8,16 @@
 
     {{post|safe}}
 
-    <form action="{{ url_for('bp_moderation.reports_edit', report_id=report.report_id) }}" method="post">
+    <form action="{{ url_for('bp_moderation.reports_edit', report_parent_id=report.report_parent_id) }}" method="post">
         {{ form.csrf_token() }}
-        Report Id:          {{report.report_id}}
+        Report Id:          {{report.report_parent_id}}
         <p>Board:           {{report.board_shortname}}</p>
         <p>Post Num:        {{report.num}}</p>
-        <p>Category:        {{ report.report_category }}</p>
+        <p>Category:        {{ report.submitter_category }}</p>
         <p>Submitter Notes: {{ report.submitter_notes }}</p>
         <p><label for="{{ form.public_access.id }}">{{ form.public_access.label }}</label>{{ form.public_access() }}</p>
         <p><label for="{{ form.mod_status.id }}">{{ form.mod_status.label }}</label>{{ form.mod_status() }}</p>
-        <p><label for="{{ form.moderator_notes.id }}">{{ form.moderator_notes.label }}</label>{{ form.moderator_notes() }}</p>
+        <p><label for="{{ form.mod_notes.id }}">{{ form.mod_notes.label }}</label>{{ form.mod_notes() }}</p>
         <button type="submit">Save</button>
     </form>
 

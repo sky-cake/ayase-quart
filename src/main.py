@@ -10,8 +10,8 @@ from werkzeug.exceptions import HTTPException
 from blueprints import blueprints
 from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
+from moderation import init_moderation
 from moderation.filter_cache import fc
-from moderation.mod import init_moderation
 from render import render_controller
 from templates import render_constants, template_message
 from utils import Perf
