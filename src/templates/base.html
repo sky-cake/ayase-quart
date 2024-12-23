@@ -4,7 +4,11 @@
     <head>
         <meta charset="utf-8">
 
-        <title>{{ tab_title }}</title>
+        {% if tab_title %}
+            <title>{{ tab_title }}</title>
+        {% else %}
+            <title>Ayase Quart</title>
+        {% endif %}
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -107,17 +111,20 @@
                 {% if board %}
                     <div class="container">
                         <h2 style="display: inline-block;">{{title}}</h2>
+                        <br>
                         {% if board %}
                             [
-                            <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
-                            <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
-                            <a href="/{{ board }}/catalog">Catalog</a>
+                                <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
+                                <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
+                                <a href="/{{ board }}/catalog">Catalog</a>
                             ]
+                            <br>
                         {% endif %}
+                        <br>
                     </div>
                 {% endif %}
 
-                {% include 'flash.html' %}
+                {% include 'macros/flash.html' %}
 
                 {% block body %}
                 {% endblock %}

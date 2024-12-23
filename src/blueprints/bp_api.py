@@ -7,10 +7,10 @@ from asagi_converter import (
     generate_thread
 )
 from moderation.filter_cache import fc
-from render import render_controller
-from templates import template_post
+from templates import template_search_post_t
 from utils import Perf
 from utils.validation import validate_board
+from posts.template_optimizer import wrap_post_t
 
 bp = Blueprint("bp_api", __name__)
 
@@ -62,7 +62,8 @@ async def v_post(board_shortname: str, post_id: int):
     if is_removed:
         return jsonify()
 
-    html_content = await render_controller(template_post, post=post, board=board_shortname, quotelinks=post_2_quotelinks)
+    html_content = template_search_post_t.render(**wrap_post_t(post | dict(quotelinks={})))
+
     p.check('render')
     print(p)
     return jsonify(html_content=html_content)

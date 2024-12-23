@@ -64,7 +64,7 @@ class BaseFilterCache(ABC):
         if not posts:
             return posts
 
-        if auth(AuthActions.is_authority):
+        if await auth(AuthActions.is_authority):
             return posts
 
         remove_op_replies = mod_conf['remove_replies_to_hidden_op']

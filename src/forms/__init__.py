@@ -215,8 +215,8 @@ class UserEditForm(QuartForm):
     notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
     submit = SubmitField('Submit')
 
-    raise RuntimeError('this validation does not work https://quart-wtf.readthedocs.io/en/latest/how_to_guides/form.html#async-custom-validators')
-    async def async_validate_password_new(self, field):
+    # raise RuntimeError('this validation does not work https://quart-wtf.readthedocs.io/en/latest/how_to_guides/form.html#async-custom-validators')
+    async def async_validators_password_new(self, field):
         password_cur = self.password_cur.data
         password_new = self.password_new.data
         if password_new and password_cur == password_new:

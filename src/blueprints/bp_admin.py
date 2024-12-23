@@ -153,6 +153,7 @@ async def users_edit(user_id):
 
     user = await get_user_by_id(user_id)
     if not user:
+        await flash('That user does not exist.')
         redirect(url_for('bp_admin.users_index'))
 
     if (await form.validate_on_submit()):
@@ -175,9 +176,6 @@ async def users_edit(user_id):
         await flash('User updated.')
 
         return redirect(url_for('bp_admin.users_edit', user_id=user_id))
-
-    if request.method == 'POST':
-        await flash(f'Invalid form submission due to {form.errors}')
 
     form.role.data = user.role
     form.active.data = user.active

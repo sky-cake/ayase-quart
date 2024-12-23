@@ -11,7 +11,9 @@ from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
 from moderation.filter_cache import fc
 from moderation.mod import init_moderation
-from templates import render_constants
+from templates import render_constants, template_error
+from render import render_controller
+from werkzeug.exceptions import HTTPException
 
 # from security.limiter import limiter
 
@@ -19,6 +21,10 @@ from templates import render_constants
 if app_conf.get('testing', False):
     import tracemalloc
     tracemalloc.start()
+
+
+async def app_error(e: HTTPException):
+    return await render_controller(template_error, e=e, tab_title=f'Error')
 
 
 async def create_app():
@@ -47,6 +53,8 @@ async def create_app():
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
+
+    app.register_error_handler(HTTPException, app_error)
 
     return app
 
