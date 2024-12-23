@@ -1,9 +1,9 @@
 
 from logging import getLogger
 
+import werkzeug.exceptions
 from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
-import werkzeug.exceptions
 
 from asagi_converter import (
     restore_comment,
@@ -28,12 +28,11 @@ from search.providers import get_search_provider
 from search.query import get_search_query
 from templates import (
     template_search,
-    template_search_info,
     template_search_gallery_post_t,
+    template_search_info,
     template_search_post_t
 )
 from utils import Perf
-import werkzeug
 
 search_log = getLogger('search')
 

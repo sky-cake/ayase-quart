@@ -7,10 +7,10 @@ from asagi_converter import (
     generate_thread
 )
 from moderation.filter_cache import fc
+from posts.template_optimizer import wrap_post_t
 from templates import template_search_post_t
 from utils import Perf
 from utils.validation import validate_board
-from posts.template_optimizer import wrap_post_t
 
 bp = Blueprint("bp_api", __name__)
 

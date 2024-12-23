@@ -5,15 +5,15 @@ import os
 
 from flask_bootstrap import Bootstrap5
 from quart import Quart
+from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
 from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
 from moderation.filter_cache import fc
 from moderation.mod import init_moderation
-from templates import render_constants, template_error
 from render import render_controller
-from werkzeug.exceptions import HTTPException
+from templates import render_constants, template_error
 
 # from security.limiter import limiter
 
