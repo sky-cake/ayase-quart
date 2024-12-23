@@ -286,10 +286,11 @@ def get_since4pass_t(post: dict):
 
 
 def get_filedeleted_t(post: dict):
-    if not post.get('deleted'):
+    if not (deleted := post.get('deleted')):
         return ''
     msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
-    return f'<strong class="warning" title="This post was {msg}.">[Deleted]</strong>'
+    deleted = '[Deleted]' if deleted == 1 else escape(deleted)
+    return f'<strong class="warning" title="This post was {msg}.">{deleted}</strong>'
 
 
 def get_header_t(post: dict):

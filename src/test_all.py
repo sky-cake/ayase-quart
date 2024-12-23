@@ -1,7 +1,7 @@
 import unittest
 
-from tests.endpoints import TestExistingEndpoints
-from tests.moderation import TestFilterReportedPosts
+from tests.test_endpoints import TestExistingEndpoints
+from tests.test_moderation import TestFilterReportedPosts
 
 tests = [
     TestExistingEndpoints,

@@ -56,6 +56,10 @@ class BaseFilterCache(ABC):
     @abstractmethod
     async def delete_post(self, board_shortname: str, num: int, op: int) -> None:
         raise NotImplementedError()
+    
+    async def get_board_num_pairs(self, posts: list) -> set[tuple[str, int]]:
+        """`set[('g', 12345), ('x', 6789), ...]`"""
+        raise NotImplementedError()
 
     async def filter_reported_posts(self, posts: list[dict]) -> list:
         if not mod_conf['moderation']:
@@ -64,21 +68,37 @@ class BaseFilterCache(ABC):
         if not posts:
             return posts
 
-        if await auth(AuthActions.is_authority):
-            return posts
+        is_authority = await auth(AuthActions.is_authority)
 
         remove_op_replies = mod_conf['remove_replies_to_hidden_op']
 
         board_num_pairs = await self.get_board_num_pairs(posts)
 
-        # len_i = len(posts)
+        note = 'Only visible to AQ staff.'
+
+        if is_authority:
+            posts = [
+                post
+                if not (
+                    (remove_op_replies and (post['board_shortname'], post['thread_num']) in board_num_pairs)
+                    or
+                    ((post['board_shortname'], post['num']) in board_num_pairs)
+                )
+                else
+                    post | dict(deleted=note)
+                for post in posts
+            ]
+            return posts
+
         posts = [
             post
             for post in posts
-            if not (remove_op_replies and (post['board_shortname'], post['thread_num']) in board_num_pairs)
-            and not ((post['board_shortname'], post['num']) in board_num_pairs)
+            if not (
+                (remove_op_replies and (post['board_shortname'], post['thread_num']) in board_num_pairs)
+                or
+                ((post['board_shortname'], post['num']) in board_num_pairs)
+            )
         ]
-        # print(f'[MOD: removed post count /{posts[0]['board_shortname']}/: {len_i - len(posts)}]')
         return posts
 
 
