@@ -70,13 +70,12 @@ class MysqlQueryRunner(BaseQueryRunner):
 
                 await cursor.execute(query, params)
 
-                if commit:
-                    await conn.commit()
-                    return
-
                 results = [await cursor.fetchall()]
                 while await cursor.nextset():
                     results.append(await cursor.fetchall())
+
+                if commit:
+                    await conn.commit()
 
                 return results[0] if len(results) == 1 else results # prone to issues ?
 

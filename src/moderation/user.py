@@ -25,7 +25,7 @@ async def get_user_by_username(username: str) -> Optional[dict]:
     return users[0]
 
 
-async def create_user(username: str, password: str, role: UserRole, active: bool, notes: str=None):
+async def create_user_if_not_exists(username: str, password: str, role: UserRole, active: bool, notes: str=None):
     # username can't already exist
     if await get_user_by_username(username):
         return
@@ -47,17 +47,33 @@ async def create_user(username: str, password: str, role: UserRole, active: bool
     await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
 
 
-async def edit_user_by_username(username: str, password: str, role: UserRole, active: bool, notes: str=None):
+async def edit_user_password_by_username(username: str, password: str):
     if not await get_user_by_username(username):
         return
 
     sql_string = f"""
     UPDATE users
-    SET password=∆, role=∆, active=∆, notes=∆, last_update_at=∆
+    SET password=∆, last_update_at=∆
     WHERE username=∆;
     """
     params = (
         generate_password_hash(password, method='scrypt', salt_length=16),
+        datetime.now(),
+        username,
+    )
+    await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
+
+
+async def edit_user_by_username(username: str, role: UserRole, active: bool, notes: str=None):
+    if not await get_user_by_username(username):
+        return
+
+    sql_string = f"""
+    UPDATE users
+    SET role=∆, active=∆, notes=∆, last_update_at=∆
+    WHERE username=∆;
+    """
+    params = (
         role,
         active,
         notes,

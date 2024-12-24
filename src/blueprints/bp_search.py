@@ -1,6 +1,7 @@
 
 from logging import getLogger
 
+import werkzeug.exceptions
 from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
@@ -13,6 +14,7 @@ from boards import board_shortnames
 from configs import SITE_NAME
 from enums import SearchType
 from forms import SearchForm
+from moderation.filter_cache import fc
 from posts.template_optimizer import (
     get_gallery_media_t,
     report_modal_t,
@@ -25,11 +27,10 @@ from search.pagination import template_pagination_links, total_pages
 from search.providers import get_search_provider
 from search.query import get_search_query
 from templates import (
-    template_error_404,
-    template_index_search,
-    template_index_search_config,
-    template_index_search_gallery_post_t,
-    template_index_search_post_t
+    template_search,
+    template_search_gallery_post_t,
+    template_search_info,
+    template_search_post_t
 )
 from utils import Perf
 
@@ -41,7 +42,7 @@ bp = Blueprint("bp_search", __name__)
 @bp.route("/index_search_config", methods=['GET', 'POST'])
 async def index_search_config():
     return await render_controller(
-        template_index_search_config,
+        template_search_info,
         tab_title=SITE_NAME,
         board_list=' '.join(board_shortnames),
     )
@@ -51,18 +52,6 @@ async def index_search_config():
 async def index_search_stats():
     search_p = get_search_provider()
     return await search_p.post_stats()
-
-
-@bp.errorhandler(404)
-async def error_not_found(e):
-    return await render_controller(template_error_404, message='404 Not Found', tab_title=f'Error')
-
-
-@bp.errorhandler(400)
-async def error_invalid(e):
-    return await render_controller(
-        template_error_404, e=e.description, message='The search parameters will result in 0 records.', tab_title=f'Invalid search'
-    )
 
 
 async def get_posts_and_total_hits(search_type: SearchType, form_data: dict, p: Perf) -> tuple[list[dict], int]:
@@ -143,6 +132,9 @@ async def search_handler(search_type: SearchType) -> str:
 
         p.check('search done')
 
+        posts = await fc.filter_reported_posts(posts)
+        p.check('filter_reported')
+
         if not gallery_mode:
             for post in posts:
                 hl_search_term_comment = form.comment.data if HIGHLIGHT_ENABLED and form.comment.data else None
@@ -153,11 +145,11 @@ async def search_handler(search_type: SearchType) -> str:
 
                 posts_t.append(wrap_post_t(post))
 
-            posts_t = ''.join(template_index_search_post_t.render(**p) for p in posts_t)
+            posts_t = ''.join(template_search_post_t.render(**p) for p in posts_t)
 
         else:
             # doesn't require restored comments because it's just a gallery
-            posts_t = ''.join(template_index_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
+            posts_t = ''.join(template_search_gallery_post_t.render(post=post, t_gallery_media=get_gallery_media_t(post)) for post in posts)
         
         p.check('templated posts')
 
@@ -168,13 +160,13 @@ async def search_handler(search_type: SearchType) -> str:
         p.check('templated links')
         cur_page = form_data.get('page', cur_page)
 
-    rendered_page = template_index_search.render(
+    rendered_page = template_search.render(
         gallery_mode=gallery_mode,
         form=form,
         posts_t=posts_t,
         report_modal_t=report_modal_t,
         page_links=page_links,
-        res_count=len(posts),
+        result_count=len(posts),
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,

@@ -1,14 +1,6 @@
 {% if pagination %}
-    <p>
-        <div class="center">
-            <div class="paginate">
-                <p class="center">
-                    {{pagination.info}}
-                </p>
-                <p>
-                    {{pagination.links}}
-                </p>
-            </div>
-        </div>
-    </p>
+    <div class="paginate m-2">
+        {{pagination.info}}
+        {{pagination.links}}
+    </div>
 {% endif %}

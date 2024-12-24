@@ -5,19 +5,26 @@ import os
 
 from flask_bootstrap import Bootstrap5
 from quart import Quart
+from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
-from configs import QuartConfig, app_conf
+from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
-from moderation.mod import init_moderation_db
-from templates import render_constants
+from moderation import init_moderation
+from moderation.filter_cache import fc
+from render import render_controller
+from templates import render_constants, template_message
+from utils import Perf
 
 # from security.limiter import limiter
 
 
-if app_conf.get('testing', False):
-    import tracemalloc
-    tracemalloc.start()
+async def app_error(e: HTTPException):
+    p = Perf('error')
+    render = await render_controller(template_message, message=e, tab_title=f'Error', title='Uh-oh...')
+    p.check('render')
+    print(p)
+    return render
 
 
 async def create_app():
@@ -39,11 +46,15 @@ async def create_app():
     for bp in blueprints:
         app.register_blueprint(bp)
 
-    await init_moderation_db()
+    if mod_conf['moderation']:
+        await init_moderation()
+        await fc.init()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
+
+    app.register_error_handler(HTTPException, app_error)
 
     return app
 

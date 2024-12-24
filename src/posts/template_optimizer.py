@@ -2,7 +2,7 @@ from enum import StrEnum
 from html import escape
 
 from configs import media_conf
-from enums import ReportCategory
+from enums import SubmitterCategory
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
 
@@ -57,9 +57,9 @@ def wrap_post_t(post: dict):
 
 
 def get_report_t(post):
-    return f"""<button class="btn" report_url="/report/{post['board_shortname']}/{post['num']}">
+    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">
         Report
-    </button>"""
+    </button>]"""
 
 
 def get_sub_t(post: dict):
@@ -286,10 +286,11 @@ def get_since4pass_t(post: dict):
 
 
 def get_filedeleted_t(post: dict):
-    if not post.get('deleted'):
+    if not (deleted := post.get('deleted')):
         return ''
     msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
-    return f'<strong class="warning" title="This post was {msg}.">[Deleted]</strong>'
+    deleted = '[Deleted]' if deleted == 1 else escape(deleted)
+    return f'<strong class="warning" title="This post was {msg}.">{deleted}</strong>'
 
 
 def get_header_t(post: dict):
@@ -340,10 +341,10 @@ def generate_report_modal():
     category_options = "\n".join(
         f"""
         <div>
-          <input type="radio" id="{category.name}" name="report_category" value="{category.value}" required>
+          <input type="radio" id="{category.name}" name="submitter_category" value="{category.value}" required>
           <label for="{category.name}">{category.value}</label>
         </div>
-        """ for category in ReportCategory
+        """ for category in SubmitterCategory
     )
     modal_html = f"""
     <div id="modal_overlay" hidden>
@@ -354,7 +355,7 @@ def generate_report_modal():
             </div>
             <form id="report_form" action="" method="POST">
                 <div>
-                    <label for="report_category">Category:</label>
+                    <label for="submitter_category">Category:</label>
                     {category_options}
                 </div>
                 <br>

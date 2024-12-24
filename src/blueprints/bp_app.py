@@ -9,6 +9,7 @@ from asagi_converter import (
 )
 from boards import get_title
 from configs import SITE_NAME
+from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
     render_wrapped_post_t,
@@ -29,8 +30,10 @@ from utils.validation import validate_board, validate_threads
 bp = Blueprint("bp_app", __name__)
 
 
-async def make_pagination_board_index(board_shortname, index, page_num):
+async def make_pagination_board_index(board_shortname: str, index: dict, page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board_shortname)
+    op_thread_removed_count = await fc.get_op_thread_removed_count(board_shortname)
+    op_thread_count -= op_thread_removed_count
 
     board_index_thread_count = len(index['threads'])
 
@@ -44,6 +47,7 @@ async def make_pagination_board_index(board_shortname, index, page_num):
         href=f'/{board_shortname}/page/' + '{0}',
         show_single_page=True,
     )
+
 
 @bp.get("/")
 async def v_index():
@@ -59,7 +63,10 @@ async def v_board_index(board_shortname: str):
     
     index, quotelinks = await generate_index(board_shortname)
     p.check('query')
-    
+
+    index['threads'] = [{'posts': await fc.filter_reported_posts(posts['posts'])} for posts in index['threads']]
+    p.check('filter_reported')
+
     validate_threads(index['threads'])
     p.check('validate')
 
@@ -70,6 +77,7 @@ async def v_board_index(board_shortname: str):
         render_thread_stats(thread['posts'][0]) +
         get_posts_t(thread['posts'], quotelinks)
         for thread in index["threads"]
+        if thread['posts']
     )
     p.check('post_t')
 
@@ -110,6 +118,9 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     index, quotelinks = await generate_index(board_shortname, page_num)
     p.check('generate index')
 
+    index['threads'] = await fc.filter_reported_posts(index['threads'])
+    p.check('filter_reported')
+
     validate_threads(index['threads'])
     p.check('validate thread')
 
@@ -137,8 +148,11 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     return rendered
 
 
-async def make_pagination_catalog(board_shortname, catalog, page_num):
+async def make_pagination_catalog(board_shortname: str, catalog: list[dict], page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board_shortname)
+    op_thread_removed_count = await fc.get_op_thread_removed_count(board_shortname)
+    op_thread_count -= op_thread_removed_count
+
     catalog_pages = int(op_thread_count / 15) + 1  # we grab 150 threads per catalog page
 
     catalog_page_thread_count = 0
@@ -176,6 +190,10 @@ async def v_catalog(board_shortname: str):
     catalog = await generate_catalog(board_shortname)
     p.check('query')
 
+    # `nreplies` won't always be correct, but it does not effect paging
+    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads']))} for page in catalog]
+    p.check('filter_reported')
+
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
     p.check('paginate')
 
@@ -191,14 +209,6 @@ async def v_catalog(board_shortname: str):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
-    # render = await render_controller(
-    #     template_catalog,
-    #     catalog=catalog,
-    #     pagination=pagination,
-    #     board=board_shortname,
-    #     title=get_title(board_shortname),
-    #     tab_title=f"/{board_shortname}/ Catalog",
-    # )
     p.check('render')
     print(p)
 
@@ -219,6 +229,10 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     catalog = await generate_catalog(board_shortname, page_num)
     p.check('query')
 
+    # `nreplies` won't always be correct, but it does not effect paging
+    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads']))} for page in catalog]
+    p.check('filter_reported')
+
     pagination = await make_pagination_catalog(board_shortname, catalog, page_num)
     p.check('paginate')
 
@@ -234,14 +248,6 @@ async def v_catalog_page(board_shortname: str, page_num: int):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
     )
-    # render = await render_controller(
-    #     template_catalog,
-    #     catalog=catalog,
-    #     pagination=pagination,
-    #     board=board_shortname,
-    #     title=get_title(board_shortname),
-    #     tab_title=f"/{board_shortname}/ Catalog",
-    # )
     p.check('render')
     print(p)
 
@@ -254,6 +260,7 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> s
     
     posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
+
 
 def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     """Returns (nreplies, nimages)"""
@@ -288,6 +295,9 @@ async def v_thread(board_shortname: str, thread_id: int):
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
     p.check('queries')
+
+    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'])
+    p.check('filter_reported')
 
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 

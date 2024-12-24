@@ -182,12 +182,18 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
         ) for board in boards)
     )
 
+    total_hits = await asyncio.gather(*(
+        db_q.query_tuple(f"""select count(*) from {board} {where_query}""", params=params)
+        for board in boards
+    ))
+    total_hits = sum(n[0][0] for n in total_hits)
+
     posts = []
     for board_post in board_posts:
         posts.extend(board_post)
-    
+
     if not posts:
-        return [], 0  # posts, total_hits
+        return [], total_hits  # posts, total_hits
 
     board_quotelinks = await get_board_2_ql_lookup(posts)
 
@@ -195,7 +201,7 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
         board = post['board_shortname']
         post['quotelinks'] = board_quotelinks.get(board, {}).get(post['num'], set())
 
-    return posts, len(posts)
+    return posts, total_hits
 
 
 async def search_posts_get_thread_nums(form_data: dict) -> dict:
@@ -304,7 +310,7 @@ def substitute_square_brackets(text):
 def restore_comment(op_num: int, comment: str, board_shortname: str, hl_search_term: str=None):
     """
     Re-convert asagi stripped comment into clean html.
-    Also create a dictionary with keys containing the post_num, which maps to a tuple containing the posts it links to.
+    Also create a dictionary with keys containing the num, which maps to a tuple containing the posts it links to.
 
     Returns a string (the processed comment) and a list of quotelinks in
     the post.
@@ -314,7 +320,7 @@ def restore_comment(op_num: int, comment: str, board_shortname: str, hl_search_t
 
     >> (show OP)
     >>>/g/ (board redirect)
-    >>>/g/<post_num> (board post redirect)
+    >>>/g/<num> (board post redirect)
     """
 
     quotelinks = []
@@ -550,3 +556,29 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
 
     post_2_quotelinks, posts = get_qls_and_posts(posts)
     return post_2_quotelinks, posts[0]
+
+
+async def get_deleted_ops_by_board(board: str) -> list[int]:
+    """Returns op post nums marked as deleted by 4chan staff."""
+    sql = f"""select num from {board} where deleted = 1 and op = 1"""
+    return [row[0] for row in (await db_q.query_tuple(sql))]
+
+
+async def get_deleted_non_ops_by_board(board: str) -> list[int]:
+    """Returns non-op post nums marked as deleted by 4chan staff."""
+    sql = f"""select num from {board} where deleted = 1 and op = 0;"""
+    return [row[0] for row in (await db_q.query_tuple(sql))]
+
+
+async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
+    """Returns all nums marked as deleted by 4chan staff in the format [(num, op), ...]"""
+    sql = f"""select num, op from {board} where deleted = 1;"""
+    return [(row[0], row[1]) for row in (await db_q.query_tuple(sql))]
+
+
+async def is_post_op(board_shortname: str, num: int) -> bool:
+    sql = f"""select num, op from {board_shortname} where num = {db_q.phg()}"""
+    rows = await db_q.query_tuple(sql, params=[num])
+    if not rows:
+        return False
+    return rows[0][1]

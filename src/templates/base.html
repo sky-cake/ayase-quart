@@ -4,7 +4,11 @@
     <head>
         <meta charset="utf-8">
 
-        <title>{{ tab_title }}</title>
+        {% if tab_title %}
+            <title>{{ tab_title }}</title>
+        {% else %}
+            <title>Ayase Quart</title>
+        {% endif %}
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -24,13 +28,13 @@
         <script type="text/javascript" src="/static/js/index.js"></script>
 
         {% if request.endpoint in [
-            'bp_app.v_thread',
-            'bp_app.v_board_index',
-            'bp_app.v_board_index_page',
-            'bp_search.v_search',
-            'bp_search.v_index_search',
+        'bp_app.v_thread',
+        'bp_app.v_board_index',
+        'bp_app.v_board_index_page',
+        'bp_search.v_search',
+        'bp_search.v_index_search',
         ] %}
-            <script type="text/javascript" src="/static/js/thread.js"></script>
+        <script type="text/javascript" src="/static/js/thread.js"></script>
         {% endif %}
 
         <div id="body">
@@ -82,7 +86,7 @@
                             /
                         {% endif %}
 
-                        <a href="{{ url_for('bp_moderation.reports_index') }}">Reports</a>
+                        <a href="{{ url_for('bp_moderation.reports_open') }}">Reports</a>
                         /
                         <a href="{{ url_for('bp_admin.stats') }}">Stats</a>
                         /
@@ -103,21 +107,24 @@
                 </div>
             {% endif %}
 
+            <h2 style="display: inline-block;">{{title}}</h2>
             <div class="container-fluid">
                 {% if board %}
                     <div class="container">
-                        <h2 style="display: inline-block;">{{title}}</h2>
+                        <br>
                         {% if board %}
                             [
-                            <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
-                            <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
-                            <a href="/{{ board }}/catalog">Catalog</a>
+                                <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
+                                <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
+                                <a href="/{{ board }}/catalog">Catalog</a>
                             ]
+                            <br>
                         {% endif %}
+                        <br>
                     </div>
                 {% endif %}
 
-                {% include 'flash.html' %}
+                {% include 'macros/flash.html' %}
 
                 {% block body %}
                 {% endblock %}

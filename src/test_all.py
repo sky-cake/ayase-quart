@@ -1,9 +1,11 @@
 import unittest
 
-from tests.endpoints import ExistingEndpoints
+from tests.test_endpoints import TestExistingEndpoints
+from tests.test_moderation import TestFilterReportedPosts
 
 tests = [
-    ExistingEndpoints,
+    TestExistingEndpoints,
+    TestFilterReportedPosts,
 ]
 
 if __name__ == "__main__":

@@ -37,20 +37,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const quotelinks = document.querySelectorAll("a.quotelink");
 
     quotelinks.forEach((quotelink) => {
-        const post_num = quotelink.getAttribute("href").split("#p")[1];
+        const num = quotelink.getAttribute("href").split("#p")[1];
         const board_shortname = quotelink.getAttribute('data-board_shortname');
 
         quotelink.addEventListener("mouseover", (e) => {
             let backlink = e.target.parentElement.parentElement.id;
             let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
             
-            const id_post_num = "#p" + post_num;
+            const id_post_num = "#p" + num;
             let target_post = document.querySelector(id_post_num);
 
             quotelink_preview_hide();
 
             if (target_post == null) {
-                fetch(`/${board_shortname}/post/${post_num}`)
+                fetch(`/${board_shortname}/post/${num}`)
                     .then(response => {
                         return response.ok ? response.json() : Promise.reject();
                     })
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // OP labels on quotelinks
-        if(post_num == op_num) {
+        if(num == op_num) {
             quotelink.textContent += ' (OP)';
         }
     });

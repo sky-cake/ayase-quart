@@ -1,19 +1,17 @@
-from werkzeug.exceptions import NotFound
+from quart import abort
 
 import boards
 
 
 def validate_board(board: str) -> None:
     if not board in boards.boards:
-        raise NotFound(board, boards.board_shortnames)
+        abort(404)
+
 
 def validate_threads(threads: list[dict]):
     if len(threads) < 1:
-        raise NotFound(threads)
+        abort(404)
 
-def validate_post(post: dict|None):
-    if not post:
-        raise NotFound(post)
 
 def clamp_positive_int(value: int|float|str, lower: int=0, upper: int=None) -> int:
     """Clamps a value within the range:

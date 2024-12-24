@@ -37,19 +37,17 @@ class AuthActions(Enum):
     is_authority = 7
 
 
-class ReportStatus(StrEnum):
-    open = 'open'
-    pending = 'pending'
-    closed = 'closed'
+class ModStatus(StrEnum):
+    open = 'o'
+    closed = 'c'
 
 
-class PostStatus(StrEnum):
-    visible = 'visible'
-    hidden = 'hidden'
-    deleted = 'deleted'
+class PublicAccess(StrEnum):
+    visible = 'v'
+    hidden = 'h'
 
 
-class ReportCategory(StrEnum):
+class SubmitterCategory(StrEnum):
     illegal_content = 'Illegal content'
     dcma = 'DCMA'
     underage = '18+ only'

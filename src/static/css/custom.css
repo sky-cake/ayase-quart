@@ -87,6 +87,15 @@ td, th {
     padding: 1em;
 }
 
+td {
+    vertical-align: top;
+}
+
+span.subject {
+	color: #b294bb;
+	font-weight: 700;
+}
+
 .mt {
     margin-top: 2em;
 }
@@ -128,6 +137,32 @@ ul {
     color: inherit;
     border-radius: 4px;
     cursor: pointer;
+}
+
+.rbtn {
+    background-color: inherit;
+    border: none;
+    color: #99bcd9 !important;
+    cursor: pointer;
+    padding: 0;
+}
+
+.rbtn:disabled {
+    background-color: inherit;
+    border: none;
+    color: #727272 !important;
+    cursor: default;
+    padding: 0;
+}
+
+.actionform {
+    border: none;
+    background-color: inherit;
+    color: #99bcd9 !important;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    display: inline;
 }
 
 hr {
@@ -307,7 +342,7 @@ input:focus {
 }
 
 .warning {
-    color: red;
+    color: #c40000;
 }
 
 .poster {

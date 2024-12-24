@@ -93,6 +93,7 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
 
     if cur_page > 1: # not first page
         links.append(get_page_link(base_link, 1, text='First'))
+        links.append('<br>')
         links.append(get_page_link(base_link, cur_page - 1, text='Previous'))
         links.append('<br>')
 
@@ -110,6 +111,7 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
     if cur_page < total_pages: # not last page
         links.append('<br>')
         links.append(get_page_link(base_link, cur_page + 1, text='Next'))
+        links.append('<br>')
         links.append(get_page_link(base_link, total_pages, text='Last'))
     
     links = ''.join(links)

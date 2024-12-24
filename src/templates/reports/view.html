@@ -1,10 +1,9 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import table %}
+{% from 'macros/macros.html' import table %}
 
 {% block body %}
 
-    <h1>View Report</h1>
-    <p><a href="{{ url_for('bp_moderation.reports_index') }}">Back to Reports</a></p>
+    <a href="{{ url_for('bp_moderation.reports_open') }}">Back to Reports</a>
 
     {% if report %}
         {{table(report, safe_cols=['actions'])}}
