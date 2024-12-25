@@ -1,6 +1,8 @@
 import aiosqlite
-from utils import make_src_path
+
 from db.sqlite import row_factory
+from utils import make_src_path
+
 
 class eavDb:
 

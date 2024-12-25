@@ -1,7 +1,6 @@
 
 from logging import getLogger
 
-import werkzeug.exceptions
 from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 

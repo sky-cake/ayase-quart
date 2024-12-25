@@ -4,7 +4,9 @@ from quart import Blueprint, flash, redirect, request, url_for
 
 from asagi_converter import get_selector
 from boards import board_shortnames
+from configs import mod_conf
 from db import db_q
+from eav.eav import db_eav
 from enums import DbPool
 from forms import UserCreateForm, UserEditForm
 from moderation.auth import admin_required
@@ -21,16 +23,14 @@ from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
 from templates import (
     template_catalog,
+    template_configs,
     template_stats,
     template_users_create,
     template_users_delete,
     template_users_edit,
     template_users_index,
-    template_users_view,
-    template_configs
+    template_users_view
 )
-from eav.eav import db_eav
-from configs import mod_conf
 
 bp = Blueprint('bp_admin', __name__)
 

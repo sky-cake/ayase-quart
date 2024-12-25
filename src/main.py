@@ -10,12 +10,12 @@ from werkzeug.exceptions import HTTPException
 from blueprints import blueprints
 from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
+from eav.eav import db_eav
 from moderation import init_moderation
 from moderation.filter_cache import fc
 from render import render_controller
 from templates import render_constants, template_message
 from utils import Perf
-from eav.eav import db_eav
 
 # from security.limiter import limiter
 

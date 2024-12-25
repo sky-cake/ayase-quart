@@ -1,3 +1,5 @@
+from html import escape
+
 from quart import Blueprint, abort, flash, jsonify, redirect, request, url_for
 
 from configs import mod_conf
@@ -16,7 +18,6 @@ from moderation.report import (
 from render import render_controller
 from templates import template_reports_index
 from utils.validation import validate_board
-from html import escape
 
 bp = Blueprint('bp_moderation', __name__)
 
