@@ -44,6 +44,11 @@ template_message = env.get_template("message.html")
 template_search_info = env.get_template('search/info.html')
 template_search = env.get_template('search/search.html')
 
+template_message = env.get_template("message.html")
+
+template_search_info = env.get_template('search/info.html')
+template_search = env.get_template('search/search.html')
+
 template_users_index = env.get_template('users/index.html')
 template_users_view = env.get_template('users/view.html')
 template_users_edit = env.get_template('users/edit.html')
