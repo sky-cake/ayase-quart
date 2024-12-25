@@ -43,6 +43,7 @@ bp = Blueprint("bp_search", __name__)
 async def index_search_config():
     return await render_controller(
         template_search_info,
+        title=SITE_NAME,
         tab_title=SITE_NAME,
         board_list=' '.join(board_shortnames),
     )
