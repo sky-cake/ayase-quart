@@ -1,4 +1,5 @@
 {%- macro table(list_of_dicts, safe_cols=None) -%}
+  {% if list_of_dicts %}
   <table style="border-collapse: collapse; font-family: Arial, sans-serif;">
     <thead>
       <tr>
@@ -23,6 +24,9 @@
       {%- endfor -%}
     </tbody>
   </table>
+  {% else %}
+    No data.
+  {% endif %}
 {%- endmacro -%}
 
 

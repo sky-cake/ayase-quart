@@ -35,7 +35,7 @@ async def login():
     if is_logged_in and request.method == 'GET':
         return redirect(url_for('bp_moderation.reports_open'))
 
-    return await render_controller(template_login, form=form, is_logged_in=is_logged_in)
+    return await render_controller(template_login, form=form, is_logged_in=is_logged_in, title='Admin Login', tab_title='Admin Login')
 
 
 @bp.route("/logout", methods=["GET"])

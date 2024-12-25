@@ -15,6 +15,7 @@ from moderation.filter_cache import fc
 from render import render_controller
 from templates import render_constants, template_message
 from utils import Perf
+from eav.eav import db_eav
 
 # from security.limiter import limiter
 
@@ -49,6 +50,7 @@ async def create_app():
     if mod_conf['moderation']:
         await init_moderation()
         await fc.init()
+        await db_eav.init()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)

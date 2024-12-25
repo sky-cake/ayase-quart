@@ -37,6 +37,7 @@ template_thread = env.get_template("thread.html")
 
 template_stats = env.get_template("stats.html")
 template_login = env.get_template('login.html')
+template_configs = env.get_template('configs.html')
 
 template_message = env.get_template("message.html")
 

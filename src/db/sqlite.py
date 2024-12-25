@@ -12,20 +12,21 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 
+def row_factory(cursor, row: tuple):
+    keys = [col[0] for col in cursor.description]
+    return DotDict({k: v for k, v in zip(keys, row)})
+
+
 class SqlitePoolManager(BasePoolManager):
     def __init__(self, sqlite_conf=None, sql_echo=False):
         self.sqlite_conf = sqlite_conf or {}
         self.sql_echo = sql_echo
         self.pools = {}
 
-    def row_factory(self, cursor, row: tuple):
-        keys = [col[0] for col in cursor.description]
-        return DotDict({k: v for k, v in zip(keys, row)})
-
     async def create_pool(self, p_id=DbPool.main, dict_row=False):
         pool = await aiosqlite.connect(self.sqlite_conf['database'])
 
-        pool.row_factory = self.row_factory if dict_row else None
+        pool.row_factory = row_factory if dict_row else None
 
         self.pools[p_id] = pool
         return pool
@@ -38,7 +39,7 @@ class SqlitePoolManager(BasePoolManager):
             # assuming this is cheap to toggle
             # we avoid having to juggle p_id codes this way
             # still get to have multiple pools for asagi, moderation, etc. if we want
-            self.pools[p_id].row_factory = self.row_factory if dict_row else None
+            self.pools[p_id].row_factory = row_factory if dict_row else None
             return self.pools[p_id]
 
         return await self.create_pool(p_id, dict_row=dict_row)

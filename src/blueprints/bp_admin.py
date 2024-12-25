@@ -26,8 +26,11 @@ from templates import (
     template_users_delete,
     template_users_edit,
     template_users_index,
-    template_users_view
+    template_users_view,
+    template_configs
 )
+from eav.eav import db_eav
+from configs import mod_conf
 
 bp = Blueprint('bp_admin', __name__)
 
@@ -65,19 +68,6 @@ async def get_latest_ops_as_catalog():
     }]
 
 
-@bp.route("/stats")
-@admin_required
-async def stats():
-    table_row_counts = await get_row_counts()
-    return await render_controller(
-        template_stats,
-        table_row_counts=table_row_counts,
-        title='Archive Metrics',
-        tab_title='Archive Metrics',
-        is_admin=True,
-    )
-
-
 @bp.route("/latest")
 @admin_required
 async def latest():
@@ -92,6 +82,43 @@ async def latest():
         threads=threads,
         title='Latest Threads',
         tab_title='Latest Threads',
+        is_admin=True,
+    )
+
+
+@bp.route("/stats")
+@admin_required
+async def stats():
+    table_row_counts = await get_row_counts()
+    return await render_controller(
+        template_stats,
+        table_row_counts=table_row_counts,
+        title='Archive Metrics',
+        tab_title='Archive Metrics',
+        is_admin=True,
+    )
+
+
+@bp.route("/configs")
+@admin_required
+async def configs():
+    entity = 'moderation'
+    configs = await db_eav.get_eavs(entity=entity)
+    modifyable_confs = [
+        'default_reported_post_public_access',
+        'hide_delete_posts',
+        'remove_replies_to_hidden_op',
+    ]
+    if not configs:
+        for c in modifyable_confs:
+            await db_eav.set_value(entity, c, mod_conf[c])
+
+    configs = await db_eav.get_eavs(entity=entity)
+    return await render_controller(
+        template_configs,
+        configs=configs,
+        title='Archive Configs',
+        tab_title='Archive Configs',
         is_admin=True,
     )
 

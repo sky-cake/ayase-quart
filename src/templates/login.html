@@ -6,9 +6,6 @@
 
   {% if not is_admin and not is_moderator and not is_logged_in %}
     <div class="mt-2 card">
-      <h3>
-        Administrator Login
-      </h3>
       <div class="card-body">
 
         <form id="login_form" action="{{url_for('bp_auth.login')}}" method="post" novalidate=True>

@@ -197,7 +197,7 @@ async def get_deleted_numops_per_board_iter():
     
     `(board_shortname, [(num, op), ...])`
     """
-    if not (mod_conf["hide_delete_posts"] and board_shortnames):
+    if not (mod_conf["hide_4chan_deleted_posts"] and board_shortnames):
         return
     for board in board_shortnames:
         numops = await get_deleted_numops_by_board(board)
