@@ -101,7 +101,6 @@ async def stats():
 
 @bp.route("/configs")
 @admin_required
-<<<<<<< HEAD
 async def configs():
     entity = 'moderation'
     configs = await db_eav.get_eavs(entity=entity)
@@ -120,20 +119,6 @@ async def configs():
         configs=configs,
         title='Archive Configs',
         tab_title='Archive Configs',
-=======
-async def latest():
-    catalog = await get_latest_ops_as_catalog()
-    threads = ''.join(
-        render_catalog_card(wrap_post_t(op|dict(quotelinks={})))
-        for batch in catalog
-        for op in batch['threads']
-    )
-    return await render_controller(
-        template_catalog,
-        threads=threads,
-        title='Latest Threads',
-        tab_title='Latest Threads',
->>>>>>> 320b0b399550273b54e8d4a5d7937e0a5c5f12e1
         is_admin=True,
     )
 
