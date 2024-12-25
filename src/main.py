@@ -15,10 +15,7 @@ from moderation.filter_cache import fc
 from render import render_controller
 from templates import render_constants, template_message
 from utils import Perf
-<<<<<<< HEAD
 from eav.eav import db_eav
-=======
->>>>>>> 320b0b399550273b54e8d4a5d7937e0a5c5f12e1
 
 # from security.limiter import limiter
 
