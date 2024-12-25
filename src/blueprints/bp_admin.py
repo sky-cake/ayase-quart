@@ -6,7 +6,7 @@ from asagi_converter import get_selector
 from boards import board_shortnames
 from configs import mod_conf
 from db import db_q
-from eav.eav import db_eav
+from eav.eav import eav
 from enums import DbPool
 from forms import UserCreateForm, UserEditForm
 from moderation.auth import admin_required
@@ -103,7 +103,7 @@ async def stats():
 @admin_required
 async def configs():
     entity = 'moderation'
-    configs = await db_eav.get_eavs(entity=entity)
+    configs = await eav.get_entities()
     modifyable_confs = [
         'default_reported_post_public_access',
         'hide_delete_posts',
@@ -111,9 +111,9 @@ async def configs():
     ]
     if not configs:
         for c in modifyable_confs:
-            await db_eav.set_value(entity, c, mod_conf[c])
+            await eav.set_value(entity, c, mod_conf[c])
 
-    configs = await db_eav.get_eavs(entity=entity)
+    configs = await eav.get_eavs(entity=entity)
     return await render_controller(
         template_configs,
         configs=configs,

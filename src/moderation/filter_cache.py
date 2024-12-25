@@ -12,14 +12,10 @@ from utils import make_src_path, read_file
 
 
 class BaseFilterCache(ABC):
-
-    @classmethod
-    async def init(cls):
-        instance = cls()
-        await instance._create_cache()
-        if not await instance._is_cache_populated():
-            await instance._populate_cache()
-        return instance
+    async def init(self):
+        await self._create_cache()
+        if not await self._is_cache_populated():
+            await self._populate_cache()
 
     @abstractmethod
     async def _create_cache(self) -> None:

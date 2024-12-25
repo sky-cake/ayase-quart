@@ -3,6 +3,7 @@ from functools import cache
 from configs import db_conf, db_mod_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from enums import DbPool, DbType
+from utils import make_src_path
 
 
 @cache
@@ -90,3 +91,4 @@ class DbHandler:
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query
 db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
+db_eav = DbHandler({'database': make_src_path('eav.db')}, DbType.sqlite)

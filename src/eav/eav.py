@@ -1,70 +1,47 @@
-import aiosqlite
-
-from db.sqlite import row_factory
-from utils import make_src_path
+from db import db_eav
 
 
-class eavDb:
-
+class EAV:
     async def init(self):
-        self.db_path = make_src_path('eav.db')
-        self.conn = None
-        self.conn = await self.create_db()
-
-    async def create_db(self):
-        if self.conn is None:
-            self.conn = await aiosqlite.connect(self.db_path)
-            self.conn.row_factory = row_factory
-            
-            await self.conn.execute('''
-                create table if not exists eav (
-                    entity text, 
-                    attribute text, 
-                    value text, 
-                    primary key (entity, attribute)
-                )
-            ''')
-
-            await self.conn.execute('create index if not exists idx_entity on eav (entity)')
-            await self.conn.execute('create index if not exists idx_attribute on eav (attribute)')
-            await self.conn.execute('create index if not exists idx_value on eav (value)')
-            await self.conn.execute('create index if not exists idx_entity_attribute on eav (entity, attribute)')
-
-            await self.conn.commit()
-
-        return self.conn
+        await db_eav.query_dict('''
+            create table if not exists eav (
+                entity text, 
+                attribute text, 
+                value text, 
+                primary key (entity, attribute)
+            )
+        ''', commit=True)
+        await db_eav.query_dict('create index if not exists idx_entity on eav (entity)', commit=True)
+        await db_eav.query_dict('create index if not exists idx_attribute on eav (attribute)', commit=True)
+        await db_eav.query_dict('create index if not exists idx_value on eav (value)', commit=True)
+        await db_eav.query_dict('create index if not exists idx_entity_attribute on eav (entity, attribute)', commit=True)
 
     async def get_value(self, entity, attribute):
-        cursor = await self.conn.execute('select value from eav where entity = ? and attribute = ?', (entity, attribute))
-        result = await cursor.fetchone()
-        return result[0] if result else None
+        if (rows := await db_eav.query_tuple('select value from eav where entity = ? and attribute = ?', params=(entity, attribute))):
+            return rows[0][0] if rows else None
 
     async def set_value(self, entity, attribute, value):
-        await self.conn.execute('insert or replace into eav (entity, attribute, value) values (?, ?, ?)', (entity, attribute, value))
-        await self.conn.commit()
+        await db_eav.query_dict('insert or replace into eav (entity, attribute, value) values (?, ?, ?)', params=(entity, attribute, value), commit=True)
 
     async def delete_value(self, entity, attribute):
-        await self.conn.execute('delete from eav where entity = ? and attribute = ?', (entity, attribute))
-        await self.conn.commit()
+        await db_eav.query_dict('delete from eav where entity = ? and attribute = ?', params=(entity, attribute), commit=True)
 
-    async def get_entities(self):
-        cursor = await self.conn.execute('select distinct entity from eav')
-        return [row[0] async for row in cursor]
+    async def get_entities(self) -> list[dict]:
+        rows = await db_eav.query_tuple('select distinct entity from eav')
+        return [row[0] for row in rows] if rows else []
 
-    async def get_attributes(self):
-        cursor = await self.conn.execute('select distinct attribute from eav')
-        return [row[0] async for row in cursor]
+    async def get_attributes(self) -> list[dict]:
+        rows = await db_eav.query_tuple('select distinct attribute from eav')
+        return [row[0] for row in rows] if rows else []
 
     async def delete_entity(self, entity):
-        await self.conn.execute('delete from eav where entity = ?', (entity,))
-        await self.conn.commit()
+        await db_eav.query_dict('delete from eav where entity = ?', params=(entity,), commit=True)
 
     async def delete_all(self):
-        await self.conn.execute('delete from eav')
-        await self.conn.commit()
+        await db_eav.query_dict('delete from eav', commit=True)
 
     async def get_eavs(self, entity=None, attribute=None):
-        query = 'select entity, attribute, value from eav'
+        sql = 'select entity, attribute, value from eav'
         params = []
 
         conditions = []
@@ -76,13 +53,10 @@ class eavDb:
             params.append(attribute)
 
         if conditions:
-            query += ' where ' + ' and '.join(conditions)
+            sql += ' where ' + ' and '.join(conditions)
 
-        results = await (await self.conn.execute(query, params)).fetchall()
-        return results
-
-    async def close(self):
-        await self.conn.close()
+        rows = await db_eav.query_dict(sql, params=params)
+        return rows if rows else []
 
 
-db_eav = eavDb()
+eav = EAV()

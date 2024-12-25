@@ -10,7 +10,7 @@ from werkzeug.exceptions import HTTPException
 from blueprints import blueprints
 from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
-from eav.eav import db_eav
+from eav.eav import eav
 from moderation import init_moderation
 from moderation.filter_cache import fc
 from render import render_controller
@@ -50,7 +50,7 @@ async def create_app():
     if mod_conf['moderation']:
         await init_moderation()
         await fc.init()
-        await db_eav.init()
+        await eav.init()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
