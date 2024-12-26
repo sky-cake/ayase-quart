@@ -2,7 +2,10 @@ from abc import ABC, abstractmethod
 
 from aiosqlite import Connection
 
-from asagi_converter import get_deleted_numops_by_board
+from asagi_converter import (
+    get_deleted_numops_by_board,
+    get_numops_by_board_and_regex
+)
 from boards import board_shortnames
 from configs import mod_conf
 from db import db_m
@@ -115,19 +118,22 @@ class FilterCacheSqlite(BaseFilterCache):
 
     async def _populate_cache(self) -> None:
         pool: Connection = await db_m.pool_manager.get_pool(p_id=DbPool.mod)
-        async for board_and_numops in get_deleted_numops_per_board_iter():
-            if not board_and_numops[1]:
-                continue
+        iter_funcs = [
+            get_numops_by_board_and_regex_iter,
+            get_deleted_numops_per_board_iter,
+        ]
+        for iter_func in iter_funcs:
+            async for board_and_numops in iter_func():
+                if not (board_and_numops and board_and_numops[1]):
+                    continue
 
-            await pool.executemany(
-                "insert or ignore into board_nums_cache (board_shortname, num, op) values (?, ?, ?)",
-                [(board_and_numops[0], numop[0], numop[1]) for numop in board_and_numops[1]],
-            )
+                params = [(board_and_numops[0], numop[0], numop[1]) for numop in board_and_numops[1]]
+                await pool.executemany("insert or ignore into board_nums_cache (board_shortname, num, op) values (?, ?, ?)", params)
+                await pool.commit()
+
+            rows = await db_m.query_tuple("select board_shortname, op, group_concat(distinct num) as nums from report_parent group by board_shortname, op", p_id=DbPool.mod)
+            await pool.executemany("insert or ignore into board_nums_cache (board_shortname, op, num) values (?, ?, ?)", rows)
             await pool.commit()
-
-        rows = await db_m.query_tuple("select board_shortname, op, group_concat(distinct num) as nums from report_parent group by board_shortname, op", p_id=DbPool.mod)
-        await pool.executemany("insert or ignore into board_nums_cache (board_shortname, op, num) values (?, ?, ?)", rows)
-        await pool.commit()
 
 
     async def _teardown(self):
@@ -197,6 +203,18 @@ async def get_deleted_numops_per_board_iter():
         return
     for board in board_shortnames:
         numops = await get_deleted_numops_by_board(board)
+        yield board, numops
+
+
+async def get_numops_by_board_and_regex_iter():
+    """Returns a tuple[str, tuple[int, int]]
+    
+    `(board_shortname, [(num, op), ...])`
+    """
+    if not (mod_conf['regex_filter'] and board_shortnames):
+        return
+    for board in board_shortnames:
+        numops = await get_numops_by_board_and_regex(board, mod_conf['regex_filter'])
         yield board, numops
 
 

@@ -1,5 +1,6 @@
 import aiosqlite
 
+from configs import mod_conf
 from enums import DbPool
 
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
@@ -27,6 +28,13 @@ class SqlitePoolManager(BasePoolManager):
         pool = await aiosqlite.connect(self.sqlite_conf['database'])
 
         pool.row_factory = row_factory if dict_row else None
+
+        if mod_conf['moderation'] and mod_conf['regex_filter'] and mod_conf['path_to_regex_so']:
+            await pool.enable_load_extension(True)
+            await pool.load_extension(mod_conf['path_to_regex_so'])
+            cur = await pool.execute('select regex_version();')
+            regex_version = (await cur.fetchone())
+            print(f'regex_version(): {regex_version}')
 
         self.pools[p_id] = pool
         return pool

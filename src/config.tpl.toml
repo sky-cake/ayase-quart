@@ -88,5 +88,8 @@ hide_4chan_deleted_posts = true # hide 4chan staff deleted posts in archive
 filter_cache_type = 'sqlite' # sqlite, bloom
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 
+regex_filter = '' # never serve posts matching this regex pattern
+path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/releases
+
 [moderation.sqlite]
 database = 'moderation.db'

@@ -103,8 +103,10 @@ async def stats():
 async def configs():
     cs = [
         'default_reported_post_public_access',
-        'hide_delete_posts',
+        'hide_4chan_deleted_posts',
         'remove_replies_to_hidden_op',
+        'regex_filter',
+        'path_to_regex_so',
     ]
     return await render_controller(
         template_configs,

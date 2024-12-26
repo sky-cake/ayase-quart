@@ -576,6 +576,11 @@ async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
     return [(row[0], row[1]) for row in (await db_q.query_tuple(sql))]
 
 
+async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[int]]:
+    sql = f"""select num, op from {board} where comment regexp {db_q.phg()};"""
+    return [(row[0], row[1]) for row in (await db_q.query_tuple(sql, params=(pattern,)))]
+
+
 async def is_post_op(board_shortname: str, num: int) -> bool:
     sql = f"""select num, op from {board_shortname} where num = {db_q.phg()}"""
     rows = await db_q.query_tuple(sql, params=[num])
