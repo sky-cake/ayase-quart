@@ -3,21 +3,73 @@
 
 {% block body %}
 
-    {{mod_status_link|safe}}
-    <br>
-    <ul>
-        <li><span class="subject">View</span> - Visit the archive's version of the post.</li>
-        <li><span class="subject">Source</span> - View the post on 4chan.</li>
-        <li><span class="subject">Open</span> - Put the report in the open reports page.</li>
-        <li><span class="subject">Close</span> - Put the report in the closed reports page.</li>
-        <li><span class="subject">Delete</span> - Delete the report from the database.</li>
-        <li><span class="subject">Save</span> - Saves moderation notes.</li>
-    </ul>
+{{mod_status_link|safe}}
+<br>
+<ul>
+    <li><span class="subject">View</span> - Visit the archive's version of the post.</li>
+    <li><span class="subject">Source</span> - View the post on 4chan.</li>
+    <li><span class="subject">Open</span> - Put the report in the open reports page.</li>
+    <li><span class="subject">Close</span> - Put the report in the closed reports page.</li>
+    <li><span class="subject">Delete</span> - Delete the report from the database.</li>
+    <li><span class="subject">Save</span> - Saves moderation notes.</li>
+</ul>
 
-    {% if reports %}
-        {{table(reports, safe_cols=['About', 'Post'])}}
-    {% else %}
-        No reports here.
-    {% endif %}
+{% if reports %}
+<div class="btn inline">
+    <label for="select_all">Check All</label>
+    <input type="checkbox" id="select_all" name="select_all">
+</div>
+<select id="bulk_action" class="btn">
+    <option value="hide">Hide</option>
+    <option value="show">Show</option>
+    <option value="open">Open</option>
+    <option value="close">Close</option>
+    <option value="delete">Delete</option>
+</select><button id="apply_action" class="btn">Apply</button>
+
+
+{{table(reports, safe_cols=['Check', 'About', 'Post'])}}
+
+<script>
+    document.getElementById('select_all').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.select_report');
+        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+    });
+
+    document.getElementById('apply_action').addEventListener('click', async function () {
+        const report_parent_ids = Array.from(document.querySelectorAll('.select_report:checked'))
+            .map(checkbox => checkbox.getAttribute('data-report-id'));
+
+        const action = document.getElementById('bulk_action').value;
+
+        if (!report_parent_ids.length) {
+            alert('No reports selected!');
+            return;
+        }
+
+        if (!action) {
+            alert('No action selected!');
+            return;
+        }
+
+        const response = await fetch(`/reports/bulk/${action}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ report_parent_ids: report_parent_ids })
+        })
+
+        if (!response.ok) {
+            alert(response.status);
+        }
+
+        const data = await response.json();
+        location.reload(); // reload after receiving response
+    });
+</script>
+{% else %}
+No reports here.
+{% endif %}
 
 {% endblock %}

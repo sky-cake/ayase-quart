@@ -10,7 +10,7 @@
       {% endif %}
       <div id="flash" class="mt-2">
         <div class="p-2 rounded bg-{{category}} text-{{font_color}}">
-          <div>{{ message }}</div>
+          <div>{{ message | safe}}</div>
         </div>
       </div>
     {% endfor %}

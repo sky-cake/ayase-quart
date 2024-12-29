@@ -18,6 +18,7 @@ from moderation.report import (
 from render import render_controller
 from templates import template_reports_index
 from utils.validation import validate_board
+from collections import defaultdict
 
 bp = Blueprint('bp_moderation', __name__)
 
@@ -58,6 +59,9 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
         d = {}
 
         report_parent_id = int(r.report_parent_id)
+
+        d['Check'] = f'<input type="checkbox" class="select_report" data-report-id="{report_parent_id}">'
+
         endpoint = f"""<input type="hidden" name="endpoint" value="{request.endpoint}">"""
         d['About'] = f"""
         [<a href="/g/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">View</a>]
@@ -132,31 +136,29 @@ async def reports_open():
     )
 
 
-@bp.route('/reports/<int:report_parent_id>/<string:action>', methods=['POST'])
-@authorization_required
-async def reports_action(report_parent_id: int, action: str):
-    """Having this endpoint being POST-only is important."""
+async def reports_action_routine(report_parent_id: int, action: str, mod_notes: str=None) -> str:
+    # must be POST to avoid duplicating actions on historic page-visits
+    if request.method != 'POST':
+        abort(400)
 
     report = await get_report_by_id(report_parent_id)
     if not report:
-        abort(404)
+        return f'Could not find report with id {report_parent_id}.'
 
-    form = (await request.form)
-    redirect_endpoint = form.get('endpoint', 'bp_moderation.reports_open')
     flash_msg = ''
 
     match action:
         case 'delete':
             report = await delete_report_if_exists(report_parent_id)
-            flash_msg = 'Report was already deleted.'
+            flash_msg = f'Report were already deleted.'
             if report:
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-                flash_msg = 'Report deleted.'
+                flash_msg = f'Report deleted.'
 
         case 'show':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
             await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-            flash_msg = 'Post now publicly visible.'
+            flash_msg = f'Post now publicly visible.'
 
         case 'hide':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.hidden)
@@ -174,14 +176,45 @@ async def reports_action(report_parent_id: int, action: str):
             flash_msg = 'Report moved to opened reports.'
 
         case 'notes':
-            mod_notes = form.get('mod_notes')
+            # falsey mod_notes are valid
             await edit_report_if_exists(report_parent_id, mod_notes=mod_notes)
-            flash_msg = 'Saved moderation notes.'
+            flash_msg = f'Report had their moderation notes saved.'
 
         case _:
             abort(404)
 
-    if flash_msg:
-        await flash(flash_msg)
+    return flash_msg
+
+
+@bp.route('/reports/<int:report_parent_id>/<string:action>', methods=['POST'])
+@authorization_required
+async def reports_action(report_parent_id: int, action: str):
+    form = (await request.form)
+    redirect_endpoint = form.get('endpoint', 'bp_moderation.reports_open')
+
+    msg = await reports_action_routine(report_parent_id, action, mod_notes=form.get('mod_notes'))
+    if msg:
+        await flash(msg)
 
     return redirect(url_for(redirect_endpoint))
+
+
+@bp.route('/reports/bulk/<string:action>', methods=['POST'])
+@authorization_required
+async def reports_action_bulk(action: str):
+    data = (await request.get_json())
+
+    report_parent_ids = data.get('report_parent_ids', [])
+
+    if not report_parent_ids:
+        await flash('No reports submitted.')
+
+    msgs = defaultdict(lambda: 0)
+    for report_parent_id in report_parent_ids:
+        msg = await reports_action_routine(report_parent_id, action)
+        msgs[msg] += 1
+
+    if msgs:
+        await flash('<br>'.join([f'{msg} x{n}' for msg, n in msgs.items()]))
+
+    return jsonify({}), 200 # the client will reload itself
