@@ -1,11 +1,19 @@
+from collections import defaultdict
 from html import escape
 
 from quart import Blueprint, abort, flash, jsonify, redirect, request, url_for
 
+from asagi_converter import get_post, move_post_to_delete_table
+from boards import board_shortnames
 from configs import mod_conf
 from enums import AuthActions, ModStatus, PublicAccess
 from forms import ReportUserForm
-from leafs import generate_post_html
+from leafs import (
+    delete_file_if_shown_or_hidden,
+    generate_post_html,
+    hide_file_if_shown,
+    show_file_if_hidden
+)
 from moderation.auth import auth, authorization_required
 from moderation.filter_cache import fc
 from moderation.report import (
@@ -18,7 +26,6 @@ from moderation.report import (
 from render import render_controller
 from templates import template_reports_index
 from utils.validation import validate_board
-from collections import defaultdict
 
 bp = Blueprint('bp_moderation', __name__)
 
@@ -64,22 +71,21 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
 
         endpoint = f"""<input type="hidden" name="endpoint" value="{request.endpoint}">"""
         d['About'] = f"""
-        [<a href="/g/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">View</a>]
-        [<a href="https://boards.4chan.org/g/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">Source</a>]
+        [<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">View</a>]
+        [<a href="https://boards.4chan.org/{r.board_shortname}/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">Source</a>]
         <br>
         <br>
         [
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='hide')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Hide</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='show')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Show</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='open')}"   method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Open</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='close')}"  method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Close</button></form> |
-            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='delete')}" method="post">{endpoint}<button class="rbtn" type="submit">Delete</button></form>
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Post Hide</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Post Show</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Report Open</button></form> |
+            <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Report Close</button></form>
         ]
         <br>
         <br>
-        <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='notes')}" method="post">
+        <form class="actionform" action="{url_for('bp_moderation.reports_action', report_parent_id=report_parent_id, action='report_save_notes')}" method="post">
             <textarea name="mod_notes" rows="2" cols="20" placeholder="Moderation notes">{escape(r.mod_notes) if r.mod_notes else ''}</textarea>
-            [<button class="rbtn" type="submit">Save</button>]
+            [<button class="rbtn" type="submit">Save Notes</button>]
         </form>
         <br>
         <br>
@@ -90,8 +96,12 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
         <b>Note:</b> {escape(r.submitter_notes)}
         """
 
+        # ordering for populating the dict, d, matters, but I put these here to short circuit the loop if no post is found
         post_html = await generate_post_html(r.board_shortname, r.num)
-        link = f'<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}"> /{r.board_shortname}/thread/{r.thread_num} </a>'
+        # if post_html.startswith('Error'):
+        #     continue # likely deleted, but not removed from posts table due to it possibly being in FTS
+
+        link = f'<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}">/{r.board_shortname}/thread/{r.thread_num}</a>'
         d['Post'] = post_html if post_html else link
 
         ds.append(d)
@@ -107,7 +117,7 @@ def get_report_mod_status_link(mod_status: ModStatus) -> str:
 @bp.route('/reports/closed')
 @authorization_required
 async def reports_closed():
-    reports = await get_all_reports(mod_status=ModStatus.closed)
+    reports = await get_all_reports(mod_status=ModStatus.closed, board_shortnames=board_shortnames)
 
     return await render_controller(
         template_reports_index,
@@ -123,7 +133,7 @@ async def reports_closed():
 @bp.route('/reports/open')
 @authorization_required
 async def reports_open():
-    reports = await get_all_reports(mod_status=ModStatus.open)
+    reports = await get_all_reports(mod_status=ModStatus.open, board_shortnames=board_shortnames)
 
     return await render_controller(
         template_reports_index,
@@ -148,34 +158,73 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
     flash_msg = ''
 
     match action:
-        case 'delete':
+        case 'report_delete':
             report = await delete_report_if_exists(report_parent_id)
-            flash_msg = f'Report were already deleted.'
+            flash_msg = f'Report was already deleted.'
             if report:
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
                 flash_msg = f'Report deleted.'
+            return flash_msg
 
-        case 'show':
+        case 'post_delete':
+            # Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
+            post, result = await move_post_to_delete_table(report.board_shortname, report.num)
+            if result == 0:
+                flash_msg = 'Did not locate post in asagi database. Did nothing as a result.'
+            elif result == -1:
+                flash_msg = 'Did not transfer post to asagi\'s delete table. It is still in the board table.'
+            elif result == 1:
+                flash_msg = 'Post transfered to asagi\'s delete table. It is no longer in the board table.'
+            else:
+                raise ValueError(post, result)
+
+            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get('media_orig'), False)
+            flash_msg += ' Deleted full media.' if r else ' Did not delete full media.'
+            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get("preview_orig"), True)
+            flash_msg += ' Deleted thumbnail.' if r else ' Did not delete thumbnail.'
+
+        case 'media_delete':
+            post = await get_post(report.board_shortname, report.num)
+            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get('media_orig'), False)
+            flash_msg += ' Deleted full media.' if r else ' Did not delete full media.'
+            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get("preview_orig"), True)
+            flash_msg += ' Deleted thumbnail.' if r else ' Did not delete thumbnail.'
+
+        case 'post_show':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
             await fc.delete_post(report['board_shortname'], report['num'], report['op'])
             flash_msg = f'Post now publicly visible.'
+    
+            hidden_images_path = mod_conf.get('hidden_images_path')
+            if hidden_images_path:
+                post = await get_post(report.board_shortname, report.num)
 
-        case 'hide':
+                show_file_if_hidden(report.board_shortname, post.get('media_orig'), True)
+                show_file_if_hidden(report.board_shortname, post.get('preview_orig'), False)
+
+        case 'post_hide':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.hidden)
             if report:
                 await fc.insert_post(report['board_shortname'], report['num'], report['op'])
+
+            hidden_images_path = mod_conf.get('hidden_images_path')
+            if hidden_images_path:
+                post = await get_post(report.board_shortname, report.num)
+
+                hide_file_if_shown(report.board_shortname, post.get('media_orig'), True)
+                hide_file_if_shown(report.board_shortname, post.get('preview_orig'), False)
     
             flash_msg = 'Post now publicly hidden.'
 
-        case 'close':
+        case 'report_close':
             report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.closed)
             flash_msg = 'Report moved to closed reports.'
 
-        case 'open':
+        case 'report_open':
             report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.open)
             flash_msg = 'Report moved to opened reports.'
 
-        case 'notes':
+        case 'report_save_notes':
             # falsey mod_notes are valid
             await edit_report_if_exists(report_parent_id, mod_notes=mod_notes)
             flash_msg = f'Report had their moderation notes saved.'

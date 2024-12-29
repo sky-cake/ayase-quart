@@ -1,5 +1,6 @@
 import asyncio
 import html
+import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass
@@ -48,6 +49,88 @@ selector_columns = (
     'board_shortname', # board acronym
     # 'tim', # `tim` - Unix timestamp + microtime that an image was uploaded. AQ does not use this.
 )
+
+# map aliases of cols in board table, back to real board table names
+selector_columns_map = {
+    'num':              'num',
+    'thread_num':       'thread_num',
+    'op':               'op',
+    'ts_unix' :         'timestamp',
+    'ts_expired':       'timestamp_expired',
+    'preview_orig':     'preview_orig',
+    'preview_w':        'preview_w',
+    'preview_h':        'preview_h',
+    'media_filename':   'media_filename',
+    'media_w':          'media_w',
+    'media_h':          'media_h',
+    'media_size':       'media_size',
+    'media_hash':       'media_hash',
+    'media_orig':       'media_orig',
+    'spoiler':          'spoiler',
+    'deleted':          'deleted',
+    'capcode':          'capcode',
+    'name':             'name',
+    'trip':             'trip',
+    'title':            'title',
+    'comment':          'comment',
+    'sticky':           'sticky',
+    'locked':           'locked',
+    'poster_hash':      'poster_hash',
+    'poster_country':   'poster_country',
+    'exif':             'exif',
+}
+
+
+def post_has_file(post: dict) -> bool:
+    return post.get('tim') and post.get('ext') and post.get('md5')
+
+
+def get_fs_filename_thumbnail(post: dict) -> str|None:
+    if post_has_file(post):
+        return f"{post.get('tim')}s.jpg"
+    
+
+def get_fs_filename_full_media(post: dict) -> str|None:
+    if post_has_file(post):
+        return f"{post.get('tim')}{post.get('ext')}"
+
+
+def get_asagi_defaults_from_post(post: dict) -> dict:
+    return {
+            # 'doc_id': post.get('doc_id'), # autoincremented
+            'media_id': post.get('media_id', 0),
+            'poster_ip': post.get('poster_ip', '0'),
+            'num': post.get('num', 0), # this is 'no' in Ritual and had to be changed
+            'subnum': post.get('subnum', 0),
+            'thread_num': post.get('thread_num'),
+            'op': post.get('op', 0),
+            'timestamp': post.get('time', 0),
+            'timestamp_expired': post.get('archived_on', 0),
+            'preview_orig': get_fs_filename_thumbnail(post),
+            'preview_w': post.get('preview_w', 0),
+            'preview_h': post.get('preview_h', 0),
+            'media_filename': post.get('media_filename'),
+            'media_w': post.get('media_w', 0),
+            'media_h': post.get('media_h', 0),
+            'media_size': post.get('media_size', 0),
+            'media_hash': post.get('media_hash'),
+            'media_orig': get_fs_filename_full_media(post),
+            'spoiler': post.get('spoiler', 0),
+            'deleted': post.get('filedeleted', 0),
+            'capcode': post.get('capcode', 'N'),
+            'email': post.get('email'),
+            'name': html.unescape(post.get('name')) if post.get('name') else None,
+            'trip': post.get('trip'),
+            'title': html.unescape(post.get('sub')) if post.get('sub') else None,
+            'comment': post.get('com', None),
+            'delpass': post.get('delpass'),
+            'sticky': post.get('sticky', 0),
+            'locked': post.get('closed', 0),
+            'poster_hash': post.get('id'),
+            'poster_country': post.get('country_name'),
+            'exif': json.dumps({'uniqueIps': int(post.get('unique_ips'))}) if post.get('unique_ips') else None,
+        }
+
 
 @cache
 def get_selector(board: str) -> str:
@@ -543,7 +626,7 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
 
 
 async def generate_post(board: str, post_id: int) -> tuple[dict]:
-    """Returns {thread_num: 123, comment: 'hello', ...}"""
+    """Returns {thread_num: 123, comment: 'hello', ...} with quotelinks"""
     sql = f"""
         {get_selector(board)}
         from {board}
@@ -556,6 +639,52 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
 
     post_2_quotelinks, posts = get_qls_and_posts(posts)
     return post_2_quotelinks, posts[0]
+
+
+async def get_post(board: str, post_id: int) -> dict:
+    """Returns {thread_num: 123, comment: 'hello', ...} wihtout quotelinks"""
+    sql = f"""
+        {get_selector(board)}
+        from {board}
+        where num = ∆
+    ;"""
+    posts = await db_q.query_dict(sql, params=(post_id,))
+
+    if not posts:
+        return dict()
+
+    return posts[0]
+
+
+async def move_post_to_delete_table(board: str, post_id: int) -> tuple[dict, int]:
+    """Insert post into `<board>_deleted` table first. If we fail at that, do nothing."""
+    post = await get_post(board, post_id)
+    if not post:
+        return (post, 0)
+
+    post = {selector_columns_map[k]: v for k, v in post.items() if k in selector_columns_map}
+    post = post | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
+
+    sql_cols = ', '.join(post)
+    sql_placeholders = ', '.join(['∆'] * len(post))
+    sql_conflict = ', '.join([f'{col}=∆' for col in post])
+
+    sql = f"""INSERT INTO `{board}_deleted` ({sql_cols}) VALUES ({sql_placeholders}) ON CONFLICT(`num`) DO UPDATE SET {sql_conflict} RETURNING `num`;"""
+    values = list(post.values())
+    parameters = values + values
+    num = await db_q.query_dict(sql, params=parameters, commit=True)
+
+    if not num:
+        return (post, -1)
+
+    sql = f"""
+        delete
+        from {board}
+        where num = ∆
+    ;"""
+    await db_q.query_dict(sql, params=(post_id,), commit=True)
+
+    return (post, 1)
 
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:

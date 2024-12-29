@@ -407,7 +407,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         </span>
         <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
         { wpt['t_report'] }
-        [<a href="{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }">View</a>]
+        [<a href="{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]
         [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
         { wpt['t_quotelink'] }
     </div>

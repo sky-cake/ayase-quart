@@ -273,7 +273,7 @@ textarea {
     display: block;
     background-color: #282a2e;
     border: 1px solid #666666;
-    color: inherit;
+    color: #dddddd;
     font: inherit!important;
 }
 

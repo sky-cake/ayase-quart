@@ -91,5 +91,9 @@ remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true,
 regex_filter = '' # never serve posts matching this regex pattern
 path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/releases
 
+# path to where hidden images should go
+# if empty, images can still be served if their URLs are known
+hidden_images_path = ''
+
 [moderation.sqlite]
 database = 'moderation.db'

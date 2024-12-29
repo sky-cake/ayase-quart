@@ -6,7 +6,7 @@ from db import db_m
 from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory
 
 
-async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatus=None) -> Optional[list[dict]]:
+async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatus=None, board_shortnames: list[str]=None) -> Optional[list[dict]]:
     ph = db_m.phg()
     where = []
     params = []
@@ -18,6 +18,10 @@ async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatu
     if mod_status:
         where.append(f'mod_status = {ph}')
         params.append(mod_status.value)
+
+    if board_shortnames:
+        where.append(f'board_shortname in ({db_m.phg.qty(len(board_shortnames))})')
+        params.extend(board_shortnames)
 
     if where:
         where = 'where ' + ' and '.join(where)

@@ -22,7 +22,7 @@ search_conf = conf.get('search', {})
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 
-if media_conf and media_conf.get('serve_outside_static'):
+if media_conf['serve_outside_static']:
     if not os.path.isdir(media_conf.get('media_root_path')):
         raise ValueError(media_conf.get('media_root_path'))
 
@@ -35,6 +35,11 @@ if media_conf and media_conf.get('serve_outside_static'):
 
 mod_conf = conf.get('moderation', {})
 mod_conf['default_reported_post_public_access'] = PublicAccess.visible if mod_conf['default_reported_post_public_access'] == 'visible' else PublicAccess.hidden
+
+if hidden_images_path := mod_conf.get('hidden_images_path'):
+    os.makedirs(hidden_images_path, exist_ok=True)
+    if not os.path.isdir(hidden_images_path):
+        raise ValueError(hidden_images_path)
 
 db_mod_conf = mod_conf.get('sqlite', {}) # only supports sqlite atm
 

@@ -3,16 +3,30 @@
 
 {% block body %}
 
-{{mod_status_link|safe}}
-<br>
+
+Definitions
 <ul>
     <li><span class="subject">View</span> - Visit the archive's version of the post.</li>
     <li><span class="subject">Source</span> - View the post on 4chan.</li>
-    <li><span class="subject">Open</span> - Put the report in the open reports page.</li>
-    <li><span class="subject">Close</span> - Put the report in the closed reports page.</li>
-    <li><span class="subject">Delete</span> - Delete the report from the database.</li>
-    <li><span class="subject">Save</span> - Saves moderation notes.</li>
+    <li><span class="subject">Post Hide</span> - Do not serve the post.</li>
+    <li><span class="subject">Post Show</span> - Allow the post to be served.</li>
+    <li><span class="subject">Post Delete</span> - If found in the 'board' table, transfer the post to the 'board_deleted' table in the asagi database. If the post is not found in 'board', do nothing. Always attempts to permanently delete the media associate with the report.</li>
+    <li><span class="subject">Media Delete</span> - Attempts to permanently delete the media associate with the report.</li>
+    <li><span class="subject">Report Open</span> - Put the report in the open reports page. This is only to aid moderation. It does nothing else.</li>
+    <li><span class="subject">Report Close</span> - Put the report in the closed reports page. This is only to aid moderation. It does nothing else.</li>
+    <li><span class="subject">Report Delete</span> - Deletes the report, allowing the archive to serve the associated post.</li>
+    <li><span class="subject">Save Notes</span> - Saves moderation notes for an individual report. Reloads the page, discarding other unsaved content.</li>
 </ul>
+Notes
+<ul>
+    <li>- If media was declared deleted via the a feedback banner but still appears, it's likely a caching issue, try [Ctrl]+[Shift]+R.</li>
+    <li>- If there is an error a fetching post, it's likely because it's been deleted from the asagi database (sent from 'board' to 'board_deleted'), but remaining in the reporting database in case the post appears in FTS. Try visiting the reported post. If you don't see it, you can delete the report.</li>
+</ul>
+
+{{mod_status_link|safe}}
+
+<br>
+<br>
 
 {% if reports %}
 <div class="btn inline">
@@ -20,17 +34,29 @@
     <input type="checkbox" id="select_all" name="select_all">
 </div>
 <select id="bulk_action" class="btn">
-    <option value="hide">Hide</option>
-    <option value="show">Show</option>
-    <option value="open">Open</option>
-    <option value="close">Close</option>
-    <option value="delete">Delete</option>
+    <option value="post_hide">Post Hide</option>
+    <option value="post_show">Post Show</option>
+    <option value="post_delete">Post Delete</option>
+    <option value="media_delete">Media Delete</option>
+    <option value="report_open">Report Open</option>
+    <option value="report_close">Report Close</option>
+    <option value="report_delete">Report Delete</option>
 </select><button id="apply_action" class="btn">Apply</button>
-
 
 {{table(reports, safe_cols=['Check', 'About', 'Post'])}}
 
 <script>
+    window.addEventListener('load', function () {
+        var checkboxes = document.querySelectorAll('.select_report');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        var checkboxes = document.querySelectorAll('#select_all');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    });
+
     document.getElementById('select_all').addEventListener('change', function () {
         const checkboxes = document.querySelectorAll('.select_report');
         checkboxes.forEach(checkbox => checkbox.checked = this.checked);
