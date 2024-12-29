@@ -11,9 +11,11 @@ Definitions
     <li><span class="subject">Post Hide</span> - Do not serve the post.</li>
     <li><span class="subject">Post Show</span> - Allow the post to be served.</li>
     <li><span class="subject">Post Delete</span> - If found in the 'board' table, transfer the post to the 'board_deleted' table in the asagi database. If the post is not found in 'board', do nothing. Always attempts to permanently delete the media associate with the report.</li>
+    <li><span class="subject">Media Hide</span> - If they exist, this move all media types out of the serve folder, hiding it from everyone.</li>
+    <li><span class="subject">Media Show</span> - If they exist, this move all media types into the serve folder, revealing them to anyone with the right URL.</li>
     <li><span class="subject">Media Delete</span> - Attempts to permanently delete the media associate with the report.</li>
-    <li><span class="subject">Report Open</span> - Put the report in the open reports page. This is only to aid moderation. It does nothing else.</li>
     <li><span class="subject">Report Close</span> - Put the report in the closed reports page. This is only to aid moderation. It does nothing else.</li>
+    <li><span class="subject">Report Open</span> - Put the report in the open reports page. This is only to aid moderation. It does nothing else.</li>
     <li><span class="subject">Report Delete</span> - Deletes the report, allowing the archive to serve the associated post.</li>
     <li><span class="subject">Save Notes</span> - Saves moderation notes for an individual report. Reloads the page, discarding other unsaved content.</li>
 </ul>
@@ -37,6 +39,8 @@ Notes
     <option value="post_hide">Post Hide</option>
     <option value="post_show">Post Show</option>
     <option value="post_delete">Post Delete</option>
+    <option value="media_hide">Media Hide</option>
+    <option value="media_show">Media Show</option>
     <option value="media_delete">Media Delete</option>
     <option value="report_open">Report Open</option>
     <option value="report_close">Report Close</option>
@@ -55,6 +59,10 @@ Notes
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
+        const bulk_action_dropdown = document.getElementById('bulk_action');
+        if (bulk_action_dropdown) {
+            bulk_action_dropdown.value = 'post_hide';
+        }
     });
 
     document.getElementById('select_all').addEventListener('change', function () {

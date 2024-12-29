@@ -190,6 +190,20 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
             r = delete_file_if_shown_or_hidden(report.board_shortname, post.get("preview_orig"), True)
             flash_msg += ' Deleted thumbnail.' if r else ' Did not delete thumbnail.'
 
+        case 'media_hide':
+            post = await get_post(report.board_shortname, report.num)
+            r = hide_file_if_shown(report.board_shortname, post.get('media_orig'), False)
+            flash_msg += ' Hid full media.' if r else ' Did not hide full media.'
+            r = hide_file_if_shown(report.board_shortname, post.get('preview_orig'), True)
+            flash_msg += ' Hid thumbnail.' if r else ' Did not hide thumbnail.'
+
+        case 'media_show':
+            post = await get_post(report.board_shortname, report.num)
+            r = show_file_if_hidden(report.board_shortname, post.get('media_orig'), False)
+            flash_msg += ' Showing full media.' if r else ' Did not reveal full media.'
+            r = show_file_if_hidden(report.board_shortname, post.get('preview_orig'), True)
+            flash_msg += ' Showing thumbnail.' if r else ' Did not reveal thumbnail.'
+
         case 'post_show':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
             await fc.delete_post(report['board_shortname'], report['num'], report['op'])

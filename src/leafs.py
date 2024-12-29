@@ -39,9 +39,8 @@ def hide_file_if_shown(board_shortname: str, media_name: str, is_thumb: bool) ->
 
     src = get_path_for_media(media_conf['media_root_path'], board_shortname, media_name, is_thumb)
     if src and os.path.isfile(src):
-        os.makedirs(os.path.dirname(src), exist_ok=True)
-
         dst = get_path_for_media(mod_conf['hidden_images_path'], board_shortname, media_name, is_thumb)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
         os.rename(src, dst)
         return True
     return False
@@ -55,9 +54,8 @@ def show_file_if_hidden(board_shortname: str, media_name: str, is_thumb: bool) -
 
     src = get_path_for_media(mod_conf['hidden_images_path'], board_shortname, media_name, is_thumb)
     if src and os.path.isfile(src):
-        os.makedirs(os.path.dirname(src), exist_ok=True)
-
         dst = get_path_for_media(media_conf['media_root_path'], board_shortname, media_name, is_thumb)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
         os.rename(src, dst)
         return True
     return False
