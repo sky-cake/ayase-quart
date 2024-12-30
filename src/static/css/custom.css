@@ -484,3 +484,7 @@ img {
 .inline {
     display: inline;
 }
+
+.p4 {
+    padding: 4px;
+}

@@ -9,10 +9,10 @@ from configs import mod_conf
 from enums import AuthActions, ModStatus, PublicAccess
 from forms import ReportUserForm
 from leafs import (
-    delete_file_if_shown_or_hidden,
+    post_files_delete,
     generate_post_html,
-    hide_file_if_shown,
-    show_file_if_hidden
+    post_files_hide,
+    post_files_show,
 )
 from flask_paginate import Pagination
 
@@ -58,6 +58,8 @@ async def report(board_shortname: str, thread_num: int, num: int):
         )
         if mod_conf['default_reported_post_public_access'] == PublicAccess.hidden:
             await fc.insert_post(board_shortname, num, op)
+            post = await get_post(board_shortname, num)
+            post_files_hide(post)
 
         return jsonify({'message': 'thank you'})
     return jsonify({'message': f'error: {form.data}: {form.errors}'})
@@ -210,55 +212,46 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
             else:
                 raise ValueError(post, result)
 
-            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get('media_orig'), False)
-            flash_msg += ' Deleted full media.' if r else ' Did not delete full media.'
-            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get("preview_orig"), True)
-            flash_msg += ' Deleted thumbnail.' if r else ' Did not delete thumbnail.'
+            full_del, prev_del = post_files_delete(post)
+            flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
+            flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
 
         case 'media_delete':
             post = await get_post(report.board_shortname, report.num)
-            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get('media_orig'), False)
-            flash_msg += ' Deleted full media.' if r else ' Did not delete full media.'
-            r = delete_file_if_shown_or_hidden(report.board_shortname, post.get("preview_orig"), True)
-            flash_msg += ' Deleted thumbnail.' if r else ' Did not delete thumbnail.'
+            full_del, prev_del = post_files_delete(post)
+            flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
+            flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
 
         case 'media_hide':
             post = await get_post(report.board_shortname, report.num)
-            r = hide_file_if_shown(report.board_shortname, post.get('media_orig'), False)
-            flash_msg += ' Hid full media.' if r else ' Did not hide full media.'
-            r = hide_file_if_shown(report.board_shortname, post.get('preview_orig'), True)
-            flash_msg += ' Hid thumbnail.' if r else ' Did not hide thumbnail.'
+            full_hid, prev_hid = post_files_hide(post)
+            flash_msg += ' Hid full media.' if full_hid else ' Did not hide full media.'
+            flash_msg += ' Hid thumbnail.' if prev_hid else ' Did not hide thumbnail.'
 
         case 'media_show':
             post = await get_post(report.board_shortname, report.num)
-            r = show_file_if_hidden(report.board_shortname, post.get('media_orig'), False)
-            flash_msg += ' Showing full media.' if r else ' Did not reveal full media.'
-            r = show_file_if_hidden(report.board_shortname, post.get('preview_orig'), True)
-            flash_msg += ' Showing thumbnail.' if r else ' Did not reveal thumbnail.'
+            full_sho, prev_sho = post_files_show(post)
+            flash_msg += ' Showing full media.' if full_sho else ' Did not reveal full media.'
+            flash_msg += ' Showing thumbnail.' if prev_sho else ' Did not reveal thumbnail.'
 
         case 'post_show':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
-            await fc.delete_post(report['board_shortname'], report['num'], report['op'])
+            if report:
+                await fc.delete_post(report['board_shortname'], report['num'], report['op'])
             flash_msg = f'Post now publicly visible.'
-    
-            hidden_images_path = mod_conf.get('hidden_images_path')
-            if hidden_images_path:
-                post = await get_post(report.board_shortname, report.num)
 
-                show_file_if_hidden(report.board_shortname, post.get('media_orig'), True)
-                show_file_if_hidden(report.board_shortname, post.get('preview_orig'), False)
+            if mod_conf.get('hidden_images_path'):
+                post = await get_post(report.board_shortname, report.num)
+                post_files_show(post)
 
         case 'post_hide':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.hidden)
             if report:
                 await fc.insert_post(report['board_shortname'], report['num'], report['op'])
 
-            hidden_images_path = mod_conf.get('hidden_images_path')
-            if hidden_images_path:
+            if mod_conf.get('hidden_images_path'):
                 post = await get_post(report.board_shortname, report.num)
-
-                hide_file_if_shown(report.board_shortname, post.get('media_orig'), True)
-                hide_file_if_shown(report.board_shortname, post.get('preview_orig'), False)
+                post_files_hide(post)
     
             flash_msg = 'Post now publicly hidden.'
 

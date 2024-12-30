@@ -7,7 +7,7 @@ from utils import make_src_path
 
 def _load_config_toml():
     if not hasattr(_load_config_toml, 'conf'):
-        with open('config.toml', 'rb') as f:
+        with open(make_src_path('config.toml'), 'rb') as f:
            _load_config_toml.conf = tomllib.load(f)
     return _load_config_toml.conf
 

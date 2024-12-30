@@ -31,7 +31,7 @@ def get_path_for_media(root_path: str, board_shortname: str, media_name: str, is
     return path
 
 
-def hide_file_if_shown(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
+def post_file_hide(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
     """Assumes media src is in `media_root_path`"""
 
     if not media_name:
@@ -46,7 +46,26 @@ def hide_file_if_shown(board_shortname: str, media_name: str, is_thumb: bool) ->
     return False
 
 
-def show_file_if_hidden(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
+def post_files_hide(post: dict) -> tuple[bool]:
+    return (
+        post_file_hide(post['board_shortname'], post.get('media_orig'), False),
+        post_file_hide(post['board_shortname'], post.get('preview_orig'), True)
+    )
+
+
+def post_files_delete(post: dict) -> tuple[bool]:
+    return (
+        post_file_delete(post['board_shortname'], post.get('media_orig'), False),
+        post_file_delete(post['board_shortname'], post.get('preview_orig'), True)
+    )
+
+def post_files_show(post: dict) -> tuple[bool]:
+    return (
+        post_file_show(post['board_shortname'], post.get('media_orig'), False),
+        post_file_show(post['board_shortname'], post.get('preview_orig'), True)
+    )
+
+def post_file_show(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
     """Assumes media src is in `hidden_images_path`"""
 
     if not media_name:
@@ -61,7 +80,7 @@ def show_file_if_hidden(board_shortname: str, media_name: str, is_thumb: bool) -
     return False
 
 
-def delete_file_if_shown_or_hidden(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
+def post_file_delete(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
     if not media_name:
         return False
 
