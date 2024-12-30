@@ -14,14 +14,18 @@ from leafs import (
     hide_file_if_shown,
     show_file_if_hidden
 )
+from flask_paginate import Pagination
+
 from moderation.auth import auth, authorization_required
 from moderation.filter_cache import fc
 from moderation.report import (
     create_report,
     delete_report_if_exists,
     edit_report_if_exists,
-    get_all_reports,
-    get_report_by_id
+    get_reports_f,
+    get_report_by_id,
+    get_report_count_f,
+    get_report_count_all
 )
 from render import render_controller
 from templates import template_reports_index
@@ -114,13 +118,37 @@ def get_report_mod_status_link(mod_status: ModStatus) -> str:
     return f'<a href="{url_for('bp_moderation.reports_closed')}">Go to closed reports</a>'
 
 
-@bp.route('/reports/closed')
-@authorization_required
-async def reports_closed():
-    reports = await get_all_reports(mod_status=ModStatus.closed, board_shortnames=board_shortnames)
+# should use **kwargs in the future
+async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[str], report_len: int, page_num: int, page_size: int=20):
+    report_count_f = await get_report_count_f(mod_status=mod_status, board_shortnames=board_shortnames)
+    report_count_all = await get_report_count_all()
+    page_size = min(page_size, report_len)
+    href=f'/reports/{mod_status.name}/' + '{0}'
+    record_name = f'{mod_status.name} reports'
 
+    pagination = Pagination(
+        page=page_num,
+        per_page=page_size,
+        display_msg=f'Displaying <b>{page_size}</b> / <b>{report_count_f}</b> {mod_status.name} reports. <b>{report_count_all}</b> reports in total.',
+        total=report_count_f,
+        search=False,
+        record_name=record_name,
+        href=href,
+        show_single_page=True,
+    )
+    return pagination
+
+
+@bp.get('/reports/closed')
+@bp.get('/reports/closed/<int:page_num>')
+@authorization_required
+async def reports_closed(page_num: int=0):
+    page_size = 20
+    reports = await get_reports_f(mod_status=ModStatus.closed, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
+    pagination = await make_report_pagination(ModStatus.closed, board_shortnames, len(reports), page_num, page_size=page_size)
     return await render_controller(
         template_reports_index,
+        pagination=pagination,
         mod_status_link=get_report_mod_status_link(ModStatus.closed),
         reports=await formulate_reports_for_html_table(reports),
         title='Closed Reports',
@@ -130,13 +158,17 @@ async def reports_closed():
     )
 
 
-@bp.route('/reports/open')
+@bp.get('/reports/open')
+@bp.get('/reports/open/<int:page_num>')
 @authorization_required
-async def reports_open():
-    reports = await get_all_reports(mod_status=ModStatus.open, board_shortnames=board_shortnames)
+async def reports_open(page_num: int=0):
+    page_size=20
+    reports = await get_reports_f(mod_status=ModStatus.open, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
+    pagination = await make_report_pagination(ModStatus.open, board_shortnames, len(reports), page_num, page_size=page_size)
 
     return await render_controller(
         template_reports_index,
+        pagination=pagination,
         mod_status_link=get_report_mod_status_link(ModStatus.open),
         reports=await formulate_reports_for_html_table(reports),
         title='Reports',

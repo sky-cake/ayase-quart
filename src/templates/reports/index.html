@@ -30,6 +30,8 @@ Notes
 <br>
 <br>
 
+{% include 'pagination.html' %}
+
 {% if reports %}
 <div class="btn inline">
     <label for="select_all">Check All</label>
@@ -46,6 +48,7 @@ Notes
     <option value="report_close">Report Close</option>
     <option value="report_delete">Report Delete</option>
 </select><button id="apply_action" class="btn">Apply</button>
+
 
 {{table(reports, safe_cols=['Check', 'About', 'Post'])}}
 
@@ -105,5 +108,8 @@ Notes
 {% else %}
 No reports here.
 {% endif %}
+
+<br>
+{% include 'pagination.html' %}
 
 {% endblock %}

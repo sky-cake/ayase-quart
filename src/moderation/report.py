@@ -6,7 +6,18 @@ from db import db_m
 from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory
 
 
-async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatus=None, board_shortnames: list[str]=None) -> Optional[list[dict]]:
+async def get_report_count_all() -> int:
+    sql = f"""
+        select
+            count(*) as report_count
+        from report_parent
+    """
+    if (reports := (await db_m.query_dict(sql, p_id=DbPool.mod))):
+        return reports[0]['report_count']
+    return 0
+
+
+async def get_report_count_f(public_access: PublicAccess=None, mod_status: ModStatus=None, board_shortnames: list[str]=None) -> Optional[list[dict]]:
     ph = db_m.phg()
     where = []
     params = []
@@ -28,6 +39,42 @@ async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatu
 
     sql = f"""
         select
+            count(*) report_count
+        from report_parent
+            join report_child using (report_parent_id)
+        {where}
+    """
+    if (reports := (await db_m.query_dict(sql, params=params, p_id=DbPool.mod))):
+        return reports[0]['report_count']
+    return 0
+
+
+async def get_reports_f(public_access: PublicAccess=None, mod_status: ModStatus=None, board_shortnames: list[str]=None, page_num: int=0, page_size: int=20) -> Optional[list[dict]]:
+    ph = db_m.phg()
+    where = []
+    params = []
+
+    if public_access:
+        where.append(f'public_access = {ph}')
+        params.append(public_access.value)
+
+    if mod_status:
+        where.append(f'mod_status = {ph}')
+        params.append(mod_status.value)
+
+    if board_shortnames:
+        where.append(f'board_shortname in ({db_m.phg.qty(len(board_shortnames))})')
+        params.extend(board_shortnames)
+
+    if where:
+        where = 'where ' + ' and '.join(where)
+
+    offset = ''
+    if page_size:
+         offset = f'limit {int(page_size)} offset {int(page_num)}'
+
+    sql = f"""
+        select
             report_parent_id,
             board_shortname,
             num,
@@ -43,6 +90,7 @@ async def get_all_reports(public_access: PublicAccess=None, mod_status: ModStatu
         {where}
         group by 1,2,3,4,5,6,7
         order by created_at desc
+        {offset}
     """
     if (reports := (await db_m.query_dict(sql, params=params, p_id=DbPool.mod))):
         return reports
