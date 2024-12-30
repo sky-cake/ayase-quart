@@ -242,18 +242,21 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
 
             if mod_conf.get('hidden_images_path'):
                 post = await get_post(report.board_shortname, report.num)
-                post_files_show(post)
+                full_sho, prev_sho = post_files_show(post)
+                flash_msg += ' Showing full media.' if full_sho else ' Did not reveal full media.'
+                flash_msg += ' Showing thumbnail.' if prev_sho else ' Did not reveal thumbnail.'
 
         case 'post_hide':
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.hidden)
             if report:
                 await fc.insert_post(report['board_shortname'], report['num'], report['op'])
-
+            flash_msg = 'Post now publicly hidden.'
+    
             if mod_conf.get('hidden_images_path'):
                 post = await get_post(report.board_shortname, report.num)
-                post_files_hide(post)
-    
-            flash_msg = 'Post now publicly hidden.'
+                full_hid, prev_hid = post_files_hide(post)
+                flash_msg += ' Hid full media.' if full_hid else ' Did not hide full media.'
+                flash_msg += ' Hid thumbnail.' if prev_hid else ' Did not hide thumbnail.'
 
         case 'report_close':
             report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.closed)
