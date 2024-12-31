@@ -1,6 +1,7 @@
 from collections import defaultdict
 from html import escape
 
+from flask_paginate import Pagination
 from quart import Blueprint, abort, flash, jsonify, redirect, request, url_for
 
 from asagi_converter import get_post, move_post_to_delete_table
@@ -9,23 +10,21 @@ from configs import mod_conf
 from enums import AuthActions, ModStatus, PublicAccess
 from forms import ReportUserForm
 from leafs import (
-    post_files_delete,
     generate_post_html,
+    post_files_delete,
     post_files_hide,
-    post_files_show,
+    post_files_show
 )
-from flask_paginate import Pagination
-
 from moderation.auth import auth, authorization_required
 from moderation.filter_cache import fc
 from moderation.report import (
     create_report,
     delete_report_if_exists,
     edit_report_if_exists,
-    get_reports_f,
     get_report_by_id,
+    get_report_count_all,
     get_report_count_f,
-    get_report_count_all
+    get_reports_f
 )
 from render import render_controller
 from templates import template_reports_index
