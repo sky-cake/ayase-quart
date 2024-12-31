@@ -2,19 +2,17 @@
 
 ## About
 
-Ayase Quart is a simple, read-only frontend for 4chan archives using the asagi schema. Please see a preview [here](preview/README.md).
+Ayase Quart (AQ) is an interface for 4chan archives using the asagi schema. It currently offers,
 
-This project is a descendent of [Ayase](https://github.com/bibanon/ayase). I chose to port Ayase from FastAPI over to Quart for the following reasons.
+- [Web UI](preview/README.md) that looks and feels like 4chan
+- Advanced search options, with optional full text search (FTS) using lnx, meilisearch, and many others.
+- A moderation system to hide, and/or delete content
 
-- I am more familiar with Flask environments, and Quart is practically just Flask with `async` and `await`.
-- Quart has convenient [extensions](http://pgjones.gitlab.io/quart/how_to_guides/quart_extensions.html#quart-extensions).
-- It's been stated by numerous sources that the FastAPI developer is not supportive and does not like to accept PRs.
-  - [GitHub](https://github.com/tiangolo/fastapi/pulls)
-  - [Reddit](https://www.reddit.com/r/Python/comments/xk6ppx/comment/ipd8c62/?utm_source=share&utm_medium=web2x&context=3)
+It supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper), [Hayden (MySQL)](https://github.com/bbepis/Hayden), and [Ritual (SQLite)](https://github.com/sky-cake/Ritual) archive downloaders.
 
-It supports MySQL and SQLite databases.
+This project is a descendent of [Ayase](https://github.com/bibanon/ayase).
 
-## Set Up - Without Docker
+## Set Up
 
 Please use Python 3.12.
 
@@ -62,12 +60,9 @@ Assuming you have a data source set up, you can:
 1.  (Optional) Submit pull requests with fixes and new features.
 
 
-## Set Up - With Docker (Not Tested)
+## Set Up (Docker)
 
-1. Create a file called `./src/configs.py` using `./src/rename_to_configs.py` and set the variables.
-2. Create certificates, if needed. See the next section for this.
-3. Run `sudo docker compose up --build` after looking over `Dockerfile`, and `docker-compose.yml` so see if it's configured to your liking.
-   - To run these containers in the background do `sudo docker compose up -d` after building the image.
+Not currently available.
 
 ## Certificates
 
@@ -81,16 +76,16 @@ If you're on Windows, you can use Git Bash to execute the command.
 ## Themes
 
 - Right now, only the `tomorrow` theme has complete support.
-- If you want to modifying CSS in any way, please modify `/static/css/custom.css`.
+- If you want to modify CSS, you can do so in `/static/css/custom.css`.
 
 
-## Development
+## Build
 
-If you want to take debug/dev mode to the next level, you can run the following command which will keep spawning the app, even after errors are raised.
+Sorting imports
 
-`while true; do hypercorn -w 1 --reload -b 127.0.0.1:9001 'main:app'; done`
+`isort -m 3 ./src`
 
-Some lint checking.
+Lint checking
 
 `flake8 --select F401,F403,F405,E1101,E122,C901,F401,B950 ./src`
 
@@ -98,7 +93,7 @@ Some lint checking.
 
 Here is what a systemctl service unit could look like for Ayase Quart.
 
-`sudo nano /etc/systemd/system/ayase_quart.service`
+`sudo nano /etc/systemd/system/aq.service`
 
 ```
 [Unit]

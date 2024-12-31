@@ -19,3 +19,7 @@
 ### Board Index View
 
 ![Board Index](board_index.png)
+
+### Moderation
+
+![Moderation](moderation.png)

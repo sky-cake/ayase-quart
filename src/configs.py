@@ -22,6 +22,9 @@ search_conf = conf.get('search', {})
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 
+if not media_conf.get('media_root_path'):
+    raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_conf.get('media_root_path'))
+
 if media_conf['serve_outside_static']:
     if not os.path.isdir(media_conf.get('media_root_path')):
         raise ValueError(media_conf.get('media_root_path'))
