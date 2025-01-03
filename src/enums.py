@@ -20,23 +20,6 @@ class IndexSearchType(StrEnum):
     quickwit = 'quickwit'
 
 
-class UserRole(StrEnum):
-    admin = 'admin'
-    moderator = 'moderator'
-
-
-class AuthActions(Enum):
-    is_logged_in = 1
-    log_in = 2
-    log_out = 3
-
-    get_user_id = 4
-
-    is_admin = 5
-    is_moderator = 6
-    is_authority = 7
-
-
 class ModStatus(StrEnum):
     open = 'o'
     closed = 'c'
