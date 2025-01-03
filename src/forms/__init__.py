@@ -20,6 +20,7 @@ from wtforms.fields import (
 )
 from wtforms.validators import (
     DataRequired,
+    InputRequired,
     Length,
     NumberRange,
     Optional,
@@ -27,8 +28,8 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import ModStatus, PublicAccess, SubmitterCategory, UserRole
-from moderation.user import is_user_valid
+from enums import SubmitterCategory
+from moderation.user import Permissions, is_user_valid
 from posts.capcodes import Capcode
 from search import HITS_PER_PAGE
 from utils.validation import clamp_positive_int, validate_board
@@ -180,8 +181,9 @@ def enum_validator(enum_cls: Enum):
 class UserCreateForm(QuartForm):
     username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Username'})
     password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
-    active = BooleanField('Active', validators=[DataRequired()])
-    role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
+    active = BooleanField('Active', validators=[InputRequired()])
+    is_admin = BooleanField('Is Admin', validators=[InputRequired()])
+    permissions = MultiCheckboxField('Permissions', choices=[p.name for p in Permissions], validators=[DataRequired()])
     notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
     submit = SubmitField('Submit')
 
@@ -211,7 +213,7 @@ class UserEditForm(QuartForm):
     password_cur = PasswordField('Current Password', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
     password_new = PasswordField('New Password', validators=[Length(min=0, max=512)], render_kw={'placeholder': 'Password'})
     active = BooleanField('Active', validators=[Optional()])
-    role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
+    permissions = MultiCheckboxField('Permissions', choices=[p.name for p in Permissions], validators=[DataRequired()])
     notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
     submit = SubmitField('Submit')
 

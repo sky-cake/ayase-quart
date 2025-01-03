@@ -8,15 +8,16 @@ from configs import mod_conf
 from db import db_q
 from enums import DbPool
 from forms import UserCreateForm, UserEditForm
-from moderation.auth import admin_required
 from moderation.user import (
+    Permissions,
     create_user_if_not_exists,
     delete_user,
-    edit_user_by_username,
+    edit_user,
     edit_user_password_by_username,
     get_all_users,
     get_user_by_id,
-    is_user_valid
+    is_user_valid,
+    permissions_needed
 )
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
@@ -68,7 +69,7 @@ async def get_latest_ops_as_catalog():
 
 
 @bp.route("/latest")
-@admin_required
+@permissions_needed(set([Permissions.archive_latest_view]))
 async def latest():
     catalog = await get_latest_ops_as_catalog()
     threads = ''.join(
@@ -86,7 +87,7 @@ async def latest():
 
 
 @bp.route("/stats")
-@admin_required
+@permissions_needed(set([Permissions.archive_stats_view]))
 async def stats():
     table_row_counts = await get_row_counts()
     return await render_controller(
@@ -99,7 +100,7 @@ async def stats():
 
 
 @bp.route("/configs")
-@admin_required
+@permissions_needed(set([Permissions.archive_configs_view]))
 async def configs():
     cs = [
         'default_reported_post_public_access',
@@ -118,7 +119,7 @@ async def configs():
 
 
 @bp.route('/users')
-@admin_required
+@permissions_needed(set([Permissions.user_read]))
 async def users_index():
     users = await get_all_users()
     ds = []
@@ -129,7 +130,8 @@ async def users_index():
             <a href="{url_for('bp_admin.users_delete', user_id=u.user_id)}">Delete</a>
         """
         d['Username'] = u['username']
-        d['Role'] = u['role']
+        d['Is Admin'] = u['is_admin']
+        d['Permissions'] = u['permissions']
         d['Active'] = 'Yes' if u['active'] else 'No'
         d['Notes'] = u['notes']
         ds.append(d)
@@ -144,7 +146,7 @@ async def users_index():
 
 
 @bp.route('/users/<int:user_id>')
-@admin_required
+@permissions_needed(set([Permissions.user_read]))
 async def users_view(user_id):
     user = await get_user_by_id(user_id)
     return await render_controller(
@@ -157,7 +159,7 @@ async def users_view(user_id):
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
-@admin_required
+@permissions_needed(set([Permissions.user_create]))
 async def users_create():
     form: UserCreateForm = await UserCreateForm.create_form()
 
@@ -179,7 +181,7 @@ async def users_create():
 
 
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
-@admin_required
+@permissions_needed(set([Permissions.user_update]))
 async def users_edit(user_id):
     form: UserEditForm = await UserEditForm.create_form()
 
@@ -196,11 +198,12 @@ async def users_edit(user_id):
             return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
         password_new = form.password_new.data
-        role = form.role.data
+        permissions = form.permissions.data
         active = form.active.data
         notes = form.notes.data
+        is_admin = form.is_admin.data
 
-        await edit_user_by_username(user['username'], role, active, notes)
+        await edit_user(user.get('user_id'), passowrd=password_new, is_admin=is_admin, active=active, notes=notes, permissions=permissions)
 
         if password_new:
             await edit_user_password_by_username(user['username'], password_new)
@@ -223,7 +226,7 @@ async def users_edit(user_id):
 
 
 @bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
-@admin_required
+@permissions_needed(set([Permissions.user_delete]))
 async def users_delete(user_id):
     if request.method == 'POST':
         await delete_user(user_id)

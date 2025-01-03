@@ -9,8 +9,7 @@ from asagi_converter import (
 from boards import board_shortnames
 from configs import mod_conf
 from db import db_m
-from enums import AuthActions, DbPool
-from moderation.auth import auth
+from enums import DbPool
 from utils import make_src_path, read_file
 
 
@@ -60,14 +59,12 @@ class BaseFilterCache(ABC):
         """`set[('g', 12345), ('x', 6789), ...]`"""
         raise NotImplementedError()
 
-    async def filter_reported_posts(self, posts: list[dict]) -> list:
+    async def filter_reported_posts(self, posts: list[dict], is_authority: bool=False) -> list:
         if not mod_conf['moderation']:
             return posts
 
         if not posts:
             return posts
-
-        is_authority = await auth(AuthActions.is_authority)
 
         remove_op_replies = mod_conf['remove_replies_to_hidden_op']
 
