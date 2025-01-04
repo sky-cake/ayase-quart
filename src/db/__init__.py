@@ -51,16 +51,16 @@ async def get_db_tables(db_conf: dict, db_type: DbType, close_pool_after=False) 
     if not hasattr(get_db_tables, 'tables'):
         match db_type:
             case DbType.mysql:
-                sql_string = 'SHOW TABLES;'
+                sql = 'SHOW TABLES;'
             case DbType.sqlite:
-                sql_string = "SELECT name FROM sqlite_master WHERE type='table';"
+                sql = "SELECT name FROM sqlite_master WHERE type='table';"
             case DbType.postgres:
-                sql_string = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
+                sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
             case _:
                 return []
         
         db_h = DbHandler(db_conf, db_type)
-        rows = await db_h.query_tuple(sql_string)
+        rows = await db_h.query_tuple(sql)
         get_db_tables.tables = [row[0] for row in rows]
 
         if close_pool_after:

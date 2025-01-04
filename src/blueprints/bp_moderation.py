@@ -3,7 +3,7 @@ from html import escape
 
 from flask_paginate import Pagination
 from quart import Blueprint, abort, flash, jsonify, redirect, request, url_for
-from quart_auth import current_user
+from quart_auth import current_user, login_required
 
 from asagi_converter import get_post, move_post_to_delete_table
 from boards import board_shortnames
@@ -26,7 +26,12 @@ from moderation.report import (
     get_report_count_f,
     get_reports_f
 )
-from moderation.user import Permissions, permissions_needed
+from moderation.user import (
+    Permissions,
+    require_is_active,
+    require_is_admin,
+    require_permissions
+)
 from render import render_controller
 from templates import template_reports_index
 from utils.validation import validate_board
@@ -143,7 +148,9 @@ async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[s
 
 @bp.get('/reports/closed')
 @bp.get('/reports/closed/<int:page_num>')
-@permissions_needed(set([Permissions.report_read]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.report_read]))
 async def reports_closed(page_num: int=0):
     page_size = 20
     reports = await get_reports_f(mod_status=ModStatus.closed, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
@@ -156,13 +163,15 @@ async def reports_closed(page_num: int=0):
         title='Closed Reports',
         tab_title='Closed Reports',
         is_authenticated=True,
-        is_admin=await current_user.is_admin,
+        is_admin=current_user.is_admin,
     )
 
 
 @bp.get('/reports/open')
 @bp.get('/reports/open/<int:page_num>')
-@permissions_needed(set([Permissions.report_read]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.report_read]))
 async def reports_open(page_num: int=0):
     page_size=20
     reports = await get_reports_f(mod_status=ModStatus.open, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
@@ -176,7 +185,7 @@ async def reports_open(page_num: int=0):
         title='Reports',
         tab_title='Reports',
         is_authenticated=True,
-        is_admin=await current_user.is_admin,
+        is_admin=current_user.is_admin,
     )
 
 
@@ -278,7 +287,9 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
 
 
 @bp.route('/reports/<int:report_parent_id>/<string:action>', methods=['POST'])
-@permissions_needed(set([Permissions.report_read]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.report_read]))
 async def reports_action(report_parent_id: int, action: str):
     form = (await request.form)
     redirect_endpoint = form.get('endpoint', 'bp_moderation.reports_open')
@@ -291,7 +302,9 @@ async def reports_action(report_parent_id: int, action: str):
 
 
 @bp.route('/reports/bulk/<string:action>', methods=['POST'])
-@permissions_needed(set([Permissions.report_read]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.report_read]))
 async def reports_action_bulk(action: str):
     data = (await request.get_json())
 

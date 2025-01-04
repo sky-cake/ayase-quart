@@ -13,9 +13,9 @@
           {{ render_field(form.username) }}
           {{ render_field(form.password) }}
 
-          <div style="display: flex;">
+          <div>
             {{ render_field(form.captcha_id) }}
-            <img style="align-self: center;" src="data:image/jpeg;base64,{{form.captcha_b64_img_str}}"/>
+            <img width="65px" src="data:image/jpeg;base64,{{form.captcha_b64_img_str}}"/>
             {{ render_field(form.captcha_answer, placeholder='Solution') }}
           </div>
 

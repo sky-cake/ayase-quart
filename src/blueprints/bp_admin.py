@@ -1,6 +1,7 @@
 import asyncio
 
 from quart import Blueprint, flash, redirect, request, url_for
+from quart_auth import login_required
 
 from asagi_converter import get_selector
 from boards import board_shortnames
@@ -17,7 +18,8 @@ from moderation.user import (
     get_all_users,
     get_user_by_id,
     is_user_valid,
-    permissions_needed
+    require_is_active,
+    require_permissions
 )
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
@@ -69,7 +71,9 @@ async def get_latest_ops_as_catalog():
 
 
 @bp.route("/latest")
-@permissions_needed(set([Permissions.archive_latest_view]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.archive_latest_view]))
 async def latest():
     catalog = await get_latest_ops_as_catalog()
     threads = ''.join(
@@ -87,7 +91,9 @@ async def latest():
 
 
 @bp.route("/stats")
-@permissions_needed(set([Permissions.archive_stats_view]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.archive_stats_view]))
 async def stats():
     table_row_counts = await get_row_counts()
     return await render_controller(
@@ -100,7 +106,9 @@ async def stats():
 
 
 @bp.route("/configs")
-@permissions_needed(set([Permissions.archive_configs_view]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.archive_configs_view]))
 async def configs():
     cs = [
         'default_reported_post_public_access',
@@ -118,8 +126,16 @@ async def configs():
     )
 
 
+def list_to_html_ul(items: list[str], klass=None) -> str:
+    klass = f'class={klass}' if klass else ''
+    lis = ''.join(f'<li>{item}</li>' for item in items)
+    return f"<ul {klass}>{lis}</ul>" if items else ''
+
+
 @bp.route('/users')
-@permissions_needed(set([Permissions.user_read]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.user_read]))
 async def users_index():
     users = await get_all_users()
     ds = []
@@ -131,9 +147,9 @@ async def users_index():
         """
         d['Username'] = u['username']
         d['Is Admin'] = u['is_admin']
-        d['Permissions'] = u['permissions']
-        d['Active'] = 'Yes' if u['active'] else 'No'
-        d['Notes'] = u['notes']
+        d['Permissions'] = list_to_html_ul(sorted([p.name for p in u['permissions']] if u['permissions'] else []), klass='disc')
+        d['Active'] = 'Yes' if u['is_active'] else 'No'
+        d['Notes'] = u['notes'] if u['notes'] else ''
         ds.append(d)
 
     return await render_controller(
@@ -146,7 +162,9 @@ async def users_index():
 
 
 @bp.route('/users/<int:user_id>')
-@permissions_needed(set([Permissions.user_read]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.user_read]))
 async def users_view(user_id):
     user = await get_user_by_id(user_id)
     return await render_controller(
@@ -159,16 +177,20 @@ async def users_view(user_id):
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
-@permissions_needed(set([Permissions.user_create]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.user_create]))
 async def users_create():
     form: UserCreateForm = await UserCreateForm.create_form()
 
     if await form.validate_on_submit():
         username = form.username.data
         password = form.password.data
-        role = form.role.data
+        permissions = form.permissions.data
+        is_admin = form.is_admin.data
+        is_active = form.is_active.data
         notes = form.notes.data
-        await create_user_if_not_exists(username, password, role, notes)
+        await create_user_if_not_exists(username, password, is_active, is_admin, permissions, notes)
         return redirect(url_for('bp_admin.users_index'))
 
     return await render_controller(
@@ -181,7 +203,9 @@ async def users_create():
 
 
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
-@permissions_needed(set([Permissions.user_update]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.user_update]))
 async def users_edit(user_id):
     form: UserEditForm = await UserEditForm.create_form()
 
@@ -198,12 +222,12 @@ async def users_edit(user_id):
             return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
         password_new = form.password_new.data
-        permissions = form.permissions.data
-        active = form.active.data
-        notes = form.notes.data
         is_admin = form.is_admin.data
+        permissions = form.permissions.data
+        is_active = form.is_active.data
+        notes = form.notes.data
 
-        await edit_user(user.get('user_id'), passowrd=password_new, is_admin=is_admin, active=active, notes=notes, permissions=permissions)
+        await edit_user(user.get('user_id'), password=password_new, is_admin=is_admin, is_active=is_active, notes=notes, permissions=permissions)
 
         if password_new:
             await edit_user_password_by_username(user['username'], password_new)
@@ -212,8 +236,9 @@ async def users_edit(user_id):
 
         return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
-    form.role.data = user.role
-    form.active.data = user.active
+    form.is_admin.data = user.is_admin
+    form.permissions.data = [p.name for p in user.permissions]
+    form.is_active.data = user.is_active
     form.notes.data = user.notes
     return await render_controller(
         template_users_edit,
@@ -226,7 +251,9 @@ async def users_edit(user_id):
 
 
 @bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
-@permissions_needed(set([Permissions.user_delete]))
+@login_required
+@require_is_active
+@require_permissions(set([Permissions.user_delete]))
 async def users_delete(user_id):
     if request.method == 'POST':
         await delete_user(user_id)

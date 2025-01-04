@@ -89,7 +89,11 @@ No reports here.
 {% endif %}
 
 <br>
-{% include 'pagination.html' %}
+<br>
+
+{% if reports %}
+    {% include 'pagination.html' %}
+{% endif %}
 
 Definitions
 <ul>

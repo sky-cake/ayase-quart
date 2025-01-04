@@ -429,7 +429,6 @@ img {
 #captcha_answer {
     width: 60px;
     padding: 2px;
-    margin: 10px;
     text-align: center;
 }
 
@@ -487,4 +486,12 @@ img {
 
 .p4 {
     padding: 4px;
+}
+
+.disc {
+    list-style: disc;
+}
+
+.block {
+    display: block;
 }

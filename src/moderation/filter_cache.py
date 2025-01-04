@@ -155,12 +155,12 @@ class FilterCacheSqlite(BaseFilterCache):
         
         expanded = [item for bn in board_and_nums for item in bn]
 
-        sql_string = f"""
+        sql = f"""
             select board_shortname, num
             from board_nums_cache
             where (board_shortname, num) in ({ph})
         """
-        rows = await db_m.query_tuple(sql_string, expanded)
+        rows = await db_m.query_tuple(sql, expanded)
 
         return {(row[0], row[1]) for row in rows}
     

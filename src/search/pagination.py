@@ -23,17 +23,17 @@ def total_pages(total: int, per_page: int) -> int:
     return d
 
 
-def get_page_link(base_link: str, page: int, active: bool=False, text: str=None):
+def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=None):
     text = page if text is None else text
 
-    if active:
-        active = ' class="active"'
+    if is_active:
+        is_active = ' class="is_active"'
         text = f'[{text}]'
     else:
-        active = ''
+        is_active = ''
 
     link = f'<a href="{base_link}&page={page}">{text}</a>'
-    wrapped = f'<li{active}>{link}</li>'
+    wrapped = f'<li{is_active}>{link}</li>'
     return wrapped
 
 def template_pagination_links(path: str, params: dict, total_pages: int):
@@ -42,7 +42,7 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
         total_pages:int
         and current_page:int
     return html of all the pages at the bottom of page
-    active class for current page
+    is_active class for current page
     extra buttons:
         first, last, previous, next
 
@@ -52,7 +52,7 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
             <li><a href="/index_search?terms=hello+there&boards=g&page=1">First</a></li>
             <li><a href="/index_search?terms=hello+there&boards=g&page=1">Previous</a></li>
             <li><a href="/index_search?terms=hello+there&boards=g&page=1">1</a></li>
-            <li class="active"><a href="/index_search?terms=hello+there&boards=g&page=2">2</a></li>
+            <li class="is_active"><a href="/index_search?terms=hello+there&boards=g&page=2">2</a></li>
             <li><a href="/index_search?terms=hello+there&boards=g&page=3">3</a></li>
             <li><a href="/index_search?terms=hello+there&boards=g&page=4">4</a></li>
             <li><a href="/index_search?terms=hello+there&boards=g&page=3">Next</a></li>
@@ -105,8 +105,8 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
         upper = min(total_pages, cur_page + page_range)
 
     for page_i in range(lower, upper + 1): # numbered links
-        active = page_i == cur_page
-        links.append(get_page_link(base_link, page_i, active=active))
+        is_active = page_i == cur_page
+        links.append(get_page_link(base_link, page_i, is_active=is_active))
 
     if cur_page < total_pages: # not last page
         links.append('<br>')

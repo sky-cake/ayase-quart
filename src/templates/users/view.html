@@ -11,8 +11,9 @@
     </p>
 
     <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Role:</strong> {{ user.role }}</p>
-    <p><strong>Active:</strong> {{ 'Yes' if user.active else 'No' }}</p>
+    <p><strong>Is Admin:</strong> {{ 'Yes' if user.is_admin else 'No' }}</p>
+    <p><strong>Permissions:</strong> {{ user.permissions }}</p>
+    <p><strong>Is Active:</strong> {{ 'Yes' if user.is_active else 'No' }}</p>
     <p><strong>Created At:</strong> {{ user.created_at }}</p>
     <p><strong>Last Login:</strong> {{ user.last_login_at }}</p>
     <p><strong>Notes:</strong> {{ user.notes }}</p>

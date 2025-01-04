@@ -178,24 +178,44 @@ def enum_validator(enum_cls: Enum):
     return validator
 
 
-class UserCreateForm(QuartForm):
-    username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Username'})
-    password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
-    active = BooleanField('Active', validators=[InputRequired()])
-    is_admin = BooleanField('Is Admin', validators=[InputRequired()])
-    permissions = MultiCheckboxField('Permissions', choices=[p.name for p in Permissions], validators=[DataRequired()])
+class UserBaseForm(QuartForm):
+    is_admin = BooleanField('Is Admin', validators=[Optional()])
+    permissions = MultiCheckboxField('Permissions', choices=enum_choices(Permissions), validators=[Optional()])
+    is_active = BooleanField('Active', validators=[Optional()])
     notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
     submit = SubmitField('Submit')
 
-    async def async_validate_username(self, field):
+    async def async_validators_permissions(self, field):
+        if self.permissions.data:
+            self.permissions.data = [Permissions(p) for p in self.permissions.data]
+
+
+class UserCreateForm(UserBaseForm):
+    username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Username'})
+    password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
+
+    async def async_validators_username(self, field):
         if self.username.data:
             self.username.data = self.username.data.strip()
 
         if not self.username.data:
             await flash('Please provide a username.', 'warning')
             raise ValidationError()
-        
-    async def async_validate_password(self, field):
+
+
+class UserEditForm(UserBaseForm):
+    password_cur = PasswordField('Current Password', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
+    password_new = PasswordField('New Password', validators=[Length(min=0, max=512)], render_kw={'placeholder': 'Password'})
+
+    # raise RuntimeError('this validation does not work https://quart-wtf.readthedocs.io/en/latest/how_to_guides/form.html#async-custom-validators')
+    async def async_validators_password_new(self, field):
+        password_cur = self.password_cur.data
+        password_new = self.password_new.data
+        if password_new and password_cur == password_new:
+            await flash('That\'s the same password.', 'warning')
+            raise ValidationError()
+
+    async def async_validators_password(self, field):
         """Login user should already exist."""
 
         username = self.username.data
@@ -207,23 +227,6 @@ class UserCreateForm(QuartForm):
 
         await flash('User logged in.', 'success')
         session['user_id'] = user['user_id']
-
-
-class UserEditForm(QuartForm):
-    password_cur = PasswordField('Current Password', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
-    password_new = PasswordField('New Password', validators=[Length(min=0, max=512)], render_kw={'placeholder': 'Password'})
-    active = BooleanField('Active', validators=[Optional()])
-    permissions = MultiCheckboxField('Permissions', choices=[p.name for p in Permissions], validators=[DataRequired()])
-    notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
-    submit = SubmitField('Submit')
-
-    # raise RuntimeError('this validation does not work https://quart-wtf.readthedocs.io/en/latest/how_to_guides/form.html#async-custom-validators')
-    async def async_validators_password_new(self, field):
-        password_cur = self.password_cur.data
-        password_new = self.password_new.data
-        if password_new and password_cur == password_new:
-            await flash('That\'s the same password.', 'warning')
-            raise ValidationError()
 
 
 class ReportUserForm(QuartForm):

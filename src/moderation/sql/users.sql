@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL,
     password TEXT,
     is_admin BOOLEAN NOT NULL DEFAULT 0,
-    active BOOLEAN NOT NULL DEFAULT 1,
+    is_active BOOLEAN NOT NULL DEFAULT 1,
     created_at TIMESTAMP NOT NULL,
     last_update_at TIMESTAMP NOT NULL,
     last_login_at TIMESTAMP,
