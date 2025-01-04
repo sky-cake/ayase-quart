@@ -227,12 +227,12 @@ async def users_edit(user_id):
         is_active = form.is_active.data
         notes = form.notes.data
 
-        await edit_user(user.get('user_id'), password=password_new, is_admin=is_admin, is_active=is_active, notes=notes, permissions=permissions)
+        flash_msg = await edit_user(user.get('user_id'), password=password_new, is_admin=is_admin, is_active=is_active, notes=notes, permissions=permissions)
 
         if password_new:
-            await edit_user_password_by_username(user['username'], password_new)
+            flash_msg += ' ' + await edit_user_password_by_username(user['username'], password_new)
 
-        await flash('User updated.')
+        await flash(flash_msg)
 
         return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 

@@ -141,9 +141,9 @@ async def create_user_if_not_exists(username: str, password: str, is_active: boo
     await set_user_permissions(user_id, permissions)
 
 
-async def edit_user_password_by_username(username: str, password: str):
+async def edit_user_password_by_username(username: str, password: str) -> str:
     if not await get_user_by_username(username):
-        raise ValueError(f'Username {username} already exists')
+        raise ValueError(f'Username {username} does not exist.')
 
     sql = f"""
     update users
@@ -152,6 +152,7 @@ async def edit_user_password_by_username(username: str, password: str):
     ;"""
     params = (gen_pwd(password), datetime.now(), username,)
     await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    return 'Password updated.'
 
 
 async def set_user_permissions(user_id: int, permissions: set[Permissions]):
@@ -168,10 +169,18 @@ def gen_pwd(password: str) -> str:
     return generate_password_hash(password, method='scrypt', salt_length=16)
 
 
-async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_active: bool=False, notes: str=None, permissions: set[Permissions]=None):
+async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_active: bool=False, notes: str=None, permissions: set[Permissions]=None) -> str:
     """password is the non-hashed password"""
     if not user_id:
         raise ValueError(user_id)
+
+    # must always have at least 1 active admin
+    if not is_admin or not is_active:
+        rows = await db_m.query_dict('select count(*) as active_admin_count from users where is_admin=1 and is_active=1;', p_id=DbPool.mod)
+        if not rows:
+            raise ValueError(rows)
+        if rows[0]['active_admin_count'] < 2:
+            return 'User not update. There must always be at least one active admin.'
 
     pwd = 'password=∆,' if password else ''
     sql = f"""
@@ -189,6 +198,8 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
         raise ValueError("Failed to update user")
 
     await set_user_permissions(int(rows[0]['user_id']), permissions)
+
+    return 'User updated.'
 
 
 async def set_user_active_status(user_id: int, is_active: bool):
