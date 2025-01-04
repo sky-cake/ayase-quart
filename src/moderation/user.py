@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from functools import wraps
-from typing import Optional
+from typing import Optional, Iterable
 
 from quart import Blueprint
 from quart_auth import AuthUser, Unauthorized, current_user
@@ -18,12 +18,18 @@ class Permissions(Enum):
     user_read = 'user_read'
     user_update = 'user_update'
     user_delete = 'user_delete'
+    report_open = 'report_open'
+    report_close = 'report_close'
     report_read = 'report_read'
     report_update = 'report_update'
     report_delete = 'report_delete'
+    report_save_notes = 'report_save_notes'
     post_show = 'post_show'
     post_hide = 'post_hide'
     post_delete = 'post_delete'
+    media_hide = 'media_hide'
+    media_show = 'media_show'
+    media_delete = 'media_delete'
     archive_stats_view = 'archive_stats_view'
     archive_latest_view = 'archive_latest_view'
     archive_configs_view = 'archive_configs_view'
@@ -45,8 +51,10 @@ class User(AuthUser):
             self.is_active = u['is_active']
             self.permissions = u['permissions']
 
-    def has_permissions(self, permissions: set[Permissions]) -> bool:
-        return self.permissions.issuperset(permissions)
+    def has_permissions(self, perms: Iterable[Permissions]) -> bool:
+        if not isinstance(perms, set):
+            return self.permissions.issuperset(set(perms))
+        return self.permissions.issuperset(perms)
 
 
 def require_is_admin(func):

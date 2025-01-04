@@ -73,7 +73,7 @@ async def get_latest_ops_as_catalog():
 @bp.route("/latest")
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.archive_latest_view]))
+@require_permissions([Permissions.archive_latest_view])
 async def latest():
     catalog = await get_latest_ops_as_catalog()
     threads = ''.join(
@@ -93,7 +93,7 @@ async def latest():
 @bp.route("/stats")
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.archive_stats_view]))
+@require_permissions([Permissions.archive_stats_view])
 async def stats():
     table_row_counts = await get_row_counts()
     return await render_controller(
@@ -108,7 +108,7 @@ async def stats():
 @bp.route("/configs")
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.archive_configs_view]))
+@require_permissions([Permissions.archive_configs_view])
 async def configs():
     cs = [
         'default_reported_post_public_access',
@@ -135,7 +135,7 @@ def list_to_html_ul(items: list[str], klass=None) -> str:
 @bp.route('/users')
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.user_read]))
+@require_permissions([Permissions.user_read])
 async def users_index():
     users = await get_all_users()
     ds = []
@@ -164,7 +164,7 @@ async def users_index():
 @bp.route('/users/<int:user_id>')
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.user_read]))
+@require_permissions([Permissions.user_read])
 async def users_view(user_id):
     user = await get_user_by_id(user_id)
     return await render_controller(
@@ -179,7 +179,7 @@ async def users_view(user_id):
 @bp.route('/users/create', methods=['GET', 'POST'])
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.user_create]))
+@require_permissions([Permissions.user_create])
 async def users_create():
     form: UserCreateForm = await UserCreateForm.create_form()
 
@@ -205,7 +205,7 @@ async def users_create():
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.user_update]))
+@require_permissions([Permissions.user_update])
 async def users_edit(user_id):
     form: UserEditForm = await UserEditForm.create_form()
 
@@ -253,7 +253,7 @@ async def users_edit(user_id):
 @bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
 @login_required
 @require_is_active
-@require_permissions(set([Permissions.user_delete]))
+@require_permissions([Permissions.user_delete])
 async def users_delete(user_id):
     if request.method == 'POST':
         await delete_user(user_id)
