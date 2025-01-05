@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% block body %}
 
-    <div id="index" style="margin: 30px;">
-        <h1>{{site_name}}</h1>
+    <div id="index">
         {% if board_objects %}
-            <h2>Boards</h2>
-            <ul id="home_boards" style="list-style: none;">
+            <h3>Boards</h3>
+            <ul>
                 {% for board_object in board_objects %}
                     <li>
                         <a href="/{{ board_object.shortname }}/catalog">/{{ board_object.shortname }}/ - {{ board_object.name }}</a>
