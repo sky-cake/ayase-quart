@@ -83,10 +83,10 @@ class DbHandler:
         await self.pool_manager.close_pool()
 
     async def query_tuple(self, query: str, params=None, p_id=DbPool.main):
-        return await self.query_runner.run_query_fast(query.replace('∆', self.phg()), params=params, p_id=p_id)
+        return await self.query_runner.run_query_fast(query, params=params, p_id=p_id)
 
     async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
-        return await self.query_runner.run_query(query.replace('∆', self.phg()), params=params, commit=commit, p_id=p_id, dict_row=dict_row)
+        return await self.query_runner.run_query(query, params=params, commit=commit, p_id=p_id, dict_row=dict_row)
 
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query

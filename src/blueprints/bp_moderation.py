@@ -217,15 +217,7 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
                 return f'Need permissions for {Permissions.post_delete.name}'
             
             # Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
-            post, result = await move_post_to_delete_table(report.board_shortname, report.num)
-            if result == 0:
-                flash_msg = 'Did not locate post in asagi database. Did nothing as a result.'
-            elif result == -1:
-                flash_msg = 'Did not transfer post to asagi\'s delete table. It is still in the board table.'
-            elif result == 1:
-                flash_msg = 'Post transfered to asagi\'s delete table. It is no longer in the board table.'
-            else:
-                raise ValueError(post, result)
+            post, flash_msg = await move_post_to_delete_table(report.board_shortname, report.num)
 
             full_del, prev_del = post_files_delete(post)
             flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
@@ -243,7 +235,7 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
         case 'media_hide':
             if not current_user.has_permissions([Permissions.media_hide]):
                 return f'Need permissions for {Permissions.media_hide.name}'
-            
+
             post = await get_post(report.board_shortname, report.num)
             full_hid, prev_hid = post_files_hide(post)
             flash_msg += ' Hid full media.' if full_hid else ' Did not hide full media.'

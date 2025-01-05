@@ -29,7 +29,7 @@ from wtforms.validators import (
 
 from boards import board_shortnames
 from enums import SubmitterCategory
-from moderation.user import Permissions, is_user_valid
+from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
 from search import HITS_PER_PAGE
 from utils.validation import clamp_positive_int, validate_board
@@ -221,7 +221,7 @@ class UserEditForm(UserBaseForm):
         username = self.username.data
         password_candidate = self.password.data
 
-        if not (user := await is_user_valid(username, password_candidate)):
+        if not (user := await is_valid_creds(username, password_candidate)):
             await flash('Incorrect username or password.', 'warning')
             raise ValidationError()
 

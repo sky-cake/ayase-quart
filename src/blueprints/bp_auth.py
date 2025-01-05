@@ -4,7 +4,7 @@ from quart import Blueprint, current_app, flash, redirect, request, url_for
 from quart_auth import current_user, login_user, logout_user
 
 from forms import LoginForm
-from moderation.user import User, is_user_valid
+from moderation.user import User, is_valid_creds
 from render import render_controller
 from security.captcha import MathCaptcha
 from templates import template_login
@@ -39,7 +39,7 @@ async def login():
         if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
             username = form.username.data
             password_candidate = form.password.data
-            user = await is_user_valid(username, password_candidate)
+            user = await is_valid_creds(username, password_candidate)
             if user:
                 login_user(User(user.user_id))
                 await flash("Login successful.", "success")

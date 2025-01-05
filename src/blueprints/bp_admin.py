@@ -17,7 +17,7 @@ from moderation.user import (
     edit_user_password_by_username,
     get_all_users,
     get_user_by_id,
-    is_user_valid,
+    is_valid_creds,
     require_is_active,
     require_permissions
 )
@@ -217,7 +217,7 @@ async def users_edit(user_id):
     if (await form.validate_on_submit()):
         password_cur = form.password_cur.data
 
-        if not (await is_user_valid(user['username'], password_cur)):
+        if not (await is_valid_creds(user['username'], password_cur)):
             await flash('Wrong current password.')
             return redirect(url_for('bp_admin.users_edit', user_id=user_id))
 
@@ -256,7 +256,8 @@ async def users_edit(user_id):
 @require_permissions([Permissions.user_delete])
 async def users_delete(user_id):
     if request.method == 'POST':
-        await delete_user(user_id)
+        flash_msg = await delete_user(user_id)
+        await flash(flash_msg)
         return redirect(url_for('bp_admin.users_index'))
     
     user = await get_user_by_id(user_id)
