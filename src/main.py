@@ -5,6 +5,7 @@ import os
 
 from flask_bootstrap import Bootstrap5
 from quart import Quart
+from quart_auth import QuartAuth, current_user
 from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
@@ -12,6 +13,7 @@ from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
 from moderation import init_moderation
 from moderation.filter_cache import fc
+from moderation.user import User
 from render import render_controller
 from templates import render_constants, template_message
 from utils import Perf
@@ -25,6 +27,10 @@ async def app_error(e: HTTPException):
     p.check('render')
     print(p)
     return render
+
+
+async def load_user():
+    await current_user.load_user_data()
 
 
 async def create_app():
@@ -53,6 +59,13 @@ async def create_app():
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
+
+    app.before_request(load_user)
+    app.before_websocket(load_user)
+
+    auth_manager = QuartAuth()
+    auth_manager.user_class = User
+    auth_manager.init_app(app)
 
     app.register_error_handler(HTTPException, app_error)
 

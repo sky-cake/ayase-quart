@@ -12,10 +12,29 @@
 
         <p><label for="{{ form.password_cur.id }}">{{ form.password_cur.label }}</label>{{ form.password_cur() }}</p>
         <p><label for="{{ form.password_new.id }}">{{ form.password_new.label }} [Optional]</label>{{ form.password_new() }}</p>
-        <p><label for="{{ form.role.id }}">{{ form.role.label }}</label>{{ form.role() }}</p>
-        <p><label for="{{ form.active.id }}">{{ form.active.label }}</label>{{ form.active() }}</p>
+        <p><label for="{{ form.is_admin.id }}">{{ form.is_admin.label }}</label>{{ form.is_admin() }}</p>
+
+        
+        <p>{{ form.permissions.label }}
+            <label for="{{ form.permissions.id }}">
+            <div class="btn inline p4">
+                <label for="select_all">Check All</label>
+                <input type="checkbox" id="select_all" name="select_all">
+            </div>
+            <br>
+            <br>
+            </label>{{ form.permissions() }}
+        </p>
+        <p><label for="{{ form.is_active.id }}">{{ form.is_active.label }}</label>{{ form.is_active() }}</p>
         <p><label for="{{ form.notes.id }}">{{ form.notes.label }}</label>{{ form.notes() }}</p>
         <button type="submit">Save</button>
     </form>
+
+    <script>
+        document.getElementById('select_all').addEventListener('change', function () {
+            const checkboxes = document.querySelectorAll('input[name=permissions]');
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        });
+    </script>
 
 {% endblock %}

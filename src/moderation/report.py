@@ -178,13 +178,13 @@ async def edit_report_if_exists(report_parent_id: int, public_access: PublicAcce
     if not s:
         return
 
-    sql_string = f"""
+    sql = f"""
         update report_parent
         set {s} last_updated_at={db_m.phg()}
         where report_parent_id={db_m.phg()}
     ;"""
     params = params + [datetime.now(), report_parent_id]
-    await db_m.query_dict(sql_string, params=params, commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
     return report
 
 

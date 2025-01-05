@@ -181,15 +181,15 @@ class SqlSearchFilter:
     in_list: bool = False
     fieldname: str|None = None # added due to possible key overlap in `sql_search_filters`
 
-
+phg = db_q.phg()
 sql_search_filters = dict(
-    title=SqlSearchFilter('title like ∆', like=True),
-    comment=SqlSearchFilter('comment like ∆', like=True),
-    media_filename=SqlSearchFilter('media_filename like ∆', like=True),
-    media_hash=SqlSearchFilter('media_hash = ∆'),
-    num=SqlSearchFilter('num = ∆'),
-    date_before=SqlSearchFilter('timestamp <= ∆'),
-    date_after=SqlSearchFilter('timestamp >= ∆'),
+    title=SqlSearchFilter(f'title like {phg}', like=True),
+    comment=SqlSearchFilter(f'comment like {phg}', like=True),
+    media_filename=SqlSearchFilter(f'media_filename like {phg}', like=True),
+    media_hash=SqlSearchFilter(f'media_hash = {phg}'),
+    num=SqlSearchFilter(f'num = {phg}'),
+    date_before=SqlSearchFilter(f'timestamp <= {phg}'),
+    date_after=SqlSearchFilter(f'timestamp >= {phg}'),
     has_no_file=SqlSearchFilter("(media_filename is null or media_filename = '')", placeholder=False),
     has_file=SqlSearchFilter("media_filename is not null and media_filename != ''", placeholder=False),
     is_op=SqlSearchFilter('op = 1', placeholder=False),
@@ -198,9 +198,9 @@ sql_search_filters = dict(
     is_not_deleted=SqlSearchFilter('deleted = 0', placeholder=False),
     is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
     is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
-    width=SqlSearchFilter('media_w = ∆'),
-    height=SqlSearchFilter('media_h = ∆'),
-    capcode=SqlSearchFilter('capcode = ∆'),
+    width=SqlSearchFilter(f'media_w = {phg}'),
+    height=SqlSearchFilter(f'media_h = {phg}'),
+    capcode=SqlSearchFilter(f'capcode = {phg}'),
     thread_nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='thread_num'),
 )
 
@@ -592,17 +592,18 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
         - nreplies: int
         - nimages: int
     """
+    phg = db_q.phg()
     thread_query = f'''
         select
             nreplies,
             nimages
         from {board}_threads
-        where thread_num = ∆
+        where thread_num = {phg}
     ;'''
     posts_query = f'''
         {get_selector(board)}
         from {board}
-        where thread_num = ∆
+        where thread_num = {phg}
         order by num asc
     ;'''
     threads_details, posts = await asyncio.gather(
@@ -630,7 +631,7 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
     sql = f"""
         {get_selector(board)}
         from {board}
-        where num = ∆
+        where num = {db_q.phg()}
     ;"""
     posts = await db_q.query_dict(sql, params=(post_id,))
 
@@ -646,7 +647,7 @@ async def get_post(board: str, post_id: int) -> dict:
     sql = f"""
         {get_selector(board)}
         from {board}
-        where num = ∆
+        where num = {db_q.phg()}
     ;"""
     posts = await db_q.query_dict(sql, params=(post_id,))
 
@@ -656,35 +657,38 @@ async def get_post(board: str, post_id: int) -> dict:
     return posts[0]
 
 
-async def move_post_to_delete_table(board: str, post_id: int) -> tuple[dict, int]:
-    """Insert post into `<board>_deleted` table first. If we fail at that, do nothing."""
+async def move_post_to_delete_table(board: str, post_id: int) -> tuple[dict, str]:
+    """Insert post into `<board>_deleted` table first. If we fail at that, do nothing.
+    
+    Returns the post dict, and a flash message.
+    """
     post = await get_post(board, post_id)
     if not post:
-        return (post, 0)
+        return (post, 'Did not locate post in asagi database. Did nothing as a result.')
 
     post = {selector_columns_map[k]: v for k, v in post.items() if k in selector_columns_map}
     post = post | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
 
+    phg = db_q.phg()
     sql_cols = ', '.join(post)
-    sql_placeholders = ', '.join(['∆'] * len(post))
-    sql_conflict = ', '.join([f'{col}=∆' for col in post])
+    sql_conflict = ', '.join([f'{col}={phg}' for col in post])
 
-    sql = f"""INSERT INTO `{board}_deleted` ({sql_cols}) VALUES ({sql_placeholders}) ON CONFLICT(`num`) DO UPDATE SET {sql_conflict} RETURNING `num`;"""
+    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({db_q.phg.size(post)}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
     values = list(post.values())
     parameters = values + values
     num = await db_q.query_dict(sql, params=parameters, commit=True)
 
     if not num:
-        return (post, -1)
+        return (post, 'Did not transfer post to asagi\'s delete table. It is still in the board table.')
 
     sql = f"""
         delete
         from {board}
-        where num = ∆
+        where num = {phg}
     ;"""
     await db_q.query_dict(sql, params=(post_id,), commit=True)
 
-    return (post, 1)
+    return (post, 'Post transfered to asagi\'s delete table. It is no longer in the board table.')
 
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:

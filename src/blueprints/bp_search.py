@@ -171,6 +171,7 @@ async def search_handler(search_type: SearchType) -> str:
         quotelinks=quotelinks,
         search_result=True,
         tab_title=SITE_NAME,
+        title=f'{SITE_NAME} Search',
         cur_page=cur_page,
         pages=pages,
         total_hits=total_hits,

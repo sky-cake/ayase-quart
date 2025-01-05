@@ -51,7 +51,7 @@ async def make_pagination_board_index(board_shortname: str, index: dict, page_nu
 
 @bp.get("/")
 async def v_index():
-    return await render_controller(template_index, tab_title=SITE_NAME)
+    return await render_controller(template_index, tab_title=SITE_NAME, title=SITE_NAME)
 
 
 @bp.get("/<string:board_shortname>")

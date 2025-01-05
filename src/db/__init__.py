@@ -51,16 +51,16 @@ async def get_db_tables(db_conf: dict, db_type: DbType, close_pool_after=False) 
     if not hasattr(get_db_tables, 'tables'):
         match db_type:
             case DbType.mysql:
-                sql_string = 'SHOW TABLES;'
+                sql = 'SHOW TABLES;'
             case DbType.sqlite:
-                sql_string = "SELECT name FROM sqlite_master WHERE type='table';"
+                sql = "SELECT name FROM sqlite_master WHERE type='table';"
             case DbType.postgres:
-                sql_string = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
+                sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
             case _:
                 return []
         
         db_h = DbHandler(db_conf, db_type)
-        rows = await db_h.query_tuple(sql_string)
+        rows = await db_h.query_tuple(sql)
         get_db_tables.tables = [row[0] for row in rows]
 
         if close_pool_after:
@@ -83,10 +83,10 @@ class DbHandler:
         await self.pool_manager.close_pool()
 
     async def query_tuple(self, query: str, params=None, p_id=DbPool.main):
-        return await self.query_runner.run_query_fast(query.replace('∆', self.phg()), params=params, p_id=p_id)
+        return await self.query_runner.run_query_fast(query, params=params, p_id=p_id)
 
     async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
-        return await self.query_runner.run_query(query.replace('∆', self.phg()), params=params, commit=commit, p_id=p_id, dict_row=dict_row)
+        return await self.query_runner.run_query(query, params=params, commit=commit, p_id=p_id, dict_row=dict_row)
 
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query
