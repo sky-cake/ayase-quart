@@ -17,4 +17,4 @@ flask_limiter==3.8.0
 zlib-ng==0.5.0
 pybase64==1.4.0
 msgpack==1.0.8
-quart-auth
+quart-auth==0.11.0
