@@ -19,9 +19,22 @@ from utils import Perf
 # from security.limiter import limiter
 
 
-async def app_error(e: HTTPException):
-    p = Perf('error')
+async def http_exception(e: HTTPException):
+    p = Perf('http error')
     render = await render_controller(template_message, message=e, tab_title=f'Error', title='Uh-oh...')
+    p.check('render')
+    print(p)
+    return render
+
+
+async def app_exception(e: Exception):
+    p = Perf('app error')
+
+    message = 'We\'re sorry, our server ran into an issue.'
+    if app.testing:
+        message = e
+
+    render = await render_controller(template_message, message=message, tab_title=f'Error', title='Uh-oh...')
     p.check('render')
     print(p)
     return render
@@ -54,7 +67,8 @@ async def create_app():
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
 
-    app.register_error_handler(HTTPException, app_error)
+    app.register_error_handler(HTTPException, http_exception)
+    app.register_error_handler(Exception, app_exception)
 
     return app
 

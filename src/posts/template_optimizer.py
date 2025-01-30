@@ -412,7 +412,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_quotelink'] }
     </div>
     { wpt['t_media'] if not is_op else '' }
-    <blockquote class="postMessage" id="m{num}">{wpt.get('comment', '')}</blockquote>
+    <blockquote class="postMessage" id="m{num}">{wpt.get('comment') if wpt.get('comment') else ''}</blockquote>
     </div>
     </div>
     """

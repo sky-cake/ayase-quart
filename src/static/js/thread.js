@@ -120,6 +120,8 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
         }
     }
 
+    preview.addEventListener("mouseover", (e) => {quotelink_preview_hide();});
+
     document.body.appendChild(preview);
 
     const ql = quotelink.getBoundingClientRect();
@@ -142,7 +144,7 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
 
     // Adjust width to prevent clipping on the right
     if (left + prev.width > window.innerWidth) {
-        preview.style.width = `${window.innerWidth - left - 10}px`;
+        preview.style.width = `${window.innerWidth - left - 20}px`;
     }
 
     // Set position
