@@ -7,7 +7,7 @@ from utils import make_src_path
 
 def _load_config_toml():
     if not hasattr(_load_config_toml, 'conf'):
-        with open('config.toml', 'rb') as f:
+        with open(make_src_path('config.toml'), 'rb') as f:
            _load_config_toml.conf = tomllib.load(f)
     return _load_config_toml.conf
 
@@ -21,6 +21,9 @@ db_conf['db_type'] = DbType[db_conf['db_type']]
 search_conf = conf.get('search', {})
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
+
+if not media_conf.get('media_root_path'):
+    raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_conf.get('media_root_path'))
 
 if media_conf['serve_outside_static']:
     if not os.path.isdir(media_conf.get('media_root_path')):

@@ -3,35 +3,16 @@
 
 {% block body %}
 
-
-Definitions
-<ul>
-    <li><span class="subject">View</span> - Visit the archive's version of the post.</li>
-    <li><span class="subject">Source</span> - View the post on 4chan.</li>
-    <li><span class="subject">Post Hide</span> - Do not serve the post.</li>
-    <li><span class="subject">Post Show</span> - Allow the post to be served.</li>
-    <li><span class="subject">Post Delete</span> - If found in the 'board' table, transfer the post to the 'board_deleted' table in the asagi database. If the post is not found in 'board', do nothing. Always attempts to permanently delete the media associate with the report.</li>
-    <li><span class="subject">Media Hide</span> - If they exist, this move all media types out of the serve folder, hiding it from everyone.</li>
-    <li><span class="subject">Media Show</span> - If they exist, this move all media types into the serve folder, revealing them to anyone with the right URL.</li>
-    <li><span class="subject">Media Delete</span> - Attempts to permanently delete the media associate with the report.</li>
-    <li><span class="subject">Report Close</span> - Put the report in the closed reports page. This is only to aid moderation. It does nothing else.</li>
-    <li><span class="subject">Report Open</span> - Put the report in the open reports page. This is only to aid moderation. It does nothing else.</li>
-    <li><span class="subject">Report Delete</span> - Deletes the report, allowing the archive to serve the associated post.</li>
-    <li><span class="subject">Save Notes</span> - Saves moderation notes for an individual report. Reloads the page, discarding other unsaved content.</li>
-</ul>
-Notes
-<ul>
-    <li>- If media was declared deleted via the a feedback banner but still appears, it's likely a caching issue, try [Ctrl]+[Shift]+R.</li>
-    <li>- If there is an error a fetching post, it's likely because it's been deleted from the asagi database (sent from 'board' to 'board_deleted'), but remaining in the reporting database in case the post appears in FTS. Try visiting the reported post. If you don't see it, you can delete the report.</li>
-</ul>
-
 {{mod_status_link|safe}}
 
 <br>
 <br>
 
+{% if reports | length > 15 %}
+{% include 'pagination.html' %}
+{% endif %}
 {% if reports %}
-<div class="btn inline">
+<div class="btn inline p4">
     <label for="select_all">Check All</label>
     <input type="checkbox" id="select_all" name="select_all">
 </div>
@@ -46,6 +27,7 @@ Notes
     <option value="report_close">Report Close</option>
     <option value="report_delete">Report Delete</option>
 </select><button id="apply_action" class="btn">Apply</button>
+
 
 {{table(reports, safe_cols=['Check', 'About', 'Post'])}}
 
@@ -105,5 +87,33 @@ Notes
 {% else %}
 No reports here.
 {% endif %}
+
+<br>
+<br>
+
+{% if reports %}
+    {% include 'pagination.html' %}
+{% endif %}
+
+Definitions
+<ul>
+    <li><span class="subject">View</span> - Visit the archive's version of the post.</li>
+    <li><span class="subject">Source</span> - View the post on 4chan.</li>
+    <li><span class="subject">Post Hide</span> - Do not serve the post.</li>
+    <li><span class="subject">Post Show</span> - Allow the post to be served.</li>
+    <li><span class="subject">Post Delete</span> - If found in the 'board' table, transfer the post to the 'board_deleted' table in the asagi database. If the post is not found in 'board', do nothing. Always attempts to permanently delete the media associate with the report.</li>
+    <li><span class="subject">Media Hide</span> - If they exist, this move all media types out of the serve folder, hiding it from everyone.</li>
+    <li><span class="subject">Media Show</span> - If they exist, this move all media types into the serve folder, revealing them to anyone with the right URL.</li>
+    <li><span class="subject">Media Delete</span> - Attempts to permanently delete the media associate with the report.</li>
+    <li><span class="subject">Report Close</span> - Put the report in the closed reports page. This is only to aid moderation. It does nothing else.</li>
+    <li><span class="subject">Report Open</span> - Put the report in the open reports page. This is only to aid moderation. It does nothing else.</li>
+    <li><span class="subject">Report Delete</span> - Deletes the report, allowing the archive to serve the associated post.</li>
+    <li><span class="subject">Save Notes</span> - Saves moderation notes for an individual report. Reloads the page, discarding other unsaved content.</li>
+</ul>
+Notes
+<ul>
+    <li>- If media was declared deleted via the a feedback banner but still appears, it's likely a caching issue, try [Ctrl]+[Shift]+R.</li>
+    <li>- If there is an error a fetching post, it's likely because it's been deleted from the asagi database (sent from 'board' to 'board_deleted'), but remaining in the reporting database in case the post appears in FTS. Try visiting the reported post. If you don't see it, you can delete the report.</li>
+</ul>
 
 {% endblock %}

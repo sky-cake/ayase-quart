@@ -19,10 +19,10 @@ def make_path(*path):
 async def execute_sql(connection, cursor, board, filename):
     with open(make_path(filename), encoding='utf-8') as f:
         print(filename)
-        sql_string = f.read().replace(BOARD_PLACEHOLDER, board).replace(DATABASE_PLACEHOLDER, CONSTS.db_database)
-        sql_strings = [x.strip() for x in sql_string.split(DELIMITER) if x.strip()]
-        for sql_string in sql_strings:
-            await cursor.execute(sql_string)
+        sql = f.read().replace(BOARD_PLACEHOLDER, board).replace(DATABASE_PLACEHOLDER, CONSTS.db_database)
+        sqls = [x.strip() for x in sql.split(DELIMITER) if x.strip()]
+        for sql in sqls:
+            await cursor.execute(sql)
             await connection.commit()
 
 

@@ -20,6 +20,7 @@ from wtforms.fields import (
 )
 from wtforms.validators import (
     DataRequired,
+    InputRequired,
     Length,
     NumberRange,
     Optional,
@@ -27,8 +28,8 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from enums import ModStatus, PublicAccess, SubmitterCategory, UserRole
-from moderation.user import is_user_valid
+from enums import SubmitterCategory
+from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
 from search import HITS_PER_PAGE
 from utils.validation import clamp_positive_int, validate_board
@@ -177,43 +178,34 @@ def enum_validator(enum_cls: Enum):
     return validator
 
 
-class UserCreateForm(QuartForm):
-    username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Username'})
-    password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
-    active = BooleanField('Active', validators=[DataRequired()])
-    role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
+class UserBaseForm(QuartForm):
+    is_admin = BooleanField('Is Admin', validators=[Optional()])
+    permissions = MultiCheckboxField('Permissions', choices=enum_choices(Permissions), validators=[Optional()])
+    is_active = BooleanField('Active', validators=[Optional()])
     notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
     submit = SubmitField('Submit')
 
-    async def async_validate_username(self, field):
+    async def async_validators_permissions(self, field):
+        if self.permissions.data:
+            self.permissions.data = [Permissions(p) for p in self.permissions.data]
+
+
+class UserCreateForm(UserBaseForm):
+    username = StringField('Username', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Username'})
+    password = PasswordField('Password', default='admin', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
+
+    async def async_validators_username(self, field):
         if self.username.data:
             self.username.data = self.username.data.strip()
 
         if not self.username.data:
             await flash('Please provide a username.', 'warning')
             raise ValidationError()
-        
-    async def async_validate_password(self, field):
-        """Login user should already exist."""
-
-        username = self.username.data
-        password_candidate = self.password.data
-
-        if not (user := await is_user_valid(username, password_candidate)):
-            await flash('Incorrect username or password.', 'warning')
-            raise ValidationError()
-
-        await flash('User logged in.', 'success')
-        session['user_id'] = user['user_id']
 
 
-class UserEditForm(QuartForm):
+class UserEditForm(UserBaseForm):
     password_cur = PasswordField('Current Password', validators=[DataRequired(), Length(min=1, max=512)], render_kw={'placeholder': 'Password'})
     password_new = PasswordField('New Password', validators=[Length(min=0, max=512)], render_kw={'placeholder': 'Password'})
-    active = BooleanField('Active', validators=[Optional()])
-    role = RadioField('Role', validators=[DataRequired()], choices=[(r, r) for r in UserRole])
-    notes = TextAreaField('Notes', validators=[Optional(), Length(min=0, max=1024)])
-    submit = SubmitField('Submit')
 
     # raise RuntimeError('this validation does not work https://quart-wtf.readthedocs.io/en/latest/how_to_guides/form.html#async-custom-validators')
     async def async_validators_password_new(self, field):
@@ -222,6 +214,19 @@ class UserEditForm(QuartForm):
         if password_new and password_cur == password_new:
             await flash('That\'s the same password.', 'warning')
             raise ValidationError()
+
+    async def async_validators_password(self, field):
+        """Login user should already exist."""
+
+        username = self.username.data
+        password_candidate = self.password.data
+
+        if not (user := await is_valid_creds(username, password_candidate)):
+            await flash('Incorrect username or password.', 'warning')
+            raise ValidationError()
+
+        await flash('User logged in.', 'success')
+        session['user_id'] = user['user_id']
 
 
 class ReportUserForm(QuartForm):

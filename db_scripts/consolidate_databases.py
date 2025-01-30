@@ -4,21 +4,21 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 
-def execute_query(sql_string, db_old='', db_new='', board='', write=False, print_output=True):
+def execute_query(sql, db_old='', db_new='', board='', write=False, print_output=True):
     """Users of this function must specify if a read or write query is executed by using the kwarg `write`."""
 
     with ENGINE.connect() as conn:
-        sql_string = dedent(sql_string.format(db_old=db_old, db_new=db_new, board=board))
+        sql = dedent(sql.format(db_old=db_old, db_new=db_new, board=board))
 
         if not write:
-            result = pd.read_sql(sql_string, conn)
+            result = pd.read_sql(sql, conn)
 
             if print_output:
                 print(result)
 
             return result
 
-        conn.execute(text(sql_string))
+        conn.execute(text(sql))
         conn.commit()
 
 

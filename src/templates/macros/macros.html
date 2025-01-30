@@ -117,10 +117,12 @@
     {{ field(**kwargs)|safe }}
   </div>
   {% if field.errors %}
-    <div>
-      ^{% for error in field.errors %}
-        {{ error }}<br>
-      {% endfor %}
+    <div class="block">
+      <div class="block">
+        ^{% for error in field.errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
     </div>
   {% endif %}
 {% endmacro %}

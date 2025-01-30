@@ -1,12 +1,12 @@
 from configs import mod_conf
 from db import db_m
-from enums import DbPool, UserRole
-from moderation.user import create_user_if_not_exists
+from enums import DbPool
+from moderation.user import Permissions, create_user_if_not_exists
 from utils import make_src_path, read_file
 
 
 async def init_moderation():
-    moderation_scripts = ['users.sql', 'report_parent.sql', 'report_child.sql']
+    moderation_scripts = ['users.sql', 'user_permissions.sql', 'report_parent.sql', 'report_child.sql']
     for script in moderation_scripts:
         await db_m.query_dict(read_file(make_src_path('moderation', 'sql', script)), p_id=DbPool.mod)
 
@@ -15,4 +15,4 @@ async def init_moderation():
         admin_username = mod_conf['admin_user']
         admin_password = mod_conf['admin_password']
 
-        await create_user_if_not_exists(admin_username, admin_password, UserRole.admin, True, 'Remember to change your default password.')
+        await create_user_if_not_exists(admin_username, admin_password, True, True, set([p for p in Permissions]), notes=None)
