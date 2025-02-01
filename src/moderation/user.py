@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from enum import Enum
 from functools import wraps
@@ -7,8 +8,10 @@ from quart import Blueprint
 from quart_auth import AuthUser, Unauthorized, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from configs import redis_conf
 from db import db_m
 from enums import DbPool
+from redis_cache import RedisDbNumber, get_redis
 
 bp = Blueprint("bp_auth", __name__, template_folder="templates")
 
@@ -35,6 +38,45 @@ class Permissions(Enum):
     archive_configs_view = 'archive_configs_view'
 
 
+
+async def redis_set_user_data(user_id: int, user_data: dict[str, str|int|float|set], expire_seconds: int = None):
+    r = await get_redis(RedisDbNumber.auth)
+
+    serialized_data = {key: json.dumps(list(value)) if isinstance(value, set) else value for key, value in user_data.items()}
+
+    successes = await r.hset(user_id, serialized_data)
+    assert successes == len(user_data)
+    if expire_seconds:
+        await r.expire(user_id, expire_seconds)
+
+
+async def redis_get_user_data(user_id: int) -> dict[str, str|int|float|set]:
+    """All returned keys are strings. Values are strings (or sets if originally stored as sets)."""
+    r = await get_redis(RedisDbNumber.auth)
+    user_data = await r.hgetall(user_id)
+
+    if not user_data:
+        return None
+
+    deserialized_data = {}
+    for key, value in user_data.items():
+        key = key.decode('utf-8')
+        value = value.decode('utf-8')
+
+        try:
+            parsed_value = json.loads(value)
+            deserialized_data[key] = set(parsed_value) if isinstance(parsed_value, list) else value
+        except json.JSONDecodeError:
+            deserialized_data[key] = value
+    
+    return deserialized_data
+
+
+async def redis_delete_user_data(user_id: int):
+    r = await get_redis(RedisDbNumber.auth)
+    await r.delete(user_id)
+
+
 class User(AuthUser):
     def __init__(self, auth_id: str):
         super().__init__(auth_id) # we use auth_id and user_id synonymously - i.e. max one session per user
@@ -44,12 +86,27 @@ class User(AuthUser):
         self.permissions: set = set()
 
     async def load_user_data(self):
-        if self.auth_id:
+        if not self.auth_id:
+            return
+
+        u = None
+        if redis_conf['redis']:
+            u = await redis_get_user_data(self.auth_id) # could not exist, or possibly be expired
+
+        if not u:
             u = await get_user_by_id(self.auth_id)
-            self.username = u['username']
-            self.is_admin = u['is_admin']
-            self.is_active = u['is_active']
-            self.permissions = u['permissions']
+
+            if redis_conf['redis']:
+                key = self.auth_id
+                val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
+                expire_seconds = 15
+                await redis_set_user_data(key, val, expire_seconds)
+
+        self.username = u['username']
+        self.is_admin = u['is_admin']
+        self.is_active = u['is_active']
+        self.permissions = u['permissions']
+
 
     def has_permissions(self, perms: Iterable[Permissions]) -> bool:
         if not isinstance(perms, set):
@@ -79,7 +136,7 @@ def require_permissions(permissions: Iterable[Permissions]):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            if not current_user.has_permissions(permissions):
+            if not current_user.has_permissions(permissions) and not current_user.is_admin:
                 raise Unauthorized()
             return await func(*args, **kwargs)
         return wrapper
@@ -103,6 +160,8 @@ async def get_all_users()-> Optional[list[dict]]:
         return
     for user in users:
         user['permissions'] = get_permissions_from_string(user['permissions'])
+        user['is_admin'] = user['role'] == 'admin'
+        user['is_active'] = user['active'] == 1
     return users
 
 
@@ -120,6 +179,8 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
         return
     user = users[0]
     user['permissions'] = set([Permissions(p) for p in user['permissions'].split(',')]) if user['permissions'] else set()
+    user['is_admin'] = user['role'] == 'admin'
+    user['is_active'] = user['active'] == 1
     return user
 
 

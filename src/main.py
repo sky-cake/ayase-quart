@@ -4,7 +4,7 @@ import asyncio
 import os
 
 from flask_bootstrap import Bootstrap5
-from quart import Quart
+from quart import Quart, request
 from quart_auth import QuartAuth, current_user
 from werkzeug.exceptions import HTTPException
 
@@ -43,6 +43,9 @@ async def app_exception(e: Exception):
 
 
 async def load_user():
+    # this gets hammered by every request...
+    if request.endpoint == 'bp_media.serve':
+        return
     await current_user.load_user_data()
 
 
@@ -74,7 +77,7 @@ async def create_app():
     app.after_serving(db_q.close_db_pool)
 
     app.before_request(load_user)
-    app.before_websocket(load_user)
+    # app.before_websocket(load_user) # we currently do not use websockets
 
     auth_manager = QuartAuth()
     auth_manager.user_class = User
