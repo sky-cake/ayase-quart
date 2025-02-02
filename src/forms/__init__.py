@@ -20,7 +20,6 @@ from wtforms.fields import (
 )
 from wtforms.validators import (
     DataRequired,
-    InputRequired,
     Length,
     NumberRange,
     Optional,

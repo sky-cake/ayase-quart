@@ -1,3 +1,5 @@
+import quart_flask_patch
+
 import asyncio
 
 from quart import Blueprint, flash, redirect, request, url_for
@@ -18,6 +20,7 @@ from moderation.user import (
     get_all_users,
     get_user_by_id,
     is_valid_creds,
+    load_user_data,
     require_is_active,
     require_permissions
 )
@@ -72,6 +75,7 @@ async def get_latest_ops_as_catalog():
 
 @bp.route("/latest")
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.archive_latest_view])
 async def latest():
@@ -92,6 +96,7 @@ async def latest():
 
 @bp.route("/stats")
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.archive_stats_view])
 async def stats():
@@ -107,6 +112,7 @@ async def stats():
 
 @bp.route("/configs")
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.archive_configs_view])
 async def configs():
@@ -134,6 +140,7 @@ def list_to_html_ul(items: list[str], klass=None) -> str:
 
 @bp.route('/users')
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.user_read])
 async def users_index():
@@ -163,6 +170,7 @@ async def users_index():
 
 @bp.route('/users/<int:user_id>')
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.user_read])
 async def users_view(user_id):
@@ -177,8 +185,6 @@ async def users_view(user_id):
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
-@login_required
-@require_is_active
 @require_permissions([Permissions.user_create])
 async def users_create():
     form: UserCreateForm = await UserCreateForm.create_form()
@@ -204,6 +210,7 @@ async def users_create():
 
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.user_update])
 async def users_edit(user_id):
@@ -252,6 +259,7 @@ async def users_edit(user_id):
 
 @bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.user_delete])
 async def users_delete(user_id):

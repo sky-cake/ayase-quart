@@ -1,3 +1,5 @@
+import quart_flask_patch
+
 import json
 from datetime import datetime
 from enum import Enum
@@ -38,38 +40,47 @@ class Permissions(Enum):
     archive_configs_view = 'archive_configs_view'
 
 
-
-async def redis_set_user_data(user_id: int, user_data: dict[str, str|int|float|set], expire_seconds: int = None):
+async def redis_set_user_data(user_id: int, user_data: dict[str, str|int|float|set|list|tuple], expire_seconds: int = None):
+    """
+    Redis does not take dict values, so we json serialize it.
+    Keep that in mind when using this.
+    E.g. sets will be returned as lists.
+    """
     r = await get_redis(RedisDbNumber.auth)
 
-    serialized_data = {key: json.dumps(list(value)) if isinstance(value, set) else value for key, value in user_data.items()}
+    serialized = {key: json.dumps(list(value)) if isinstance(value, set) else value for key, value in user_data.items()}
 
-    successes = await r.hset(user_id, serialized_data)
-    assert successes == len(user_data)
+    successes: int = await r.hset(user_id, serialized)
+
+    if successes != len(user_data):
+        raise ValueError('Not all user data entries inserted to redis.', successes, len(user_data))
+
     if expire_seconds:
         await r.expire(user_id, expire_seconds)
 
 
-async def redis_get_user_data(user_id: int) -> dict[str, str|int|float|set]:
-    """All returned keys are strings. Values are strings (or sets if originally stored as sets)."""
+async def redis_get_user_data(user_id: int) -> dict | None:
+    """
+    Redis does not take dict values, so we json serialize it.
+    Keep that in mind when using this.
+    E.g. sets will be returned as lists.
+    """
     r = await get_redis(RedisDbNumber.auth)
     user_data = await r.hgetall(user_id)
 
     if not user_data:
         return None
 
-    deserialized_data = {}
+    deserialized = {}
     for key, value in user_data.items():
         key = key.decode('utf-8')
         value = value.decode('utf-8')
-
         try:
-            parsed_value = json.loads(value)
-            deserialized_data[key] = set(parsed_value) if isinstance(parsed_value, list) else value
-        except json.JSONDecodeError:
-            deserialized_data[key] = value
+            deserialized[key] = json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            deserialized[key] = value
     
-    return deserialized_data
+    return deserialized
 
 
 async def redis_delete_user_data(user_id: int):
@@ -85,7 +96,8 @@ class User(AuthUser):
         self.is_active: bool = False
         self.permissions: set = set()
 
-    async def load_user_data(self):
+    async def load_user_data(self, expire_seconds: int = 10):
+        """We query user data from the database, and, if configured, cache it in redis for `expire_seconds`."""
         if not self.auth_id:
             return
 
@@ -99,19 +111,30 @@ class User(AuthUser):
             if redis_conf['redis']:
                 key = self.auth_id
                 val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
-                expire_seconds = 15
                 await redis_set_user_data(key, val, expire_seconds)
 
         self.username = u['username']
         self.is_admin = u['is_admin']
         self.is_active = u['is_active']
-        self.permissions = u['permissions']
+        self.permissions = set(u['permissions']) # must Set() this here
 
 
     def has_permissions(self, perms: Iterable[Permissions]) -> bool:
+        """Admins get to do everything, and don't have their permissions checked."""
+        if current_user.is_admin:
+            return True
         if not isinstance(perms, set):
             return self.permissions.issuperset(set(perms))
         return self.permissions.issuperset(perms)
+
+
+def load_user_data(func):
+    """Reference existing endpoints to see which order to place this decorator in."""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        await current_user.load_user_data()
+        return await func(*args, **kwargs)
+    return wrapper
 
 
 def require_is_admin(func):
@@ -136,7 +159,7 @@ def require_permissions(permissions: Iterable[Permissions]):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            if not current_user.has_permissions(permissions) and not current_user.is_admin:
+            if not current_user.has_permissions(permissions):
                 raise Unauthorized()
             return await func(*args, **kwargs)
         return wrapper

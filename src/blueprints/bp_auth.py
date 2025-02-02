@@ -1,3 +1,5 @@
+import quart_flask_patch
+
 from functools import wraps
 
 from quart import Blueprint, current_app, flash, redirect, request, url_for
@@ -51,12 +53,20 @@ async def login():
 
     form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
 
-    authed = current_user.is_authenticated
-    valid_user = authed and current_user.is_active
-    if valid_user and request.method == 'GET':
+    is_authenticated = await current_user.is_authenticated
+    is_active = is_authenticated and current_user.is_active
+
+    if request.method == 'GET' and is_authenticated and is_active:
         return redirect(url_for('bp_moderation.reports_open'))
 
-    return await render_controller(template_login, form=form, is_authenticated=valid_user, title='Admin Login', tab_title='Admin Login')
+    return await render_controller(
+        template_login,
+        form=form,
+        is_authenticated=is_authenticated,
+        is_admin=is_active,
+        title='Admin Login',
+        tab_title='Admin Login'
+    )
 
 
 @bp.route("/logout", methods=["GET"])

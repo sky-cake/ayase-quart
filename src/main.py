@@ -1,11 +1,11 @@
-import quart_flask_patch  # isort: skip  # noqa: F401
+import quart_flask_patch
 
 import asyncio
 import os
 
 from flask_bootstrap import Bootstrap5
-from quart import Quart, request
-from quart_auth import QuartAuth, current_user
+from quart import Quart
+from quart_auth import QuartAuth
 from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
@@ -16,37 +16,29 @@ from moderation.filter_cache import fc
 from moderation.user import User
 from render import render_controller
 from templates import render_constants, template_message
-from utils import Perf
+import traceback
 
 # from security.limiter import limiter
 
 
+def print_exception(e: Exception):
+    print("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+
+
 async def http_exception(e: HTTPException):
-    p = Perf('http error')
     render = await render_controller(template_message, message=e, tab_title=f'Error', title='Uh-oh...')
-    p.check('render')
-    print(p)
     return render
 
 
 async def app_exception(e: Exception):
-    p = Perf('app error')
+    print_exception(e) # should log these errors
 
     message = 'We\'re sorry, our server ran into an issue.'
     if app.testing:
         message = e
 
     render = await render_controller(template_message, message=message, tab_title=f'Error', title='Uh-oh...')
-    p.check('render')
-    print(p)
     return render
-
-
-async def load_user():
-    # this gets hammered by every request...
-    if request.endpoint == 'bp_media.serve':
-        return
-    await current_user.load_user_data()
 
 
 async def create_app():
@@ -75,9 +67,6 @@ async def create_app():
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
-
-    app.before_request(load_user)
-    # app.before_websocket(load_user) # we currently do not use websockets
 
     auth_manager = QuartAuth()
     auth_manager.user_class = User

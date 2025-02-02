@@ -1,3 +1,5 @@
+import quart_flask_patch
+
 from collections import defaultdict
 from html import escape
 
@@ -29,8 +31,8 @@ from moderation.report import (
 from moderation.user import (
     Permissions,
     require_is_active,
-    require_is_admin,
-    require_permissions
+    require_permissions,
+    load_user_data
 )
 from render import render_controller
 from templates import template_reports_index
@@ -136,6 +138,7 @@ async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[s
     pagination = Pagination(
         page=page_num,
         per_page=page_size,
+        page_parameter=None,
         display_msg=f'Displaying <b>{page_size}</b> / <b>{report_count_f}</b> {mod_status.name} reports. <b>{report_count_all}</b> reports in total.',
         total=report_count_f,
         search=False,
@@ -149,6 +152,7 @@ async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[s
 @bp.get('/reports/closed')
 @bp.get('/reports/closed/<int:page_num>')
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.report_read])
 async def reports_closed(page_num: int=0):
@@ -170,6 +174,7 @@ async def reports_closed(page_num: int=0):
 @bp.get('/reports/open')
 @bp.get('/reports/open/<int:page_num>')
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.report_read])
 async def reports_open(page_num: int=0):
@@ -310,6 +315,7 @@ async def reports_action_routine(report_parent_id: int, action: str, mod_notes: 
 
 @bp.route('/reports/<int:report_parent_id>/<string:action>', methods=['POST'])
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.report_read])
 async def reports_action(report_parent_id: int, action: str):
@@ -325,6 +331,7 @@ async def reports_action(report_parent_id: int, action: str):
 
 @bp.route('/reports/bulk/<string:action>', methods=['POST'])
 @login_required
+@load_user_data
 @require_is_active
 @require_permissions([Permissions.report_read])
 async def reports_action_bulk(action: str):
