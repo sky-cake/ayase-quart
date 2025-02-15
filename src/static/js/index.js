@@ -1,6 +1,6 @@
 function pointToOtherMediaOnError(e) {
   var ext = e.getAttribute("data-ext");
-  if (ext === "webm") {
+  if (ext === "webm" || ext === "mp4") {
       return;
   }
 
@@ -29,7 +29,7 @@ function expandMedia(e) {
 
   removeClonedImages();
   
-  if (ext === "webm") {
+  if (ext === "webm" || ext === "mp4") {
       var video = document.createElement("video");
       video.setAttribute("controls", true);
       video.setAttribute("autoplay", true);
@@ -37,7 +37,7 @@ function expandMedia(e) {
 
       var source = document.createElement("source");
       source.setAttribute("src", e.getAttribute("data-full_media_src"));
-      source.setAttribute("type", "video/webm");
+      ext === "webm" ? source.setAttribute("type", "video/webm") : source.setAttribute("type", "video/mp4");
       
       video.appendChild(source);
 
