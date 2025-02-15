@@ -33,7 +33,7 @@ function expandMedia(e) {
       var video = document.createElement("video");
       video.setAttribute("controls", true);
       video.setAttribute("autoplay", true);
-      video.setAttribute("style", "max-height: 90vh; max-width: 90vw;");
+      video.setAttribute("style", "max-height: 60vh; max-width: 80vw;");
 
       var source = document.createElement("source");
       source.setAttribute("src", e.getAttribute("data-full_media_src"));
@@ -51,7 +51,7 @@ function expandMedia(e) {
 
       img.setAttribute("src", e.getAttribute("data-full_media_src"));
       
-      img.setAttribute("style", "max-height: 90vh; max-width: 90vw;");
+      img.setAttribute("style", "max-height: 60vh; max-width: 80vw;");
       img.setAttribute("data-width", e.getAttribute("width"));
       img.setAttribute("data-height", e.getAttribute("height"));
       img.removeAttribute("width", null);
@@ -62,7 +62,7 @@ function expandMedia(e) {
       
       img.removeAttribute("style");
 
-      img.setAttribute("style", "max-height: 90vh; max-width: 90vw;");
+      img.setAttribute("style", "max-height: 60vh; max-width: 80vw;");
       img.setAttribute("width", e.getAttribute("data-width"));
       img.setAttribute("height", e.getAttribute("data-height"));
 
