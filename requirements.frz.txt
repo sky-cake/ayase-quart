@@ -25,7 +25,7 @@ hyperframe==6.0.1
 idna==3.10
 importlib_resources==6.4.5
 itsdangerous==2.2.0
-Jinja2==3.1.4
+Jinja2==3.1.5
 limits==3.13.0
 markdown-it-py==3.0.0
 MarkupSafe==2.1.5
@@ -42,7 +42,7 @@ pybase64==1.4.0
 Pygments==2.18.0
 Pympler==1.1
 PyMySQL==1.1.1
-Quart==0.19.9
+Quart==0.20.0
 quart-auth==0.11.0
 quart-flask-patch==0.3.0
 quart-uploads==0.0.2

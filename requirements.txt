@@ -6,7 +6,7 @@ Bootstrap-Flask==2.3.3
 flask-paginate==2023.10.24
 Flask-WTF==1.2.1
 Hypercorn==0.16.0
-Quart>=0.19.9
+Quart>=0.20.0
 quart-flask-patch==0.3.0
 quart-uploads==0.0.2
 quart-wtforms==1.0.1
