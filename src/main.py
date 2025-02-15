@@ -26,6 +26,8 @@ def print_exception(e: Exception):
 
 
 async def http_exception(e: HTTPException):
+    if e.code == 404:
+        return '', 404
     render = await render_controller(template_message, message=e, tab_title=f'Error', title='Uh-oh...')
     return render
 
