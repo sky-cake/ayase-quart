@@ -72,9 +72,3 @@ def extract_quotelinks_esc(comment: str) -> list[int]:
 def html_quotelinks(comment: str, board: str, op_num: int):
     subs = rf'<a href="/{board}/thread/{op_num}#p\1" class="quotelink" data-board_shortname="{board}">&gt;&gt;\1</a>'
     return esc_ql_re.sub(subs, comment)
-
-
-unesc_ql_re = re.compile(r'[^>]?>>(\d+)')
-def html_uneqscaped_quotelinks(comment: str, board: str, op_num: int):
-    subs = rf'<a href="/{board}/thread/{op_num}#p\1" class="quotelink" data-board_shortname="{board}">>>\1</a>'
-    return unesc_ql_re.sub(subs, comment)

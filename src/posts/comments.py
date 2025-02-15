@@ -1,8 +1,7 @@
 from html import escape
-from re import DOTALL, IGNORECASE, MULTILINE, compile
+from re import DOTALL, IGNORECASE, MULTILINE, compile, sub
 
-from posts.quotelinks import html_quotelinks, html_uneqscaped_quotelinks
-from search.highlighting import html_highlight
+from posts.quotelinks import html_quotelinks
 from configs import archive_conf
 
 '''
@@ -29,20 +28,16 @@ def html_comment(comment: str, op_num: int, board: str, highlight=False):
     if archive_conf['name'][0] == 'l':
         """Lainchan's API has already has escaped the html. It's ready to be displayed."""
 
-        comment = comment.replace('<br/>', '\n')
-        has_angle_r = '>' in comment
-        has_square_l = '[' in comment
-        # if highlight:
-        #     comment = html_highlight(comment)
+        has_angle_r = '<a' in comment
         if has_angle_r:
-            comment = html_uneqscaped_quotelinks(comment, board, op_num)
-        if has_square_l:
-            comment = comment.replace('[code]', '').replace('[/code]', '')
-        if has_angle_r:
-            comment = html_unescaped_greentext(comment)
-        if 'http' in comment:
-            comment = clickable_links(comment)
-        comment = comment.replace('\n', '<br>')
+            # before: <a onclick="highlightReply('14202', event);" href="/sec/res/14192.html#14202">&gt;&gt;14202</a>
+            # after: <a class="quotelink" data-board_shortname="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
+
+            comment = sub(r'\s*onclick="[^"]*"', '', comment)
+
+            pattern = r'(<a)([^>]*\bhref="/)([^/]+)(/res/)([^"]*?)(\.html)?(#)?(\d+)(")'
+            replacement = r'\1 class="quotelink" data-board_shortname="\3"\2\3/thread/\5\7p\8\9'
+            comment = sub(pattern, replacement, comment)
 
     # 4chan
     else:
@@ -86,12 +81,6 @@ greentext_re = compile(r'^&gt;(?!&gt;\d)(.*)$', MULTILINE)
 greentext_sub = r'<span class="quote">&gt;\1</span>'
 def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)
-
-
-unescaped_greentext_re = compile(r'^>(?!>\d)(.*)$', MULTILINE)
-unescaped_greentext_sub = r'<span class="quote">>\1</span>'
-def html_unescaped_greentext(comment: str):
-    return unescaped_greentext_re.sub(unescaped_greentext_sub, comment)
 
 
 link_re = compile(r'(https?://([a-z0-9]+\.)+[a-z]{2,}[a-z0-9/\?&=\-_\(\)\+\.;,]+)[.,]?', IGNORECASE)
