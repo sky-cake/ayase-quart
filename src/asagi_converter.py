@@ -12,8 +12,7 @@ from textwrap import dedent
 from db import db_q
 from posts.capcodes import Capcode
 from posts.comments import html_comment
-from posts.quotelinks import get_quotelink_lookup, get_quotelink_lookup_raw
-from search.highlighting import highlight_search_results
+from posts.quotelinks import get_quotelink_lookup, get_quotelink_lookup_raw, extract_quotelinks
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -243,8 +242,6 @@ def get_offset(page_num: int, page_size: int) -> str:
 
 
 async def search_posts(form_data: dict) -> tuple[list[dict], int]:
-    """Returns posts that not been restored with `restore_comment()`."""
-
     boards = form_data['boards']
     hits_per_page = form_data['hits_per_page']
     order_by = form_data['order_by']
@@ -328,9 +325,10 @@ def get_qls_and_posts(rows: list[dict], gather_qls: bool=True) -> tuple[dict, li
     post_2_quotelinks = defaultdict(list)
     posts = []
     for row in rows:
-        row_quotelinks, row['comment'] = restore_comment(row['thread_num'], row['comment'], row['board_shortname'])
+        row['comment'] = html_comment(row['comment'], row['thread_num'], row['board_shortname'])
 
         if gather_qls:
+            row_quotelinks = extract_quotelinks(row['comment'])
             for row_quotelink in row_quotelinks:
                 post_2_quotelinks[row_quotelink].append(row['num'])
 
@@ -388,58 +386,6 @@ def substitute_square_brackets(text):
         text = code_re.sub(code_sub, text)
         text = banned_re.sub(banned_sub, text)
     return text
-
-
-def restore_comment(op_num: int, comment: str, board_shortname: str, hl_search_term: str=None):
-    """
-    Re-convert asagi stripped comment into clean html.
-    Also create a dictionary with keys containing the num, which maps to a tuple containing the posts it links to.
-
-    Returns a string (the processed comment) and a list of quotelinks in
-    the post.
-
-    greentext: a line that begins with a single ">" and ends with a '\n'
-    redirect: a line that begins with a single ">>", has a thread number afterward that exists in the current thread or another thread (may be inline)
-
-    >> (show OP)
-    >>>/g/ (board redirect)
-    >>>/g/<num> (board post redirect)
-    """
-
-    quotelinks = []
-
-    GT = '&gt;'
-    GTGT = "&gt;&gt;"
-
-    if comment is None:
-        return [], ''
-
-    lines = html.escape(comment).split("\n")
-    hl_search_term = html.escape(hl_search_term) if hl_search_term else None
-    for i, line in enumerate(lines):
-        # >green text
-        if GT == line[:4] and GT != line[4:8]:
-            lines[i] = f"""<span class="quote">{highlight_search_results(line, hl_search_term)}</span>"""
-            continue
-
-        # >>123456789
-        elif GTGT in line:
-            tokens = line.split(" ")
-
-            for j, token in enumerate(tokens):
-                if token[:8] == GTGT and token[8:].isdigit():
-                    quotelinks.append(int(token[8:]))
-                    tokens[j] = f"""<a href="/{board_shortname}/thread/{op_num}#p{token[8:]}" class="quotelink" data-board_shortname="{board_shortname}">{token}</a>"""
-
-            lines[i] = " ".join(tokens)
-
-        else:
-            lines[i] = highlight_search_results(line, hl_search_term) # will not highlight matches if line has a quotelink for performance
-
-    lines = "</br>".join(lines)
-    lines = substitute_square_brackets(lines)
-
-    return quotelinks, lines
 
 
 async def generate_index(board: str, page_num: int=1):
@@ -514,12 +460,13 @@ async def generate_index(board: str, page_num: int=1):
     )
 
     for reply in replies:
-        _, reply['comment'] = restore_comment(reply['op_num'], reply['comment'], board)
+        reply['comment'] = html_comment(reply['comment'], reply['op_num'], board)
 
     thread_posts = defaultdict(list)
     for op in ops:
         op_num = op['num']
-        _, op['comment'] = restore_comment(op_num, op['comment'], board)
+        op['comment'] = html_comment(op['comment'], op_num, board)
+
         op.update(thread_nums_d[op_num])
         thread_posts[op_num].append(op)
     for reply in replies:

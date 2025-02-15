@@ -14,6 +14,7 @@ def _load_config_toml():
 conf = _load_config_toml()
 app_conf = conf.get('app', {})
 site_conf = conf.get('site', {})
+archive_conf = conf.get('archive', {'name': '4chan'})
 
 db_conf = conf.get('db', {})
 db_conf['db_type'] = DbType[db_conf['db_type']]

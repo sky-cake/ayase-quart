@@ -5,7 +5,7 @@ from quart import Blueprint, request
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from asagi_converter import (
-    restore_comment,
+    html_comment,
     search_posts,
     search_posts_get_thread_nums
 )
@@ -140,7 +140,9 @@ async def search_handler(search_type: SearchType) -> str:
                 hl_search_term_comment = form.comment.data if HIGHLIGHT_ENABLED and form.comment.data else None
                 hl_search_term_title = form.title.data if HIGHLIGHT_ENABLED and form.title.data else None
 
-                _, post['comment'] = restore_comment(post['op_num'], post['comment'], post['board_shortname'], hl_search_term=hl_search_term_comment)
+                post['comment'] = html_comment(post['comment'], post['op_num'], post['board_shortname'], highlight=True)
+
+                post['comment'] = highlight_search_results(post['comment'], hl_search_term_comment, is_comment=True)
                 post['title'] = highlight_search_results(post['title'], hl_search_term_title, is_comment=False)
 
                 posts_t.append(wrap_post_t(post))

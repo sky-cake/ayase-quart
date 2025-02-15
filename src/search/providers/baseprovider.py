@@ -80,8 +80,7 @@ class BaseSearch(ABC):
 
     async def search_posts(self, q: SearchQuery) -> tuple[list[dict], int]:
         """Returns search results and num hits.
-        Downstream calculates pages from cur_page and limits.
-        Comments have not been restored using `restore_comment()`.
+        Downstream calculates pages from cur_page and limits.`.
         """
         results, total_hits = await self._search_index(INDEXES.posts.value, q)
         # results = [{'comment':r['comment'], **unpack_metadata(r['data'])} for r in results]

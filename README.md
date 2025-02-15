@@ -5,7 +5,7 @@
 Ayase Quart (AQ) is an interface for 4chan archives using the asagi schema. It currently offers,
 
 - [Web UI](preview/README.md) that looks and feels like 4chan.
-  - Primitive Lainchan support is also available with [Ritual](https://github.com/sky-cake/Ritual) databases.
+  - Lainchan support is also available.
 - Advanced search options, with optional full text search (FTS) using lnx, meilisearch, and many others.
 - A moderation system to hide, and/or delete content
 

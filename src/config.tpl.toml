@@ -13,6 +13,9 @@ port = 9001
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 
+[archive]
+name = '4chan' # '4chan' 'lainchan'
+
 [db]
 db_type = 'mysql' # mysql, sqlite, postgresql
 echo = false # print rendered sql statements to console if enabled
