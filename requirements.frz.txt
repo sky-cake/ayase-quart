@@ -50,7 +50,7 @@ quart-wtforms==1.0.1
 rich==13.9.2
 tqdm==4.66.4
 typing_extensions==4.12.2
-Werkzeug==3.0.4
+Werkzeug==3.0.6
 wrapt==1.16.0
 wsproto==1.2.0
 WTForms==3.1.2
