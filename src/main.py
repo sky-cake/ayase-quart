@@ -1,11 +1,11 @@
-import quart_flask_patch
+import quart_flask_patch  # noqa
 
 import asyncio
 import os
+import traceback
 
 from flask_bootstrap import Bootstrap5
 from quart import Quart
-from quart_auth import QuartAuth
 from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
@@ -13,16 +13,12 @@ from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
 from moderation import init_moderation
 from moderation.filter_cache import fc
-from moderation.user import User
 from render import render_controller
 from templates import render_constants, template_message
-import traceback
-
-# from security.limiter import limiter
 
 
 def print_exception(e: Exception):
-    print("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+    print(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
 
 
 async def http_exception(e: HTTPException):
@@ -50,10 +46,7 @@ async def create_app():
     app = Quart(__name__)
 
     app.config.from_object(QuartConfig)
-
-    # limiter.init_app(app)
-
-    app.config['MATH_CAPTCHA_FONT'] = os.path.join(file_dir, "fonts/tly.ttf")
+    app.config['MATH_CAPTCHA_FONT'] = os.path.join(file_dir, 'fonts/tly.ttf')
 
     Bootstrap5(app)
     app.jinja_env.auto_reload = False
@@ -70,9 +63,10 @@ async def create_app():
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
 
-    auth_manager = QuartAuth()
-    auth_manager.user_class = User
-    auth_manager.init_app(app)
+    if mod_conf['moderation']:
+        from moderation.auth import auth_api, auth_web
+        auth_api.init_app(app)
+        auth_web.init_app(app)
 
     app.register_error_handler(HTTPException, http_exception)
     app.register_error_handler(Exception, app_exception)

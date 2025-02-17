@@ -82,9 +82,7 @@ If you're on Windows, you can use Git Bash to execute the command.
 
 ## Build
 
-Sorting imports
-
-`isort -m 3 ./src`
+Do not sort imports automatically. No tools I've come across respect `#noqa` for `quart_flask_patch`, which we always want at the top of our files.
 
 Lint checking
 

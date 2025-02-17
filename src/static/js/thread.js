@@ -28,10 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
       });
   });
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
+  
   const op = document.querySelector('.op');
   const op_num = op ? op.getAttribute('id').split('p')[1] : null;
   const quotelinks = document.querySelectorAll("a.quotelink");
@@ -81,27 +78,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
 function get_quotelink_preview_default_string(){
-  return `<div class="postContainer replyContainer">
-      <div class="post reply">
-          <div class="postInfo desktop">
-              <span class="nameBlock">
-                  <span class="name">Admin</span>
-              </span>
-          </div>
-          <blockquote class="postMessage">Could not locate post</blockquote>
-      </div>
-  </div>`;
+  return `<div class="postContainer replyContainer"><div class="post reply">
+    <div class="postInfo desktop"><span class="nameBlock"><span class="name">Admin</span></span></div>
+    <blockquote class="postMessage">Could not locate post</blockquote>
+</div></div>`;
 }
-
 
 function quotelink_preview_hide(){
-  document.querySelectorAll("#quote-preview").forEach(qp => {
-      qp.remove()
-  });
+  document.querySelectorAll("#quote-preview").forEach(qp => {qp.remove()});
 }
-
 
 function quotelink_preview_show(target_post, quotelink, backlink_num) {
   let preview = target_post.cloneNode(true);
@@ -128,26 +114,34 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
   const prev = preview.getBoundingClientRect();
   const scroll_y = document.documentElement.scrollTop;
 
-  // Default preview coordinates
   let top = ql.bottom + scroll_y - prev.height / 2;
   let left = ql.right + 5;
-
-  // don't clip top
-  if (top < scroll_y) {
-      top = scroll_y;
+  const space_right = window.innerWidth - ql.right;
+  const space_left = ql.left;
+  
+  // If screen width is below 500px, center the popup
+  if (window.innerWidth < 500) {
+      left = (window.innerWidth - prev.width) / 2;
+      top = ql.bottom + scroll_y + 12;
+  } else {
+      // Don't clip top
+      if (top < scroll_y) {
+          top = scroll_y + 5;
+      }
+      // If there's less than 400px on the right, try putting it on the left
+      if (space_right < 400) {
+          left = ql.left - prev.width - 5;
+      }
+      // If it goes off the left side, center it instead
+      if (left < 0) {
+          left = (window.innerWidth - prev.width) / 2;
+          top = ql.bottom + scroll_y + 12;
+      }
+      // Adjust width to prevent clipping on the right
+      if (left + prev.width > window.innerWidth) {
+          preview.style.width = `${window.innerWidth - left - 20}px`;
+      }
   }
-
-  // Flip side if there's not enough space on the right
-  if (ql.right > window.innerWidth / 1.5) {
-      left = ql.left - prev.width - 5;
-  }
-
-  // Adjust width to prevent clipping on the right
-  if (left + prev.width > window.innerWidth) {
-      preview.style.width = `${window.innerWidth - left - 20}px`;
-  }
-
-  // Set position
   preview.style.top = `${top}px`;
   preview.style.left = `${left}px`;
   preview.style.border = "1px solid white";

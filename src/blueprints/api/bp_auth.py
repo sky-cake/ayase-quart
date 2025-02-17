@@ -3,15 +3,15 @@ import quart_flask_patch
 from functools import wraps
 
 from quart import Blueprint, current_app, flash, redirect, request, url_for
-from quart_auth import current_user, login_user, logout_user
-
+from quart_auth import Action
 from forms import LoginForm
+from moderation.auth import auth_api, current_api_usr
 from moderation.user import User, is_valid_creds
 from render import render_controller
 from security.captcha import MathCaptcha
 from templates import template_login
 
-bp = Blueprint("bp_auth", __name__, template_folder="templates")
+bp = Blueprint("bp_api_auth", __name__, template_folder="templates")
 
 
 def logout_required(func):
@@ -19,11 +19,11 @@ def logout_required(func):
     but they won't see any content."""
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        authed = await current_user.is_authenticated
-        if authed and current_user.is_active:
-            return redirect(url_for('bp_moderation.reports_open'))
-        elif authed and not current_user.is_active:
-            return redirect(url_for('bp_app.v_index'))
+        authed = await current_api_usr.is_authenticated
+        if authed and current_api_usr.is_active:
+            return redirect(url_for('bp_web_moderation.reports_open'))
+        elif authed and not current_api_usr.is_active:
+            return redirect(url_for('bp_web_app.v_index'))
         else:
             return await current_app.ensure_async(func)(*args, **kwargs)
     return wrapper
@@ -43,9 +43,9 @@ async def login():
             password_candidate = form.password.data
             user = await is_valid_creds(username, password_candidate)
             if user:
-                login_user(User(user.user_id))
+                auth_api.login_user(User(user.user_id, Action.WRITE_PERMANENT))
                 await flash("Login successful.", "success")
-                return redirect(url_for("bp_moderation.reports_open"))
+                return redirect(url_for('bp_web_moderation.reports_open'))
 
             await flash("Incorrect username or password.", "danger")
         else:
@@ -53,11 +53,11 @@ async def login():
 
     form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
 
-    is_authenticated = await current_user.is_authenticated
-    is_active = is_authenticated and current_user.is_active
+    is_authenticated = await current_api_usr.is_authenticated
+    is_active = is_authenticated and current_api_usr.is_active
 
     if request.method == 'GET' and is_authenticated and is_active:
-        return redirect(url_for('bp_moderation.reports_open'))
+        return redirect(url_for('bp_web_moderation.reports_open'))
 
     return await render_controller(
         template_login,
@@ -71,7 +71,7 @@ async def login():
 
 @bp.route("/logout", methods=["GET"])
 async def logout():
-    if await current_user.is_authenticated:
-        logout_user()
+    if await current_api_usr.is_authenticated:
+        auth_api.logout_user()
         await flash("Logout successful.", "success")
-    return redirect(url_for("bp_auth.login"))
+    return redirect(url_for('bp_web_auth.login'))

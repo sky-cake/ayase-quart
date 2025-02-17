@@ -3,22 +3,27 @@ testing = false
 secret = 'DEFAULT_CHANGE_ME' # python -c "import secrets as s; print(s.token_hex(24))"
 validate_boards_db = true
 autoreload = false
-
-# quart/hypercorn keys
+api = false # serve catalog.json, thread.json, index.json ?
 port = 9001
 # ssl_key = 'key.pem'
 # ssl_cert = 'cert.pem'
+
+
 
 [site]
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 
+
+
 [archive]
 name = '4chan' # '4chan' 'lainchan'
 
+
+
 [db]
 db_type = 'mysql' # mysql, sqlite, postgresql
-echo = false # print rendered sql statements to console if enabled
+echo = false # if true, print rendered sql statements to console
 
 [db.mysql] # follow pymysql/aiomysql connection keys
 host = '127.0.0.1'
@@ -42,62 +47,85 @@ database = 'asagi'
 min_size = 1
 max_size = 50
 
+
+
 [redis] # follow coredis connection keys
-redis = true # use redis or not
+redis = true # true, false. AQ uses redis to cache user auth, and filter posts that have been reported
 host = "127.0.0.1"
 port = 6379
-db = 0
+db = 0 # redis database id
+
 
 
 [media]
 image_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/image" # must contain {board_shortname}
 thumb_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/thumb" # must contain {board_shortname}
 
-# these optional settings are for serving media outside the quart app static path
-# i.e. outside of '/path/to/ayase_quart/src/static'
+# Below are optional settings for serving media outside the quart app's static path
+#       i.e. outside of '/path/to/ayase_quart/src/static'
+
 serve_outside_static = false # true, false
-media_root_path = '' # the full path to the root media directory on your server e.g. '/mnt/dl' where there exists paths like '/mnt/dl/<board_shortname>/image'
+
+# `media_root_path` is the full path to the root media directory on your server
+#       i.e. if you have images like '/mnt/dl/<board_shortname>/image' set this to '/mnt/dl'
+media_root_path = ''
+
+# only serve files with these extension from outside the static path
 valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
-endpoint = '/serve/abc/' # serves content from filesystem at endpoint /serve/abc/<board_shortname>/image
-# if you use this, the following must be done:
-# image_uri = "/<endpoint>/{board_shortname}/image" # must contain {board_shortname}
-# thumb_uri = "/<endpoint>/{board_shortname}/thumb" # must contain {board_shortname}
-# e.g.
-# image_uri = "/serve/abc/{board_shortname}/image" # must contain {board_shortname}
-# thumb_uri = "/serve/abc/{board_shortname}/thumb" # must contain {board_shortname}
-# and comment out the other image_uri, thumb_uri configs.
+
+# `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board_shortname>/image
+#       i.e. if you want to serve content from '/srv/media/<board_shortname>/image' set this to '/srv/media'
+endpoint = '/srv/media'
+
+# If you use this, declare the two URIs like below, and comment out the above URI declarations.
+# image_uri = "/<endpoint>/{board_shortname}/image" # e.g. "/srv/media/{board_shortname}/image"
+# thumb_uri = "/<endpoint>/{board_shortname}/thumb" # e.g. "/srv/media/{board_shortname}/thumb"
+
 
 
 [search]
 enabled = true
 highlight = true
-hits_per_page = 500
-max_hits = 10000
-provider = 'lnx' # lnx, meili, manticore, typesense, quickwit
-host = 'http://localhost:8000'
+hits_per_page = 50
+max_hits = 1_000
+provider = 'lnx' # 'lnx', 'meili', 'manticore', 'typesense', 'quickwit'
+host = 'http://localhost:8000' # index search host, this is not associated with vanilla search
 
 [search.config]
 headers = { content-type = 'application/json' }
 
-[search.meili]
 
-[search.lnx]
 
 [moderation]
 moderation = true # true, false
+
 admin_user = 'admin'
 admin_password = 'admin'
+
 default_reported_post_public_access = 'hidden' # 'visible', 'hidden'
 hide_4chan_deleted_posts = true # hide 4chan staff deleted posts in archive
-filter_cache_type = 'sqlite' # sqlite, bloom
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 
-regex_filter = '' # never serve posts matching this regex pattern
+filter_cache_type = 'sqlite' # 'sqlite', 'bloom' (not supported yet)
+
+regex_filter = '' # never serve posts matching this regex pattern e.g. 'gentoo|based'
 path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/releases
 
-# path to where hidden images should go
+# path where hidden images should go
 # if empty, images can still be served if their URLs are known
-hidden_images_path = ''
+hidden_images_path = '' # e.g. '/home/garbage/disposal'
 
 [moderation.sqlite]
-database = 'moderation.db'
+database = 'moderation.db' # name of the moderation database. Will be created in `src`.
+
+[moderation.auth]
+cookie_samesite='Strict'
+cookie_secure=false # set this to true when you are using https / are in production
+cookie_http_only=true # js does not need to access auth cookies
+cookie_name='aq'
+
+cookie_salt='web salt'
+bearer_salt='api salt'
+
+cookie_duration=604_800 # one week
+bearer_duration=604_800 # one week

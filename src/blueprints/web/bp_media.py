@@ -5,7 +5,7 @@ from werkzeug.security import safe_join
 
 from configs import media_conf
 
-bp = Blueprint("bp_media", __name__)
+bp = Blueprint("bp_app_media", __name__)
 
 if media_conf.get('endpoint') and media_conf['serve_outside_static']:
     @bp.route(f'/{media_conf['endpoint']}/<path:file_path>')

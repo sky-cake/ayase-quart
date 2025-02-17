@@ -3,7 +3,6 @@ import quart_flask_patch
 import asyncio
 
 from quart import Blueprint, flash, redirect, request, url_for
-from quart_auth import login_required
 
 from asagi_converter import get_selector
 from boards import board_shortnames
@@ -20,9 +19,12 @@ from moderation.user import (
     get_all_users,
     get_user_by_id,
     is_valid_creds,
-    load_user_data,
-    require_is_active,
-    require_permissions
+)
+from moderation.auth import (
+    load_web_usr_data,
+    require_web_usr_is_active,
+    require_web_usr_permissions,
+    login_web_usr_required,
 )
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
@@ -37,7 +39,7 @@ from templates import (
     template_users_view
 )
 
-bp = Blueprint('bp_admin', __name__)
+bp = Blueprint('bp_web_admin', __name__)
 
 
 async def get_row_counts() -> dict:
@@ -74,10 +76,10 @@ async def get_latest_ops_as_catalog():
 
 
 @bp.route("/latest")
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.archive_latest_view])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.archive_latest_view])
 async def latest():
     catalog = await get_latest_ops_as_catalog()
     threads = ''.join(
@@ -95,10 +97,10 @@ async def latest():
 
 
 @bp.route("/stats")
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.archive_stats_view])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.archive_stats_view])
 async def stats():
     table_row_counts = await get_row_counts()
     return await render_controller(
@@ -111,10 +113,10 @@ async def stats():
 
 
 @bp.route("/configs")
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.archive_configs_view])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.archive_configs_view])
 async def configs():
     cs = [
         'default_reported_post_public_access',
@@ -139,18 +141,18 @@ def list_to_html_ul(items: list[str], klass=None) -> str:
 
 
 @bp.route('/users')
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.user_read])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.user_read])
 async def users_index():
     users = await get_all_users()
     ds = []
     for u in users:
         d = {}
         d['Actions'] = f"""
-            <a href="{url_for('bp_admin.users_edit', user_id=u.user_id)}">View</a> |
-            <a href="{url_for('bp_admin.users_delete', user_id=u.user_id)}">Delete</a>
+            <a href="{url_for('bp_web_admin.users_edit', user_id=u.user_id)}">View</a> |
+            <a href="{url_for('bp_web_admin.users_delete', user_id=u.user_id)}">Delete</a>
         """
         d['Username'] = u['username']
         d['Is Admin'] = u['is_admin']
@@ -169,10 +171,10 @@ async def users_index():
 
 
 @bp.route('/users/<int:user_id>')
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.user_read])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.user_read])
 async def users_view(user_id):
     user = await get_user_by_id(user_id)
     return await render_controller(
@@ -185,7 +187,7 @@ async def users_view(user_id):
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
-@require_permissions([Permissions.user_create])
+@require_web_usr_permissions([Permissions.user_create])
 async def users_create():
     form: UserCreateForm = await UserCreateForm.create_form()
 
@@ -197,7 +199,7 @@ async def users_create():
         is_active = form.is_active.data
         notes = form.notes.data
         await create_user_if_not_exists(username, password, is_active, is_admin, permissions, notes)
-        return redirect(url_for('bp_admin.users_index'))
+        return redirect(url_for('bp_web_admin.users_index'))
 
     return await render_controller(
         template_users_create,
@@ -209,24 +211,24 @@ async def users_create():
 
 
 @bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.user_update])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.user_update])
 async def users_edit(user_id):
     form: UserEditForm = await UserEditForm.create_form()
 
     user = await get_user_by_id(user_id)
     if not user:
         await flash('That user does not exist.')
-        redirect(url_for('bp_admin.users_index'))
+        redirect(url_for('bp_web_admin.users_index'))
 
     if (await form.validate_on_submit()):
         password_cur = form.password_cur.data
 
         if not (await is_valid_creds(user['username'], password_cur)):
             await flash('Wrong current password.')
-            return redirect(url_for('bp_admin.users_edit', user_id=user_id))
+            return redirect(url_for('bp_web_admin.users_edit', user_id=user_id))
 
         password_new = form.password_new.data
         is_admin = form.is_admin.data
@@ -241,7 +243,7 @@ async def users_edit(user_id):
 
         await flash(flash_msg)
 
-        return redirect(url_for('bp_admin.users_edit', user_id=user_id))
+        return redirect(url_for('bp_web_admin.users_edit', user_id=user_id))
 
     form.is_admin.data = user.is_admin
     form.permissions.data = [p.name for p in user.permissions]
@@ -258,19 +260,19 @@ async def users_edit(user_id):
 
 
 @bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
-@login_required
-@load_user_data
-@require_is_active
-@require_permissions([Permissions.user_delete])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.user_delete])
 async def users_delete(user_id):
     if request.method == 'POST':
         flash_msg = await delete_user(user_id)
         await flash(flash_msg)
-        return redirect(url_for('bp_admin.users_index'))
+        return redirect(url_for('bp_web_admin.users_index'))
     
     user = await get_user_by_id(user_id)
     if not user:
-        redirect(url_for('bp_admin.users_index'))
+        redirect(url_for('bp_web_admin.users_index'))
 
     return await render_controller(
         template_users_delete,

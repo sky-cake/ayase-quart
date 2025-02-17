@@ -35,7 +35,7 @@ from utils import Perf
 
 search_log = getLogger('search')
 
-bp = Blueprint("bp_search", __name__)
+bp = Blueprint("bp_web_search", __name__)
 
 
 @bp.route("/index_search_config", methods=['GET', 'POST'])

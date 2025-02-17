@@ -1,21 +1,16 @@
-import quart_flask_patch
+import quart_flask_patch  # no qa
 
 import json
 from datetime import datetime
 from enum import Enum
-from functools import wraps
 from typing import Iterable, Optional
 
-from quart import Blueprint
-from quart_auth import AuthUser, Unauthorized, current_user
+from quart_auth import AuthUser, Action
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from configs import redis_conf
 from db import db_m
 from enums import DbPool
 from redis_cache import RedisDbNumber, get_redis
-
-bp = Blueprint("bp_auth", __name__, template_folder="templates")
 
 
 class Permissions(Enum):
@@ -86,84 +81,6 @@ async def redis_get_user_data(user_id: int) -> dict | None:
 async def redis_delete_user_data(user_id: int):
     r = await get_redis(RedisDbNumber.auth)
     await r.delete(user_id)
-
-
-class User(AuthUser):
-    def __init__(self, auth_id: str):
-        super().__init__(auth_id) # we use auth_id and user_id synonymously - i.e. max one session per user
-        self.username: str = ''
-        self.is_admin: bool = False
-        self.is_active: bool = False
-        self.permissions: set = set()
-
-    async def load_user_data(self, expire_seconds: int = 10):
-        """We query user data from the database, and, if configured, cache it in redis for `expire_seconds`."""
-        if not self.auth_id:
-            return
-
-        u = None
-        if redis_conf['redis']:
-            u = await redis_get_user_data(self.auth_id) # could not exist, or possibly be expired
-
-        if not u:
-            u = await get_user_by_id(self.auth_id)
-
-            if redis_conf['redis']:
-                key = self.auth_id
-                val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
-                await redis_set_user_data(key, val, expire_seconds)
-
-        self.username = u['username']
-        self.is_admin = u['is_admin']
-        self.is_active = u['is_active']
-        self.permissions = set(u['permissions']) # must Set() this here
-
-
-    def has_permissions(self, perms: Iterable[Permissions]) -> bool:
-        """Admins get to do everything, and don't have their permissions checked."""
-        if current_user.is_admin:
-            return True
-        if not isinstance(perms, set):
-            return self.permissions.issuperset(set(perms))
-        return self.permissions.issuperset(perms)
-
-
-def load_user_data(func):
-    """Reference existing endpoints to see which order to place this decorator in."""
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        await current_user.load_user_data()
-        return await func(*args, **kwargs)
-    return wrapper
-
-
-def require_is_admin(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        if not current_user.is_admin:
-            raise Unauthorized()
-        return await func(*args, **kwargs)
-    return wrapper
-
-
-def require_is_active(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        if not current_user.is_active:
-            raise Unauthorized()
-        return await func(*args, **kwargs)
-    return wrapper
-
-
-def require_permissions(permissions: Iterable[Permissions]):
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            if not current_user.has_permissions(permissions):
-                raise Unauthorized()
-            return await func(*args, **kwargs)
-        return wrapper
-    return decorator
 
 
 def get_permissions_from_string(permissions: str) -> set[Permissions]:
@@ -356,3 +273,43 @@ async def is_valid_creds(username: str, password_candidate: str) -> Optional[dic
         return
 
     return user
+
+
+class User(AuthUser):
+    def __init__(self, auth_id: str, action: Action = Action.PASS):
+        super().__init__(auth_id, action) # we use auth_id and user_id synonymously - i.e. max one session per user
+        self.username: str = ''
+        self.is_admin: bool = False
+        self.is_active: bool = False
+        self.permissions: set = set()
+
+    async def load_user(self, expire_seconds: int = 10):
+        """We query user data from the database, and, if configured, cache it in redis for `expire_seconds`."""
+        if not self.auth_id:
+            return
+
+        u = None
+        if redis_conf['redis']:
+            u = await redis_get_user_data(self.auth_id) # could not exist, or possibly be expired
+
+        if not u:
+            u = await get_user_by_id(self.auth_id)
+
+            if redis_conf['redis']:
+                key = self.auth_id
+                val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
+                await redis_set_user_data(key, val, expire_seconds)
+
+        self.username = u['username']
+        self.is_admin = u['is_admin']
+        self.is_active = u['is_active']
+        self.permissions = set(u['permissions']) # must Set() this here
+
+
+    def has_permissions(self, perms: Iterable[Permissions]) -> bool:
+        """Admins get to do everything, and don't have their permissions checked."""
+        if self.is_admin:
+            return True
+        if not isinstance(perms, set):
+            return self.permissions.issuperset(set(perms))
+        return self.permissions.issuperset(perms)

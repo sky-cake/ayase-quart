@@ -8,7 +8,7 @@
     <div class="mt-2 card">
       <div class="card-body">
 
-        <form id="login_form" action="{{url_for('bp_auth.login')}}" method="post" novalidate=True>
+        <form id="login_form" action="{{url_for('bp_web_auth.login')}}" method="post" novalidate=True>
           {{ form.csrf_token() }}
           {{ render_field(form.username) }}
           {{ render_field(form.password) }}

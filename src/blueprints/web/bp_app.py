@@ -27,7 +27,7 @@ from threads import render_thread_stats
 from utils import Perf
 from utils.validation import validate_board, validate_threads
 
-bp = Blueprint("bp_app", __name__)
+bp = Blueprint("bp_web_app", __name__)
 
 
 async def make_pagination_board_index(board_shortname: str, index: dict, page_num: int) -> Pagination:

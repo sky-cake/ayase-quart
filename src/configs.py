@@ -35,6 +35,8 @@ if media_conf['serve_outside_static']:
     media_conf['valid_extensions'] = tuple(media_conf.get('valid_extensions'))
 
     media_conf['endpoint'] = media_conf['endpoint'].strip().strip('/')
+    if not media_conf['endpoint']:
+        raise ValueError('The set media endpoint is falsey or root (/). Set it to something else.')
 
 
 mod_conf = conf.get('moderation', {})

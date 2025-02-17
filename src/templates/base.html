@@ -28,17 +28,17 @@
         <script type="text/javascript" src="/static/js/index.js"></script>
 
         {% if request.endpoint in [
-        'bp_app.v_thread',
-        'bp_app.v_board_index',
-        'bp_app.v_board_index_page',
-        'bp_search.v_search',
-        'bp_search.v_index_search',
+        'bp_web_app.v_thread',
+        'bp_web_app.v_board_index',
+        'bp_web_app.v_board_index_page',
+        'bp_web_search.v_search',
+        'bp_web_search.v_index_search',
         ] %}
         <script type="text/javascript" src="/static/js/thread.js"></script>
         {% endif %}
 
         <div id="body">
-            {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_app.v_catalog', 'bp_search.v_search', 'bp_search.v_index_search'] %}
+            {% if request.endpoint in ['bp_web_app.v_thread', 'bp_web_app.v_board_index', 'bp_web_app.v_catalog', 'bp_web_search.v_search', 'bp_web_search.v_index_search'] %}
                 <span id="top">[<a href="#top_hidden">Top</a>] [<a href="#bottom_hidden">Bottom</a>]</span>
                 <span id="top_hidden"></span>
                 <br>
@@ -82,17 +82,17 @@
                         Admin: [
 
                         {% if is_admin %}
-                            <a href="{{ url_for('bp_admin.users_index') }}">Users</a>
+                            <a href="{{ url_for('bp_web_admin.users_index') }}">Users</a>
                             /
                         {% endif %}
 
-                        <a href="{{ url_for('bp_moderation.reports_open') }}">Reports</a>
+                        <a href="{{ url_for('bp_web_moderation.reports_open') }}">Reports</a>
                         /
-                        <a href="{{ url_for('bp_admin.stats') }}">Stats</a>
+                        <a href="{{ url_for('bp_web_admin.stats') }}">Stats</a>
                         /
-                        <a href="{{ url_for('bp_admin.latest') }}">Latest OPs</a>
+                        <a href="{{ url_for('bp_web_admin.latest') }}">Latest OPs</a>
                         /
-                        <a href="{{ url_for('bp_admin.configs') }}">Configs</a>
+                        <a href="{{ url_for('bp_web_admin.configs') }}">Configs</a>
                         ]
                     {% endif %}
 
@@ -100,11 +100,10 @@
                         <br>
                         Profile: [
                         {% if is_admin or is_authenticated %}
-                            <a href="{{ url_for('bp_auth.logout') }}">Sign Out</a>
+                            <a href="{{ url_for('bp_web_moderation.reports_open') }}">Moderation</a>
+                            <a href="{{ url_for('bp_web_auth.logout') }}">Sign Out</a>
                         {% else %}
-                            <!-- Need extra logic here -->
-                            <a href="{{ url_for('bp_moderation.reports_open') }}">Moderation</a>
-                            <a href="{{ url_for('bp_auth.login') }}">Login</a>
+                            <a href="{{ url_for('bp_web_auth.login') }}">Login</a>
                         {% endif %}
                         ]
                     {% endif %}
@@ -139,7 +138,7 @@
                 {% endif %}
             </div>
 
-            {% if request.endpoint in ['bp_app.v_thread', 'bp_app.v_board_index', 'bp_app.v_catalog', 'bp_search.v_search', 'bp_search.v_index_search'] %}
+            {% if request.endpoint in ['bp_web_app.v_thread', 'bp_web_app.v_board_index', 'bp_web_app.v_catalog', 'bp_web_search.v_search', 'bp_web_search.v_index_search'] %}
                 <span id="bottom_hidden"></span>
             {% endif %}
 

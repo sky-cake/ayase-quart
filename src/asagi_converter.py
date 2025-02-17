@@ -12,7 +12,11 @@ from textwrap import dedent
 from db import db_q
 from posts.capcodes import Capcode
 from posts.comments import html_comment
-from posts.quotelinks import get_quotelink_lookup, get_quotelink_lookup_raw, extract_quotelinks
+from posts.quotelinks import (
+    extract_quotelinks,
+    get_quotelink_lookup,
+    get_quotelink_lookup_raw
+)
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
