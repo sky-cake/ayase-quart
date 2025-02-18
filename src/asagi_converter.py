@@ -671,3 +671,37 @@ async def is_post_op(board_shortname: str, num: int) -> bool:
     if not rows:
         return False
     return rows[0][1]
+
+
+async def get_row_counts(board_shortnames) -> dict:
+    row_counts = []
+    for table in board_shortnames:
+        t, t_images = await asyncio.gather(
+            db_q.query_dict(f"SELECT '{table}' as `table`, COUNT(*) as `rows` FROM {table};"),
+            db_q.query_dict(f"SELECT '{table}_images' as `table`, COUNT(*) as `rows` FROM {table}_images;"),
+        )
+        t[0]['rows'] = f'{t[0]['rows']:,}'
+        t_images[0]['rows'] = f'{t_images[0]['rows']:,}'
+        row_counts.extend([t[0], t_images[0]])
+    return row_counts
+
+
+async def get_latest_ops_as_catalog(board_shortnames):
+    latest_ops = await asyncio.gather(*(
+        db_q.query_dict(f"""
+            {get_selector(board_shortname)}
+            FROM {board_shortname}
+            WHERE op = 1 
+            ORDER BY num DESC 
+            LIMIT 5;
+        """)
+        for board_shortname in board_shortnames
+    ))
+    return [{
+        "page": 1,
+        'threads': [
+            l[0] | dict(nreplies='?', nimages='?', quotelinks={})
+            for i, l in enumerate(latest_ops)
+            if l
+        ],
+    }]

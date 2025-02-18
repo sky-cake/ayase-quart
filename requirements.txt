@@ -19,3 +19,4 @@ pybase64>=1.4.0
 msgpack>=1.0.8
 quart-auth>=0.11.0
 coredis>=4.18.0
+quart-schema[pydantic]>=0.21.0

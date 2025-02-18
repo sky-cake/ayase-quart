@@ -103,6 +103,7 @@
                             <a href="{{ url_for('bp_web_moderation.reports_open') }}">Moderation</a>
                             <a href="{{ url_for('bp_web_auth.logout') }}">Sign Out</a>
                         {% else %}
+                            <a href="{{ url_for('bp_web_moderation.reports_open') }}">Moderation</a>    
                             <a href="{{ url_for('bp_web_auth.login') }}">Login</a>
                         {% endif %}
                         ]

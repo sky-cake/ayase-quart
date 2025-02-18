@@ -65,8 +65,10 @@ async def create_app():
 
     if mod_conf['moderation']:
         from moderation.auth import auth_api, auth_web
+        from quart_schema import QuartSchema
         auth_api.init_app(app)
         auth_web.init_app(app)
+        QuartSchema(app)
 
     app.register_error_handler(HTTPException, http_exception)
     app.register_error_handler(Exception, app_exception)

@@ -1,14 +1,10 @@
 import quart_flask_patch
 
-import asyncio
-
 from quart import Blueprint, flash, redirect, request, url_for
 
-from asagi_converter import get_selector
+from asagi_converter import get_row_counts, get_latest_ops_as_catalog
 from boards import board_shortnames
 from configs import mod_conf
-from db import db_q
-from enums import DbPool
 from forms import UserCreateForm, UserEditForm
 from moderation.user import (
     Permissions,
@@ -42,48 +38,15 @@ from templates import (
 bp = Blueprint('bp_web_admin', __name__)
 
 
-async def get_row_counts() -> dict:
-    row_counts = []
-    for table in board_shortnames:
-        t, t_images = await asyncio.gather(
-            db_q.query_dict(f"SELECT '{table}' as `table`, COUNT(*) as `rows` FROM {table};", p_id=DbPool.mod),
-            db_q.query_dict(f"SELECT '{table}_images' as `table`, COUNT(*) as `rows` FROM {table}_images;", p_id=DbPool.mod),
-        )
-        t[0]['rows'] = f'{t[0]['rows']:,}'
-        t_images[0]['rows'] = f'{t_images[0]['rows']:,}'
-        row_counts.extend([t[0], t_images[0]])
-    return row_counts
-
-
-async def get_latest_ops_as_catalog():
-    latest_ops = await asyncio.gather(*(
-        db_q.query_dict(f"""
-            {get_selector(board_shortname)}
-            FROM {board_shortname}
-            WHERE op = 1 
-            ORDER BY num DESC 
-            LIMIT 5;
-        """)
-        for board_shortname in board_shortnames
-    ))
-    return [{
-        "page": 1,
-        'threads': [
-            l[0] | dict(nreplies='?', nimages='?')
-            for l in latest_ops
-        ],
-    }]
-
-
 @bp.route("/latest")
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.archive_latest_view])
 async def latest():
-    catalog = await get_latest_ops_as_catalog()
+    catalog = await get_latest_ops_as_catalog(board_shortnames)
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op|dict(quotelinks={})))
+        render_catalog_card(wrap_post_t(op))
         for batch in catalog
         for op in batch['threads']
     )
@@ -102,7 +65,7 @@ async def latest():
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.archive_stats_view])
 async def stats():
-    table_row_counts = await get_row_counts()
+    table_row_counts = await get_row_counts(board_shortnames)
     return await render_controller(
         template_stats,
         table_row_counts=table_row_counts,
@@ -267,6 +230,8 @@ async def users_edit(user_id):
 async def users_delete(user_id):
     if request.method == 'POST':
         flash_msg = await delete_user(user_id)
+        if not flash_msg:
+            flash_msg = 'Bad user id'
         await flash(flash_msg)
         return redirect(url_for('bp_web_admin.users_index'))
     

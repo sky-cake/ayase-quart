@@ -255,7 +255,7 @@ async def set_user_password(user_id: int, new_password: str):
 async def delete_user(user_id: int) -> str:
     # does not exist
     if not (await get_user_by_id(user_id)):
-        raise ValueError(user_id)
+        return
 
     if not (await meets_active_admin_requirements()):
         return 'User not deleted. There must always be at least one active admin.'
@@ -299,6 +299,9 @@ class User(AuthUser):
                 key = self.auth_id
                 val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
                 await redis_set_user_data(key, val, expire_seconds)
+
+        if not u:
+            return None
 
         self.username = u['username']
         self.is_admin = u['is_admin']

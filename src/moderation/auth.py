@@ -2,7 +2,7 @@ from typing import Iterable
 from werkzeug.local import LocalProxy
 from functools import wraps
 
-from quart import current_app
+from quart import current_app, request
 from quart_auth import QuartAuth, Unauthorized
 from moderation.user import User, Permissions
 
@@ -103,38 +103,32 @@ def require_web_usr_permissions(permissions: Iterable[Permissions]):
 
 
 ## API ################
+    
 
 def login_api_usr_required(func):
     @wraps(func)
-    async def wrapper(*args, **kwargs):
-        if not await current_api_usr.is_authenticated:
-            raise Unauthorized()
-        else:
-            return await current_app.ensure_async(func)(*args, **kwargs)
-    return wrapper
+    async def decorated_function(*args, **kwargs):
+        data = await request.get_json()
+        token = data.get('token', '')
 
+        if not token:
+            return {'error': 'Missing token'}, 400
 
-def load_api_usr_data(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        await current_api_usr.load_user()
+        user_id = auth_api.load_token(token)
+        if not user_id:
+            return {'error': 'Bad token'}, 401
+
+        kwargs['current_api_usr_id'] = int(user_id)
         return await func(*args, **kwargs)
-    return wrapper
 
-
-def load_api_usr_data(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        await current_api_usr.load_user()
-        return await func(*args, **kwargs)
-    return wrapper
+    return decorated_function
 
 
 def require_api_usr_is_admin(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         if not current_api_usr.is_admin:
-            raise Unauthorized()
+            {'error': 'User not admin'}, 401
         return await func(*args, **kwargs)
     return wrapper
 
@@ -143,7 +137,7 @@ def require_api_usr_is_active(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         if not current_api_usr.is_active:
-            raise Unauthorized()
+            {'error': 'User not active'}, 401
         return await func(*args, **kwargs)
     return wrapper
 
@@ -153,7 +147,7 @@ def require_api_usr_permissions(permissions: Iterable[Permissions]):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             if not current_api_usr.has_permissions(permissions):
-                raise Unauthorized()
+                {'error': 'User not permitted'}, 401
             return await func(*args, **kwargs)
         return wrapper
     return decorator

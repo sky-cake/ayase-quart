@@ -1,9 +1,10 @@
 from flask_paginate import Pagination
-from quart import Blueprint
+from quart import Blueprint, jsonify
 
 from asagi_converter import (
     generate_catalog,
     generate_index,
+    generate_post,
     generate_thread,
     get_op_thread_count
 )
@@ -21,6 +22,7 @@ from templates import (
     template_board_index,
     template_catalog,
     template_index,
+    template_search_post_t,
     template_thread
 )
 from threads import render_thread_stats
@@ -321,3 +323,28 @@ async def v_thread(board_shortname: str, thread_id: int):
     p.check('rendered')
     print(p)
     return render
+
+
+@bp.get("/<string:board_shortname>/post/<int:post_id>")
+async def v_post(board_shortname: str, post_id: int):
+    """Called by the client to generate posts not on the page - e.g. when viewing search results.
+    """
+    validate_board(board_shortname)
+
+    p = Perf("post")
+    post_2_quotelinks, post = await generate_post(board_shortname, post_id)
+    p.check('query')
+
+    if not post:
+        return {}
+
+    is_removed = await fc.is_post_removed(post.board_shortname, post.num)
+    p.check('is_post_removed')
+    if is_removed:
+        return {}
+
+    html_content = template_search_post_t.render(**wrap_post_t(post | dict(quotelinks={})))
+
+    p.check('render')
+    print(p)
+    return jsonify(html_content=html_content)

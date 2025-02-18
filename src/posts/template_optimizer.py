@@ -32,6 +32,8 @@ needed_keys = {
 
 
 def wrap_post_t(post: dict):
+    if not (post and post.get('num')):
+        return post
     esc_user_data(post)
     set_links(post)
     post.update(
