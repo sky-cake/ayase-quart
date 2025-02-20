@@ -63,7 +63,7 @@ async def login():
         template_login,
         form=form,
         is_authenticated=is_authenticated,
-        is_admin=is_active,
+        is_admin=is_active, # TODO: this is not an issue, but it's odd
         title='Admin Login',
         tab_title='Admin Login'
     )

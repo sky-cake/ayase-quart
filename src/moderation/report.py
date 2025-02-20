@@ -9,7 +9,7 @@ from moderation.user import Permissions
 from asagi_converter import get_post, move_post_to_delete_table
 from configs import mod_conf
 from db import db_m
-from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory
+from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory, ReportAction
 from leafs import post_files_delete, post_files_hide, post_files_show
 from moderation.filter_cache import fc
 from moderation.user import Permissions
@@ -230,78 +230,75 @@ async def get_reports_by_submitter_category(submitter_category: SubmitterCategor
         return reports
 
 
-async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, action: str, mod_notes: str=None) -> str:
-    """Remember: when calling this routine, the request method must be POST
-    to avoid duplicating actions on historic page-visits
-    """
+async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:
 
     report = await get_report_by_id(report_parent_id)
     if not report:
-        return f'Could not find report with id {report_parent_id}.'
+        return f'Could not find report with id {report_parent_id}.', 404
 
     flash_msg = ''
 
     match action:
-        case 'report_delete':
+        case ReportAction.report_delete:
             if not current_usr.has_permissions([Permissions.report_delete]):
-                return f'Need permissions for {Permissions.report_delete.name}'
+                return f'Need permissions for {Permissions.report_delete.name}', 401
 
             report = await delete_report_if_exists(report_parent_id)
-            flash_msg = f'Report was already deleted.'
+            flash_msg = f'Report seems to already be deleted.'
             if report:
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
                 flash_msg = f'Report deleted.'
-            return flash_msg
+            return flash_msg, 200
 
-        case 'post_delete':
+        case ReportAction.post_delete:
             if not current_usr.has_permissions([Permissions.post_delete]):
-                return f'Need permissions for {Permissions.post_delete.name}'
+                return f'Need permissions for {Permissions.post_delete.name}', 401
             
             # Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
             post, flash_msg = await move_post_to_delete_table(report.board_shortname, report.num)
             if not post:
-                return 'Could not find post. ' + flash_msg
+                return 'Could not find post. ' + flash_msg, 404
 
             full_del, prev_del = post_files_delete(post)
             flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
             flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
 
-        case 'media_delete':
+        case ReportAction.media_delete:
             if not current_usr.has_permissions([Permissions.media_delete]):
-                return f'Need permissions for {Permissions.media_delete.name}'
-            
+                return f'Need permissions for {Permissions.media_delete.name}', 401
+
             post = await get_post(report.board_shortname, report.num)
             if not post:
-                return 'Could not find post.'
+                return 'Could not find post.', 404
             full_del, prev_del = post_files_delete(post)
             flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
             flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
 
-        case 'media_hide':
+        case ReportAction.media_hide:
             if not current_usr.has_permissions([Permissions.media_hide]):
-                return f'Need permissions for {Permissions.media_hide.name}'
+                return f'Need permissions for {Permissions.media_hide.name}', 401
 
             post = await get_post(report.board_shortname, report.num)
             if not post:
-                return 'Could not find post.'
+                return 'Could not find post.', 404
             full_hid, prev_hid = post_files_hide(post)
             flash_msg += ' Hid full media.' if full_hid else ' Did not hide full media.'
             flash_msg += ' Hid thumbnail.' if prev_hid else ' Did not hide thumbnail.'
 
-        case 'media_show':
+        case ReportAction.media_show:
             if not current_usr.has_permissions([Permissions.media_show]):
-                return f'Need permissions for {Permissions.media_show.name}'
+                return f'Need permissions for {Permissions.media_show.name}', 401
             
             post = await get_post(report.board_shortname, report.num)
             if not post:
-                return 'Could not find post.'
+                return 'Could not find post.', 404
             full_sho, prev_sho = post_files_show(post)
             flash_msg += ' Showing full media.' if full_sho else ' Did not reveal full media.'
             flash_msg += ' Showing thumbnail.' if prev_sho else ' Did not reveal thumbnail.'
 
-        case 'post_show':
+        case ReportAction.post_show:
             if not current_usr.has_permissions([Permissions.post_show]):
-                return f'Need permissions for {Permissions.post_show.name}'
+                return f'Need permissions for {Permissions.post_show.name}', 401
             
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
             if report:
@@ -311,51 +308,51 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
             if mod_conf.get('hidden_images_path'):
                 post = await get_post(report.board_shortname, report.num)
                 if not post:
-                    return 'Could not find post.'
+                    return 'Could not find post.', 404
                 full_sho, prev_sho = post_files_show(post)
                 flash_msg += ' Showing full media.' if full_sho else ' Did not reveal full media.'
                 flash_msg += ' Showing thumbnail.' if prev_sho else ' Did not reveal thumbnail.'
 
-        case 'post_hide':
+        case ReportAction.post_hide:
             if not current_usr.has_permissions([Permissions.post_hide]):
-                return f'Need permissions for {Permissions.post_hide.name}'
+                return f'Need permissions for {Permissions.post_hide.name}', 401
 
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.hidden)
             if report:
                 await fc.insert_post(report['board_shortname'], report['num'], report['op'])
             flash_msg = 'Post now publicly hidden.'
-    
+
             if mod_conf.get('hidden_images_path'):
                 post = await get_post(report.board_shortname, report.num)
                 if not post:
-                    return 'Could not find post.'
+                    return 'Could not find post.', 404
                 full_hid, prev_hid = post_files_hide(post)
                 flash_msg += ' Hid full media.' if full_hid else ' Did not hide full media.'
                 flash_msg += ' Hid thumbnail.' if prev_hid else ' Did not hide thumbnail.'
 
-        case 'report_close':
+        case ReportAction.report_close:
             if not current_usr.has_permissions([Permissions.report_close]):
-                return f'Need permissions for {Permissions.report_close.name}'
+                return f'Need permissions for {Permissions.report_close.name}', 401
 
             report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.closed)
             flash_msg = 'Report moved to closed reports.'
 
-        case 'report_open':
+        case ReportAction.report_open:
             if not current_usr.has_permissions([Permissions.report_open]):
-                return f'Need permissions for {Permissions.report_open.name}'
+                return f'Need permissions for {Permissions.report_open.name}', 401
 
             report = await edit_report_if_exists(report_parent_id, mod_status=ModStatus.open)
             flash_msg = 'Report moved to opened reports.'
 
-        case 'report_save_notes':
+        case ReportAction.report_save_notes:
             if not current_usr.has_permissions([Permissions.report_save_notes]):
-                return f'Need permissions for {Permissions.report_save_notes.name}'
+                return f'Need permissions for {Permissions.report_save_notes.name}', 401
 
             # falsey mod_notes are valid
             await edit_report_if_exists(report_parent_id, mod_notes=mod_notes)
             flash_msg = f'Report had their moderation notes saved.'
 
         case _:
-            abort(404)
+            return 'Unsupported action', 400
 
-    return flash_msg
+    return flash_msg, 200

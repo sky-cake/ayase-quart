@@ -15,10 +15,15 @@ from moderation import init_moderation
 from moderation.filter_cache import fc
 from render import render_controller
 from templates import render_constants, template_message
+from quart_schema import RequestSchemaValidationError
 
 
 def print_exception(e: Exception):
     print(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+
+
+async def api_validation_exception(e: RequestSchemaValidationError):
+    return {'error': str(e.description)}, 400
 
 
 async def http_exception(e: HTTPException):
@@ -72,6 +77,7 @@ async def create_app():
 
     app.register_error_handler(HTTPException, http_exception)
     app.register_error_handler(Exception, app_exception)
+    app.register_error_handler(RequestSchemaValidationError, api_validation_exception)
 
     return app
 

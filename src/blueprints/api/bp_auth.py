@@ -4,22 +4,19 @@ from quart import Blueprint
 from moderation.auth import auth_api
 from moderation.user import is_valid_creds
 
-from dataclasses import dataclass
-
 from quart_schema import validate_request, validate_response
+from pydantic import BaseModel
 
 
 bp = Blueprint("bp_api_auth", __name__, url_prefix='/api/v1')
 
 
-@dataclass
-class Credentials:
+class Credentials(BaseModel):
     username: str
     password: str
 
 
-@dataclass
-class Token:
+class Token(BaseModel):
     token: str | None
     error: str | None
 

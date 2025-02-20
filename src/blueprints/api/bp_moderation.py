@@ -1,12 +1,8 @@
 import quart_flask_patch
 
-from collections import defaultdict
-from dataclasses import dataclass
-from quart_schema import validate_request, validate_response
-
-from quart import Blueprint, flash, request
+from quart import Blueprint
 from boards import board_shortnames
-from enums import ModStatus
+from enums import ModStatus, PublicAccess, ReportAction
 from moderation.report import (
     get_reports_f,
     reports_action_routine
@@ -17,80 +13,79 @@ from moderation.auth import (
     require_api_usr_is_active,
     require_api_usr_permissions
 )
+from pydantic import BaseModel, Field
+from quart_schema import validate_querystring, validate_request
 
 
 bp = Blueprint('bp_api_moderation', __name__, url_prefix='/api/v1')
 
 
-@dataclass
-class Token:
-    token: str
+class ReportGET(BaseModel):
+    public_access: PublicAccess = Field(None, description='v: visible, h: hidden')
+    mod_status: ModStatus = Field(None, description='o: open, c: closed')
+    page_size: int = Field(20, ge=0, le=50)
+    page_num: int = Field(0, ge=0)
+    board_shortnames: list[str] = Field(board_shortnames, min_items=0, max_items=len(board_shortnames))
 
 
-@bp.get('/reports/closed')
-@bp.get('/reports/closed/<int:page_num>')
+@bp.get('/reports')
+@validate_querystring(ReportGET)
 @login_api_usr_required
-@validate_request(Token) # just here for api docs
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
-async def reports_closed(data: Token, current_api_usr_id: int, page_num: int=0):
-    page_size = 20
-    reports = await get_reports_f(mod_status=ModStatus.closed, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
-    # pagination = await make_report_pagination(ModStatus.closed, board_shortnames, len(reports), page_num, page_size=page_size)
-    raise NotImplementedError
+async def reports_get(query_args: ReportGET, current_api_usr_id: int):
+    reports = await get_reports_f(
+        public_access=query_args.public_access,
+        mod_status=query_args.mod_status,
+        board_shortnames=query_args.board_shortnames,
+        page_num=query_args.page_num,
+        page_size=query_args.page_size,
+    )
+    return reports
 
 
-@bp.get('/reports/open')
-@bp.get('/reports/open/<int:page_num>')
+class ReportPOST(BaseModel):
+    action: ReportAction = Field(f'One or more: {[x.name for x in ReportAction]}')
+    mod_notes: str | None = None
+
+
+@bp.post('/reports/<int:report_parent_id>')
+@validate_request(ReportPOST)
 @login_api_usr_required
-@validate_request(Token) # just here for api docs
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
-async def reports_open(data: Token, current_api_usr_id: int, page_num: int=0):
-    page_size=20
-    reports = await get_reports_f(mod_status=ModStatus.open, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
-    # pagination = await make_report_pagination(ModStatus.open, board_shortnames, len(reports), page_num, page_size=page_size)
-    raise NotImplementedError
-
-
-@bp.post('/reports/<int:report_parent_id>/<string:action>')
-@login_api_usr_required
-@validate_request(Token) # just here for api docs
-@require_api_usr_is_active
-@require_api_usr_permissions([Permissions.report_read])
-async def reports_action(data: Token, current_api_usr_id: int, report_parent_id: int, action: str):
-    form = (await request.form)
-    
+async def reports_post(data: ReportPOST, current_api_usr_id: int, report_parent_id: int):
     current_api_usr = await get_user_by_id(current_api_usr_id)
 
-    msg = await reports_action_routine(current_api_usr, report_parent_id, action, mod_notes=form.get('mod_notes'))
-    if msg:
-        await flash(msg)
+    msg, code = await reports_action_routine(current_api_usr, report_parent_id, data.action, mod_notes=data.mod_notes)
+    if code < 400:
+        return {'msg': msg}, code
+    return {'error': msg}, code
 
-    raise NotImplementedError
+
+class ReportBulkPOST(ReportPOST):
+    report_parent_ids: list[int] = Field(min_items=1)
 
 
-@bp.post('/reports/bulk/<string:action>')
+@bp.post('/reports/bulk')
+@validate_request(ReportBulkPOST)
 @login_api_usr_required
-@validate_request(Token) # just here for api docs
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
-async def reports_action_bulk(data: Token, current_api_usr_id: int, action: str):
-    data = (await request.get_json())
-
-    report_parent_ids = data.get('report_parent_ids', [])
-
-    if not report_parent_ids:
-        await flash('No reports submitted.')
+async def reports_action_bulk(data: ReportBulkPOST, current_api_usr_id: int):
 
     current_api_usr = await get_user_by_id(current_api_usr_id)
 
-    msgs = defaultdict(lambda: 0)
-    for report_parent_id in report_parent_ids:
-        msg = await reports_action_routine(current_api_usr, report_parent_id, action)
-        msgs[msg] += 1
+    results = {}
+    codes = set()
+    for report_parent_id in data.report_parent_ids:
+        msg, code = await reports_action_routine(current_api_usr, report_parent_id, data.action, data.mod_notes)
+        results[report_parent_id] = {'msg': msg, 'code': code}
+        codes.add(code)
 
-    if msgs:
-        await flash('<br>'.join([f'{msg} x{n}' for msg, n in msgs.items()]))
+    if len(codes) == 0:
+        return {}, 200
+    elif len(codes) == 1:
+        return results, code # last code of the loop
 
-    raise NotImplementedError
+    return results, 207 # Multi-Status

@@ -30,6 +30,19 @@ class PublicAccess(StrEnum):
     hidden = 'h'
 
 
+class ReportAction(StrEnum):
+    report_delete = 'report_delete'
+    post_delete = 'post_delete'
+    media_delete = 'media_delete'
+    media_hide = 'media_hide'
+    media_show = 'media_show'
+    post_show = 'post_show'
+    post_hide = 'post_hide'
+    report_close = 'report_close'
+    report_open = 'report_open'
+    report_save_notes = 'report_save_notes'
+    
+
 class SubmitterCategory(StrEnum):
     illegal_content = 'Illegal content'
     dcma = 'DCMA'

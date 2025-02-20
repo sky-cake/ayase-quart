@@ -190,7 +190,7 @@ async def users_edit(user_id):
         password_cur = form.password_cur.data
 
         if not (await is_valid_creds(user['username'], password_cur)):
-            await flash('Wrong current password.')
+            await flash('Bad credentials')
             return redirect(url_for('bp_web_admin.users_edit', user_id=user_id))
 
         password_new = form.password_new.data
@@ -199,10 +199,7 @@ async def users_edit(user_id):
         is_active = form.is_active.data
         notes = form.notes.data
 
-        flash_msg = await edit_user(user.get('user_id'), password=password_new, is_admin=is_admin, is_active=is_active, notes=notes, permissions=permissions)
-
-        if password_new:
-            flash_msg += ' ' + await edit_user_password_by_username(user['username'], password_new)
+        flash_msg, code = await edit_user(user.get('user_id'), password=password_new, is_admin=is_admin, is_active=is_active, notes=notes, permissions=permissions)
 
         await flash(flash_msg)
 
@@ -229,12 +226,10 @@ async def users_edit(user_id):
 @require_web_usr_permissions([Permissions.user_delete])
 async def users_delete(user_id):
     if request.method == 'POST':
-        flash_msg = await delete_user(user_id)
-        if not flash_msg:
-            flash_msg = 'Bad user id'
+        flash_msg, code = await delete_user(user_id)
         await flash(flash_msg)
         return redirect(url_for('bp_web_admin.users_index'))
-    
+
     user = await get_user_by_id(user_id)
     if not user:
         redirect(url_for('bp_web_admin.users_index'))

@@ -673,7 +673,7 @@ async def is_post_op(board_shortname: str, num: int) -> bool:
     return rows[0][1]
 
 
-async def get_row_counts(board_shortnames) -> dict:
+async def get_row_counts(board_shortnames) -> list[dict]:
     row_counts = []
     for table in board_shortnames:
         t, t_images = await asyncio.gather(

@@ -200,7 +200,7 @@ async def reports_action(report_parent_id: int, action: str):
     form = (await request.form)
     redirect_endpoint = form.get('endpoint', 'bp_moderation.reports_open')
 
-    msg = await reports_action_routine(current_web_usr, report_parent_id, action, mod_notes=form.get('mod_notes'))
+    msg, code = await reports_action_routine(current_web_usr, report_parent_id, action, mod_notes=form.get('mod_notes'))
     if msg:
         await flash(msg)
 
@@ -222,7 +222,7 @@ async def reports_action_bulk(action: str):
 
     msgs = defaultdict(lambda: 0)
     for report_parent_id in report_parent_ids:
-        msg = await reports_action_routine(current_web_usr, report_parent_id, action)
+        msg, code = await reports_action_routine(current_web_usr, report_parent_id, action)
         msgs[msg] += 1
 
     if msgs:

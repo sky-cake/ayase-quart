@@ -108,11 +108,18 @@ def require_web_usr_permissions(permissions: Iterable[Permissions]):
 def login_api_usr_required(func):
     @wraps(func)
     async def decorated_function(*args, **kwargs):
-        data = await request.get_json()
-        token = data.get('token', '')
+        bearer_token = request.headers.get('Authorization')
+
+        if not bearer_token:
+            return {'error': 'Missing Authorization header'}, 400
+
+        if not bearer_token.startswith('bearer '):
+            return {'error': 'Authorization header should be "bearer <token>"'}, 400
+
+        token = bearer_token[7:]
 
         if not token:
-            return {'error': 'Missing token'}, 400
+            return {'error': 'Empty token'}, 400
 
         user_id = auth_api.load_token(token)
         if not user_id:
