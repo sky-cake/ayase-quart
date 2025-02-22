@@ -3,7 +3,6 @@ from functools import cache
 from configs import db_conf, db_mod_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from enums import DbPool, DbType
-from utils import make_src_path
 
 
 @cache

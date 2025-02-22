@@ -11,7 +11,6 @@ from moderation.user import (
     create_user_if_not_exists,
     delete_user,
     edit_user,
-    edit_user_password_by_username,
     get_all_users,
     get_user_by_id,
     is_valid_creds,

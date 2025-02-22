@@ -17,7 +17,7 @@ class Credentials(BaseModel):
 
 
 class Token(BaseModel):
-    token: str | None
+    token: str
     error: str | None
 
 
@@ -33,6 +33,6 @@ async def login(data: Credentials):
     if username and password:
         user = await is_valid_creds(username, password)
         if user:
-            return Token(auth_api.dump_token(str(user.user_id)), None), 200
-        return Token(None, 'Bad credentials'), 401
-    return Token(None, 'Bad request'), 400
+            return Token(token=auth_api.dump_token(str(user.user_id)), error=None), 200
+        return Token(token=None, error='Bad credentials'), 401
+    return Token(token=None, error='Bad request'), 400
