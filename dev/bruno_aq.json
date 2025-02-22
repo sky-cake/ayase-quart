@@ -1,0 +1,127 @@
+{
+  "name": "bruno_aq",
+  "version": "1",
+  "items": [
+    {
+      "type": "http",
+      "name": "CREATE_USER",
+      "seq": 2,
+      "request": {
+        "url": "http://localhost:9001/api/v1/users",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "bearer IjEi.Z7pC7g.V56OH2SpIat-c-TH6LiS5eod9H64uRaN56yVLp7DaYgWWema7am1adrVX-UDEzThlQWLbQN47KQyJ5hYjUYPnw",
+            "enabled": true
+          }
+        ],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"active\": 1,\n  \"is_active\": true,\n  \"is_admin\": true,\n  \"notes\": \"Remember to change your default password.\",\n  \"password\": \"aq\",\n  \"permissions\": [\"media_hide\", \"report_read\"],\n  \"user_id\": 2,\n  \"username\": \"aq\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "LOGIN_GET_TOKEN",
+      "seq": 1,
+      "request": {
+        "url": "http://localhost:9001/api/v1/login",
+        "method": "POST",
+        "headers": [],
+        "params": [],
+        "body": {
+          "mode": "json",
+          "json": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "type": "http",
+      "name": "GET_REPORTS",
+      "seq": 4,
+      "request": {
+        "url": "http://localhost:9001/api/v1/reports?board_shortnames=r9k&public_access=h",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "bearer IjEi.Z7pC7g.V56OH2SpIat-c-TH6LiS5eod9H64uRaN56yVLp7DaYgWWema7am1adrVX-UDEzThlQWLbQN47KQyJ5hYjUYPnw",
+            "enabled": true
+          }
+        ],
+        "params": [
+          {
+            "name": "board_shortnames",
+            "value": "r9k",
+            "type": "query",
+            "enabled": true
+          },
+          {
+            "name": "public_access",
+            "value": "h",
+            "type": "query",
+            "enabled": true
+          },
+          {
+            "name": "board_shortnames",
+            "value": "g",
+            "type": "query",
+            "enabled": false
+          }
+        ],
+        "body": {
+          "mode": "json",
+          "json": "",
+          "formUrlEncoded": [],
+          "multipartForm": [],
+          "file": []
+        },
+        "script": {},
+        "vars": {},
+        "assertions": [],
+        "tests": "",
+        "docs": "",
+        "auth": {
+          "mode": "none"
+        }
+      }
+    }
+  ],
+  "environments": [],
+  "brunoConfig": {
+    "version": "1",
+    "name": "bruno_aq",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ],
+    "size": 0.0014181137084960938,
+    "filesCount": 4
+  }
+}

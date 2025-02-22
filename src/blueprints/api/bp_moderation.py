@@ -1,6 +1,6 @@
 import quart_flask_patch
 
-from quart import Blueprint
+from quart import Blueprint, jsonify
 from boards import board_shortnames
 from enums import ModStatus, PublicAccess, ReportAction
 from moderation.report import (
@@ -25,7 +25,7 @@ class ReportGET(BaseModel):
     mod_status: ModStatus = Field(None, description='o: open, c: closed')
     page_size: int = Field(20, ge=0, le=50)
     page_num: int = Field(0, ge=0)
-    board_shortnames: list[str] = Field(board_shortnames, min_items=0, max_items=len(board_shortnames))
+    board_shortnames: list[str] | str = Field(board_shortnames, min_items=0, max_items=len(board_shortnames))
 
 
 @bp.get('/reports')
@@ -37,12 +37,11 @@ async def reports_get(query_args: ReportGET, current_api_usr_id: int):
     reports = await get_reports(
         public_access=query_args.public_access,
         mod_status=query_args.mod_status,
-        board_shortnames=query_args.board_shortnames,
+        board_shortnames=query_args.board_shortnames if isinstance(query_args.board_shortnames, list) else [query_args.board_shortnames],
         page_num=query_args.page_num,
         page_size=query_args.page_size,
     )
-    return reports
-
+    return jsonify(reports)
 
 class ReportPOST(BaseModel):
     action: ReportAction = Field(f'One of: {[x.name for x in ReportAction]}')
