@@ -4,6 +4,7 @@ secret = 'DEFAULT_CHANGE_ME' # python -c "import secrets as s; print(s.token_hex
 validate_boards_db = true
 autoreload = false
 api = false # serve catalog.json, thread.json, index.json ?
+url = 'http://127.0.0.1:9001' # 'http://127.0.0.1:9001' 'https://192.168.1.100' 'https://ayasequart.com' # everything before the paths/querystrings in your url
 port = 9001
 # ssl_key = 'key.pem'
 # ssl_cert = 'cert.pem'

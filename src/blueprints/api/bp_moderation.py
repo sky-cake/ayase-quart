@@ -4,7 +4,7 @@ from quart import Blueprint
 from boards import board_shortnames
 from enums import ModStatus, PublicAccess, ReportAction
 from moderation.report import (
-    get_reports_f,
+    get_reports,
     reports_action_routine
 )
 from moderation.user import Permissions, get_user_by_id
@@ -34,7 +34,7 @@ class ReportGET(BaseModel):
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
 async def reports_get(query_args: ReportGET, current_api_usr_id: int):
-    reports = await get_reports_f(
+    reports = await get_reports(
         public_access=query_args.public_access,
         mod_status=query_args.mod_status,
         board_shortnames=query_args.board_shortnames,
@@ -45,7 +45,7 @@ async def reports_get(query_args: ReportGET, current_api_usr_id: int):
 
 
 class ReportPOST(BaseModel):
-    action: ReportAction = Field(f'One or more: {[x.name for x in ReportAction]}')
+    action: ReportAction = Field(f'One of: {[x.name for x in ReportAction]}')
     mod_notes: str | None = None
 
 

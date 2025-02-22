@@ -43,7 +43,12 @@ async def redis_set_user_data(user_id: int, user_data: dict[str, str|int|float|s
     """
     r = await get_redis(RedisDbNumber.auth)
 
-    serialized = {key: json.dumps(list(value)) if isinstance(value, set) else value for key, value in user_data.items()}
+    serialized = dict()
+    for key, value in user_data.items():
+        v = value
+        if isinstance(value, set):
+            v = json.dumps([x.value if isinstance(x, Enum) else x for x in value])
+        serialized[key] = v
 
     successes: int = await r.hset(user_id, serialized)
 
@@ -87,7 +92,7 @@ def get_permissions_from_string(permissions: str) -> set[Permissions]:
     return set([Permissions(p) for p in permissions.split(',')]) if permissions else set()
 
 
-async def get_all_users()-> Optional[list[dict]]:
+async def get_all_users(include_pwd: bool=False)-> Optional[list[dict]]:
     sql = """
     select
         users.*,
@@ -102,7 +107,8 @@ async def get_all_users()-> Optional[list[dict]]:
         user['permissions'] = get_permissions_from_string(user['permissions'])
         user['is_admin'] = bool(user['is_admin'])
         user['is_active'] = bool(user['is_active'])
-        user['password'] = ''
+        if not include_pwd:
+            user['password'] = ''
     return users
 
 
@@ -122,15 +128,15 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
     user['permissions'] = set([Permissions(p) for p in user['permissions'].split(',')]) if user['permissions'] else set()
     user['is_admin'] = bool(user['is_admin'])
     user['is_active'] = bool(user['is_active'])
-    user['password'] = ''
     return user
 
 
-async def get_user_by_username(username: str) -> Optional[dict]:
+async def get_user_by_username(username: str, include_pwd: bool=False) -> Optional[dict]:
     if not (rows := await db_m.query_dict(f"select user_id from users where username={db_m.phg()}", params=(username,), p_id=DbPool.mod)):
         return
     user = await get_user_by_id(rows[0]['user_id'])
-    user['password'] = ''
+    if not include_pwd:
+        user['password'] = ''
     return user
 
 
@@ -269,10 +275,9 @@ async def delete_user(user_id: int) -> tuple[str, int]:
 
 
 async def is_valid_creds(username: str, password_candidate: str) -> Optional[dict]:
-    user = await get_user_by_username(username)
+    user = await get_user_by_username(username, include_pwd=True)
     if not user:
         return
-
     if not check_password_hash(user.password, password_candidate):
         return
     user['password'] = ''

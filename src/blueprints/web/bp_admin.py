@@ -150,6 +150,9 @@ async def users_view(user_id):
 
 
 @bp.route('/users/create', methods=['GET', 'POST'])
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_create])
 async def users_create():
     form: UserCreateForm = await UserCreateForm.create_form()

@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 
-from quart import abort
 from quart_auth import AuthUser
 
 from moderation.user import Permissions
@@ -15,93 +14,156 @@ from moderation.filter_cache import fc
 from moderation.user import Permissions
 
 
-async def get_report_count_all() -> int:
-    sql = f"""
+async def get_report_count(
+    report_parent_id: Optional[int] = None,
+    board_shortnames: Optional[list[str]] = None,
+    thread_num: Optional[int] = None,
+    num: Optional[int] = None,
+    is_op: Optional[bool] = None,
+    public_access: Optional[PublicAccess] = None,
+    mod_status: Optional[ModStatus] = None,
+    submitter_category: Optional[SubmitterCategory] = None,
+    created_at_gte: Optional[str] = None,
+    created_at_lte: Optional[str] = None,
+    **kwarg,
+) -> int:
+    """kwarg is just a convenience here, it gobbles up any extra, unused params for us."""
+    ph = db_m.phg()
+    where = []
+    params = []
+
+    if public_access:
+        where.append(f'public_access = {ph}')
+        params.append(public_access)
+    if mod_status:
+        where.append(f'mod_status = {ph}')
+        params.append(mod_status)
+    if board_shortnames:
+        assert isinstance(board_shortnames, list)
+        assert isinstance(board_shortnames[0], str)
+        where.append(f'board_shortname in ({db_m.phg.qty(len(board_shortnames))})')
+        params.extend(board_shortnames)
+    if report_parent_id:
+        where.append(f'report_parent_id = {ph}')
+        params.append(report_parent_id)
+    if num:
+        where.append(f'num = {ph}')
+        params.append(num)
+    if thread_num:
+        where.append(f'thread_num = {ph}')
+        params.append(thread_num)
+    if is_op:
+        where.append(f'op = 1')
+    if is_op is not None and not is_op:
+        where.append(f'op != 1')
+
+    where_child = []
+    if submitter_category:
+        where_child.append(f'submitter_category = {ph}')
+        params.append(submitter_category)
+    if created_at_gte:
+        where_child.append(f'created_at >= {ph}')
+        params.append(created_at_gte)
+    if created_at_lte:
+        where_child.append(f'created_at =< {ph}')
+        params.append(created_at_lte)
+
+    sql = """
         select
             count(*) as report_count
         from report_parent
     """
-    if (reports := (await db_m.query_dict(sql, p_id=DbPool.mod))):
-        return reports[0]['report_count']
-    return 0
-
-
-async def get_report_count_f(public_access: PublicAccess=None, mod_status: ModStatus=None, board_shortnames: list[str]=None) -> Optional[list[dict]]:
-    ph = db_m.phg()
-    where = []
-    params = []
-
-    if public_access:
-        where.append(f'public_access = {ph}')
-        params.append(public_access.value)
-
-    if mod_status:
-        where.append(f'mod_status = {ph}')
-        params.append(mod_status.value)
-
-    if board_shortnames:
-        where.append(f'board_shortname in ({db_m.phg.qty(len(board_shortnames))})')
-        params.extend(board_shortnames)
-
     if where:
-        where = 'where ' + ' and '.join(where)
+        sql += ' where ' + ' and '.join(where)
 
-    sql = f"""
-        select
-            count(*) report_count
-        from report_parent
-            join report_child using (report_parent_id)
-        {where}
-    """
+    if where_child:
+        w = ' and '.join(where_child)
+        sql += f' and report_parent_id in ( select report_parent_id from report_child where {w})'
+
     if (reports := (await db_m.query_dict(sql, params=params, p_id=DbPool.mod))):
         return reports[0]['report_count']
     return 0
 
 
-async def get_reports_f(public_access: PublicAccess=None, mod_status: ModStatus=None, board_shortnames: list[str]=None, page_num: int=0, page_size: int=20) -> Optional[list[dict]]:
+async def get_reports(
+    report_parent_id: Optional[int] = None,
+    board_shortnames: Optional[list[str]] = None,
+    thread_num: Optional[int] = None,
+    num: Optional[int] = None,
+    is_op: Optional[bool] = None,
+    public_access: Optional[PublicAccess] = None,
+    mod_status: Optional[ModStatus] = None,
+    submitter_category: Optional[SubmitterCategory] = None,
+    created_at_gte: Optional[str] = None,
+    created_at_lte: Optional[str] = None,
+    page_num: int = 0,
+    page_size: int = 20
+) -> Optional[list[dict]] | int:
+
     ph = db_m.phg()
     where = []
     params = []
 
     if public_access:
-        where.append(f'public_access = {ph}')
-        params.append(public_access.value)
-
+        where.append(f'rp.public_access = {ph}')
+        params.append(public_access)
     if mod_status:
-        where.append(f'mod_status = {ph}')
-        params.append(mod_status.value)
-
+        where.append(f'rp.mod_status = {ph}')
+        params.append(mod_status)
     if board_shortnames:
-        where.append(f'board_shortname in ({db_m.phg.qty(len(board_shortnames))})')
+        assert isinstance(board_shortnames, list)
+        assert isinstance(board_shortnames[0], str)
+        where.append(f'rp.board_shortname in ({db_m.phg.qty(len(board_shortnames))})')
         params.extend(board_shortnames)
+    if report_parent_id:
+        where.append(f'rp.report_parent_id = {ph}')
+        params.append(report_parent_id)
+    if num:
+        where.append(f'rp.num = {ph}')
+        params.append(num)
+    if submitter_category:
+        where.append(f'rc.submitter_category = {ph}')
+        params.append(submitter_category)
+    if thread_num:
+        where.append(f'rp.thread_num = {ph}')
+        params.append(thread_num)
+    if is_op:
+        where.append(f'rp.op = 1')
+    if is_op is not None and not is_op:
+        where.append(f'rp.op != 1')
+    if created_at_gte:
+        where.append(f'rc.created_at >= {ph}')
+        params.append(created_at_gte)
+    if created_at_lte:
+        where.append(f'rc.created_at =< {ph}')
+        params.append(created_at_lte)
 
-    if where:
-        where = 'where ' + ' and '.join(where)
-
-    offset = ''
-    if page_size:
-         offset = f'limit {int(page_size)} offset {int(page_num)}'
-
-    sql = f"""
+    sql = """
         select
-            report_parent_id,
-            board_shortname,
-            num,
-            thread_num,
-            public_access,
-            mod_status,
-            mod_notes,
-            count(submitter_ip) as report_count,
-            group_concat(submitter_category, '||') as submitter_category,
-            group_concat(submitter_notes, '||') as submitter_notes
-        from report_parent
-            join report_child using (report_parent_id)
-        {where}
+            rp.report_parent_id,
+            rp.board_shortname,
+            rp.num,
+            rp.thread_num,
+            rp.public_access,
+            rp.mod_status,
+            rp.mod_notes,
+            count(distinct submitter_ip) as ip_count,
+            group_concat(rc.submitter_category, '||') as submitter_category,
+            group_concat(rc.submitter_notes, '||') as submitter_notes
+        from report_parent rp
+            join report_child rc using (report_parent_id)
+    """
+    if where:
+        sql += ' where ' + ' and '.join(where)
+
+    sql += f"""
         group by 1,2,3,4,5,6,7
-        order by created_at desc
-        {offset}
+        order by rc.report_parent_id, max(rc.created_at) desc
+        limit {ph} offset {ph}
     """
-    if (reports := (await db_m.query_dict(sql, params=params, p_id=DbPool.mod))):
+    params.extend([page_size, page_num * page_size])
+
+    if (reports := await db_m.query_dict(sql, params=params, p_id=DbPool.mod)):
         return reports
     return []
 
@@ -206,28 +268,6 @@ async def delete_report_if_exists(report_parent_id: int) -> dict:
     await db_m.query_dict(sql, params=(report_parent_id,), commit=True, p_id=DbPool.mod)
 
     return report
-
-
-async def get_reports_by_mod_status(mod_status: ModStatus) -> Optional[list[dict]]:
-    sql = f'select * report_parent from report_parent where mod_status={db_m.phg()};'
-    if (reports := await db_m.query_dict(sql, params=(mod_status.value,), p_id=DbPool.mod)):
-        return reports
-
-
-async def get_reports_by_public_access(public_access: PublicAccess) -> Optional[list[dict]]:
-    sql = f'select * from report_parent where public_access={db_m.phg()};'
-    if (reports := await db_m.query_dict(sql, params=(public_access.value,), p_id=DbPool.mod)):
-        return reports
-
-
-async def get_reports_by_submitter_category(submitter_category: SubmitterCategory) -> Optional[list[dict]]:
-    sql = f"""
-    select *
-    from report_parent
-    where report_parent_id in (select report_parent_id from report_child where submitter_category={db_m.phg()})
-    ;"""
-    if (reports := await db_m.query_dict(sql, params=(submitter_category.value,), p_id=DbPool.mod)):
-        return reports
 
 
 async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:

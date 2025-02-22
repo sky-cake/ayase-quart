@@ -34,7 +34,7 @@ class SqlitePoolManager(BasePoolManager):
             await pool.load_extension(mod_conf['path_to_regex_so'])
             cur = await pool.execute('select regex_version();')
             regex_version = (await cur.fetchone())
-            print(f'regex_version(): {regex_version}')
+            # print(f'regex_version(): {regex_version}')
 
         self.pools[p_id] = pool
         return pool

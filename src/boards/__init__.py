@@ -41,7 +41,7 @@ def _get_board_views():
         db_tables = run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
         valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
         if removals := [board for board in boards if board not in valid_boards]:
-            print(f'Boards not found in database:\n\t[{", ".join(removals)}]\nWill be ignored.')
+            # print(f'Boards not found in database:\n\t[{", ".join(removals)}]\nWill be ignored.')
             for b in removals:
                 del boards[b]
     if not boards:

@@ -19,10 +19,9 @@ from leafs import (
 from moderation.filter_cache import fc
 from moderation.report import (
     create_report,
-    get_report_count_all,
-    get_report_count_f,
-    get_reports_f,
-    reports_action_routine
+    get_report_count,
+    reports_action_routine,
+    get_reports
 )
 from moderation.user import Permissions
 from moderation.auth import (
@@ -39,7 +38,7 @@ bp = Blueprint('bp_web_moderation', __name__)
 
 
 @bp.post('/report/<string:board_shortname>/<int:thread_num>/<int:num>')
-async def create_report(board_shortname: str, thread_num: int, num: int):
+async def route_create_report(board_shortname: str, thread_num: int, num: int):
     form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
 
     validate_board(board_shortname)
@@ -99,7 +98,7 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
         </form>
         <br>
         <br>
-        <b>Count:</b> {int(r.report_count)}
+        <b>IP Count:</b> {int(r.ip_count)}
         <br>
         <b>Category:</b> {escape(r.submitter_category)}
         <br>
@@ -126,8 +125,8 @@ def get_report_mod_status_link(mod_status: ModStatus) -> str:
 
 # should use **kwargs in the future
 async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[str], report_len: int, page_num: int, page_size: int=20):
-    report_count_f = await get_report_count_f(mod_status=mod_status, board_shortnames=board_shortnames)
-    report_count_all = await get_report_count_all()
+    report_count = await get_report_count(mod_status=mod_status, board_shortnames=board_shortnames)
+    report_count_all = await get_report_count()
     page_size = min(page_size, report_len)
     href=f'/reports/{mod_status.name}/' + '{0}'
     record_name = f'{mod_status.name} reports'
@@ -136,8 +135,8 @@ async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[s
         page=page_num,
         per_page=page_size,
         page_parameter=None,
-        display_msg=f'Displaying <b>{page_size}</b> / <b>{report_count_f}</b> {mod_status.name} reports. <b>{report_count_all}</b> reports in total.',
-        total=report_count_f,
+        display_msg=f'Displaying <b>{page_size}</b> / <b>{report_count}</b> {mod_status.name} reports. <b>{report_count_all}</b> reports in total.',
+        total=report_count,
         search=False,
         record_name=record_name,
         href=href,
@@ -154,7 +153,7 @@ async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[s
 @require_web_usr_permissions([Permissions.report_read])
 async def reports_closed(page_num: int=0):
     page_size = 20
-    reports = await get_reports_f(mod_status=ModStatus.closed, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
+    reports = await get_reports(mod_status=ModStatus.closed, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
     pagination = await make_report_pagination(ModStatus.closed, board_shortnames, len(reports), page_num, page_size=page_size)
     return await render_controller(
         template_reports_index,
@@ -176,7 +175,7 @@ async def reports_closed(page_num: int=0):
 @require_web_usr_permissions([Permissions.report_read])
 async def reports_open(page_num: int=0):
     page_size=20
-    reports = await get_reports_f(mod_status=ModStatus.open, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
+    reports = await get_reports(mod_status=ModStatus.open, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
     pagination = await make_report_pagination(ModStatus.open, board_shortnames, len(reports), page_num, page_size=page_size)
 
     return await render_controller(
@@ -198,7 +197,7 @@ async def reports_open(page_num: int=0):
 @require_web_usr_permissions([Permissions.report_read])
 async def reports_action(report_parent_id: int, action: str):
     form = (await request.form)
-    redirect_endpoint = form.get('endpoint', 'bp_moderation.reports_open')
+    redirect_endpoint = form.get('endpoint', 'bp_web_moderation.reports_open')
 
     msg, code = await reports_action_routine(current_web_usr, report_parent_id, action, mod_notes=form.get('mod_notes'))
     if msg:
