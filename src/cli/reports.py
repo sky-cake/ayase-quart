@@ -6,6 +6,7 @@ import click
 from typing import Optional
 from functools import wraps
 from datetime import datetime
+import asyncio
 
 from boards import board_shortnames
 from enums import ModStatus, PublicAccess, ReportAction, SubmitterCategory
@@ -16,8 +17,9 @@ from moderation.report import (
     get_reports,
     get_report_count
 )
-from cli.utils import run_coroutine, print_list_of_dict, print_result, MockAdmin
+from cli.utils import print_list_of_dict, print_result, MockAdmin
 from configs import app_conf
+from db import close_all_databases
 
 
 @click.group(name='report')
@@ -67,8 +69,9 @@ def report_filters_formatter(func):
 @cli_group_report.command()
 @report_filters
 @report_filters_formatter
+@close_all_databases
 def cli_get_report_count(**kwargs):
-    report_count = run_coroutine(get_report_count(**kwargs))
+    report_count = asyncio.run(get_report_count(**kwargs))
     click.echo(f'Report count: {report_count}')
 
 
@@ -76,8 +79,9 @@ def cli_get_report_count(**kwargs):
 @report_filters
 @report_options
 @report_filters_formatter
+@close_all_databases
 def cli_get_reports(**kwargs):
-    reports = run_coroutine(get_reports(**kwargs))
+    reports = asyncio.run(get_reports(**kwargs))
     for r in reports:
         r['link'] = f'{app_conf['url']}/{r.board_shortname}/thread/{r.thread_num}#p{r.num}'
         # do we need these if there is a link ?
@@ -92,8 +96,9 @@ def cli_get_reports(**kwargs):
 @click.option('--public_access', '-access', type=click.Choice([e.value for e in PublicAccess]), default=None)
 @click.option('--mod_status', '-status', type=click.Choice([e.value for e in ModStatus]), default=None)
 @click.option('--mod_notes', '-notes', type=str, default=None)
+@close_all_databases
 def cli_edit_report(report_parent_id: int, public_access: Optional[str], mod_status: Optional[str], mod_notes: Optional[str]):
-    report = run_coroutine(edit_report_if_exists(report_parent_id, public_access, mod_status, mod_notes))
+    report = asyncio.run(edit_report_if_exists(report_parent_id, public_access, mod_status, mod_notes))
     if report:
         click.echo('Updated')
         return
@@ -102,8 +107,9 @@ def cli_edit_report(report_parent_id: int, public_access: Optional[str], mod_sta
 
 @cli_group_report.command()
 @click.option('--report_parent_id', '-id', required=True, type=int)
+@close_all_databases
 def cli_delete_report(report_parent_id: int):
-    report = run_coroutine(delete_report_if_exists(report_parent_id))
+    report = asyncio.run(delete_report_if_exists(report_parent_id))
     if report:
         click.echo('Deleted')
         return
@@ -114,8 +120,9 @@ def cli_delete_report(report_parent_id: int):
 @click.option('--report_parent_id', '-id', required=True, type=int)
 @click.option('--action', '-action', required=True, type=click.Choice([e.value for e in ReportAction]))
 @click.option('--mod_notes', '-notes', required=False, type=str, default=None)
+@close_all_databases
 def cli_reports_action(report_parent_id: int, action: str, mod_notes: Optional[str] = None):
-    msg, code = run_coroutine(
+    msg, code = asyncio.run(
         reports_action_routine(MockAdmin(), report_parent_id, action, mod_notes=mod_notes)
     )
     print_result(msg, code)

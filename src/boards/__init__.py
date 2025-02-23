@@ -1,9 +1,11 @@
+import asyncio
 import os
 from functools import cache
 from tomllib import load
 
 from configs import app_conf, db_conf
 from utils import make_src_path
+from db import get_db_tables
 
 BOARDS_FILE = make_src_path('boards.toml')
 DEFAULT_BOARDS_FILE = make_src_path('boards.tpl.toml')
@@ -34,11 +36,7 @@ def get_shorts_objects(boards: dict):
 def _get_board_views():
     boards = _load_boards_toml()
     if app_conf.get('validate_boards_db', True):
-        from asyncio import run
-
-        from db import get_db_tables
-
-        db_tables = run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
+        db_tables = asyncio.run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
         valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
         if removals := [board for board in boards if board not in valid_boards]:
             # print(f'Boards not found in database:\n\t[{", ".join(removals)}]\nWill be ignored.')

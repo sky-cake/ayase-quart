@@ -1,9 +1,9 @@
-from functools import cache
+import asyncio
+from functools import wraps, cache
 
 from configs import db_conf, db_mod_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from enums import DbPool, DbType
-
 
 @cache
 def _get_db_module(db_type: DbType):
@@ -86,6 +86,15 @@ class DbHandler:
 
     async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
         return await self.query_runner.run_query(query, params=params, commit=commit, p_id=p_id, dict_row=dict_row)
+
+
+def close_all_databases(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        func(*args, **kwargs)
+        asyncio.run(db_q.pool_manager.close_all_pools())
+        asyncio.run(db_m.pool_manager.close_all_pools())
+    return wrapper
 
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query

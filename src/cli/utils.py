@@ -9,14 +9,6 @@ class MockAdmin(User):
     is_admin = True
 
 
-def run_coroutine(coro):
-    return asyncio.run(coro)
-
-
-def print_result(msg, code):
-    click.echo(f'{code}: {msg}')
-
-
 def print_result(msg: str, code: int):
     if code < 400:
         click.echo(f'Success ({code}): {msg}')
