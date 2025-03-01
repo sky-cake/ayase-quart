@@ -88,6 +88,7 @@ if not app_conf.get('testing', False):
     print('Quart app created. Now, since you\'re not in dev mode, point hypercorn to this asgi app with something like,')
     print('    hypercorn --config hypercorn.toml ./src/main:app')
     print('Hypercorn config docs at: https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html')
+    print('If you want to exit, use ctrl-c and/or ctrl-z.')
 
 elif __name__ == '__main__':
     app.run(
