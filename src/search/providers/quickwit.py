@@ -4,13 +4,13 @@ from typing import Any
 from orjson import dumps, loads
 
 from . import (
-    MAX_HITS,
     POST_PK,
     SearchIndexField,
-    SearchQuery,
+    IndexSearchQuery,
     search_index_fields
 )
 from .baseprovider import BaseSearch
+from configs import index_search_conf
 
 pk = POST_PK
 
@@ -18,9 +18,8 @@ pk = POST_PK
 class QuickwitSearch(BaseSearch):
     version: str
 
-    def __init__(self, host: str, config: dict=None, **kwargs):
-        super().__init__(host, config, **kwargs)
-        self.version = config['version']
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
 
     def _get_index_url(self, index: str):
         return f'{self.host}/api/v1/indexes/{index}'
@@ -92,10 +91,10 @@ class QuickwitSearch(BaseSearch):
         print(loads(await resp.read()))
         return None
 
-    async def _search_index(self, index: str, q: SearchQuery):
+    async def _search_index(self, index: str, q: IndexSearchQuery):
         url = self._get_index_url2(index) + '/search'
         params = {
-            'max_hits': MAX_HITS,
+            'max_hits': index_search_conf['max_hits'],
             'sort_by': ('-' if q.sort == 'asc' else '+') + 'timestamp',
             'format': 'json',
             'start_offset': 0 if q.page <= 1 else q.page * q.hits_per_page,
@@ -115,7 +114,7 @@ class QuickwitSearch(BaseSearch):
         hits = [_restore_result(res) for res in data['hits']]
         return hits, total
 
-def get_qw_query(q: SearchQuery):
+def get_qw_query(q: IndexSearchQuery):
     qb = []
     if q.comment:
         comment = esc_term(q.comment)

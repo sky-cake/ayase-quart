@@ -28,17 +28,23 @@
         <script type="text/javascript" src="/static/js/index.js"></script>
 
         {% if request.endpoint in [
-        'bp_web_app.v_thread',
-        'bp_web_app.v_board_index',
-        'bp_web_app.v_board_index_page',
-        'bp_web_search.v_search',
-        'bp_web_search.v_index_search',
+            'bp_web_app.v_thread',
+            'bp_web_app.v_board_index',
+            'bp_web_app.v_board_index_page',
+            'bp_web_vanilla_search.v_vanilla_search',
+            'bp_web_index_search.v_index_search',
         ] %}
         <script type="text/javascript" src="/static/js/thread.js"></script>
         {% endif %}
 
         <div id="body">
-            {% if request.endpoint in ['bp_web_app.v_thread', 'bp_web_app.v_board_index', 'bp_web_app.v_catalog', 'bp_web_search.v_search', 'bp_web_search.v_index_search'] %}
+            {% if request.endpoint in [
+                'bp_web_app.v_thread',
+                'bp_web_app.v_board_index',
+                'bp_web_app.v_catalog',
+                'bp_web_vanilla_search.v_vanilla_search',
+                'bp_web_index_search.v_index_search'
+            ] %}
                 <span id="top">[<a href="#top_hidden">Top</a>] [<a href="#bottom_hidden">Bottom</a>]</span>
                 <span id="top_hidden"></span>
                 <br>
@@ -50,21 +56,28 @@
                     {{site_name}}:
                     [
                     <a href="/">Home</a>
-                    {% if search %}
-                        / <a href="/search">Search</a>
-                    {% endif %}
                     ]
-                    {% if index_search_provider %}
+
+                    {% if vanilla_search_enabled %}
+                        <br>
+                        Vanilla Search: [
+                        <a href="/search">Search</a>
+                        ]
+                    {% endif %}
+                    {% if index_search_enabled %}
                         <br>
                         Index Search:
                         [
-                        <a href="/index_search">Search</a>
-                        /
-                        <a href="/index_search_config">Config</a>
-                        /
-                        <a href="{{index_search_host}}">{{index_search_provider.title()}}</a>
-                        /
-                        <a href="/index_stats">Stats</a>
+                            <a href="/index_search">Search</a>
+
+                            {% if (is_admin or is_authenticated) %}
+                                /
+                                <a href="/index_search_config">Config</a>
+                                /
+                                <a href="{{index_search_host}}">{{index_search_provider.title()}}</a>
+                                /
+                                <a href="/index_stats">Stats</a>
+                            {% endif %}
                         ]
                     {% endif %}
                     {% if board_objects %}
@@ -77,7 +90,7 @@
                         ]
                     {% endif %}
 
-                    {% if is_admin or is_authenticated %}
+                    {% if (is_admin or is_authenticated) %}
                         <br>
                         Admin: [
 
@@ -96,16 +109,11 @@
                         ]
                     {% endif %}
 
-                    {% if request.path != '/login' %}
+                    {% if request.path != '/login' and (is_admin or is_authenticated) %}
                         <br>
                         Profile: [
-                        {% if is_admin or is_authenticated %}
                             <a href="{{ url_for('bp_web_moderation.reports_open') }}">Moderation</a>
                             <a href="{{ url_for('bp_web_auth.logout') }}">Sign Out</a>
-                        {% else %}
-                            <a href="{{ url_for('bp_web_moderation.reports_open') }}">Moderation</a>    
-                            <a href="{{ url_for('bp_web_auth.login') }}">Login</a>
-                        {% endif %}
                         ]
                     {% endif %}
                 </div>
@@ -139,7 +147,13 @@
                 {% endif %}
             </div>
 
-            {% if request.endpoint in ['bp_web_app.v_thread', 'bp_web_app.v_board_index', 'bp_web_app.v_catalog', 'bp_web_search.v_search', 'bp_web_search.v_index_search'] %}
+            {% if request.endpoint in [
+                'bp_web_app.v_thread',
+                'bp_web_app.v_board_index',
+                'bp_web_app.v_catalog',
+                'bp_web_vanilla_search.v_vanilla_search',
+                'bp_web_index_search.v_index_search'
+            ] %}
                 <span id="bottom_hidden"></span>
             {% endif %}
 

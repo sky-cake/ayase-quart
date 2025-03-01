@@ -5,12 +5,12 @@ from typing import Optional
 from posts.capcodes import Capcode, capcode_2_id
 from utils.validation import clamp_positive_int
 
-from . import HITS_PER_PAGE, MAX_HITS
+from configs import index_search_conf
 from .post_metadata import board_2_int
 
 
 @dataclass(slots=True)
-class SearchQuery:
+class IndexSearchQuery:
     boards: list[int]
     comment: Optional[str] = None
     title: Optional[str] = None
@@ -29,7 +29,7 @@ class SearchQuery:
     deleted: Optional[bool] = None
     op: Optional[bool] = None
     sticky: Optional[bool] = None
-    hits_per_page: int = HITS_PER_PAGE
+    hits_per_page: int = index_search_conf['hits_per_page']
     page: Optional[int] = 1
     sort: str = 'asc'
     sort_by: Optional[str] = 'timestamp'
@@ -39,8 +39,8 @@ class SearchQuery:
 common_words = set('the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us'.split())
 
 
-def get_search_query(params: dict) -> SearchQuery:
-    q = SearchQuery(
+def get_index_search_query(params: dict) -> IndexSearchQuery:
+    q = IndexSearchQuery(
         comment=params['comment'],
         title=params['title'],
         boards=[board_2_int(board) for board in params['boards']],
@@ -52,7 +52,7 @@ def get_search_query(params: dict) -> SearchQuery:
     if params['num']:
         q.num = int(params['num'])
     if params['hits_per_page']:
-        q.hits_per_page = clamp_positive_int(params['hits_per_page'], 1, MAX_HITS)
+        q.hits_per_page = clamp_positive_int(params['hits_per_page'], 1, index_search_conf['hits_per_page'])
     if params['media_filename']:
         q.media_file = params['media_filename']
     if params['media_hash']:

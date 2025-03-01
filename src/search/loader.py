@@ -311,9 +311,9 @@ async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerat
 
 
 async def main(boards: list[str], reset: bool=False):
-    from .providers import get_search_provider
+    from .providers import get_index_search_provider
 
-    sp = get_search_provider()
+    sp = get_index_search_provider()
     try:
         if reset:
             try:

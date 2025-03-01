@@ -30,7 +30,7 @@ from boards import board_shortnames
 from enums import SubmitterCategory
 from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
-from search import HITS_PER_PAGE
+from configs import index_search_conf, vanilla_search_conf
 from utils.validation import clamp_positive_int, validate_board
 
 LENGTH_MD5_HASH = 32
@@ -50,13 +50,13 @@ class StripForm(QuartForm):
                 field.data = field.data.strip()
 
 
-class SearchForm(StripForm):
+class VanillaSearchForm(StripForm):
     do_not_strip = ('comment',)
 
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     boards = MultiCheckboxField('Boards', choices=board_shortnames)
-    hits_per_page = IntegerField('Hits per page', default=HITS_PER_PAGE, validators=[NumberRange(1, HITS_PER_PAGE)], description='Per board')
+    hits_per_page = IntegerField('Hits per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     op_title = StringField("OP Subject", validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
@@ -94,13 +94,18 @@ class SearchForm(StripForm):
         return True
 
 
+# kinda dumb to need to perform inheritance, but I haven't found a way to do this dynamically... oh well, at least this is not janky
+class IndexSearchForm(VanillaSearchForm):
+    hits_per_page = IntegerField('Hits per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
+
+
 def strip_2_none(s: str) -> str|None:
     if isinstance(s, str) and s.strip() == '':
         return None
     return s
 
 
-def validate_search_form(form: SearchForm):
+def validate_search_form(form: VanillaSearchForm):
     if not form.boards.data:
         raise BadRequest('select a board')
 

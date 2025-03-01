@@ -3,7 +3,7 @@ from typing import Any
 
 from orjson import dumps, loads
 
-from . import POST_PK, SearchIndexField, SearchQuery, search_index_fields
+from . import POST_PK, SearchIndexField, IndexSearchQuery, search_index_fields
 from .baseprovider import BaseSearch
 
 pk = POST_PK
@@ -138,7 +138,7 @@ class LnxSearch(BaseSearch):
     def _get_post_pack_fn(self):
         return pack_post
 
-    async def _search_index(self, index: str, q: SearchQuery):
+    async def _search_index(self, index: str, q: IndexSearchQuery):
         url = self._get_index_url(index) + '/search'
         payload = {
             'query': self._query_builder(q),
@@ -161,7 +161,7 @@ class LnxSearch(BaseSearch):
         hits = (_restore_result(r['doc']) for r in parsed['hits'])
         return hits, total
 
-    def _query_builder(self, q: SearchQuery):
+    def _query_builder(self, q: IndexSearchQuery):
         query = []
         if comment := q.comment:
             query.extend(get_term_query('comment', comment))

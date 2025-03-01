@@ -2,7 +2,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 
 from boards import board_objects
-from configs import app_conf, media_conf, search_conf, site_conf
+from configs import app_conf, media_conf, site_conf, vanilla_search_conf, index_search_conf
 from enums import IndexSearchType
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
@@ -10,9 +10,10 @@ from utils.timestamps import ts_2_formatted
 render_constants = dict(
     site_name=site_conf.get('name'),
     theme=site_conf.get('theme', 'tomorrow'),
-    search=search_conf.get('enabled', False),
-    index_search_host=search_conf.get('host'),
-    index_search_provider=IndexSearchType(search_conf.get('provider')),
+    vanilla_search_enabled=vanilla_search_conf.get('enabled', False),
+    index_search_enabled=index_search_conf.get('enabled', False),
+    index_search_host=index_search_conf.get('host'),
+    index_search_provider=IndexSearchType(index_search_conf.get('provider')),
     image_uri=media_conf.get('image_uri'),
     thumb_uri=media_conf.get('thumb_uri'),
     request=request,

@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 
-from configs import search_conf
+from configs import index_search_conf
 from enums import IndexSearchType
-from search import MAX_HITS  # noqa: F401
 
-from ..query import SearchQuery  # noqa: F401
+from ..query import IndexSearchQuery  # noqa: F401
 
 POST_PK = 'pk'
 
@@ -39,10 +38,10 @@ search_index_fields = [
 ]
 
 
-def get_search_provider():
-    if hasattr(get_search_provider, 'search_p'):
-        return get_search_provider.search_p
-    match IndexSearchType[search_conf['provider']]:
+def get_index_search_provider():
+    if hasattr(get_index_search_provider, 'search_p'):
+        return get_index_search_provider.search_p
+    match IndexSearchType[index_search_conf['provider']]:
         case IndexSearchType.meili:
             from .meili import MeiliSearch as Search_p
         case IndexSearchType.typesense:
@@ -56,6 +55,6 @@ def get_search_provider():
         case _:
             from .lnx import LnxSearch as Search_p
 
-    search_p = Search_p(search_conf['host'], search_conf['config'])
-    get_search_provider.search_p = search_p
+    search_p = Search_p(index_search_conf)
+    get_index_search_provider.search_p = search_p
     return search_p

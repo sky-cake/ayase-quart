@@ -5,13 +5,13 @@ from orjson import dumps, loads
 from search.highlighting import mark_post, mark_pre
 
 from . import (
-    MAX_HITS,
     POST_PK,
     SearchIndexField,
-    SearchQuery,
+    IndexSearchQuery,
     search_index_fields
 )
 from .baseprovider import BaseSearch
+from configs import index_search_conf
 
 pk = POST_PK
 
@@ -72,7 +72,7 @@ class TypesenseSearch(BaseSearch):
         resp = await self.client.delete(url, params=params)
         return loads(await resp.read())
 
-    async def _search_index(self, index: str, q: SearchQuery):
+    async def _search_index(self, index: str, q: IndexSearchQuery):
         url = self._get_index_url(index) + '/documents/search'
         params = dict(
             collections=index,
@@ -82,7 +82,7 @@ class TypesenseSearch(BaseSearch):
             include_fields='comment,data',
             page=q.page,
             per_page=q.hits_per_page,
-            limit_hits=MAX_HITS,
+            limit_hits=index_search_conf['max_hits'],
             search_cutoff_ms=2_000,
             num_typos=0,
             split_join_tokens='off',
@@ -112,7 +112,7 @@ class TypesenseSearch(BaseSearch):
         return hits, total
 
 
-def _build_filter(q: SearchQuery):
+def _build_filter(q: IndexSearchQuery):
     filters = []
     filters.append(f'board: [{", ".join(q.boards)}]')
     if q.num is not None:

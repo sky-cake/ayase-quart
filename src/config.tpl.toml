@@ -84,16 +84,23 @@ endpoint = '/srv/media'
 
 
 
-[search]
+[vanilla_search]
 enabled = true
-highlight = true
+highlight = false # not supported yet
+hits_per_page = 50
+max_hits = 1_000
+
+
+
+[index_search]
+enabled = true
+highlight = false # not supported yet
 hits_per_page = 50
 max_hits = 1_000
 provider = 'lnx' # 'lnx', 'meili', 'manticore', 'typesense', 'quickwit'
-host = 'http://localhost:8000' # index search host, this is not associated with vanilla search
-
-[search.config]
+host = 'http://localhost:8000' # index search host. It should really be a LAN IP address like '192.168.1.122' - not 'localhost', nor a domain name.
 headers = { content-type = 'application/json' }
+version = '1' # only matters for quickwit
 
 
 

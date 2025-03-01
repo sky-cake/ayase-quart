@@ -19,7 +19,14 @@ archive_conf = conf.get('archive', {'name': '4chan'})
 db_conf = conf.get('db', {})
 db_conf['db_type'] = DbType[db_conf['db_type']]
 
-search_conf = conf.get('search', {})
+index_search_conf = conf.get('index_search', {})
+vanilla_search_conf = conf.get('vanilla_search', {})
+
+# not supported yet... searching for "a " will match "<a href..." and break links
+# other tags break too, of course
+index_search_conf['highlight'] = False
+vanilla_search_conf['highlight'] = False
+
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 

@@ -9,7 +9,7 @@ from orjson import dumps
 
 from search.post_metadata import unpack_metadata
 
-from . import SearchQuery
+from . import IndexSearchQuery
 
 
 class INDEXES(StrEnum):
@@ -28,12 +28,15 @@ class BaseSearch(ABC):
     host: str
     client: ClientSession
 
-    def __init__(self, host: str, config: dict = None):
-        self.host = host.strip('/')
+    def __init__(self, search_conf: dict):
+        self.host = search_conf['host'].strip('/')
         self.client = ClientSession(
             connector=TCPConnector(keepalive_timeout=600),
-            headers=config.get('headers', None),
+            headers=search_conf.get('headers', None),
         )
+        self.version = search_conf.get('version', None)
+        if not self.version:
+            print('Ignore warning if not using quickwit. Warning: quickwit version not set.')
 
     async def close(self):
         if not self.client.closed:
@@ -63,7 +66,7 @@ class BaseSearch(ABC):
     async def _remove_docs(self, index: str, pk_ids: list[str]):
         raise NotImplementedError
 
-    async def _search_index(self, index: str, q: SearchQuery) -> tuple[Generator[any, None, None], int]:
+    async def _search_index(self, index: str, q: IndexSearchQuery) -> tuple[Generator[any, None, None], int]:
         raise NotImplementedError
 
     def _get_post_pack_fn(self) -> Callable[[dict], dict]:
@@ -78,7 +81,7 @@ class BaseSearch(ABC):
     async def index_ready(self, index: str):
         return (await self._index_ready(index)) == 'ready'
 
-    async def search_posts(self, q: SearchQuery) -> tuple[list[dict], int]:
+    async def search_posts(self, q: IndexSearchQuery) -> tuple[list[dict], int]:
         """Returns search results and num hits.
         Downstream calculates pages from cur_page and limits.`.
         """
@@ -87,7 +90,7 @@ class BaseSearch(ABC):
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
 
-    async def search_posts_get_thread_nums(self, q: SearchQuery, form_data: dict) -> dict:
+    async def search_posts_get_thread_nums(self, q: IndexSearchQuery, form_data: dict) -> dict:
         """Returns {board_shortname: thread_nums} mappings.
         Used for faceted search.
         """

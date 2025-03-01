@@ -2,8 +2,9 @@ from orjson import dumps, loads
 
 from search.highlighting import mark_post, mark_pre
 
-from . import MAX_HITS, POST_PK, SearchQuery, search_index_fields
+from . import POST_PK, IndexSearchQuery, search_index_fields
 from .baseprovider import INDEXES, BaseSearch
+from configs import index_search_conf
 
 pk = POST_PK
 
@@ -93,7 +94,7 @@ class MeiliSearch(BaseSearch):
             searchCutoffMs=20_000,  # time before search gives up
             typoTolerance=dict(enabled=False),  # disable typo
             pagination=dict(
-                maxTotalHits=MAX_HITS,
+                maxTotalHits=index_search_conf['max_hits'],
             ),
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))
@@ -106,7 +107,7 @@ class MeiliSearch(BaseSearch):
         sort_attrs = [f.field for f in search_index_fields if f.sortable]
         return await self._configure_index(INDEXES.posts.value, pk, search_attrs, filter_attrs, sort_attrs)
 
-    async def _search_index(self, index: str, q: SearchQuery):
+    async def _search_index(self, index: str, q: IndexSearchQuery):
         url = self._get_index_url(index) + '/search'
         filters = self._filter_builder(q)
         payload = {
@@ -139,7 +140,7 @@ class MeiliSearch(BaseSearch):
         total = data.get('totalHits', 0)
         return hits, total
 
-    def _filter_builder(self, q: SearchQuery):
+    def _filter_builder(self, q: IndexSearchQuery):
         filters = []
         filters.append(f'board IN [{", ".join(q.boards)}]')
         if q.num is not None:

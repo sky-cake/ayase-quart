@@ -3,7 +3,7 @@ from typing import Any
 import aiomysql
 from orjson import loads
 
-from . import POST_PK, SearchIndexField, SearchQuery, search_index_fields
+from . import POST_PK, SearchIndexField, IndexSearchQuery, search_index_fields
 from .baseprovider import BaseSearch
 
 pk = POST_PK
@@ -70,7 +70,7 @@ class ManticoreSearch(BaseSearch):
         q = f'delete from {index} where {pk} in %s;'
         return await self._execute_query(q, (pk_ids,))
 
-    async def _search_index(self, index: str, q: SearchQuery):
+    async def _search_index(self, index: str, q: IndexSearchQuery):
         query_end = self._query_builder(q)
         q = f'select comment, data from {index} where {query_end}; show meta;'
         res, meta = await self._execute_query(q)
@@ -78,7 +78,7 @@ class ManticoreSearch(BaseSearch):
         res = [{'comment': r[0], **loads(r[1])} for r in res]
         return res, total
 
-    def _query_builder(self, q: SearchQuery):
+    def _query_builder(self, q: IndexSearchQuery):
         where_q = []
         where_q.append(f'board IN [{", ".join(q.boards)}]')
         if q.num is not None:

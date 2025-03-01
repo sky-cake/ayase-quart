@@ -84,7 +84,12 @@ async def create_app():
 
 app = asyncio.run(create_app())
 
-if __name__ == '__main__' and app_conf.get('testing', False):
+if not app_conf.get('testing', False):
+    print('Quart app created. Now, since you\'re not in dev mode, point hypercorn to this asgi app with something like,')
+    print('    hypercorn --config hypercorn.toml ./src/main:app')
+    print('Hypercorn config docs at: https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html')
+
+elif __name__ == '__main__':
     app.run(
         '127.0.0.1',
         port=app_conf.get('port', 9001),
@@ -93,3 +98,6 @@ if __name__ == '__main__' and app_conf.get('testing', False):
         keyfile=app_conf.get('ssl_key'),
         use_reloader=app_conf.get('autoreload', True),
     )
+else:
+    print('Nothing to do.')
+

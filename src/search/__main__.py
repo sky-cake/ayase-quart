@@ -2,7 +2,7 @@ import asyncio
 import sys
 
 from .loader import main as load
-from .providers import get_search_provider
+from .providers import get_index_search_provider
 
 help_text = """
 usage: python3.12 -m search COMMAND [args]
@@ -23,7 +23,7 @@ def print_help():
 
 async def create_index():
     if input('Create index? (y/n): ').strip().lower() != 'y': return
-    sp = get_search_provider()
+    sp = get_index_search_provider()
     await sp.init_indexes()
     await sp.close()
     print('Indexes created')
@@ -31,7 +31,7 @@ async def create_index():
 
 async def delete_index():
     if input('Wipe index? (y/n): ').strip().lower() != 'y': return
-    sp = get_search_provider()
+    sp = get_index_search_provider()
     await sp.posts_wipe()
     await sp.close()
     print('Index data wiped')
