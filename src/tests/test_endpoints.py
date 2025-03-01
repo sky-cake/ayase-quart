@@ -21,7 +21,7 @@ class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
             f'/{test_board}',
             f'/{test_board}/catalog',
             '/login',
-            '/search',
+            '/vanilla_search',
             '/index_search',
             '/index_search_config',
             '/stats',

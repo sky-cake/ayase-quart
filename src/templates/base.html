@@ -61,22 +61,22 @@
                     {% if vanilla_search_enabled %}
                         <br>
                         Vanilla Search: [
-                        <a href="/search">Search</a>
+                        <a href="{{ url_for('bp_web_vanilla_search.v_vanilla_search') }}">Search</a>
                         ]
                     {% endif %}
                     {% if index_search_enabled %}
                         <br>
                         Index Search:
                         [
-                            <a href="/index_search">Search</a>
+                            <a href="{{ url_for('bp_web_index_search.v_index_search') }}">Search</a>
 
                             {% if (is_admin or is_authenticated) %}
                                 /
-                                <a href="/index_search_config">Config</a>
+                                <a href="{{ url_for('bp_web_index_search.index_search_config') }}">Config</a>
                                 /
                                 <a href="{{index_search_host}}">{{index_search_provider.title()}}</a>
                                 /
-                                <a href="/index_stats">Stats</a>
+                                <a href="{{ url_for('bp_web_index_search.index_stats') }}">Stats</a>
                             {% endif %}
                         ]
                     {% endif %}
