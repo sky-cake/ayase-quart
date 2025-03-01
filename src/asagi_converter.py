@@ -670,7 +670,7 @@ async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
 
 
 async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[int]]:
-    sql = f"""select num, op from {board} where comment regexp {db_q.phg()};"""
+    sql = f"""select num, op from {board} where comment is not null and comment regexp {db_q.phg()};"""
     rows = await db_q.query_tuple(sql, params=(pattern,))
     if not rows:
         return []
