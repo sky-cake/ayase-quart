@@ -17,6 +17,7 @@ from posts.template_optimizer import (
     report_modal_t,
     wrap_post_t
 )
+from moderation.auth import web_usr_logged_in
 from render import render_controller
 from templates import (
     template_board_index,
@@ -52,12 +53,19 @@ async def make_pagination_board_index(board_shortname: str, index: dict, page_nu
 
 
 @bp.get("/")
-async def v_index():
-    return await render_controller(template_index, tab_title=SITE_NAME, title=SITE_NAME)
+@web_usr_logged_in
+async def v_index(logged_in: bool):
+    return await render_controller(
+        template_index,
+        tab_title=SITE_NAME,
+        title=SITE_NAME,
+        logged_in=logged_in,
+    )
 
 
 @bp.get("/<string:board_shortname>")
-async def v_board_index(board_shortname: str):
+@web_usr_logged_in
+async def v_board_index(board_shortname: str, logged_in: bool):
     """See `v_board_index_page()` for benchmarks.
     """
     validate_board(board_shortname)
@@ -89,6 +97,7 @@ async def v_board_index(board_shortname: str):
         threads=threads,
         board=board_shortname,
         title=get_title(board_shortname),
+        logged_in=logged_in,
     )
     p.check('render')
     print(p)
@@ -97,7 +106,8 @@ async def v_board_index(board_shortname: str):
 
 
 @bp.get("/<string:board_shortname>/page/<int:page_num>")
-async def v_board_index_page(board_shortname: str, page_num: int):
+@web_usr_logged_in
+async def v_board_index_page(board_shortname: str, page_num: int, logged_in: bool):
     """
     Benchmarked with SQLite (local), 150 OPs, 8th gen i7.
     validate: 0.0000
@@ -143,6 +153,7 @@ async def v_board_index_page(board_shortname: str, page_num: int):
         board=board_shortname,
         title=title,
         tab_title=title,
+        logged_in=logged_in,
     )
     p.check('rendered')
     print(p)
@@ -174,7 +185,8 @@ async def make_pagination_catalog(board_shortname: str, catalog: list[dict], pag
 
 
 @bp.get("/<string:board_shortname>/catalog")
-async def v_catalog(board_shortname: str):
+@web_usr_logged_in
+async def v_catalog(board_shortname: str, logged_in: bool):
     """
     Benchmarked with SQLite, page 0, 8th gen i7.
     query   : 0.0649
@@ -210,6 +222,7 @@ async def v_catalog(board_shortname: str):
         board=board_shortname,
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
+        logged_in=logged_in,
     )
     p.check('render')
     print(p)
@@ -218,7 +231,8 @@ async def v_catalog(board_shortname: str):
 
 
 @bp.get("/<string:board_shortname>/catalog/<int:page_num>")
-async def v_catalog_page(board_shortname: str, page_num: int):
+@web_usr_logged_in
+async def v_catalog_page(board_shortname: str, page_num: int, logged_in: bool):
     """
     Benchmarked with SQLite, page 129, 5700X.
     query   : 0.8202
@@ -249,6 +263,7 @@ async def v_catalog_page(board_shortname: str, page_num: int):
         board=board_shortname,
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
+        logged_in=logged_in,
     )
     p.check('render')
     print(p)
@@ -277,7 +292,8 @@ def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
 
 
 @bp.get("/<string:board_shortname>/thread/<int:thread_id>")
-async def v_thread(board_shortname: str, thread_id: int):
+@web_usr_logged_in
+async def v_thread(board_shortname: str, thread_id: int, logged_in: bool):
     """
     Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.
     queries : 0.0150
@@ -319,6 +335,7 @@ async def v_thread(board_shortname: str, thread_id: int):
         board=board_shortname,
         title=title,
         tab_title=title,
+        logged_in=logged_in,
     )
     p.check('rendered')
     print(p)
@@ -326,7 +343,8 @@ async def v_thread(board_shortname: str, thread_id: int):
 
 
 @bp.get("/<string:board_shortname>/post/<int:post_id>")
-async def v_post(board_shortname: str, post_id: int):
+@web_usr_logged_in
+async def v_post(board_shortname: str, post_id: int, logged_in: bool):
     """Called by the client to generate posts not on the page - e.g. when viewing search results.
     """
     validate_board(board_shortname)
@@ -343,7 +361,7 @@ async def v_post(board_shortname: str, post_id: int):
     if is_removed:
         return {}
 
-    html_content = template_search_post_t.render(**wrap_post_t(post | dict(quotelinks={})))
+    html_content = template_search_post_t.render(logged_in=logged_in, **wrap_post_t(post | dict(quotelinks={})))
 
     p.check('render')
     print(p)

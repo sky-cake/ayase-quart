@@ -66,7 +66,7 @@ async def get_posts_and_total_hits_faceted(search_type: SearchType, form_data: d
     return posts, total_hits
 
 
-async def search_handler(search_type: SearchType) -> str:
+async def search_handler(search_type: SearchType, logged_in=False) -> str:
     if search_type == SearchType.idx and not index_search_conf.get('enabled'):
         raise BadRequest('index search is disabled')
 
@@ -166,6 +166,7 @@ async def search_handler(search_type: SearchType) -> str:
         title=f'{SITE_NAME} Search',
         cur_page=cur_page,
         total_hits=total_hits,
+        logged_in=logged_in,
     )
 
     p.check('rendered page')

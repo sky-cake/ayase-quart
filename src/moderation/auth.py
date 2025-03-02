@@ -102,6 +102,14 @@ def require_web_usr_permissions(permissions: Iterable[Permissions]):
     return decorator
 
 
+def web_usr_logged_in(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        logged_in = bool(current_web_usr.auth_id)
+        return await func(*args, logged_in=logged_in, **kwargs)
+    return wrapper
+
+
 ## API ################
     
 

@@ -109,6 +109,23 @@ span.subject {
     border-radius: 4px;
 }
 
+.unset {
+    all: unset;
+
+}
+
+.btnlink {
+    border: none;
+    background: none;
+    color: #81a2be;
+    cursor: pointer;
+    filter: none;
+}
+
+.btnlink:hover {
+    color: #5f89ac !important
+}
+
 ul {
     list-style: none;
 }
