@@ -9,7 +9,7 @@ from asagi_converter import (
     get_op_thread_count
 )
 from boards import get_title
-from configs import SITE_NAME
+from configs import SITE_NAME, app_conf
 from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
@@ -61,7 +61,7 @@ async def v_board_index(board_shortname: str):
     """See `v_board_index_page()` for benchmarks.
     """
     validate_board(board_shortname)
-    p = Perf('index')
+    p = Perf('index', enabled=app_conf.get('testing'))
     
     index, quotelinks = await generate_index(board_shortname)
     p.check('query')
@@ -113,7 +113,7 @@ async def v_board_index_page(board_shortname: str, page_num: int):
     paginate: 0.1702
     rendered: 0.2564
     """
-    p = Perf('index page')
+    p = Perf('index page', enabled=app_conf.get('testing'))
     validate_board(board_shortname)
     p.check('validate board')
 
@@ -188,7 +188,7 @@ async def v_catalog(board_shortname: str):
     """
     validate_board(board_shortname)
 
-    p = Perf('catalog')
+    p = Perf('catalog', enabled=app_conf.get('testing'))
     catalog = await generate_catalog(board_shortname)
     p.check('query')
 
@@ -227,7 +227,7 @@ async def v_catalog_page(board_shortname: str, page_num: int):
     """
     validate_board(board_shortname)
 
-    p = Perf('catalog page')
+    p = Perf('catalog page', enabled=app_conf.get('testing'))
     catalog = await generate_catalog(board_shortname, page_num)
     p.check('query')
 
@@ -293,7 +293,7 @@ async def v_thread(board_shortname: str, thread_id: int):
     """
     validate_board(board_shortname)
 
-    p = Perf(topic='thread')
+    p = Perf('thread', enabled=app_conf.get('testing'))
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
     p.check('queries')
@@ -331,7 +331,7 @@ async def v_post(board_shortname: str, post_id: int):
     """
     validate_board(board_shortname)
 
-    p = Perf("post")
+    p = Perf('post', enabled=app_conf.get('testing'))
     post_2_quotelinks, post = await generate_post(board_shortname, post_id)
     p.check('query')
 

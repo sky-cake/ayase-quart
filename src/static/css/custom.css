@@ -182,6 +182,14 @@ code {
     white-space: pre;
 }
 
+.pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 90%;
+    width: 800px;
+}
+
 .form-control {
     list-style: none;
     margin-bottom: 3px;

@@ -3,11 +3,14 @@ from configs import media_conf, mod_conf, index_search_conf, vanilla_search_conf
 from blueprints.web.bp_app         import bp as bp_web_app
 from blueprints.api.bp_app         import bp as bp_api_app
 
+from blueprints.web.bp_about       import bp as bp_about
+
 from blueprints.web.bp_index_search    import bp as bp_web_index_search
 from blueprints.web.bp_vanilla_search  import bp as bp_web_vanilla_search
 
 
 blueprints = [
+    bp_about,
     bp_api_app, # the configurable (on/off) .json endpoints
     bp_web_app,
 ]

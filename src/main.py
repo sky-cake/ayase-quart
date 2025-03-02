@@ -37,7 +37,7 @@ async def app_exception(e: Exception):
     print_exception(e) # should log these errors
 
     message = 'We\'re sorry, our server ran into an issue.'
-    if app.testing:
+    if app_conf.get('testing'):
         message = e
 
     render = await render_controller(template_message, message=message, tab_title=f'Error', title='Uh-oh...')

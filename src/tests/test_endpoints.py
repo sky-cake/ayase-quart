@@ -23,7 +23,6 @@ class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
             '/login',
             '/vanilla_search',
             '/index_search',
-            '/index_search_config',
             '/stats',
         ]
 

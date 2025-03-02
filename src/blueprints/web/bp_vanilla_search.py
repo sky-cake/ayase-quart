@@ -1,11 +1,7 @@
-from logging import getLogger
-
 from quart import Blueprint
 
 from enums import SearchType
 from search import search_handler
-
-search_log = getLogger('search')
 
 bp = Blueprint("bp_web_vanilla_search", __name__)
 

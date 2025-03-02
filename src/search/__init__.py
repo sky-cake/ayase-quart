@@ -6,7 +6,7 @@ from asagi_converter import (
     search_posts,
     search_posts_get_thread_nums
 )
-from configs import SITE_NAME, index_search_conf, vanilla_search_conf
+from configs import SITE_NAME, index_search_conf, vanilla_search_conf, app_conf
 from enums import SearchType
 from forms import IndexSearchForm, VanillaSearchForm
 from moderation.filter_cache import fc
@@ -92,7 +92,7 @@ async def search_handler(search_type: SearchType) -> str:
     quotelinks = []
     page_links = ''
 
-    p = Perf(f'{search_type.value} search')
+    p = Perf(f'{search_type.value} search', enabled=app_conf.get('testing'))
 
     if request.method == 'POST':
         form: VanillaSearchForm = await search_form.create_form(meta={'csrf': False})

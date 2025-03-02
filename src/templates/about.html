@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="pre">
+<a href="https://github.com/sky-cake/ayase-quart" target="_blank">Ayase Quart (AQ)</a> is an interface for 4chan/Lainchan archives using the Asagi database schema. It currently offers,
+
+    A web ui that looks and feels like 4chan.
+        - See <a href="https://github.com/sky-cake/ayase-quart/blob/main/preview/README.md" target="_blank">here</a> for images.
+
+    Advanced search options.
+        - Search replies where the opening post's comment includes a specific pattern.
+        - Full-text-search (FTS) using lnx, meilisearch, and others engines are supported.
+        - Gallery mode for search results.
+
+    A moderation system.
+        - View reports.
+        - Auto-hide reported content.
+        - Filter all content based on a regex pattern.
+        - View reports.
+        - Web, API, and CLI support.
+
+AQ supports MySQL and SQLite, so it's compatible with <a href="https://github.com/bibanon/neofuuka-scraper" target="_blank">Neofuuka (MySQL)</a>, <a href="https://github.com/bbepis/Hayden" target="_blank">Hayden (MySQL)</a>, and <a href="https://github.com/sky-cake/Ritual" target="_blank">Ritual (SQLite)</a> archive downloaders.
+
+This project is a descendent of <a href="https://github.com/bibanon/ayase" target="_blank">Ayase</a>.
+</div>
+<div class="pre">
+
+<h2>Contact</h2>
+For any questions, or concerns, please email ayasequart[at]proton.me.
+</div>
+
+{% endblock %}

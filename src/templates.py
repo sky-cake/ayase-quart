@@ -36,6 +36,8 @@ template_board_index = env.get_template("board_index.html")
 template_catalog = env.get_template("catalog.html")
 template_thread = env.get_template("thread.html")
 
+template_about = env.get_template("about.html")
+
 template_stats = env.get_template("stats.html")
 template_login = env.get_template('login.html')
 template_configs = env.get_template('configs.html')
