@@ -254,10 +254,10 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     where_filters, params = validate_and_generate_params(form_data)
     where_query = f'where {where_filters}' if where_filters else ''
 
-    max_hits_per_board = int(max_hits / len(boards))
+    # max_hits_per_board = int(max_hits / len(boards))
 
-    if page_num * hits_per_page > max_hits_per_board:
-        page_num = int(max_hits_per_board / hits_per_page)
+    # if page_num * hits_per_page > max_hits_per_board:
+    #     page_num = int(max_hits_per_board / hits_per_page)
 
     board_posts = await asyncio.gather(*(
         db_q.query_dict(f"""
@@ -273,7 +273,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     total_hits = await asyncio.gather(*(
         db_q.query_tuple(
-            f"""select min(count(*), {max_hits_per_board}) from {board} {where_query};"""
+            f"""select count(*) from {board} {where_query};"""
             , params=params
         )
         for board in boards
