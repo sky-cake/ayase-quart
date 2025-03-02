@@ -33,7 +33,7 @@ async def get_posts_and_total_hits(search_type: SearchType, form_data: dict, p: 
         p.check('parsed query')
         return await get_index_search_provider().search_posts(query)
 
-    return await search_posts(form_data)
+    return await search_posts(form_data, vanilla_search_conf['max_hits'])
 
 
 async def get_posts_and_total_hits_faceted(search_type: SearchType, form_data: dict, p: Perf) -> tuple[list[dict], int]:
@@ -126,13 +126,14 @@ async def search_handler(search_type: SearchType) -> str:
 
         if not gallery_mode:
             for post in posts:
-                hl_search_term_comment = form.comment.data if highlight_enabled and form.comment.data else None
-                hl_search_term_title = form.title.data if highlight_enabled and form.title.data else None
 
-                post['comment'] = html_comment(post['comment'], post['op_num'], post['board_shortname'], highlight=True)
+                post['comment'] = html_comment(post['comment'], post['op_num'], post['board_shortname'])
 
-                post['comment'] = highlight_search_results(post['comment'], hl_search_term_comment, is_comment=True)
-                post['title'] = highlight_search_results(post['title'], hl_search_term_title, is_comment=False)
+                if highlight_enabled:
+                    hl_search_term_comment = form.comment.data if form.comment.data else None
+                    hl_search_term_title = form.title.data if form.title.data else None
+                    post['comment'] = highlight_search_results(post['comment'], hl_search_term_comment, is_comment=True)
+                    post['title'] = highlight_search_results(post['title'], hl_search_term_title, is_comment=False)
 
                 posts_t.append(wrap_post_t(post))
 
@@ -145,8 +146,8 @@ async def search_handler(search_type: SearchType) -> str:
         p.check('templated posts')
 
         endpoint_path = '/index_search' if search_type == SearchType.idx else '/vanilla_search'
-        pages = total_pages(total_hits, form_data['hits_per_page'])
-        page_links = template_pagination_links(endpoint_path, form_data, pages)
+        page_count = total_pages(total_hits, form_data['hits_per_page'])
+        page_links = template_pagination_links(endpoint_path, form_data, page_count)
 
         p.check('templated links')
         cur_page = form_data.get('page', cur_page)
@@ -164,7 +165,6 @@ async def search_handler(search_type: SearchType) -> str:
         tab_title=SITE_NAME,
         title=f'{SITE_NAME} Search',
         cur_page=cur_page,
-        pages=pages,
         total_hits=total_hits,
     )
 

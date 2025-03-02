@@ -21,7 +21,7 @@ logic:
     finally replace all the newlines with <br>
 '''
 
-def html_comment(comment: str, op_num: int, board: str, highlight=False):
+def html_comment(comment: str, op_num: int, board: str):
     """Yes, there are multiple `in comment` statements, but this is 1-2ms faster than looping over `comment` once, believe it or not."""
 
     # lainchan

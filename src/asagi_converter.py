@@ -241,11 +241,11 @@ def validate_and_generate_params(form_data: dict):
     return where_fragment, params
 
 
-def get_offset(page_num: int, page_size: int) -> str:
-    return f'offset {page_num * page_size}' if page_num > 0 and page_size > 0 else ''
+def get_offset(page_num: int, hits_per_page: int) -> str:
+    return f'offset {page_num * hits_per_page}' if page_num > 0 and hits_per_page > 0 else ''
 
 
-async def search_posts(form_data: dict) -> tuple[list[dict], int]:
+async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]:
     boards = form_data['boards']
     hits_per_page = form_data['hits_per_page']
     order_by = form_data['order_by']
@@ -253,6 +253,11 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
 
     where_filters, params = validate_and_generate_params(form_data)
     where_query = f'where {where_filters}' if where_filters else ''
+
+    max_hits_per_board = int(max_hits / len(boards))
+
+    if page_num * hits_per_page > max_hits_per_board:
+        page_num = int(max_hits_per_board / hits_per_page)
 
     board_posts = await asyncio.gather(*(
         db_q.query_dict(f"""
@@ -267,7 +272,10 @@ async def search_posts(form_data: dict) -> tuple[list[dict], int]:
     )
 
     total_hits = await asyncio.gather(*(
-        db_q.query_tuple(f"""select count(*) from {board} {where_query}""", params=params)
+        db_q.query_tuple(
+            f"""select count(*) from {board} {where_query} order by timestamp desc limit {max_hits_per_board};"""
+            , params=params
+        )
         for board in boards
     ))
     total_hits = sum(n[0][0] for n in total_hits)
