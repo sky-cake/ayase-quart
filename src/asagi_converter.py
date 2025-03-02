@@ -271,18 +271,22 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
         ) for board in boards)
     )
 
-    total_hits = await asyncio.gather(*(
-        db_q.query_tuple(
-            f"""select count(*) from {board} {where_query};"""
-            , params=params
-        )
-        for board in boards
-    ))
-    total_hits = sum(n[0][0] for n in total_hits)
+    # total_hits = await asyncio.gather(*(
+    #     db_q.query_tuple(
+    #         f"""select count(*) from {board} {where_query};"""
+    #         , params=params
+    #     )
+    #     for board in boards
+    # ))
+    # total_hits = sum(n[0][0] for n in total_hits)
+
+    # board_posts = [[post, post], ...] for each board, there is 1 sub-list
 
     posts = []
+    total_hits = 0
     for board_post in board_posts:
         posts.extend(board_post)
+        total_hits += len(board_post)
 
     if not posts:
         return [], total_hits  # posts, total_hits
