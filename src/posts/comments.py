@@ -23,6 +23,8 @@ logic:
 
 def html_comment(comment: str, op_num: int, board: str):
     """Yes, there are multiple `in comment` statements, but this is 1-2ms faster than looping over `comment` once, believe it or not."""
+    if not comment:
+        return comment
 
     # lainchan
     if archive_conf['name'][0] == 'l':
