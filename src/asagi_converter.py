@@ -273,7 +273,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     total_hits = await asyncio.gather(*(
         db_q.query_tuple(
-            f"""select count(*) from {board} {where_query} order by timestamp desc limit {max_hits_per_board};"""
+            f"""select count(*) from {board} {where_query};"""
             , params=params
         )
         for board in boards

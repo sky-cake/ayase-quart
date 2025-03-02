@@ -130,7 +130,9 @@ async def v_board_index_page(board_shortname: str, page_num: int, logged_in: boo
     index, quotelinks = await generate_index(board_shortname, page_num)
     p.check('generate index')
 
-    index['threads'] = await fc.filter_reported_posts(index['threads'])
+    for i in range(0, len(index['threads'])):
+        index['threads'][i]['posts'] = await fc.filter_reported_posts(index['threads'][i]['posts'])
+
     p.check('filter_reported')
 
     validate_threads(index['threads'])
