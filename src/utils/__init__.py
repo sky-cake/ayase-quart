@@ -47,3 +47,5 @@ class Perf:
                 f'{name:<{longest}}: {elapsed:.4f} {elapsed / total * 100 :.1f}%'
                 for name, elapsed in self.checkpoints
             ) + f'\n{"total":<{longest}}: {total:.4f}'
+        else:
+            return ''
