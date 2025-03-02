@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 
 
-def total_pages(total: int, per_page: int) -> int:
+def total_pages(total: int, hits_per_page: int) -> int:
     """
     Given
         - a total number of results (ex: 186)
@@ -17,7 +17,7 @@ def total_pages(total: int, per_page: int) -> int:
     # -(-total // q.hits_per_page) # https://stackoverflow.com/a/35125872
     if not total:
         return 0
-    d, m = divmod(total, per_page)
+    d, m = divmod(total, hits_per_page)
     if m > 0:
         return d + 1
     return d
