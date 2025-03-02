@@ -8,7 +8,7 @@
 
     {{post|safe}}
 
-    <form action="{{ url_for('bp_web_moderation.reports_edit', report_parent_id=report.report_parent_id) }}" method="post">
+    <form action="{{ url_for('bp_web_moderation.reports_edit', report_parent_id=report.report_parent_id) }}" class="form" method="post">
         {{ form.csrf_token() }}
         Report Id:          {{report.report_parent_id}}
         <p>Board:           {{report.board_shortname}}</p>

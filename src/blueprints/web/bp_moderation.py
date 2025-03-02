@@ -85,14 +85,14 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
         <br>
         <br>
         [
-            <form class="actionform" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Post Hide</button></form> |
-            <form class="actionform" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Post Show</button></form> |
-            <form class="actionform" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Report Open</button></form> |
-            <form class="actionform" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Report Close</button></form>
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Post Hide</button></form> |
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"   method="post">{endpoint}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Post Show</button></form> |
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Report Open</button></form> |
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{endpoint}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Report Close</button></form>
         ]
         <br>
         <br>
-        <form class="actionform" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_save_notes')}" method="post">
+        <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_save_notes')}" method="post">
             <textarea name="mod_notes" rows="2" cols="20" placeholder="Moderation notes">{escape(r.mod_notes) if r.mod_notes else ''}</textarea>
             [<button class="rbtn" type="submit">Save Notes</button>]
         </form>

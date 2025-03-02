@@ -355,7 +355,7 @@ def generate_report_modal():
                 <div class="modal_title">Report</div>
                 <div id="report_close" class="btn">Close</div>
             </div>
-            <form id="report_form" action="" method="POST">
+            <form class="form" id="report_form" action="" method="POST">
                 <div>
                     <label for="submitter_category">Category:</label>
                     {category_options}

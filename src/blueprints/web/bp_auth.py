@@ -69,7 +69,7 @@ async def login():
     )
 
 
-@bp.route("/logout", methods=["GET"])
+@bp.post("/logout")
 async def logout():
     if await current_web_usr.is_authenticated:
         auth_web.logout_user()

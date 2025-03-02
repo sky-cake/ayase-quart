@@ -3,7 +3,7 @@
 {% block body %}
     <a href="{{ url_for('bp_web_admin.users_index') }}">Back to Users</a>
 
-    <form action="{{ url_for('bp_web_admin.users_create') }}" method="post">
+    <form action="{{ url_for('bp_web_admin.users_create') }}" class="form" method="post">
         {{ form.csrf_token() }}
         <p><label for="{{ form.username.id }}">{{ form.username.label }}</label>{{ form.username() }}</p>
         <p><label for="{{ form.password.id }}">{{ form.password.label }}</label>{{ form.password() }}</p>
