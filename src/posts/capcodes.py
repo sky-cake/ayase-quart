@@ -19,7 +19,7 @@ class Capcode(StrEnum):
     def from_str(capcode_str: str):
         try:
             return Capcode[capcode_str.strip().upper()]
-        except:
+        except Exception:
             return Capcode.user
 
 

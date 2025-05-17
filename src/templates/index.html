@@ -1,17 +1,28 @@
 {% extends "base.html" %}
 {% block body %}
+<div class="center">
+    <img id="welcome" class="center" src="{{url_for('static', filename=logo_filename)}}"/>
+</div>
 
-    <div id="index">
-        {% if board_objects %}
-            <h3>Boards</h3>
-            <ul>
-                {% for board_object in board_objects %}
-                    <li>
-                        <a href="/{{ board_object.shortname }}/catalog">/{{ board_object.shortname }}/ - {{ board_object.name }}</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </div>
+{% if archiveposting_conf['enabled'] %}
+<div class="mw1000 mauto">
+<h3>Ayase Quart</h3>
+<ul class="ul3col">
+    <li><a href="/{{ archiveposting_conf['board_name'] }}/catalog">/{{archiveposting_conf['board_name']}}/</a></li>
+</ul>
+</div>
+{% endif %}
 
+{% if board_objects %}
+<div class="mw1000 mauto">
+    <h3>4chan</h3>
+    <ul class="ul3col">
+        {% for board_object in board_objects %}
+            <li>
+                <a href="/{{ board_object.shortname }}/catalog">/{{ board_object.shortname }}/ - {{ board_object.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 {% endblock %}

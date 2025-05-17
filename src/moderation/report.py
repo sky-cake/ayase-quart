@@ -6,12 +6,12 @@ from quart_auth import AuthUser
 from moderation.user import Permissions
 
 from asagi_converter import get_post, move_post_to_delete_table
-from configs import mod_conf
-from db import db_m
+from configs import mod_conf, archiveposting_conf
+from db import db_m, db_a, db_q
 from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory, ReportAction
 from leafs import post_files_delete, post_files_hide, post_files_show
 from moderation.filter_cache import fc
-from moderation.user import Permissions
+from utils.validation import validate_board
 
 
 async def get_report_count(
@@ -53,9 +53,9 @@ async def get_report_count(
         where.append(f'thread_num = {ph}')
         params.append(thread_num)
     if is_op:
-        where.append(f'op = 1')
+        where.append('op = 1')
     if is_op is not None and not is_op:
-        where.append(f'op != 1')
+        where.append('op != 1')
 
     where_child = []
     if submitter_category:
@@ -128,9 +128,9 @@ async def get_reports(
         where.append(f'rp.thread_num = {ph}')
         params.append(thread_num)
     if is_op:
-        where.append(f'rp.op = 1')
+        where.append('rp.op = 1')
     if is_op is not None and not is_op:
-        where.append(f'rp.op != 1')
+        where.append('rp.op != 1')
     if created_at_gte:
         where.append(f'rc.created_at >= {ph}')
         params.append(created_at_gte)
@@ -278,22 +278,32 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
 
     flash_msg = ''
 
+    bs = report.board_shortname
+
+    if bs != archiveposting_conf['board_name']:
+        validate_board(bs)
+        db_X = db_q
+    elif archiveposting_conf['enabled'] and bs == archiveposting_conf['board_name']:
+        db_X = db_a
+    else:
+        return f'Unknown board {bs}', 404
+
     match action:
         case ReportAction.report_delete:
             if not current_usr.has_permissions([Permissions.report_delete]):
                 return f'Need permissions for {Permissions.report_delete.name}', 401
 
             report = await delete_report_if_exists(report_parent_id)
-            flash_msg = f'Report seems to already be deleted.'
+            flash_msg = 'Report seems to already be deleted.'
             if report:
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-                flash_msg = f'Report deleted.'
+                flash_msg = 'Report deleted.'
             return flash_msg, 200
 
         case ReportAction.post_delete:
             if not current_usr.has_permissions([Permissions.post_delete]):
                 return f'Need permissions for {Permissions.post_delete.name}', 401
-            
+
             # Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
             post, flash_msg = await move_post_to_delete_table(report.board_shortname, report.num)
             if not post:
@@ -307,7 +317,7 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
             if not current_usr.has_permissions([Permissions.media_delete]):
                 return f'Need permissions for {Permissions.media_delete.name}', 401
 
-            post = await get_post(report.board_shortname, report.num)
+            post = await get_post(report.board_shortname, report.num, db_X=db_X)
             if not post:
                 return 'Could not find post.', 404
             full_del, prev_del = post_files_delete(post)
@@ -318,7 +328,7 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
             if not current_usr.has_permissions([Permissions.media_hide]):
                 return f'Need permissions for {Permissions.media_hide.name}', 401
 
-            post = await get_post(report.board_shortname, report.num)
+            post = await get_post(report.board_shortname, report.num, db_X=db_X)
             if not post:
                 return 'Could not find post.', 404
             full_hid, prev_hid = post_files_hide(post)
@@ -328,8 +338,8 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
         case ReportAction.media_show:
             if not current_usr.has_permissions([Permissions.media_show]):
                 return f'Need permissions for {Permissions.media_show.name}', 401
-            
-            post = await get_post(report.board_shortname, report.num)
+
+            post = await get_post(report.board_shortname, report.num, db_X=db_X)
             if not post:
                 return 'Could not find post.', 404
             full_sho, prev_sho = post_files_show(post)
@@ -339,14 +349,14 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
         case ReportAction.post_show:
             if not current_usr.has_permissions([Permissions.post_show]):
                 return f'Need permissions for {Permissions.post_show.name}', 401
-            
+
             report = await edit_report_if_exists(report_parent_id, public_access=PublicAccess.visible)
             if report:
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-            flash_msg = f'Post now publicly visible.'
+            flash_msg = 'Post now publicly visible.'
 
             if mod_conf.get('hidden_images_path'):
-                post = await get_post(report.board_shortname, report.num)
+                post = await get_post(report.board_shortname, report.num, db_X=db_X)
                 if not post:
                     return 'Could not find post.', 404
                 full_sho, prev_sho = post_files_show(post)
@@ -363,7 +373,7 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
             flash_msg = 'Post now publicly hidden.'
 
             if mod_conf.get('hidden_images_path'):
-                post = await get_post(report.board_shortname, report.num)
+                post = await get_post(report.board_shortname, report.num, db_X=db_X)
                 if not post:
                     return 'Could not find post.', 404
                 full_hid, prev_hid = post_files_hide(post)
@@ -390,7 +400,7 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
 
             # falsey mod_notes are valid
             await edit_report_if_exists(report_parent_id, mod_notes=mod_notes)
-            flash_msg = f'Report had their moderation notes saved.'
+            flash_msg = 'Report had their moderation notes saved.'
 
         case _:
             return 'Unsupported action', 400

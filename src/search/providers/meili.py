@@ -1,6 +1,6 @@
 from orjson import dumps, loads
 
-from search.highlighting import mark_post, mark_pre
+# from search.highlighting import mark_post, mark_pre
 
 from . import POST_PK, IndexSearchQuery, search_index_fields
 from .baseprovider import INDEXES, BaseSearch
@@ -123,14 +123,14 @@ class MeiliSearch(BaseSearch):
         if q.comment or q.title:
             payload['q'] = q.comment or q.title # can we separate these?
 
-        if q.highlight:
-            payload.update(
-                {
-                    "attributesToHighlight": ["title", 'comment'],
-                    "highlightPreTag": mark_pre,
-                    "highlightPostTag": mark_post,
-                }
-            )
+        # if q.highlight:
+        #     payload.update(
+        #         {
+        #             "attributesToHighlight": ["title", 'comment'],
+        #             "highlightPreTag": mark_pre,
+        #             "highlightPostTag": mark_post,
+        #         }
+        #     )
 
         resp = await self.client.post(url, data=dumps(payload))
         data = loads(await resp.read())
@@ -152,9 +152,9 @@ class MeiliSearch(BaseSearch):
         if q.trip is not None:
             filters.append(f'trip = {q.trip}')
         if q.width is not None:
-            filters.append(f'media_w = {q.width}')
+            filters.append(f'media_w >= {q.width}')
         if q.height is not None:
-            filters.append(f'media_h = {q.height}')
+            filters.append(f'media_h >= {q.height}')
         if q.capcode is not None:
             filters.append(f'capcode = {q.capcode}')
         if q.op is not None:
@@ -164,9 +164,9 @@ class MeiliSearch(BaseSearch):
         if q.sticky is not None:
             filters.append(f'sticky = {int(q.sticky)}')
         if q.has_file:
-            filters.append(f'(media_filename IS NOT EMPTY) AND (media_filename IS NOT NULL)')
+            filters.append('(media_filename IS NOT EMPTY) AND (media_filename IS NOT NULL)')
         if q.has_no_file:
-            filters.append(f'(media_filename IS EMPTY) OR (media_filename IS NULL)')
+            filters.append('(media_filename IS EMPTY) OR (media_filename IS NULL)')
         if q.before is not None:
             filters.append(f'timestamp < {q.before}')
         if q.after is not None:

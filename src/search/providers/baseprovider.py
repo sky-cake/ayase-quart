@@ -74,7 +74,7 @@ class BaseSearch(ABC):
 
     def _get_batch_pack_fn(self) -> Callable[[dict], bytes]:
         return dumps
-    
+
     def _finalize(self, index: str):
         pass
 
@@ -90,20 +90,15 @@ class BaseSearch(ABC):
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
 
-    async def search_posts_get_thread_nums(self, q: IndexSearchQuery, form_data: dict) -> dict:
-        """Returns {board_shortname: thread_nums} mappings.
-        Used for faceted search.
+    async def search_posts_get_thread_nums(self, q: IndexSearchQuery) -> dict:
+        """Returns {board_shortname: nums} mappings. nums = thread_nums when op=1. Used for faceted search.
         """
-        q.op = True
-        q.comment = form_data['op_comment']
-        q.title = form_data['op_title']
-
-        results, _ = await self._search_index(INDEXES.posts.value, q)
-        results = [unpack_metadata(r['data'], '') for r in results] # must unpack everything to get op_nums
+        results, total_hits = await self._search_index(INDEXES.posts.value, q)
+        results = [unpack_metadata(r['data'], '') for r in results] # must unpack everything to get thread_nums
         d = defaultdict(list)
         for p in results:
             d[p['board_shortname']].append(p['num'])
-        return d
+        return d, total_hits
 
     async def add_posts(self, posts: list[dict]):
         await self._add_docs(INDEXES.posts.value, posts)
@@ -131,7 +126,7 @@ class BaseSearch(ABC):
 
     async def post_stats(self):
         return await self._index_stats(INDEXES.posts.value)
-    
+
     async def finalize(self):
         await self._finalize(INDEXES.posts.value)
 

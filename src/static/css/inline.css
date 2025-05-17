@@ -16,9 +16,9 @@ div.op>span .postHideButtonCollapsed {
     margin-right: 1px;
 }
 
-.dropDownNav #boardNavMobile,
+.dropDownNav #boardNavMobile
 {
-display: block !important;
+    display: block !important;
 }
 
 .extPanel {

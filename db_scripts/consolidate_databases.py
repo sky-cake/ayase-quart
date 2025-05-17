@@ -110,7 +110,7 @@ def do_query_sequence(db_old, db_new, board):
         preview_orig, preview_w, preview_h, media_filename, media_w, media_h, media_size,
         media_hash, media_orig, spoiler, deleted, capcode, email, name, trip, title, comment,
         delpass, sticky, locked, poster_hash, poster_country, exif
-    ) SELECT 
+    ) SELECT
         modified_doc_id,
         modified_media_id,
         poster_ip, num, subnum, thread_num, op, timestamp, timestamp_expired,
@@ -128,7 +128,7 @@ def do_query_sequence(db_old, db_new, board):
         preview_reply,
         total,
         banned
-    ) SELECT 
+    ) SELECT
         modified_media_id,
         media_hash,
         media,

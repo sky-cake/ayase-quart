@@ -1,7 +1,7 @@
 import asyncio
 from functools import wraps, cache
 
-from configs import db_conf, db_mod_conf
+from configs import db_conf, db_mod_conf, db_archiveposting_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from enums import DbPool, DbType
 
@@ -57,7 +57,7 @@ async def get_db_tables(db_conf: dict, db_type: DbType, close_pool_after=False) 
                 sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
             case _:
                 return []
-        
+
         db_h = DbHandler(db_conf, db_type)
         rows = await db_h.query_tuple(sql)
         get_db_tables.tables = [row[0] for row in rows]
@@ -74,6 +74,7 @@ class DbHandler:
         self.pool_manager: BasePoolManager = pool_manager or self.db_module['PoolManager'](db_conf)
         self.query_runner: BaseQueryRunner = query_runner or self.db_module['QueryRunner'](self.pool_manager)
         self.phg: BasePlaceHolderGen = self.db_module['PlaceholderGenerator']() # "Place Holder Generator"
+        self.length_method = 'CHAR_LENGTH' if db_type == DbType.mysql else 'LENGTH' # sqlite and pg
 
     async def prime_db_pool(self):
         await self.pool_manager.create_pool()
@@ -81,8 +82,8 @@ class DbHandler:
     async def close_db_pool(self):
         await self.pool_manager.close_pool()
 
-    async def query_tuple(self, query: str, params=None, p_id=DbPool.main):
-        return await self.query_runner.run_query_fast(query, params=params, p_id=p_id)
+    async def query_tuple(self, query: str, params=None, p_id=DbPool.main, commit=False):
+        return await self.query_runner.run_query_fast(query, params=params, p_id=p_id, commit=commit)
 
     async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
         return await self.query_runner.run_query(query, params=params, commit=commit, p_id=p_id, dict_row=dict_row)
@@ -99,4 +100,6 @@ def close_all_databases(func):
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query
 db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
+db_a = DbHandler(db_archiveposting_conf, DbType.sqlite) # archive
+# db_t = DbHandler(db_tag_conf, DbType.sqlite)
 # db_eav = DbHandler({'database': make_src_path('eav.db')}, DbType.sqlite)

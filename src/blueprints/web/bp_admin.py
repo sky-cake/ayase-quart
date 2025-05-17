@@ -1,11 +1,11 @@
 import quart_flask_patch
 
-from quart import Blueprint, flash, redirect, request, url_for
+from quart import Blueprint, flash, redirect, request, url_for, current_app
 
 from asagi_converter import get_row_counts, get_latest_ops_as_catalog
-from boards import board_shortnames
+from boards import board_objects, board_shortnames
 from configs import mod_conf
-from forms import UserCreateForm, UserEditForm
+from forms import UserCreateForm, UserEditForm, MessageForm
 from moderation.user import (
     Permissions,
     create_user_if_not_exists,
@@ -20,21 +20,82 @@ from moderation.auth import (
     require_web_usr_is_active,
     require_web_usr_permissions,
     login_web_usr_required,
+    web_usr_logged_in,
+    web_usr_is_admin,
 )
+from moderation.message import create_message, get_messages_from_last_30_days
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
+from utils.validation import validate_board
 from templates import (
     template_catalog,
     template_configs,
     template_stats,
+    template_stats_board,
     template_users_create,
     template_users_delete,
     template_users_edit,
     template_users_index,
-    template_users_view
+    template_users_view,
+    template_message,
+    template_messages,
 )
+from quart_rate_limiter import rate_limit
+from datetime import timedelta
+from security.captcha import MathCaptcha
+
 
 bp = Blueprint('bp_web_admin', __name__)
+
+
+@bp.route("/message", methods=['GET', 'POST'])
+@rate_limit(2, timedelta(days=1))
+@load_web_usr_data
+@web_usr_logged_in
+@web_usr_is_admin
+async def message(is_admin: bool, logged_in: bool):
+    form: MessageForm = await MessageForm.create_form()
+    captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
+
+    username = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if (await form.validate_on_submit()):
+        if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
+            await create_message(username, form.title.data, form.comment.data)
+            msg = 'Thank you for your anonymous submission. We will review it shortly.'
+            if mod_conf['site_email']:
+                msg += f'If this is urgent, you can also message us at {mod_conf['site_email']}.'
+            await flash(msg)
+            return redirect(url_for('bp_web_admin.message'))
+        else:
+            await flash("Wrong math captcha answer", "danger")
+
+    form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
+
+    return await render_controller(
+        template_message,
+        form=form,
+        title='Contact',
+        tab_title='Message',
+        logged_in=logged_in,
+        is_admin=is_admin,
+    )
+
+
+@bp.route("/messages")
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_permissions([Permissions.messages_view])
+@web_usr_is_admin
+async def messages(is_admin: bool):
+    messages = await get_messages_from_last_30_days()
+    return await render_controller(
+        template_messages,
+        messages=messages,
+        title='Messages',
+        tab_title='Messages',
+        is_admin=is_admin,
+    )
 
 
 @bp.route("/latest")
@@ -42,7 +103,8 @@ bp = Blueprint('bp_web_admin', __name__)
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.archive_latest_view])
-async def latest():
+@web_usr_is_admin
+async def latest(is_admin: bool):
     catalog = await get_latest_ops_as_catalog(board_shortnames)
     threads = ''.join(
         render_catalog_card(wrap_post_t(op))
@@ -54,23 +116,39 @@ async def latest():
         threads=threads,
         title='Latest Threads',
         tab_title='Latest Threads',
-        is_admin=True,
+        is_admin=is_admin,
+    )
+
+
+@bp.route("/stats/<string:board>")
+@load_web_usr_data
+@web_usr_logged_in
+@web_usr_is_admin
+async def stats_board(logged_in: bool, is_admin: bool, board: str):
+    validate_board(board)
+    table_row_counts = await get_row_counts([board])
+    return await render_controller(
+        template_stats_board,
+        table_row_counts=table_row_counts,
+        title='Stats',
+        tab_title='Stats',
+        logged_in=logged_in,
+        is_admin=is_admin,
     )
 
 
 @bp.route("/stats")
-@login_web_usr_required
 @load_web_usr_data
-@require_web_usr_is_active
-@require_web_usr_permissions([Permissions.archive_stats_view])
-async def stats():
-    table_row_counts = await get_row_counts(board_shortnames)
+@web_usr_logged_in
+@web_usr_is_admin
+async def stats(logged_in: bool, is_admin: bool):
     return await render_controller(
         template_stats,
-        table_row_counts=table_row_counts,
-        title='Archive Metrics',
-        tab_title='Archive Metrics',
-        is_admin=True,
+        board_objects=board_objects,
+        title='Stats',
+        tab_title='Stats',
+        logged_in=logged_in,
+        is_admin=is_admin,
     )
 
 
@@ -79,7 +157,8 @@ async def stats():
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.archive_configs_view])
-async def configs():
+@web_usr_is_admin
+async def configs(is_admin: bool):
     cs = [
         'default_reported_post_public_access',
         'hide_4chan_deleted_posts',
@@ -92,7 +171,7 @@ async def configs():
         configs=[{'key': c, 'value': mod_conf[c]} for c in cs],
         title='Archive Configs',
         tab_title='Archive Configs',
-        is_admin=True,
+        is_admin=is_admin,
     )
 
 
@@ -107,7 +186,8 @@ def list_to_html_ul(items: list[str], klass=None) -> str:
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_read])
-async def users_index():
+@web_usr_is_admin
+async def users_index(is_admin: bool):
     users = await get_all_users()
     ds = []
     for u in users:
@@ -126,7 +206,7 @@ async def users_index():
     return await render_controller(
         template_users_index,
         users=ds,
-        is_admin=True,
+        is_admin=is_admin,
         title='Users',
         tab_title='Users',
     )
@@ -137,12 +217,13 @@ async def users_index():
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_read])
-async def users_view(user_id):
+@web_usr_is_admin
+async def users_view(is_admin: bool, user_id: str):
     user = await get_user_by_id(user_id)
     return await render_controller(
         template_users_view,
         user=user,
-        is_admin=True,
+        is_admin=is_admin,
         title='Users',
         tab_title='Users',
     )
@@ -153,7 +234,8 @@ async def users_view(user_id):
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_create])
-async def users_create():
+@web_usr_is_admin
+async def users_create(is_admin: bool):
     form: UserCreateForm = await UserCreateForm.create_form()
 
     if await form.validate_on_submit():
@@ -171,7 +253,7 @@ async def users_create():
         form=form,
         title='Create User',
         tab_title='Create User',
-        is_admin=True,
+        is_admin=is_admin,
     )
 
 
@@ -180,7 +262,8 @@ async def users_create():
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_update])
-async def users_edit(user_id):
+@web_usr_is_admin
+async def users_edit(is_admin: bool, user_id: str):
     form: UserEditForm = await UserEditForm.create_form()
 
     user = await get_user_by_id(user_id)
@@ -217,7 +300,7 @@ async def users_edit(user_id):
         user=user,
         title='Edit User',
         tab_title='Edit User',
-        is_admin=True,
+        is_admin=is_admin,
     )
 
 
@@ -226,7 +309,8 @@ async def users_edit(user_id):
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_delete])
-async def users_delete(user_id):
+@web_usr_is_admin
+async def users_delete(is_admin: bool, user_id: str):
     if request.method == 'POST':
         flash_msg, code = await delete_user(user_id)
         await flash(flash_msg)
@@ -242,5 +326,5 @@ async def users_delete(user_id):
         user_id=user_id,
         title='Delete User',
         tab_title='Delete User',
-        is_admin=True,
+        is_admin=is_admin,
     )

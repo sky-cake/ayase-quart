@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block body %}
+{% if message %}
+    <p>{{message}}</p>
+    <img src="/static/aq/errorpage.gif"/>
+{% else %}
+    <p>We aren't sure why, but we ended up here.</p>
+    <img src="/static/aq/errorpage_no_message.gif"/>
+{% endif %}
+{% endblock %}

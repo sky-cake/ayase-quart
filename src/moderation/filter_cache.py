@@ -42,19 +42,19 @@ class BaseFilterCache(ABC):
     async def is_post_removed(self, board_shortname: str, num: int) -> bool:
         """Is the post removed?"""
         raise NotImplementedError()
-    
+
     @abstractmethod
     async def get_op_thread_removed_count(self, board_shortname: str) -> int:
         raise NotImplementedError()
-    
+
     @abstractmethod
     async def insert_post(self, board_shortname: str, num: int, op: int) -> None:
         raise NotImplementedError()
-    
+
     @abstractmethod
     async def delete_post(self, board_shortname: str, num: int, op: int) -> None:
         raise NotImplementedError()
-    
+
     async def get_board_num_pairs(self, posts: list) -> set[tuple[str, int]]:
         """`set[('g', 12345), ('x', 6789), ...]`"""
         raise NotImplementedError()
@@ -152,7 +152,7 @@ class FilterCacheSqlite(BaseFilterCache):
         board_and_nums = [(p['board_shortname'], p['num']) for p in posts]
 
         ph = ','.join([f'({db_m.phg()},{db_m.phg()})'] * len(board_and_nums))
-        
+
         expanded = [item for bn in board_and_nums for item in bn]
 
         sql = f"""
@@ -163,7 +163,7 @@ class FilterCacheSqlite(BaseFilterCache):
         rows = await db_m.query_tuple(sql, expanded)
 
         return {(row[0], row[1]) for row in rows}
-    
+
 
     async def is_post_removed(self, board_shortname: str, num: int) -> bool:
         ph = db_m.phg()
@@ -172,7 +172,7 @@ class FilterCacheSqlite(BaseFilterCache):
         if not row:
             return False
         return True
-    
+
 
     async def insert_post(self, board_shortname: str, num: int, op: int):
         ph = db_m.phg()
@@ -193,7 +193,7 @@ class FilterCacheSqlite(BaseFilterCache):
 
 async def get_deleted_numops_per_board_iter():
     """Returns a tuple[str, tuple[int, int]]
-    
+
     `(board_shortname, [(num, op), ...])`
     """
     if not (mod_conf["hide_4chan_deleted_posts"] and board_shortnames):
@@ -205,7 +205,7 @@ async def get_deleted_numops_per_board_iter():
 
 async def get_numops_by_board_and_regex_iter():
     """Returns a tuple[str, tuple[int, int]]
-    
+
     `(board_shortname, [(num, op), ...])`
     """
     if not (mod_conf['regex_filter'] and board_shortnames):

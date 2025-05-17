@@ -1,19 +1,15 @@
 {% from 'macros/macros.html' import table %}
-
 {% extends 'base.html' %}
-
 {% block body %}
+<div class="mw1000 mauto">
+  <div><img id="banner" src="{{url_for('static', filename='logo.png')}}"/></div><br>
+  <ul class="ul3col">
+    {% for board_object in board_objects %}
+      <li>
+        <a href="/stats/{{board_object.shortname}}">/{{board_object.shortname}}/ - {{board_object.name}}</a>
+      </li>
+    {% endfor %}
+  </ul>
 
-  <div>
-    <div>
-      <h4>Filesystem</h4>
-      <p>We officially endorse the use of the tool <a href="https://en.wikipedia.org/wiki/Ncdu" rel="noreferrer" target="_blank">ncdu</a> for inspecting your archived media.</p>
-    </div>
-
-    <div>
-      <h4>Db Records</h4>
-      <p>{{table(table_row_counts)}}</p>
-    </div>
-
-  </div>
+</div>
 {% endblock %}

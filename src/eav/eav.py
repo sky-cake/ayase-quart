@@ -5,9 +5,9 @@ class EAV:
     async def init(self):
         await db_eav.query_dict('''
             create table if not exists eav (
-                entity text, 
-                attribute text, 
-                value text, 
+                entity text,
+                attribute text,
+                value text,
                 primary key (entity, attribute)
             )
         ''', commit=True)

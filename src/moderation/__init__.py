@@ -6,7 +6,7 @@ from utils import make_src_path, read_file
 
 
 async def init_moderation():
-    moderation_scripts = ['users.sql', 'user_permissions.sql', 'report_parent.sql', 'report_child.sql']
+    moderation_scripts = ['users.sql', 'user_permissions.sql', 'report_parent.sql', 'report_child.sql', 'message.sql']
     for script in moderation_scripts:
         await db_m.query_dict(read_file(make_src_path('moderation', 'sql', script)), p_id=DbPool.mod)
 

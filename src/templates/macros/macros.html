@@ -14,7 +14,7 @@
           {%- for col in row.keys() -%}
             <td style="border: 0.5px solid #585858; padding: 8px; max-width: 80ch; word-wrap: break-word; text-align: left;">
               {% if safe_cols and col in safe_cols %}
-                {{ row[col] | safe}}
+                {{ row[col]|safe}}
               {% else %}
                 {{ row[col] }}
               {% endif %}
@@ -30,98 +30,17 @@
 {%- endmacro -%}
 
 
-{%- macro capcode_author(capcode) -%}
-  {%- set capcode_map = {'A': 'capcodeAdmin', 'F': 'capcodeFounder', 'M': 'capcodeMod', 'D': 'capcodeDeveloper', 'G': 'capcodeManager', 'V': 'capcodeVerified', 'N': ''} -%}
-  {{ capcode_map[capcode] }}
-{%- endmacro -%}
-
-{%- macro poster_heading(thread) -%}
-  {%- set verified = 'capcodeVerified' if thread.code == 'V' else '' -%}
-  {%- set exif = 'title="Exif: ' + thread.exif + '"' if thread.exif else '' -%}
-
-  <span class="poster {{ capcode_author[thread.capcode] }}">Posted by
-    <span class="name post_author {{ capcode_map[code] }} {{ verified }}" {{ exif }}>{{ thread.name }}</span>
-  </span>
-{%- endmacro -%}
-
-{%- macro thread_stats(post) -%}
-  <div class="thread-stats">
-    {%- if post.sticky -%} Sticky / {%- endif -%}
-    {%- if post.locked -%} Closed / {%- endif -%}
-    <span class="ts-replies" data-tip="Replies" title="Replies">{{post.nreplies}}</span>
-    /
-    <span class="ts-images" data-tip="Images" title="Files">{{post.nimages}}</span>
-    /
-    <span data-tip="Posters" class="ts-ips" title="Posters">
-      {%- if post.posters -%} {{post.posters}} {%- else -%} ? {%- endif -%}
-    </span>
-  </div>
-{%- endmacro -%}
-
-{%- macro get_full_media_src(image_uri, post) -%}
-  {%- if image_uri -%}
-
-    {%- set fname_img = (post.media_orig|string) -%}
-    {%- set url = (image_uri.format(board_shortname=post.board_shortname) + "/" + fname_img[0:4] + "/" + fname_img[4:6] + "/" + fname_img) -%}
-
-    {{url}}
-
-  {%- else -%}
-    {{''}}
-  {%- endif -%}
-{%- endmacro -%}
-
-
-{%- macro get_thumb_src(thumb_uri, post) -%}
-  {%- if thumb_uri -%}
-
-    {%- set fname_thumb = (post.preview_orig|string) -%}
-    {%- set fname_img = (post.media_orig|string) -%}
-
-    {%- set url = (thumb_uri.format(board_shortname=post.board_shortname) + "/" + fname_thumb[0:4] + "/" + fname_thumb[4:6] + "/" + fname_thumb) -%}
-
-    {{url}}
-
-  {%- else -%}
-    {{''}}
-  {%- endif -%}
-{%- endmacro -%}
-
-
-{%- macro get_img(thumb_uri, image_uri, post, classes="", expand_media=True) -%}
-
-  {%- set thumb_src = get_thumb_src(thumb_uri, post) -%}
-  {%- set full_media_src = get_full_media_src(image_uri, post) -%}
-
-  <img
-    src="{{thumb_src}}"
-    class="{{classes}}"
-    data-media_hash="{{ post.media_hash }}"
-    width="{{ post.preview_w }}"
-    height="{{ post.preview_h }}"
-    loading="lazy"
-    data-thumb_src="{{thumb_src}}"
-    data-full_media_src="{{full_media_src}}"
-    onclick="{{'expandMedia(this)' if expand_media else 'null'}}"
-    onerror="pointToOtherMediaOnError(this)"
-    data-expanded="false"
-  />
-{%- endmacro -%}
-
 {% macro render_field(field) %}
   <div class="form-control">
-    {% if field.name not in ['submit', 'captcha_id', 'captcha_answer'] %}
+    {% if field.name not in ['submit', 'captcha_id', 'captcha_answer', 'boards'] %}
       <div class="field_label">{{ field.label }}</div>
     {% endif %}
-
     {{ field(**kwargs)|safe }}
   </div>
   {% if field.errors %}
     <div class="block">
       <div class="block">
-        ^{% for error in field.errors %}
-          {{ error }}
-        {% endfor %}
+        ^{% for error in field.errors %}{{ error }}{% endfor %}
       </div>
     </div>
   {% endif %}

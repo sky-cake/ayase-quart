@@ -22,6 +22,9 @@ from moderation.auth import (
 )
 from pydantic import BaseModel, Field
 
+from quart_rate_limiter import rate_limit
+from datetime import timedelta
+
 
 bp = Blueprint('bp_api_admin', __name__, url_prefix='/api/v1')
 
@@ -96,6 +99,7 @@ class UserPOST(BaseModel):
 
 @bp.post('/users')
 @validate_request(UserPOST)
+@rate_limit(6, timedelta(hours=1))
 @login_api_usr_required
 @require_api_usr_permissions([Permissions.user_create])
 async def users_create(data: UserPOST, current_api_usr_id: int):

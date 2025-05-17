@@ -3,12 +3,9 @@
     {{ t_sub }}
     {{ t_mobile }}
 </div>
-{% if op_num == 0 %}
-    {{t_media}}
-{% endif %}
 <div class="postInfo desktop" id="pi{{num}}">
     <b>/{{board_shortname}}/</b>
-    {% if op_num == 0 %}
+    {% if num == thread_num %}
         <strong class="op_label">OP</strong>
     {% endif %}
     {{ t_filedeleted }}
@@ -24,18 +21,20 @@
     <span class="dateTime" data-utc="{{ts_unix}}">{{format_ts(ts_unix)}}</span>
     <span class="postNum desktop">
         <a href="{{t_post_link_rel}}">No.{{num}}</a>
-        {% if op_num == 0 %}
+        {% if num == thread_num %}
             {{ t_sticky }}
             {{ t_closed }}
         {% endif %}
     </span>
-    <span class="postMenuBtn" title="Post menu" data-cmd="post-menu">▶</span>
+    <button class="btnlink" onclick="copy_link(this, '{{t_post_link_rel}}')">⎘</button>
+    <span class="inblk">
     {{ t_report }}
-    [<a href="{{t_post_link_rel if op_num else t_thread_link_rel}}" target="_blank">View</a>]
-    [<a href="{{t_post_link_src if op_num else t_thread_link_src}}" rel="noreferrer" target="_blank">Source</a>]
+    [<a href="{{t_post_link_rel if num == thread_num else t_thread_link_rel}}" target="_blank">View</a>]
+    [<a href="{{t_post_link_src if num == thread_num else t_thread_link_src}}" rel="noreferrer" target="_blank">Source</a>]
+    </span>
     {{ t_quotelink }}
 </div>
-{% if op_num %}
+{% if num == thread_num %}
     {{t_media}}
 {% endif %}
 <blockquote class="postMessage" id="m{{num}}">{{comment or ''}}</blockquote>

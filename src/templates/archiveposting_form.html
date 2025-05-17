@@ -1,0 +1,42 @@
+{% if archiveposting_form %}
+{% from 'macros/macros.html' import render_field %}
+<div class="mw800 mauto">
+  <div class="mw800 center">{{archiveposting_conf['board_desc']}}</div><br>
+  <form action="" id="archivepostingform" method="post" role="form" autocomplete="off"
+    onsubmit="this.submit.disabled = true;">
+    <div class="form inlinegrid">
+      <h3 class="center">{{form_message}}</h3>
+      {{archiveposting_form.csrf_token()}}
+      {{ render_field(archiveposting_form.title, class='w240') }}
+      {{ render_field(archiveposting_form.comment, class='w240 h4em') }}
+      {{ render_field(archiveposting_form.captcha_id) }}
+      <img width="65px" src="data:image/jpeg;base64,{{archiveposting_form.captcha_b64_img_str}}" />
+      {{ render_field(archiveposting_form.captcha_answer, placeholder='Solution', class='center') }}
+      <div class="mtb-1"><input id="submit" name="submit" type="submit" value="Submit"></div>
+    </div>
+  </form>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let op_thread_num = document.getElementById("op_thread_num");
+      if (op_thread_num) {
+        op_thread_num = op_thread_num.getAttribute('data-num');
+        document.querySelectorAll('blockquote').forEach((bq) => {
+          bq.innerHTML = bq.innerHTML.replace(/&gt;&gt;(\d+)/g, `<a href="/{{archiveposting_conf['board_name']}}/thread/${op_thread_num}#p$1" class="quotelink" data-board_shortname="{{archiveposting_conf['board_name']}}">&gt;&gt;$1</a>`);
+        });
+
+        document.querySelectorAll('.quotelink').forEach((link) => {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const commentBox = document.getElementById('comment');
+            if (commentBox) {
+              const quoteText = `${link.textContent}\n`;
+              commentBox.value += quoteText;
+              commentBox.focus();
+            }
+          });
+        });
+      }
+    });
+  </script>
+</div>
+{% endif %}

@@ -22,16 +22,25 @@ AQ supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https:/
 This project is a descendent of [Ayase](https://github.com/bibanon/ayase).
 
 
+## Donate
+
+If you like Ayase Quart, please consider donating. 
+
+  - BTC: 3NTq5J41seSiCckK9PJc8cpkD1Bp9CNUSA
+  - ETH: 0x1bfCADA8C808Eb3AE7964304F69004a1053Fb1da
+  - USDC: 0xAd002E0e9A64DE5e0B93BB7509B475309A2e1ac8
+
+
 ## Basic Set Up
 
-Python 3.12.x is required.
+Python 3.13.x is required.
 
 Assuming you have a data source set up, you can:
 
 1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
 1. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
-		- Run `python3.12 -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
+		- Run `python3.13 -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
       - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
@@ -42,9 +51,9 @@ Assuming you have a data source set up, you can:
 1. Create a virtualenv and install dependencies,
    
     ```bash
-    python3.12 -m venv venv
+    python3.13 -m venv venv
     source venv/bin/activate
-    python3.12 -m pip install -r requirements.txt
+    python3.13 -m pip install -r requirements.txt
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
@@ -58,7 +67,7 @@ Assuming you have a data source set up, you can:
     sudo systemctl restart redis
     sudo systemctl status redis
     ```
-1. `python3.12 main.py`
+1. `python3.13 main.py`
 1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
 1. [Optional] Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`.
@@ -75,7 +84,7 @@ Assuming you have a data source set up, you can:
         | [MySQL 8.x](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [mysql-server](https://github.com/mysql/mysql-server) | (not supported) |
 
     - Remember to check that your config port matches the docker container port.
-    - Run `python3.12 -m search load --reset board1 [board2 [board3 ...]`.
+    - Run `python3.13 -m search load --reset board1 [board2 [board3 ...]`.
       - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
 1. [Optional] Submit pull requests with fixes and new features!
@@ -123,9 +132,9 @@ The moderation system requires authentication. The default username and password
 
 Here is a test drive of the cli.
 
-`python3.12 ./src/cli/reports.py`
+`python3.13 ./src/cli/reports.py`
 ```bash
-Usage: python3.12 ./src/cli/reports.py [OPTIONS] COMMAND [ARGS]...
+Usage: python3.13 ./src/cli/reports.py [OPTIONS] COMMAND [ARGS]...
 
 Options:
 --help  Show this message and exit.
@@ -138,12 +147,12 @@ cli-get-reports
 cli-reports-action
 ```
 
-`python3.12 ./src/cli/reports.py cli-get-report-count`
+`python3.13 ./src/cli/reports.py cli-get-report-count`
 ```bash
 Report count: 4
 ```
 
-`python3.12 ./src/cli/reports.py cli-get-reports --public_access v --created_at_gte "2024-01-01"`
+`python3.13 ./src/cli/reports.py cli-get-reports --public_access v --created_at_gte "2024-01-01"`
 ```bash
 |   report_parent_id | board_shortname   |      num |   thread_num | public_access   | mod_status   | mod_notes   |   ip_count | submitter_category          | submitter_notes   | link                                                |
 |--------------------+-------------------+----------+--------------+-----------------+--------------+-------------+------------+-----------------------------+-------------------+-----------------------------------------------------|
@@ -151,7 +160,7 @@ Report count: 4
 |                  3 | r9k               | 80365280 |     80365251 | v               | o            |             |          1 | DCMA                        | aaaaaa            | http://127.0.0.1:9001/r9k/thread/80365251#p80365280 |
 ```
 
-`python3.12 ./src/cli/reports.py cli-reports-action --help`
+`python3.13 ./src/cli/reports.py cli-reports-action --help`
 ```bash
 Usage: reports.py cli-reports-action [OPTIONS]
 
@@ -171,7 +180,9 @@ Do **not** sort imports automatically. Tools will not respect `#noqa`, and will 
 
 Lint checking can be performed with,
 
-`flake8 --select F401,F403,F405,E1101,E122,C901,F401,B950 ./src`
+`python3.13 -m pip install ruff`
+
+`ruff check src/ --ignore F401`
 
 
 ## Production

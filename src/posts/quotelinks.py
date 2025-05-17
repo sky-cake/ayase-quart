@@ -7,12 +7,12 @@ from typing import Generator
 def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
     # key is num, value is list of nums quoting it
     lookup = defaultdict(list)
-    
+
     for post in posts:
         # asagi comments are nullable
         if not (comment := post.get('comment')):
             continue
-        
+
         num = post['num']
         for quotelink in extract_quotelinks_raw(comment):
             lookup[quotelink].append(num)
@@ -37,10 +37,12 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
 def extract_quotelinks(comment: str, html=False) -> list[int]:
     """Given some escaped post/comment, `text`, returns a list of all the quotelinks (>>123456) in it."""
     quotelinks = []
+    if not comment:
+        return quotelinks
 
     # if the comment is not already html escaped, escape it
     comment_esc = comment if html else escape(comment)
-    
+
     # text = '>>20074095\n>>20074101\nYou may be buying the wrong eggs'
     lines = comment_esc.split("\n")
 
@@ -69,6 +71,11 @@ def extract_quotelinks_esc(comment: str) -> list[int]:
         for match in esc_ql_re.findall(comment)
     ]
 
-def html_quotelinks(comment: str, board: str, op_num: int):
-    subs = rf'<a href="/{board}/thread/{op_num}#p\1" class="quotelink" data-board_shortname="{board}">&gt;&gt;\1</a>'
-    return esc_ql_re.sub(subs, comment)
+def html_quotelinks(comment: str, board: str, thread_num: int):
+    def replacer(match):
+        post_num = match.group(1)
+        op_tag = ' (OP)' if int(post_num) == thread_num else ''
+        return f'<a href="/{board}/thread/{thread_num}#p{post_num}" class="quotelink" data-board_shortname="{board}">&gt;&gt;{post_num}{op_tag}</a>'
+
+    esc_ql_re = re.compile(r'&gt;&gt;(\d+)')
+    return esc_ql_re.sub(replacer, comment)

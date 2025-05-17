@@ -41,7 +41,7 @@ class ReportAction(StrEnum):
     report_close = 'report_close'
     report_open = 'report_open'
     report_save_notes = 'report_save_notes'
-    
+
 
 class SubmitterCategory(StrEnum):
     illegal_content = 'Illegal content'

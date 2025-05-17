@@ -1,7 +1,6 @@
 from enum import Enum
-
 from quart import flash, session
-from quart_wtf import QuartForm
+from quart_wtf import QuartForm, FileSize, FileAllowed
 from werkzeug.exceptions import BadRequest
 from wtforms import widgets
 from wtforms.fields import (
@@ -16,22 +15,27 @@ from wtforms.fields import (
     SelectMultipleField,
     StringField,
     SubmitField,
-    TextAreaField
+    TextAreaField,
+    FileField,
 )
 from wtforms.validators import (
     DataRequired,
     Length,
     NumberRange,
     Optional,
-    ValidationError
+    ValidationError,
 )
-
+from datetime import datetime
 from boards import board_shortnames
 from enums import SubmitterCategory
 from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
-from configs import index_search_conf, vanilla_search_conf
-from utils.validation import clamp_positive_int, validate_board
+from configs import index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf
+from utils.validation import clamp_positive_int
+import re
+from tagging.enums import SafeSearch
+from collections import Counter
+
 
 LENGTH_MD5_HASH = 32
 
@@ -49,26 +53,126 @@ class StripForm(QuartForm):
             if isinstance(field, Field) and hasattr(field.data, 'strip') and (field.name not in self.do_not_strip):
                 field.data = field.data.strip()
 
+render_kw_hide = {'style': 'display: none;'}
+hide_tag_field = None if tag_conf['enabled'] else render_kw_hide
 
-class VanillaSearchForm(StripForm):
+
+def is_spam(s) -> bool:
+    if not s:
+        return False
+
+    words = s.lower().split()
+    if not words:
+        return False
+
+    if len(words) < 10:
+        return False
+
+    # check if word is 60% or more of the words
+    counts = Counter(words)
+    total = len(words)
+
+    for word, count in counts.items():
+        if count / total >= 0.6:
+            return True
+
+    return False
+
+
+def collapse_newlines(s):
+    return re.sub(r'(\r\n){2,}|(\n){2,}', '\n', s) if s else s
+
+
+def is_too_long(s: str):
+    return s.count('\n') > 20 if s else False
+
+
+class PostForm(StripForm):
+    do_not_strip = []
+
+    new_thread = BooleanField('New Thread')
+    thread_num = IntegerField('Thread Num', validators=[Optional(), NumberRange(1, 1_000_000_000)])
+    title = StringField('Subject', validators=[Length(0, 32)])
+    comment = TextAreaField('Comment', validators=[Length(2, 2048)])
+
+    captcha_id = HiddenField(validators=[DataRequired()])
+    captcha_answer = IntegerField(validators=[DataRequired()])
+    submit = SubmitField('Post')
+
+    async def validate(self, extra_validators=None) -> bool:
+        """Overriding this definition allows us to validate fields in a specific order, and halt on a validation error."""
+
+        item_order = self._fields.keys()
+        for item in item_order:
+            field = self._fields[item]
+            if not field.validate(self, tuple()):
+                return False
+
+        if archiveposting_conf['ascii_only'] and not self.title.data.isascii():
+            raise BadRequest('ascii only')
+
+        if archiveposting_conf['ascii_only'] and not self.comment.data.isascii():
+            raise BadRequest('ascii only')
+
+        self.title.data = collapse_newlines(strip_2_none(self.title.data))
+        self.comment.data = collapse_newlines(strip_2_none(self.comment.data))
+
+        if is_too_long(self.title.data) or is_too_long(self.comment.data):
+            raise BadRequest('20 lines exceeded')
+
+        if is_spam(self.title.data) or is_spam(self.comment.data):
+            raise BadRequest('Our system thinks your post is spam')
+
+        return True
+
+
+class MessageForm(StripForm):
+    do_not_strip = []
+    title = StringField("Subject", validators=[Length(0, 128)])
+    comment = TextAreaField("Comment", validators=[Length(2, 2048)])
+    captcha_id = HiddenField(validators=[DataRequired()])
+    captcha_answer = IntegerField("", validators=[DataRequired()])
+    submit = SubmitField('Search')
+
+
+def date_filter(x):
+    return datetime.strptime(x, '%Y-%m-%d') if x and re.fullmatch(r'\d\d\d\d-\d\d-\d\d', x) else None
+
+
+class SearchForm(StripForm):
     do_not_strip = ('comment',)
+
+    boards: MultiCheckboxField | RadioField
+    hits_per_page: IntegerField
 
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
-    boards = MultiCheckboxField('Boards', choices=board_shortnames)
-    hits_per_page = IntegerField('Hits per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
     title = StringField("Subject", validators=[Optional(), Length(2, 256)])
     comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
     op_title = StringField("OP Subject", validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
     op_comment = TextAreaField("OP Comment", validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
+    min_title_length = IntegerField('Subject', validators=[Optional(), NumberRange(0, 100)])
+    min_comment_length = IntegerField('Comment', validators=[Optional(), NumberRange(0, 2_000)])
     num = IntegerField("Post Number", validators=[Optional(), NumberRange(min=0)])
     media_filename = StringField("Filename", validators=[Optional(), Length(2, 256)])
     media_hash = StringField("File Hash", validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
     tripcode = StringField("Tripcode", validators=[Optional(), Length(8, 15)])
-    date_after = DateField('Date after', validators=[Optional()], format='%Y-%m-%d')
-    date_before = DateField('Date before', validators=[Optional()], format='%Y-%m-%d')
-    has_file = BooleanField('Has File', default=False, validators=[Optional()])
+    date_after = DateField('Start', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
+    date_before = DateField('End', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
+    file_archived = BooleanField('File Archived', default=False, validators=[Optional()])
+    has_file = BooleanField('Has file', default=False, validators=[Optional()])
     has_no_file = BooleanField('No file', default=False, validators=[Optional()])
+
+    safe_search = RadioField('Safe Search', choices=[(ss.value, ss.name) for ss in SafeSearch], default=SafeSearch.safe.value, validate_choice=True, render_kw=hide_tag_field)
+
+    ## Values will come in as strings like '1,2,3,4,5' or ''. A fieldlist of integerfields was too complex, and added bandwidth; ints_from_csv_string() will be used to convert the strings
+    ## These fields' `choices` will be generated with js
+    file_tags_general   = StringField('File tags, general',   default='', validators=[Length(min=0, max=100)], render_kw=render_kw_hide)
+    file_tags_character = StringField('File tags, character', default='', validators=[Length(min=0, max=100)], render_kw=render_kw_hide)
+
+    if tag_conf['enabled'] and tag_conf['allow_file_search']:
+        file_upload = FileField('File Search', validators=[FileAllowed(tag_conf['exts']), FileSize(min_size=1024, max_size=4.05 * 1024 * 1024)])
+
     is_op = BooleanField('OP', default=False, validators=[Optional()])
     is_not_op = BooleanField('Not OP', default=False, validators=[Optional()])
     is_deleted = BooleanField('Deleted', default=False, validators=[Optional()])
@@ -76,14 +180,14 @@ class VanillaSearchForm(StripForm):
     is_sticky = BooleanField('Sticky', default=False, validators=[Optional()])
     is_not_sticky = BooleanField('Not sticky', default=False, validators=[Optional()])
     page = IntegerField(default=1, validators=[NumberRange(min=1)])
-    width = IntegerField('Width', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution width')
-    height = IntegerField('Height', default=None, validators=[Optional(), NumberRange(0, 4_294_967_295)], description='Media resolution height')
+    width = IntegerField('Media width', default=None, validators=[Optional(), NumberRange(0, 10_000)])
+    height = IntegerField('Media height', default=None, validators=[Optional(), NumberRange(0, 10_000)])
     capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
 
     async def validate(self, extra_validators=None) -> bool:
         """Overriding this definition allows us to validate fields in a specific order, and halt on a validation error."""
-        
+
         validate_search_form(self) # call our custom validation
 
         item_order = self._fields.keys()
@@ -94,23 +198,52 @@ class VanillaSearchForm(StripForm):
         return True
 
 
-# kinda dumb to need to perform inheritance, but I haven't found a way to do this dynamically... oh well, at least this is not janky
+# introduce fields in dervied classes when they depend on different search confs
+
+class VanillaSearchForm(SearchForm):
+    boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if vanilla_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
+    hits_per_page = IntegerField('Per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
+
+
 class IndexSearchForm(VanillaSearchForm):
-    hits_per_page = IntegerField('Hits per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
+    boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if index_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
+    hits_per_page = IntegerField('Per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
 
 
-def strip_2_none(s: str) -> str|None:
-    if isinstance(s, str) and s.strip() == '':
+def strip_2_none(s: str) -> str | None:
+    if not isinstance(s, str) or s.strip() == '':
         return None
     return s
 
 
-def validate_search_form(form: VanillaSearchForm):
+def ints_from_csv_string(csv_string: str) -> list[int]:
+    if not csv_string or not isinstance(csv_string, str):
+        return []
+
+    csv_string = csv_string.strip()
+    if not re.fullmatch(r'^\d+(?:,\d+)*$', csv_string):
+        return []
+
+    return [int(i) for i in csv_string.split(',')]
+
+
+def validate_search_form(form: SearchForm):
+    # board validations should work with str and list[str]
     if not form.boards.data:
         raise BadRequest('select a board')
 
-    for board in form.boards.data:
-        validate_board(board)
+    if len(form.boards.data) < 1:
+        raise BadRequest('select a board')
+
+    if len(form.boards.data) > len(board_shortnames):
+        raise BadRequest('too many boards selected')
+
+    if not form.boards.validate_choice:
+        if not isinstance(form.boards.data, list):
+            raise ValueError(type(form.boards.data))
+        for b in form.boards.data:
+            if b not in board_shortnames:
+                raise BadRequest('invalid board choice(s)')
 
     if form.gallery_mode.data and form.has_no_file.data:
         raise BadRequest("search gallery mode only shows files")
@@ -137,6 +270,10 @@ def validate_search_form(form: VanillaSearchForm):
 
     form.page.data = clamp_positive_int(form.page.data, 1)
 
+    if tag_conf['enabled']:
+        form.file_tags_general.data   = ints_from_csv_string(form.file_tags_general.data)
+        form.file_tags_character.data = ints_from_csv_string(form.file_tags_character.data)
+
     if form.gallery_mode.data:
         form.has_file.data = True
         form.has_no_file.data = False
@@ -162,11 +299,9 @@ class IndexSearchConfigForm(QuartForm):
 class LoginForm(QuartForm):
     username = StringField(validators=[DataRequired(), Length(min=1, max=128)])
     password = PasswordField(validators=[DataRequired(), Length(min=1, max=128)])
-
-    captcha_id = HiddenField(validators=[DataRequired()])
-    captcha_answer = IntegerField("", validators=[DataRequired()])
-
-    submit = SubmitField("Submit")
+    captcha_id = HiddenField('', validators=[DataRequired()])
+    captcha_answer = IntegerField('', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 
 def enum_choices(enum_cls: Enum):

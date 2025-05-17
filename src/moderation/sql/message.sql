@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    username TEXT NOT NULL,
+    title TEXT,
+    comment TEXT NOT NULL
+);

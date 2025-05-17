@@ -30,7 +30,7 @@
         <button type="submit">Save</button>
     </form>
 
-    <script>
+    <script type="text/javascript">
         document.getElementById('select_all').addEventListener('change', function () {
             const checkboxes = document.querySelectorAll('input[name=permissions]');
             checkboxes.forEach(checkbox => checkbox.checked = this.checked);

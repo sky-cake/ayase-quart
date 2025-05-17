@@ -1,12 +1,13 @@
 from flask_paginate import Pagination
-from quart import Blueprint, jsonify
+from quart import Blueprint, jsonify, abort, current_app, Response
 
 from asagi_converter import (
     generate_catalog,
     generate_index,
     generate_post,
     generate_thread,
-    get_op_thread_count
+    get_op_thread_count,
+    get_counts_from_posts
 )
 from boards import get_title
 from configs import SITE_NAME, app_conf
@@ -15,20 +16,21 @@ from posts.template_optimizer import (
     render_catalog_card,
     render_wrapped_post_t,
     report_modal_t,
-    wrap_post_t
+    wrap_post_t,
+    get_posts_t,
 )
-from moderation.auth import web_usr_logged_in
+from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
 from render import render_controller
 from templates import (
     template_board_index,
     template_catalog,
     template_index,
-    template_search_post_t,
     template_thread
 )
 from threads import render_thread_stats
 from utils import Perf
 from utils.validation import validate_board, validate_threads
+from random import randint
 
 bp = Blueprint("bp_web_app", __name__)
 
@@ -53,24 +55,43 @@ async def make_pagination_board_index(board_shortname: str, index: dict, page_nu
 
 
 @bp.get("/")
+@load_web_usr_data
 @web_usr_logged_in
-async def v_index(logged_in: bool):
+@web_usr_is_admin
+async def v_index(is_admin: bool, logged_in: bool):
     return await render_controller(
         template_index,
+        logo_filename=f'logo{randint(1, 3)}.png',
         tab_title=SITE_NAME,
-        title=SITE_NAME,
+        title='',
         logged_in=logged_in,
+        is_admin=is_admin,
     )
 
 
+@bp.route('/robots.txt')
+async def robots():
+    if app_conf['allow_robots']:
+        abort(404)
+    content = 'User-agent: *\nDisallow: /'
+    return Response(content, mimetype='text/plain')
+
+
+@bp.route('/favicon.ico')
+async def favicon():
+    return await current_app.send_static_file('favicon.gif')
+
+
 @bp.get("/<string:board_shortname>")
+@load_web_usr_data
 @web_usr_logged_in
-async def v_board_index(board_shortname: str, logged_in: bool):
+@web_usr_is_admin
+async def v_board_index(is_admin: bool, board_shortname: str, logged_in: bool):
     """See `v_board_index_page()` for benchmarks.
     """
     validate_board(board_shortname)
     p = Perf('index', enabled=app_conf.get('testing'))
-    
+
     index, quotelinks = await generate_index(board_shortname)
     p.check('query')
 
@@ -98,16 +119,19 @@ async def v_board_index(board_shortname: str, logged_in: bool):
         board=board_shortname,
         title=get_title(board_shortname),
         logged_in=logged_in,
+        is_admin=is_admin,
     )
     p.check('render')
     print(p)
-    
+
     return rendered
 
 
 @bp.get("/<string:board_shortname>/page/<int:page_num>")
+@load_web_usr_data
 @web_usr_logged_in
-async def v_board_index_page(board_shortname: str, page_num: int, logged_in: bool):
+@web_usr_is_admin
+async def v_board_index_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
     """
     Benchmarked with SQLite (local), 150 OPs, 8th gen i7.
     validate: 0.0000
@@ -156,6 +180,7 @@ async def v_board_index_page(board_shortname: str, page_num: int, logged_in: boo
         title=title,
         tab_title=title,
         logged_in=logged_in,
+        is_admin=is_admin,
     )
     p.check('rendered')
     print(p)
@@ -187,8 +212,10 @@ async def make_pagination_catalog(board_shortname: str, catalog: list[dict], pag
 
 
 @bp.get("/<string:board_shortname>/catalog")
+@load_web_usr_data
 @web_usr_logged_in
-async def v_catalog(board_shortname: str, logged_in: bool):
+@web_usr_is_admin
+async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
     """
     Benchmarked with SQLite, page 0, 8th gen i7.
     query   : 0.0649
@@ -225,6 +252,7 @@ async def v_catalog(board_shortname: str, logged_in: bool):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
         logged_in=logged_in,
+        is_admin=is_admin,
     )
     p.check('render')
     print(p)
@@ -233,8 +261,10 @@ async def v_catalog(board_shortname: str, logged_in: bool):
 
 
 @bp.get("/<string:board_shortname>/catalog/<int:page_num>")
+@load_web_usr_data
 @web_usr_logged_in
-async def v_catalog_page(board_shortname: str, page_num: int, logged_in: bool):
+@web_usr_is_admin
+async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
     """
     Benchmarked with SQLite, page 129, 5700X.
     query   : 0.8202
@@ -266,6 +296,7 @@ async def v_catalog_page(board_shortname: str, page_num: int, logged_in: bool):
         title=get_title(board_shortname),
         tab_title=f"/{board_shortname}/ Catalog",
         logged_in=logged_in,
+        is_admin=is_admin,
     )
     p.check('render')
     print(p)
@@ -273,29 +304,11 @@ async def v_catalog_page(board_shortname: str, page_num: int, logged_in: bool):
     return render
 
 
-def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
-    for post in posts:
-        post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
-    
-    posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
-    return posts_t
-
-
-def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
-    """Returns (nreplies, nimages)"""
-    nreplies = 0
-    nimages = 0
-    for post in posts:
-        if post.get('op'):
-            nreplies = post.get('nreplies', nreplies)
-            nimages = post.get('nimages', nimages)
-            break
-    return nreplies, nimages
-
-
 @bp.get("/<string:board_shortname>/thread/<int:thread_id>")
+@load_web_usr_data
 @web_usr_logged_in
-async def v_thread(board_shortname: str, thread_id: int, logged_in: bool):
+@web_usr_is_admin
+async def v_thread(is_admin: bool, board_shortname: str, thread_id: int, logged_in: bool):
     """
     Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.
     queries : 0.0150
@@ -338,6 +351,7 @@ async def v_thread(board_shortname: str, thread_id: int, logged_in: bool):
         title=title,
         tab_title=title,
         logged_in=logged_in,
+        is_admin=is_admin,
     )
     p.check('rendered')
     print(p)
@@ -345,8 +359,7 @@ async def v_thread(board_shortname: str, thread_id: int, logged_in: bool):
 
 
 @bp.get("/<string:board_shortname>/post/<int:post_id>")
-@web_usr_logged_in
-async def v_post(board_shortname: str, post_id: int, logged_in: bool):
+async def v_post(board_shortname: str, post_id: int):
     """Called by the client to generate posts not on the page - e.g. when viewing search results.
     """
     validate_board(board_shortname)
@@ -363,7 +376,7 @@ async def v_post(board_shortname: str, post_id: int, logged_in: bool):
     if is_removed:
         return {}
 
-    html_content = template_search_post_t.render(logged_in=logged_in, **wrap_post_t(post | dict(quotelinks={})))
+    html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks={})))
 
     p.check('render')
     print(p)

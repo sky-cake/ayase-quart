@@ -1,111 +1,169 @@
 {% extends "base.html" %}
 {% from 'macros/macros.html' import render_field %}
-
 {% block body %}
+<div class="search_container">
+  <div class="sticky_top mvh">
+  <div>{{search_type_message|safe}}</div>
+  <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data">
+    <div class="form">
+      <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search Posts"></div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.title, placeholder='Post Subject', class='w240') }}
+          {{ render_field(form.comment, placeholder='Post Comment') }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          <div class="border mtb-1">
+            Search results must have OPs where...
+            {{ render_field(form.op_title, placeholder='OP Subject', class='w240') }}
+            {{ render_field(form.op_comment, placeholder='OP Comment') }}
+          </div>
+        </div>
+      </div>
+      <div class="row pb3">
+        <div class="field_label w3em">Start</div>{{ form.date_after }}
+      </div>
+      <div class="row pb3">
+        <div class="field_label w3em">End</div>{{ form.date_before }}
+      </div>
+      <div class="row">
+        <div class="column">
+          {% if form.boards.type == 'MultiCheckboxField' %}
+          <div class="mb05 d-flex">
+            <div class="field_label">Boards</div>
+            <button type="button" class="form_btn pbtn" onclick="checkAllBoards()">All</button>
+            <button type="button" class="form_btn pbtn" onclick="uncheckAllBoards()">None</button>
+          </div>
+          {% else %}
+          <div class="field_label">Boards</div>
+          {% endif %}
+          {{ render_field(form.boards) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">{{ render_field(form.min_title_length, placeholder='Min length', class='w5em') }}</div>
+        <div class="column">{{ render_field(form.min_comment_length, placeholder='Min length', class='w5em') }}</div>
+      </div>
+      <div class="row">
+        <div class="column">{{ render_field(form.file_archived, title='Is the full media available on AQ?') }}</div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.has_file) }}
+          {{ render_field(form.has_no_file) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.is_op) }}
+          {{ render_field(form.is_not_op) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.is_deleted) }}
+          {{ render_field(form.is_not_deleted) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.is_sticky) }}
+          {{ render_field(form.is_not_sticky) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.width, placeholder='Min width', class='w5em') }}
+          {{ render_field(form.height, placeholder='Min height', class='w5em') }}
+        </div>
+        <div class="column">
+          {{ render_field(form.capcode, class='w5em') }}
+          {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
+        </div>
+      </div>
 
-  <form action="" id="searchform" method="post" class="form" role="form">
-      <div class="column">
+        <div class="row">
+          <div class="column">
+            {{ render_field(form.num, placeholder='Post Num', class='w5em') }}
+            {{ render_field(form.tripcode, placeholder='Tripcode', class='w5em') }}
+          </div>
+          <div class="column">
+            {{ render_field(form.media_filename, placeholder='Filename', class='w5em') }}
+            {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
+          </div>
+        </div>
+        {{ render_field(form.order_by) }}
+        
+        {% if tagging_enabled %}
+        <div class="imgsearchborder">
+          <div class="column">
+          <span class="form_btn pbtn" data-toggle="tag_info">Tag Search ⓘ</span>
+          <div id="tag_info" class="mt-1" style="display: none;">Post filters apply to tag search, but not the opposite. To perform a tag search, you must enter at least one tag.</div>
+        </div>
+          {{ form.file_tags_general }}
+          {{ form.file_tags_character }}
+
+          <div class="row mt-1">
+          {{ render_field(form.safe_search) }}
+          </div>
           <div class="row">
-              {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
+            <div class="column m1">
+              <input id="general_tag_input" type="text" placeholder="Search tags"><button class="form_btn pbtn" type="button" onclick="clear_general_tag_input()">x</button>
+              <div id="general_tag_suggestions" class="general tag_suggestions"></div>
+            </div>
+            
+            <div class="column m1">
+              <input id="character_tag_input" type="text" placeholder="Search characters"><button class="form_btn pbtn" type="button" onclick="clear_character_tag_input()">x</button>
+              <div id="character_tag_suggestions" class="character tag_suggestions"></div>
+            </div>
           </div>
+
+          <button id="clear_button" class="form_btn mt-1 pbtn" type="button">Clear</button>
+          <div id="selected_general_tags"></div>
+          <div id="selected_character_tags"></div>
+
+        </div>
+        <script type="text/javascript" src="/static/js/tagging.js" defer></script>
+        {% endif %}
+
+        {% if tagging_file_search_enabled %}
+        <div class="filesearchborder">
+          <span class="form_btn pbtn" data-toggle="file_info">File Search ⓘ</span>
+          <div id="file_info" class="mt-1" style="display: none;">Post filters apply to image search, but not the opposite. To perform an image search, you must submit a file. Files are deleted immediately after processing.</div>
+          <div class="column mt-1">
+            <div class="search">
+              <input type="file" id="file_upload" name="file_upload" accept="image/png, image/jpeg, image/gif"/>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search Posts"></div>
       </div>
-  
-      <div class="row">
-          <div class="column">
-              {{ render_field(form.num, placeholder='Post Number') }}
-              {{ render_field(form.title, placeholder='Post Subject') }}
-              {{ render_field(form.comment, placeholder='Post Comment') }}
-          </div>
-      </div>
-  
-      <div class="row">
-          <div class="column">
-              <div class="border mt-1">
-                  Search results must have OPs where...
-                  {{ render_field(form.op_title, placeholder='OP Subject') }}
-                  {{ render_field(form.op_comment, placeholder='OP Comment') }}
-              </div>
-          </div>
-      </div>
-  
-      <div class="row">
-          <div class="column">
-              {{ render_field(form.has_file) }}
-              {{ render_field(form.has_no_file) }}
-          </div>
-          <div class="column">
-              {{ render_field(form.is_op) }}
-              {{ render_field(form.is_not_op) }}
-          </div>
-      </div>
-      <div class="row">
-          <div class="column">
-              {{ render_field(form.is_deleted) }}
-              {{ render_field(form.is_not_deleted) }}
-          </div>
-          <div class="column">
-              {{ render_field(form.is_sticky) }}
-              {{ render_field(form.is_not_sticky) }}
-          </div>
-      </div>
-  
-      <div class="row">
-          <div class="column">
-              {{ render_field(form.capcode) }}
-              {{ render_field(form.width, placeholder='Image Width') }}
-              {{ render_field(form.height, placeholder='Image Height') }}
-              {{ render_field(form.hits_per_page, placeholder='Per board') }}
-              {{ render_field(form.media_filename, placeholder='Filename') }}
-              {{ render_field(form.media_hash, placeholder='MD5 Hash') }}
-              {{ render_field(form.tripcode, placeholder='Tripcode') }}
-              {{ render_field(form.date_after) }}
-              {{ render_field(form.date_before) }}
-              {{ render_field(form.order_by) }}
-          </div>
-      </div>
-      <div class="row">
-          <div class="column">
-              {{ render_field(form.boards) }}
-              <div>
-                  <button type="button" class="form_button" onclick="checkAllBoards()">All</button>
-                  <button type="button" class="form_button" onclick="uncheckAllBoards()">None</button>
-              </div>
-          </div>
-      </div>
-      <div>{{ render_field(form.submit) }}</div>
   </form>
+  </div>
 
   <div>
-    {% if result_count %}
-      <h3>Showing <b>{{result_count}}</b> / {{total_hits}} results</h3>
-
-      {% if page_links %}
-        <div class="mt">Pages</div>
-        {{ page_links|safe }}
-      {% endif %}
+    {% if page_post_count %}
+      {{yield_message|safe}}<br>On this page: {{page_post_count}}
+      {% if page_links %}<br>Pages{{ page_links|safe }}{% endif %}
     {% endif %}
-
-    {% if result_count %}
+    {% if page_post_count %}
       <div class="board">
-        {% if not gallery_mode %}
-          {{ posts_t|safe }}
-        {% else %}
-          <div class="row">
-            {{ posts_t|safe }}
-          </div>
-        {% endif %}
+        {% if not gallery_mode %}{{ posts_t|safe }}{% else %}<div class="row">{{ posts_t|safe }}</div>{% endif %}
       </div>
     {% else %}
       {% if searched %}
-        <h3>0 results found!</h3>
+        {{yield_message|safe}}
       {% endif %}
     {% endif %}
-
-
     {% if page_links %}
       <div class="mt">Pages</div>
       {{ page_links|safe }}
     {% endif %}
   </div>
-
+</div>
+<script type="text/javascript" src="/static/js/search.js" defer></script>
 {% endblock %}

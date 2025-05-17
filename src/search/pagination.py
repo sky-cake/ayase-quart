@@ -49,14 +49,14 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
     example page 2 of 4:
     <div class="paginate">
         <ul>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=1">First</a></li>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=1">Previous</a></li>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=1">1</a></li>
-            <li class="is_active"><a href="/index_search?terms=hello+there&boards=g&page=2">2</a></li>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=3">3</a></li>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=4">4</a></li>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=3">Next</a></li>
-            <li><a href="/index_search?terms=hello+there&boards=g&page=4">Last</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=1">First</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=1">Previous</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=1">1</a></li>
+            <li class="is_active"><a href="fts?terms=hello+there&boards=g&page=2">2</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=3">3</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=4">4</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=3">Next</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=4">Last</a></li>
         </ul>
     </div>
     First Previous
@@ -65,7 +65,8 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
     """
 
     # no results or only 1 page of results
-    if total_pages <= 1: return ''
+    if total_pages <= 1:
+        return ''
 
     cur_page = params['page']
 
@@ -76,6 +77,8 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
         cur_page = total_pages
 
     params.pop('page', None)
+    # params.pop('nums', None)
+    # params.pop('thread_nums', None)
 
     params_t = []
     for k, v in params.items():
@@ -113,6 +116,6 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
         links.append(get_page_link(base_link, cur_page + 1, text='Next'))
         links.append('<br>')
         links.append(get_page_link(base_link, total_pages, text='Last'))
-    
+
     links = ''.join(links)
     return f'<div class="paginate"><ul>{links}</ul></div>'

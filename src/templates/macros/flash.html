@@ -8,11 +8,13 @@
       {% if not category or category == 'message' %}
         {% set category = 'dark' %}
       {% endif %}
+      <div class="mw800 mauto">
       <div id="flash" class="mt-2">
         <div class="p-2 rounded bg-{{category}} text-{{font_color}}">
-          <div>{{ message | safe}}</div>
+          <div>{{ message|safe}}</div>
         </div>
       </div>
+    </div>
     {% endfor %}
   {% endif %}
 {% endwith %}

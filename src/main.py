@@ -1,45 +1,49 @@
 import quart_flask_patch  # noqa
-
 import asyncio
 import os
 import traceback
 
-from flask_bootstrap import Bootstrap5
-from quart import Quart
+from quart import Quart, jsonify, current_app
 from werkzeug.exceptions import HTTPException
+from quart_schema import RequestSchemaValidationError
+from hypercorn.middleware import ProxyFixMiddleware
+from quart_rate_limiter import RateLimiter
 
-from blueprints import blueprints
-from configs import QuartConfig, app_conf, mod_conf
+from blueprints import blueprints # importing timm and torch down the import hole makes this slow
+from configs import QuartConfig, app_conf, mod_conf, tag_conf, archiveposting_conf
 from db import db_q
 from moderation import init_moderation
+from tagging.db import init_tagging
 from moderation.filter_cache import fc
 from render import render_controller
-from templates import render_constants, template_message
-from quart_schema import RequestSchemaValidationError
+from templates import render_constants, template_error_message
+from archiveposting import init_archiveposting
 
 
-def print_exception(e: Exception):
-    print(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+async def print_exception(e: Exception):
+    msg = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+    app.logger.error(msg)
+    print(msg)
 
 
 async def api_validation_exception(e: RequestSchemaValidationError):
-    return {'error': str(e.description)}, 400
+    return jsonify({'error': str(e.description)}), 400
 
 
 async def http_exception(e: HTTPException):
-    render = await render_controller(template_message, message=e, tab_title=f'Error', title='Uh-oh...')
+    render = await render_controller(template_error_message, message=e, tab_title='Error', title='Uh-oh...')
     return render, e.code
 
 
 async def app_exception(e: Exception):
-    print_exception(e) # should log these errors
+    current_app.logger.error(e)
 
     message = 'We\'re sorry, our server ran into an issue.'
     if app_conf.get('testing'):
         message = e
 
-    render = await render_controller(template_message, message=message, tab_title=f'Error', title='Uh-oh...')
-    return render
+    render = await render_controller(template_error_message, message=message, tab_title='Error', title='Uh-oh...')
+    return render, 500
 
 
 async def create_app():
@@ -51,8 +55,9 @@ async def create_app():
     app.config.from_object(QuartConfig)
     app.config['MATH_CAPTCHA_FONT'] = os.path.join(file_dir, 'fonts/tly.ttf')
 
-    Bootstrap5(app)
-    app.jinja_env.auto_reload = False
+    RateLimiter(app, enabled=app_conf['rate_limiter'])
+
+    app.jinja_env.auto_reload = app_conf['autoreload']
     app.jinja_env.globals.update(render_constants)
 
     for bp in blueprints:
@@ -61,6 +66,12 @@ async def create_app():
     if mod_conf['moderation']:
         await init_moderation()
         await fc.init()
+
+    if tag_conf['enabled']:
+        await init_tagging()
+
+    if archiveposting_conf['enabled']:
+        await init_archiveposting()
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
@@ -73,9 +84,13 @@ async def create_app():
         auth_web.init_app(app)
         QuartSchema(app)
 
-    app.register_error_handler(HTTPException, http_exception)
-    app.register_error_handler(Exception, app_exception)
-    app.register_error_handler(RequestSchemaValidationError, api_validation_exception)
+    if not app_conf.get('testing'):
+        app.register_error_handler(HTTPException, http_exception)
+        app.register_error_handler(Exception, app_exception)
+        app.register_error_handler(RequestSchemaValidationError, api_validation_exception)
+
+    if app_conf.get('proxy_trusted_hops', 0):
+        app = ProxyFixMiddleware(app, mode="legacy", trusted_hops=1).app
 
     return app
 
@@ -99,4 +114,3 @@ elif __name__ == '__main__':
     )
 else:
     print('Nothing to do.')
-

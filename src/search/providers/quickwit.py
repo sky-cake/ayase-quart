@@ -73,7 +73,7 @@ class QuickwitSearch(BaseSearch):
         for batch in batched(docs, 10000):
             data = b'\n'.join(dumps(doc) for doc in batch)
             params = {'commit': 'force'}
-            resp = await self.client.post(url, data=data, params=params)
+            await self.client.post(url, data=data, params=params)
             # print(loads(await resp.read()))
         return None
 
@@ -81,7 +81,8 @@ class QuickwitSearch(BaseSearch):
         # There are bugs with the delete api
         # https://github.com/quickwit-oss/quickwit/issues/3762
         # https://github.com/quickwit-oss/quickwit/issues/3612
-        if not pk_ids: return
+        if not pk_ids:
+            return
         url = self._get_index_url2(index) + '/delete-tasks'
         payload = {
             "query": f"pk IN [{' '.join(pk_ids)}]",
@@ -107,7 +108,7 @@ class QuickwitSearch(BaseSearch):
             params['end_timestamp'] = q.before
         resp = await self.client.get(url, params=params)
         data = loads(await resp.read())
-        if not 'hits' in data:
+        if 'hits' not in data:
             print(data)
             return [], 0
         total = data['num_hits']

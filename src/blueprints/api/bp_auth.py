@@ -3,10 +3,12 @@ import quart_flask_patch
 from quart import Blueprint
 from moderation.auth import auth_api
 from moderation.user import is_valid_creds
+from configs import app_conf
 
 from quart_schema import validate_request, validate_response
 from pydantic import BaseModel
-
+from quart_rate_limiter import rate_limit
+from datetime import timedelta
 
 bp = Blueprint("bp_api_auth", __name__, url_prefix='/api/v1')
 
@@ -21,7 +23,8 @@ class Token(BaseModel):
     error: str | None
 
 
-@bp.post('/login')
+@bp.post(app_conf['login_endpoint'])
+@rate_limit(3, timedelta(days=1))
 @validate_request(Credentials)
 @validate_response(Token)
 async def login(data: Credentials):

@@ -13,6 +13,8 @@ def _load_config_toml():
 
 conf = _load_config_toml()
 app_conf = conf.get('app', {})
+app_conf['login_endpoint'] = f'/{app_conf['login_endpoint'].strip('/')}'
+
 site_conf = conf.get('site', {})
 archive_conf = conf.get('archive', {'name': '4chan'})
 
@@ -22,16 +24,14 @@ db_conf['db_type'] = DbType[db_conf['db_type']]
 index_search_conf = conf.get('index_search', {})
 vanilla_search_conf = conf.get('vanilla_search', {})
 
-# not supported yet... searching for "a " will match "<a href..." and break links
-# other tags break too, of course
-index_search_conf['highlight'] = False
-vanilla_search_conf['highlight'] = False
-
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 
 if not media_conf.get('media_root_path') and media_conf['serve_outside_static']:
     raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_conf.get('media_root_path'))
+
+media_conf['boards_with_image'] = [x.strip() for x in media_conf['boards_with_image'].strip(',').split(',')] if media_conf['boards_with_image'] else []
+media_conf['boards_with_thumb'] = [x.strip() for x in media_conf['boards_with_thumb'].strip(',').split(',')] if media_conf['boards_with_thumb'] else []
 
 if media_conf['serve_outside_static']:
     if not os.path.isdir(media_conf.get('media_root_path')):
@@ -55,6 +55,18 @@ if hidden_images_path := mod_conf.get('hidden_images_path'):
         raise ValueError(hidden_images_path)
 
 db_mod_conf = mod_conf.get('sqlite', {}) # only supports sqlite atm
+
+archiveposting_conf = conf.get('archiveposting', {})
+db_archiveposting_conf = archiveposting_conf
+if archiveposting_conf['enabled'] and (' ' in archiveposting_conf['board_name'] or not archiveposting_conf['board_name'].replace('_', '').isalnum()):
+    raise ValueError()
+
+tag_conf = conf.get('tagging', {})
+db_tag_conf = tag_conf # only supports sqlite atm
+
+# # database might not be created yet, so we should not enforce this here
+# if db_tag_conf['database'] and not os.path.isfile(db_tag_conf['database']):
+#     raise ValueError(f'Can not find {db_tag_conf['database']}')
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)

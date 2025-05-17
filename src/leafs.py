@@ -5,16 +5,16 @@ from werkzeug.security import safe_join
 from asagi_converter import generate_post
 from configs import media_conf, mod_conf
 from posts.template_optimizer import wrap_post_t
-from templates import template_search_post_t
+from posts.template_optimizer import render_wrapped_post_t
 
 
-async def generate_post_html(board_shortname: str, num: int) -> str:
+async def generate_post_html(board_shortname: str, num: int, db_X=None) -> str:
     """Removes [Report]"""
-    post_2_quotelinks, post = await generate_post(board_shortname, num)
+    post_2_quotelinks, post = await generate_post(board_shortname, num, db_X=db_X)
     if not post:
         return 'Error fetching post.'
     post_t = wrap_post_t(post | dict(quotelinks={})) | dict(t_report='')
-    return template_search_post_t.render(**post_t)
+    return render_wrapped_post_t(post_t)
 
 
 def get_path_for_media(root_path: str, board_shortname: str, media_name: str, is_thumb: bool) -> str:
@@ -59,11 +59,13 @@ def post_files_delete(post: dict) -> tuple[bool]:
         post_file_delete(post['board_shortname'], post.get('preview_orig'), True)
     )
 
+
 def post_files_show(post: dict) -> tuple[bool]:
     return (
         post_file_show(post['board_shortname'], post.get('media_orig'), False),
         post_file_show(post['board_shortname'], post.get('preview_orig'), True)
     )
+
 
 def post_file_show(board_shortname: str, media_name: str, is_thumb: bool) -> bool:
     """Assumes media src is in `hidden_images_path`"""
@@ -89,7 +91,7 @@ def post_file_delete(board_shortname: str, media_name: str, is_thumb: bool) -> b
     if src and os.path.isfile(src):
         os.remove(src)
         return True
-    
+
     # still available?
     src = get_path_for_media(media_conf['media_root_path'], board_shortname, media_name, is_thumb)
     if src and os.path.isfile(src):

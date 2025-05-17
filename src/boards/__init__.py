@@ -3,7 +3,7 @@ import os
 from functools import cache
 from tomllib import load
 
-from configs import app_conf, db_conf
+from configs import app_conf, db_conf, media_conf, archiveposting_conf
 from utils import make_src_path
 from db import get_db_tables
 
@@ -45,10 +45,21 @@ def _get_board_views():
     if not boards:
         raise ValueError(f'No boards to show! Configure one of {valid_boards}')
     board_shorts, board_objects = get_shorts_objects(boards)
+    print('Serving: ', board_shorts)
     return boards, board_shorts, board_objects
 
 
 boards, board_shortnames, board_objects = _get_board_views()
+if archiveposting_conf['enabled'] and archiveposting_conf['board_name'] in board_shortnames:
+    raise ValueError()
+
+for b in media_conf['boards_with_thumb']:
+    if b not in board_shortnames:
+        raise ValueError(f'Unknown board specified for serving thumb media with `boards_with_thumb`: {b}')
+
+for b in media_conf['boards_with_image']:
+    if b not in board_shortnames:
+        raise ValueError(f'Unknown board specified for serving full media with `boards_with_image`: {b}')
 
 @cache
 def get_title(board: str):

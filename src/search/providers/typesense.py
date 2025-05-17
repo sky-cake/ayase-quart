@@ -2,7 +2,7 @@ from typing import Any
 
 from orjson import dumps, loads
 
-from search.highlighting import mark_post, mark_pre
+# from search.highlighting import mark_post, mark_pre
 
 from . import (
     POST_PK,
@@ -94,17 +94,19 @@ class TypesenseSearch(BaseSearch):
         if q.comment or q.title:
             params['q'] = q.comment or q.title # can we separate these?
 
-        if q.highlight:
-            params.update(
-                dict(
-                    highlight_fields='comment',
-                    highlight_full_fields='comment',
-                    highlight_start_tag=mark_pre,
-                    highlight_end_tag=mark_post,
-                )
-            )
-        else:
-            params['highlight_fields'] = 'none'
+        params['highlight_fields'] = 'none'
+        # if q.highlight:
+        #     params.update(
+        #         dict(
+        #             highlight_fields='comment',
+        #             highlight_full_fields='comment',
+        #             highlight_start_tag=mark_pre,
+        #             highlight_end_tag=mark_post,
+        #         )
+        #     )
+        # else:
+        #     params['highlight_fields'] = 'none'
+
         resp = await self.client.get(url, params=params)
         data = loads(await resp.read())
         hits = [_restore_result(h, q.highlight) for h in data.get('hits', [])]
@@ -136,9 +138,9 @@ def _build_filter(q: IndexSearchQuery):
     if q.file is not None:
         filters.append(f'media_filename :{"!" if q.file else ""}= `None`')
     if q.width is not None:
-        filters.append(f'media_w := {q.width}')
+        filters.append(f'media_w :>= {q.width}')
     if q.height is not None:
-        filters.append(f'media_w := {q.height}')
+        filters.append(f'media_w :>= {q.height}')
     if q.before is not None:
         filters.append(f'timestamp :< {q.before}')
     if q.after is not None:

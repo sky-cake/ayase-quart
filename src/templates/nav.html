@@ -1,0 +1,85 @@
+{% include 'banner_site.html' %}
+{% if not index %}
+<div class="letters">
+    {{site_name}}: [
+        <a href="/">Home</a>
+        / <a href="{{url_for('bp_web_about.about')}}">About</a>
+        / <a href="{{url_for('bp_web_admin.message')}}">Message</a>
+        / <a href="{{ url_for('bp_web_admin.stats') }}">Stats</a>
+    ]
+    {% if archiveposting_conf['enabled'] %}Text board: [ <a href="{{url_for('bp_web_archiveposting.get_archiveposting_catalog')}}">/{{archiveposting_conf['board_name']}}/</a> ]{% endif %}
+    {% if vanilla_search_enabled or index_search_enabled %}
+        <span class="inblk">Search:
+        {% if vanilla_search_enabled %}
+            [ <a href="{{ url_for('bp_web_vanilla_search.v_vanilla_search_get') }}">SQL</a> ]
+        {% endif %}
+        {% if index_search_enabled %}
+            [ <a href="{{ url_for('bp_web_index_search.v_index_search_get') }}">Full Text</a> ]
+        {% endif %}
+        </span>
+    {% endif %}
+    {% if board_objects %}
+        Boards:
+        [
+        {% for board_object in board_objects %}
+            <a href="/{{ board_object.shortname }}/catalog">{{ board_object.shortname }}</a>{{ ' /' if not loop.last }}
+        {% endfor %}
+        ]
+    {% endif %}
+
+    {% if (logged_in or is_admin) %}
+        <br>
+        Admin: [
+
+        {% if is_admin %}
+            <a href="{{ url_for('bp_web_admin.users_index') }}">Users</a>
+            /
+        {% endif %}
+        <a href="{{ url_for('bp_web_moderation.reports_open') }}">Reports</a>
+        /
+        <a href="{{ url_for('bp_web_admin.messages') }}">Messages</a>
+        /
+        <a href="{{ url_for('bp_web_admin.latest') }}">Latest OPs</a>
+        /
+        <a href="{{ url_for('bp_web_admin.configs') }}">Configs</a>
+        ]
+    {% endif %}
+
+    {% if (logged_in or is_admin) %}
+        <br>
+        Profile: [
+            <a href="{{ url_for('bp_web_moderation.reports_open') }}">Moderation</a>
+            /
+            <form action="{{ url_for('bp_web_auth.logout') }}" method="post" class="unset"><button class="btnlink" type="submit">Sign Out</button></form>
+        ]
+    {% endif %}
+</div>
+{% endif %}
+
+{% if endpoint() in [
+    'bp_web_app.v_thread',
+    'bp_web_app.v_board_index',
+    'bp_web_app.v_catalog',
+    'bp_web_vanilla_search.v_vanilla_search_get',
+    'bp_web_index_search.v_index_search_get',
+] %}
+<span id="top">[<a href="#top_hidden">Top</a>] [<a href="#bottom_hidden">Bottom</a>]</span>
+<span id="top_hidden"></span>
+<br>
+{% endif %}
+
+<div class="mw1000 center">
+{% if title %}<h3>{{title}}</h3>{% endif %}
+{% if board and archiveposting_conf['enabled'] and board != archiveposting_conf['board_name'] %}
+[
+    <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
+    <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
+    <a href="/{{ board }}/catalog">Catalog</a>
+]
+{% endif %}
+{% if board and archiveposting_conf['enabled'] and board == archiveposting_conf['board_name'] %}
+[
+    <a href="/{{ board }}/catalog">Catalog</a>
+]
+{% endif %}
+</div>

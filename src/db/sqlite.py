@@ -25,7 +25,20 @@ class SqlitePoolManager(BasePoolManager):
         self.pools = {}
 
     async def create_pool(self, p_id=DbPool.main, dict_row=False):
-        pool = await aiosqlite.connect(self.sqlite_conf['database'])
+        db_path = self.sqlite_conf['database']
+        load_sqlite_into_memory = self.sqlite_conf.get('load_sqlite_into_memory')
+
+        if load_sqlite_into_memory:
+            mem_pool = await aiosqlite.connect(':memory:')
+
+            file_pool = await aiosqlite.connect(db_path)
+            await file_pool.backup(mem_pool)
+            await file_pool.close()
+
+            pool = mem_pool
+
+        else:
+            pool = await aiosqlite.connect(db_path)
 
         pool.row_factory = row_factory if dict_row else None
 
@@ -33,7 +46,8 @@ class SqlitePoolManager(BasePoolManager):
             await pool.enable_load_extension(True)
             await pool.load_extension(mod_conf['path_to_regex_so'])
             cur = await pool.execute('select regex_version();')
-            regex_version = (await cur.fetchone())
+            await cur.fetchone()
+            # regex_version = await cur.fetchone()
             # print(f'regex_version(): {regex_version}')
 
         self.pools[p_id] = pool
@@ -50,7 +64,9 @@ class SqlitePoolManager(BasePoolManager):
             self.pools[p_id].row_factory = row_factory if dict_row else None
             return self.pools[p_id]
 
-        return await self.create_pool(p_id, dict_row=dict_row)
+        pool = await self.create_pool(p_id, dict_row=dict_row)
+        # print(f'created sqlite pool {pool}')
+        return pool
 
     async def close_pool(self, p_id=DbPool.main):
         if pool := self.pools.pop(p_id, None):
@@ -60,6 +76,11 @@ class SqlitePoolManager(BasePoolManager):
         for pool in self.pools.values():
             await pool.close()
         self.pools.clear()
+
+    async def save_all_pools(self):
+        for pool in self.pools.values():
+            # print(f'saving sqlite pool: {pool}')
+            await pool.commit()
 
 
 class SqliteQueryRunner(BaseQueryRunner):
@@ -83,8 +104,25 @@ class SqliteQueryRunner(BaseQueryRunner):
 
             return results
 
-    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
-        return await self.run_query(query, params, p_id=p_id, dict_row=False)
+    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main, commit=False):
+        return await self.run_query(query, params, p_id=p_id, dict_row=False, commit=commit)
+
+
+    async def run_query_many(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
+        pool = await self.pool_manager.get_pool(p_id, dict_row=dict_row)
+
+        if self.sql_echo:
+            print('::SQL::', query)
+            print('::PARAMS::', params)
+
+        async with pool.executemany(query, params) as cursor:
+            results = await cursor.fetchall()
+
+            # commit comes after `fetchall` to support `returing` statements
+            if commit:
+                await pool.commit()
+
+            return results
 
 
 class SqlitePlaceholderGen(BasePlaceHolderGen):

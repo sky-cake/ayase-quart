@@ -1,4 +1,3 @@
-import shlex
 from typing import Any
 
 from orjson import dumps, loads
@@ -6,34 +5,23 @@ from orjson import dumps, loads
 from . import POST_PK, SearchIndexField, IndexSearchQuery, search_index_fields
 from .baseprovider import BaseSearch
 
+
 pk = POST_PK
 
 
 def get_term_query(fieldname: str, terms: str) -> list[dict]:
-    # lower() because lnx bug, Titlecase terms won't match anything
-    terms = terms.lower()
-
     query = []
 
-    # split and loop because lnx 0.9.0 uses tantivy 0.19 https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html
+    # split and loop because lnx 0.9.0 uses tantivy 0.18 https://docs.rs/tantivy/0.18.1/tantivy/query/struct.QueryParser.html
     # require format for "barack obama": ["title:barack", "body:barack", "title:obama", "body:obama"]
-    term_parts = shlex.split(terms, posix=False) # keep the quotes
-    for part in term_parts:
-        if part.startswith('"') and part.endswith('"'):
-            query.append({ # quoted terms can't use the fields: [] combo, must OR search fields
-                'occur': 'must',
-                'normal': {
-                    'ctx': f'{fieldname}:{part}',
-                },
-            })
-        else:
-            query.append({
-                'occur': 'must',
-                'term': {
-                    'ctx': part,
-                    'fields': [fieldname],
-                }
-            })
+    # terms = terms.replace('"', '')
+    if terms:
+        query.append({ # quoted terms can't use the fields: [] combo, must OR search fields
+            'occur': 'must',
+            'normal': {
+                'ctx': f'{fieldname}:{terms.strip()}',
+            },
+        })
     return query
 
 
@@ -90,7 +78,7 @@ class LnxSearch(BaseSearch):
 
     async def _index_delete(self, index: str):
         url = self._get_index_url(index)
-        resp = await self.client.delete(url)
+        await self.client.delete(url)
         # return loads(await resp.read())
 
     async def _index_ready(self, index: str):
@@ -108,16 +96,17 @@ class LnxSearch(BaseSearch):
             {k: [str(v)] for k, v in downcast_fields(doc).items()}
             for doc in docs
         ]
-        resp = await self.client.post(url, data=dumps(docs))
+        await self.client.post(url, data=dumps(docs))
         # await self._commit_write(index)
         # return loads(await resp.read())
 
     async def _add_docs_bytes(self, index: str, docs: bytes):
         url = self._get_index_url(index) + '/documents'
-        resp = await self.client.post(url, data=docs)
+        await self.client.post(url, data=docs)
 
     async def _remove_docs(self, index: str, pk_ids: list[str]):
-        if not pk_ids: return
+        if not pk_ids:
+            return
         url = self._get_index_url(index) + '/documents'
         resp = await self.client.delete(url, data=dumps({pk: pk_ids}))
         resp = loads(await resp.read())
@@ -190,6 +179,27 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
+        if q.min_title_length:
+            query.append({
+                'occur': 'must',
+                'normal': {
+                    'ctx': f'title_length:>={q.min_title_length}',
+                },
+            })
+        if q.min_comment_length:
+            query.append({
+                'occur': 'must',
+                'normal': {
+                    'ctx': f'comment_length:>={q.min_comment_length}',
+                },
+            })
+        if q.file_archived is not None:
+            query.append({
+                'occur': 'must',
+                'normal': {
+                    'ctx': f'file_archived:{int(q.file_archived)}',
+                },
+            })
         if q.before is not None:
             query.append(
                 {
@@ -208,7 +218,16 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.num is not None:
+        if q.nums:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'{" OR ".join(f"num:{num}" for num in q.nums)}',
+                    },
+                }
+            )
+        if q.num is not None and not q.nums:
             query.append(
                 {
                     'occur': 'must',
@@ -256,7 +275,7 @@ class LnxSearch(BaseSearch):
         if (q.has_file is not None) or (q.has_no_file is not None):
             query.append(
                 {
-                    'occur': 'mustnot' if q.has_file or (q.has_no_file == False) else 'must',
+                    'occur': 'mustnot' if q.has_file or (not q.has_no_file) else 'must',
                     'normal': {
                         'ctx': 'media_filename:None',
                         # 'ctx': f'{"" if q.has_file else "-"}(media_filename:None)',
@@ -281,6 +300,15 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
+        if q.media_origs is not None:
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': f'{" OR ".join(f"media_orig:{media_orig}" for media_orig in q.media_origs)}',
+                    },
+                }
+            )
         if q.trip is not None:
             query.append(
                 {
@@ -295,7 +323,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'media_w:{q.width}',
+                        'ctx': f'media_w:>={q.width}',
                     },
                 }
             )
@@ -304,7 +332,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'media_h:{q.height}',
+                        'ctx': f'media_h:>={q.height}',
                     },
                 }
             )
@@ -353,7 +381,7 @@ def pack_post(post: dict) -> dict:
     return {k: [str(v)] for k, v in post.items()}
 
 
-# bool_fields = ('op', 'deleted', 'sticky')
+# bool_fields = ('op', 'deleted', 'sticky', 'file_archived')
 bool_fields = tuple(f.field for f in search_index_fields if f.field_type is bool)
 # str_fields = ('comment', 'title', 'media_filename', 'media_hash')
 str_fields = tuple(f.field for f in search_index_fields if f.field_type is str)
@@ -361,6 +389,6 @@ def downcast_fields(post: dict):
     for field in bool_fields:
         post[field] = int(bool(post[field]))
     for field in str_fields:
-        if post[field] == None and field != 'media_filename':
+        if post[field] is None and field not in ('media_filename', 'media_orig'):
             post[field] = ''
     return post

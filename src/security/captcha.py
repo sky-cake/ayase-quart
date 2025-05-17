@@ -1,6 +1,7 @@
 import base64
 from io import BytesIO
 from random import random
+from functools import lru_cache
 
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 
@@ -31,14 +32,16 @@ class MathCaptcha:
             first, second = decoded.split(self.delimiter)
             first, second, answer = int(first), int(second), int(answer)
             return first + second == answer
-        except:
+        except Exception:
             return False
 
-    def generate_image(self, text):
-        img = Image.new("RGB", self.size, self.background_color)
+    @lru_cache
+    @staticmethod
+    def generate_image(text, size, background_color, font_color, font):
+        img = Image.new("RGB", size, background_color)
         draw = ImageDraw.Draw(img)
         xy = (5, 0)
-        draw.text(xy, text, self.font_color, font=self.font)
+        draw.text(xy, text, font_color, font=font)
 
         buffered = BytesIO()
         img.save(buffered, format="JPEG")
@@ -55,6 +58,7 @@ class MathCaptcha:
         second_num = MathCaptcha.generate_random()
 
         captcha_id = base64.b64encode(f"{first_num}{self.delimiter}{second_num}".encode()).decode()
-        captcha_b64_img_str = self.generate_image(f"{first_num} + {second_num}")
+        text = f"{first_num} + {second_num}"
+        captcha_b64_img_str = MathCaptcha.generate_image(text, self.size, self.background_color, self.font_color, self.font)
 
         return captcha_id, captcha_b64_img_str

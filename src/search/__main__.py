@@ -1,19 +1,23 @@
 import asyncio
 import sys
+import os
 
-from .loader import main as load
-from .providers import get_index_search_provider
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from search.loader import main as load
+from search.providers import get_index_search_provider
 
 help_text = """
-usage: python3.12 -m search COMMAND [args]
+usage: python3.13 -m search COMMAND [args]
+e.g. ./ayase-quart/src$ python3.13 -m search load --reset g ck biz
 commands:
-	create
-		create search indexes
-	load [--reset] board1 [board2 [board3 ...]]
-		index boards (ensure indexes have been created)
+    create
+        create search indexes
+    load [--reset] board1 [board2 [board3 ...]]
+        index boards (ensure indexes have been created)
         passing --reset causes a delete and recreate of the index before loading
-	delete
-		delete search indexes
+    delete
+        delete search indexes
 """
 
 
@@ -22,7 +26,8 @@ def print_help():
 
 
 async def create_index():
-    if input('Create index? (y/n): ').strip().lower() != 'y': return
+    if input('Create index? (y/n): ').strip().lower() != 'y':
+        return
     sp = get_index_search_provider()
     await sp.init_indexes()
     await sp.close()
@@ -30,7 +35,8 @@ async def create_index():
 
 
 async def delete_index():
-    if input('Wipe index? (y/n): ').strip().lower() != 'y': return
+    if input('Wipe index? (y/n): ').strip().lower() != 'y':
+        return
     sp = get_index_search_provider()
     await sp.posts_wipe()
     await sp.close()

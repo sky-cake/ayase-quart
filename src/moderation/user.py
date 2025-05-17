@@ -33,6 +33,7 @@ class Permissions(Enum):
     archive_stats_view = 'archive_stats_view'
     archive_latest_view = 'archive_latest_view'
     archive_configs_view = 'archive_configs_view'
+    messages_view = 'messages_view'
 
 
 async def redis_set_user_data(user_id: int, user_data: dict[str, str|int|float|set|list|tuple], expire_seconds: int = None):
@@ -79,7 +80,7 @@ async def redis_get_user_data(user_id: int) -> dict | None:
             deserialized[key] = json.loads(value)
         except (json.JSONDecodeError, TypeError):
             deserialized[key] = value
-    
+
     return deserialized
 
 
@@ -236,7 +237,7 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
 async def set_user_active_status(user_id: int, is_active: bool):
     if not await get_user_by_id(user_id):
         raise ValueError(user_id)
-    
+
     phg = db_m.phg()
 
     sql = f"""

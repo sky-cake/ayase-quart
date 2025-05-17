@@ -110,8 +110,15 @@ def web_usr_logged_in(func):
     return wrapper
 
 
+def web_usr_is_admin(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        return await func(*args, is_admin=bool(current_web_usr.is_admin), **kwargs)
+    return wrapper
+
+
 ## API ################
-    
+
 
 def login_api_usr_required(func):
     @wraps(func)

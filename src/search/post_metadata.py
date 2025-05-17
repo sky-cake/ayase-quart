@@ -60,7 +60,7 @@ fields = (
     'preview_h',
     'quotelinks',
     'num',
-    'op_num',
+    'thread_num',
     'ts_expired',
     'ts_unix',
 )

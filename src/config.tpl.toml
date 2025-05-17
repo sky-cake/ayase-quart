@@ -10,11 +10,17 @@ port = 9001
 # ssl_cert = 'cert.pem'
 
 
+proxy_trusted_hops = 0
+rate_limiter = true
+
+allow_robots = false # robots.txt
+
+login_endpoint = '/login'
+
 
 [site]
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
-
 
 
 [archive]
@@ -38,6 +44,8 @@ maxsize = 50
 
 [db.sqlite] # follow aiosqlite connection keys
 database = 'path/to/file.db'
+load_sqlite_into_memory = false # this must be false to persist data
+
 
 [db.postgresql] # follow aiosqlite connection keys
 host = 'localhost' # also used for unix domain socket
@@ -59,6 +67,7 @@ db = 0 # redis database id
 
 
 [media]
+# set image_uri or thumb_uri to '' if you don't want any boards to serve image, or thumb media, respectively
 image_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/image" # must contain {board_shortname}
 thumb_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/thumb" # must contain {board_shortname}
 
@@ -82,25 +91,34 @@ endpoint = '/srv/media'
 # image_uri = "/<endpoint>/{board_shortname}/image" # e.g. "/srv/media/{board_shortname}/image"
 # thumb_uri = "/<endpoint>/{board_shortname}/thumb" # e.g. "/srv/media/{board_shortname}/thumb"
 
+# The default is to serve media from all boards [Aside: set image_uri or thumb_url to '' to not serve the images, or thumbs, respectively]
+# You can specify a subset of boards with a whitelist
+boards_with_image = '' # comma separated list of board shortnames like '' or 'a,o'
+boards_with_thumb = '' # comma separated list of board shortnames like '' or 'g,ck,o'
+
+try_full_src_type_on_404 = false # let clients request full src (images only, not videos) if thumbs not found?
+
 
 
 [vanilla_search]
 enabled = true
-highlight = false # not supported yet
+highlight = false
 hits_per_page = 50
 max_hits = 1_000
+multi_board_search = false
 
 
 
 [index_search]
 enabled = true
-highlight = false # not supported yet
+highlight = false
 hits_per_page = 50
 max_hits = 1_000
 provider = 'lnx' # 'lnx', 'meili', 'manticore', 'typesense', 'quickwit'
 host = 'http://localhost:8000' # index search host. It should really be a LAN IP address like '192.168.1.122' - not 'localhost', nor a domain name.
 headers = { content-type = 'application/json' }
 version = '1' # only matters for quickwit
+multi_board_search = true
 
 
 
@@ -125,6 +143,7 @@ hidden_images_path = '' # e.g. '/home/garbage/disposal'
 
 [moderation.sqlite]
 database = 'moderation.db' # name of the moderation database. Will be created in `src`.
+load_sqlite_into_memory = false # this must be false to persist data
 
 [moderation.auth]
 cookie_samesite='Strict'
@@ -137,3 +156,27 @@ bearer_salt='api salt'
 
 cookie_duration=604_800 # one week
 bearer_duration=604_800 # one week
+
+
+[archiveposting]
+enabled = true
+database = '/home/archiveposting.db'
+board_name = 'ayase_quart'
+board_desc = '''This is Ayase Quart's text board. Only ascii is permitted.'''
+ascii_only = true
+
+
+[tagging]
+enabled = true # true, false
+
+database = '/absolute/path/to/tagging.db' # the tagger has its own database
+
+tag_model_repo_id = 'SmilingWolf/wd-swinv2-tagger-v3' # 'SmilingWolf/wd-convnext-tagger-v3' 'SmilingWolf/wd-vit-tagger-v3'
+
+allow_file_search = true # allow upload of files to search?
+exts = ['jpg', 'png', 'jpeg', 'gif'] # no . prefix, file the ext
+use_cpu = false # cpu or gpu
+
+max_page_retries = 2 # query the tag database up to <max_page_retries> times, or until <hits_per_page> is reached
+
+load_sqlite_into_memory = true # this must be false to persist data

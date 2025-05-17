@@ -1,5 +1,4 @@
 import click
-import asyncio
 from tabulate import tabulate
 
 from moderation.user import User
@@ -20,7 +19,7 @@ def print_list_of_dict(data: list[dict]):
     if not data:
         click.echo('Empty')
         return
-    
+
     headers = data[0].keys()
     rows = [list(d.values()) for d in data]
 

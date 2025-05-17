@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
-    <div id="main">
-        <div class="board">
-            {{ threads|safe }}
-        </div>
-        {% include 'pagination.html' %}
+    <div class="board">
+        {{ threads|safe }}
+    </div>
+    {% include 'pagination.html' %}
 {% endblock %}

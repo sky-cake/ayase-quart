@@ -15,6 +15,7 @@ from moderation.auth import (
 )
 from pydantic import BaseModel, Field
 from quart_schema import validate_querystring, validate_request
+from configs import archiveposting_conf
 
 
 bp = Blueprint('bp_api_moderation', __name__, url_prefix='/api/v1')
@@ -34,10 +35,11 @@ class ReportGET(BaseModel):
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
 async def reports_get(query_args: ReportGET, current_api_usr_id: int):
+    bs = board_shortnames + [archiveposting_conf['board_name']] if archiveposting_conf['enabled'] else board_shortnames
     reports = await get_reports(
         public_access=query_args.public_access,
         mod_status=query_args.mod_status,
-        board_shortnames=query_args.board_shortnames if isinstance(query_args.board_shortnames, list) else [query_args.board_shortnames],
+        board_shortnames=bs,
         page_num=query_args.page_num,
         page_size=query_args.page_size,
     )
