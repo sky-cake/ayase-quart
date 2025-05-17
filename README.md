@@ -31,6 +31,13 @@ If you like Ayase Quart, please consider donating.
   - USDC: 0xAd002E0e9A64DE5e0B93BB7509B475309A2e1ac8
 
 
+## License
+
+This project uses the GNU Affero General Public License v3.0 (GNU AGPLv3).
+
+Also, it is expected you will not remove or hide any existing links or references to this GitHub repository. For example, the "Powered by Ayase Quart" footer should remain visible on all Ayase Quart instances.
+
+
 ## Basic Set Up
 
 Python 3.13.x is required.
