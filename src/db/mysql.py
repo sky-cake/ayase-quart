@@ -79,8 +79,8 @@ class MysqlQueryRunner(BaseQueryRunner):
 
                 return results[0] if len(results) == 1 else results # prone to issues ?
 
-    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
-        return await self.run_query(query, params, p_id=p_id, dict_row=False)
+    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main, commit=False):
+        return await self.run_query(query, params, p_id=p_id, dict_row=False, commit=commit)
 
 
 class MysqlPlaceholderGen(BasePlaceHolderGen):
