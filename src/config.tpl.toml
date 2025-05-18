@@ -142,7 +142,7 @@ path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/rel
 hidden_images_path = '' # e.g. '/home/garbage/disposal'
 
 [moderation.sqlite]
-database = 'moderation.db' # name of the moderation database. Will be created in `src`.
+database = 'path/to/moderation.db' # name of the moderation database. Will be created in `src`.
 load_sqlite_into_memory = false # this must be false to persist data
 
 [moderation.auth]
