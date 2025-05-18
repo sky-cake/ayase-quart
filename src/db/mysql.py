@@ -83,6 +83,28 @@ class MysqlQueryRunner(BaseQueryRunner):
         return await self.run_query(query, params, p_id=p_id, dict_row=False, commit=commit)
 
 
+    async def run_query_many(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
+        pool: _PoolContextManager = await self.pool_manager.get_pool(p_id)
+        cursor_class = AttrDictCursor if dict_row else aiomysql.Cursor
+
+        async with pool.acquire() as conn:
+            async with conn.cursor(cursor_class) as cursor:
+                if self.sql_echo:
+                    final_sql = cursor.mogrify(query, params)
+                    print('::SQL::', final_sql, '')
+
+                await cursor.executemany(query, params)
+
+                results = [await cursor.fetchall()]
+                while await cursor.nextset():
+                    results.append(await cursor.fetchall())
+
+                if commit:
+                    await conn.commit()
+
+                return results[0] if len(results) == 1 else results # prone to issues ?
+
+
 class MysqlPlaceholderGen(BasePlaceHolderGen):
     __slots__ = ()
 
