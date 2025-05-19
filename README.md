@@ -50,6 +50,8 @@ Also, it is expected you will not remove or hide any existing links or reference
 
 Python 3.13.x is required.
 
+At least version SQLite 3.35.0 is required if you want to use the moderation tools. AQ was developed against 3.47.0. You can check your installed version with `python3.13 -c "import sqlite3; print(sqlite3.sqlite_version)"`.
+
 Assuming you have a data source set up, you can:
 
 1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
