@@ -63,7 +63,7 @@ async def create_app():
     for bp in blueprints:
         app.register_blueprint(bp)
 
-    if mod_conf['moderation']:
+    if mod_conf['enabled']:
         await init_moderation()
         await fc.init()
 
@@ -77,7 +77,7 @@ async def create_app():
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(db_q.close_db_pool)
 
-    if mod_conf['moderation']:
+    if mod_conf['enabled']:
         from moderation.auth import auth_api, auth_web
         from quart_schema import QuartSchema
         auth_api.init_app(app)

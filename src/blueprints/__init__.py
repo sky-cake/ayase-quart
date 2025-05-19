@@ -28,7 +28,7 @@ if archiveposting_conf['enabled']:
     from blueprints.web.bp_archiveposting  import bp as bp_web_archiveposting
     blueprints += [bp_web_archiveposting]
 
-if mod_conf['moderation']:
+if mod_conf['enabled']:
     from blueprints.web.bp_auth        import bp as bp_web_auth
     from blueprints.api.bp_auth        import bp as bp_api_auth
 

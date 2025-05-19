@@ -4,7 +4,7 @@
     {{site_name}}: [
         <a href="/">Home</a>
         / <a href="{{url_for('bp_web_about.about')}}">About</a>
-        / <a href="{{url_for('bp_web_admin.message')}}">Message</a>
+        {% if moderation_enabled %}/ <a href="{{url_for('bp_web_admin.message')}}">Message</a>{% endif %}
         / <a href="{{ url_for('bp_web_admin.stats') }}">Stats</a>
     ]
     {% if archiveposting_conf['enabled'] %}Text board: [ <a href="{{url_for('bp_web_archiveposting.get_archiveposting_catalog')}}">/{{archiveposting_conf['board_name']}}/</a> ]{% endif %}
@@ -27,7 +27,7 @@
         ]
     {% endif %}
 
-    {% if (logged_in or is_admin) %}
+    {% if moderation_enabled and (logged_in or is_admin) %}
         <br>
         Admin: [
 

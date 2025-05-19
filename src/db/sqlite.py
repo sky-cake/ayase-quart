@@ -42,7 +42,7 @@ class SqlitePoolManager(BasePoolManager):
 
         pool.row_factory = row_factory if dict_row else None
 
-        if mod_conf['moderation'] and mod_conf['regex_filter'] and mod_conf['path_to_regex_so']:
+        if mod_conf['enabled'] and mod_conf['regex_filter'] and mod_conf['path_to_regex_so']:
             await pool.enable_load_extension(True)
             await pool.load_extension(mod_conf['path_to_regex_so'])
             cur = await pool.execute('select regex_version();')

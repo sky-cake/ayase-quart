@@ -33,7 +33,7 @@ class TestFilterReportedPosts(unittest.IsolatedAsyncioTestCase):
         self.patcher_get_board_num_pairs.stop()
 
     async def test_filter_reported_posts_no_moderation(self):
-        self.mock_mod_conf['moderation'] = False
+        self.mock_mod_conf['enabled'] = False
         posts = [{"board_shortname": "a", "num": 1, "thread_num": 1}]
         async with self.app.test_request_context(path='/'):
             result = await fc.filter_reported_posts(posts)

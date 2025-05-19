@@ -35,6 +35,7 @@ class ReportGET(BaseModel):
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
 async def reports_get(query_args: ReportGET, current_api_usr_id: int):
+    # query_args.board_shortnames if isinstance(query_args.board_shortnames, list) else [query_args.board_shortnames]
     bs = board_shortnames + [archiveposting_conf['board_name']] if archiveposting_conf['enabled'] else board_shortnames
     reports = await get_reports(
         public_access=query_args.public_access,

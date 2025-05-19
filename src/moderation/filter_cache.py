@@ -60,7 +60,7 @@ class BaseFilterCache(ABC):
         raise NotImplementedError()
 
     async def filter_reported_posts(self, posts: list[dict], is_authority: bool=False) -> list:
-        if not mod_conf['moderation']:
+        if not mod_conf['enabled']:
             return posts
 
         if not posts:
@@ -141,7 +141,7 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def get_op_thread_removed_count(self, board_shortname: str) -> int:
-        if not mod_conf['moderation']:
+        if not mod_conf['enabled']:
             return 0
 
         rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.phg()} and op = 1', params=[board_shortname])

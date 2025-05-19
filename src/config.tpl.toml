@@ -123,7 +123,7 @@ multi_board_search = true
 
 
 [moderation]
-moderation = true # true, false
+enabled = true # true, false
 
 admin_user = 'admin'
 admin_password = 'admin'
