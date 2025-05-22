@@ -65,6 +65,9 @@ port = 6379
 db = 0 # redis database id
 
 
+[stats]
+enabled = false # true/false - allow endpoints for users to view [(posts / YYYY-MM) / board]
+
 
 [media]
 # set image_uri or thumb_uri to '' if you don't want any boards to serve image, or thumb media, respectively

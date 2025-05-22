@@ -5,7 +5,7 @@
         <a href="/">Home</a>
         / <a href="{{url_for('bp_web_about.about')}}">About</a>
         {% if moderation_enabled %}/ <a href="{{url_for('bp_web_admin.message')}}">Message</a>{% endif %}
-        / <a href="{{ url_for('bp_web_admin.stats') }}">Stats</a>
+        {% if stats_enabled %}/ <a href="{{ url_for('bp_web_stats.stats') }}">Stats</a>{% endif %}
     ]
     {% if archiveposting_conf['enabled'] %}Text board: [ <a href="{{url_for('bp_web_archiveposting.get_archiveposting_catalog')}}">/{{archiveposting_conf['board_name']}}/</a> ]{% endif %}
     {% if vanilla_search_enabled or index_search_enabled %}

@@ -1,4 +1,4 @@
-from configs import media_conf, mod_conf, index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf
+from configs import media_conf, mod_conf, index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf, stats_conf
 
 from blueprints.web.bp_app         import bp as bp_web_app
 from blueprints.api.bp_app         import bp as bp_api_app
@@ -47,6 +47,13 @@ if mod_conf['enabled']:
 
         bp_web_moderation,
         bp_api_moderation,
+    ]
+
+
+if stats_conf['enabled']:
+    from blueprints.web.bp_stats       import bp as bp_web_stats
+    blueprints += [
+        bp_web_stats,
     ]
 
 

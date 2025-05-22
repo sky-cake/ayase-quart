@@ -2,8 +2,8 @@ import quart_flask_patch
 
 from quart import Blueprint, flash, redirect, request, url_for, current_app
 
-from asagi_converter import get_row_counts, get_latest_ops_as_catalog
-from boards import board_objects, board_shortnames
+from asagi_converter import get_latest_ops_as_catalog
+from boards import board_shortnames
 from configs import mod_conf
 from forms import UserCreateForm, UserEditForm, MessageForm
 from moderation.user import (
@@ -26,12 +26,9 @@ from moderation.auth import (
 from moderation.message import create_message, get_messages_from_last_30_days
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
-from utils.validation import validate_board
 from templates import (
     template_catalog,
     template_configs,
-    template_stats,
-    template_stats_board,
     template_users_create,
     template_users_delete,
     template_users_edit,
@@ -116,38 +113,6 @@ async def latest(is_admin: bool):
         threads=threads,
         title='Latest Threads',
         tab_title='Latest Threads',
-        is_admin=is_admin,
-    )
-
-
-@bp.route("/stats/<string:board>")
-@load_web_usr_data
-@web_usr_logged_in
-@web_usr_is_admin
-async def stats_board(logged_in: bool, is_admin: bool, board: str):
-    validate_board(board)
-    table_row_counts = await get_row_counts([board])
-    return await render_controller(
-        template_stats_board,
-        table_row_counts=table_row_counts,
-        title='Stats',
-        tab_title='Stats',
-        logged_in=logged_in,
-        is_admin=is_admin,
-    )
-
-
-@bp.route("/stats")
-@load_web_usr_data
-@web_usr_logged_in
-@web_usr_is_admin
-async def stats(logged_in: bool, is_admin: bool):
-    return await render_controller(
-        template_stats,
-        board_objects=board_objects,
-        title='Stats',
-        tab_title='Stats',
-        logged_in=logged_in,
         is_admin=is_admin,
     )
 

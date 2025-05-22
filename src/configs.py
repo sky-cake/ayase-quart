@@ -61,6 +61,8 @@ db_archiveposting_conf = archiveposting_conf
 if archiveposting_conf['enabled'] and (' ' in archiveposting_conf['board_name'] or not archiveposting_conf['board_name'].replace('_', '').isalnum()):
     raise ValueError()
 
+stats_conf = conf.get('stats', {'enabled': False})
+
 tag_conf = conf.get('tagging', {})
 db_tag_conf = tag_conf # only supports sqlite atm
 
