@@ -564,7 +564,7 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
 
 
 async def get_op_thread_count(board: str) -> int:
-    rows = await db_q.query_tuple(f'select count(*) from `{board}_threads`;')
+    rows = await db_q.query_tuple(f'select count(*) from `{board}` where op = 1;')
     return rows[0][0]
 
 
@@ -608,10 +608,11 @@ async def generate_index(board: str, page_num: int=1):
     sql = f'''
         select
             thread_num,
-            nreplies,
-            nimages
-        from `{board}_threads`
-        order by time_op desc
+            count(*) - 1 as nreplies,
+            sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
+        from `{board}`
+        group by thread_num
+        order by thread_num desc
         limit {index_post_count}
         {get_offset(page_num - 1, index_post_count)}
     '''
@@ -696,13 +697,15 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
     threads_query = f'''
         select
             thread_num,
-            nreplies,
-            nimages
-        from `{board}_threads`
-        order by time_op desc
+            count(*) - 1 as nreplies,
+            sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
+        from `{board}`
+        group by thread_num
+        order by thread_num desc
         limit {catalog_post_count}
         {get_offset(page_num - 1, catalog_post_count)}
     '''
+    print(threads_query)
     if not (rows := await local_db_q.query_tuple(threads_query)):
         return []
 
@@ -758,9 +761,9 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
     phg = db_q.phg()
     thread_query = f'''
         select
-            nreplies,
-            nimages
-        from `{board}_threads`
+            count(*) - 1 as nreplies,
+            sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
+        from `{board}`
         where thread_num = {phg}
     ;'''
     posts_query = f'''
@@ -972,21 +975,6 @@ async def get_latest_ops_as_catalog(board_shortnames):
             if thread
         ],
     }]
-
-
-async def get_board_num_pairs_from_board_2_medias(board_2_medias: dict) -> list[tuple[str, int]]:
-    pairs = []
-    for board, medias in board_2_medias.items():
-        if not medias:
-            continue
-
-        s = f"""select num from `{board}` inner join `{board}_images` using(media_id) where media in ({db_q.phg.size(medias)})"""
-        rows = await db_q.query_tuple(s, params=medias)
-        if rows:
-            for row in rows:
-                pairs.append((board, row[0]))
-
-    return pairs
 
 
 async def get_board_2_nums_from_board_2_filenames(board_2_filenames: dict[str, list[str]]) -> dict[str, tuple[int]]:
