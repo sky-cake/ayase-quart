@@ -46,7 +46,7 @@ if media_conf['serve_outside_static']:
         raise ValueError('The set media endpoint is falsey or root (/). Set it to something else.')
 
 
-mod_conf = conf.get('moderation', {})
+mod_conf = conf['moderation']
 mod_conf['default_reported_post_public_access'] = PublicAccess.visible if mod_conf['default_reported_post_public_access'] == 'visible' else PublicAccess.hidden
 
 if hidden_images_path := mod_conf.get('hidden_images_path'):
@@ -55,6 +55,13 @@ if hidden_images_path := mod_conf.get('hidden_images_path'):
         raise ValueError(hidden_images_path)
 
 db_mod_conf = mod_conf.get('sqlite', {}) # only supports sqlite atm
+if mod_conf['enabled'] and db_mod_conf['database']:
+    db_directory = os.path.dirname(db_mod_conf['database'])
+    if not os.path.isdir(db_directory):
+        raise ValueError(
+            f"The moderation database directory does not exist: {db_directory}."
+            f"You set [moderation][sqlite][database] = {db_mod_conf['database']}"
+        )
 
 archiveposting_conf = conf.get('archiveposting', {})
 db_archiveposting_conf = archiveposting_conf
