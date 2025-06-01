@@ -108,20 +108,20 @@ enabled = true
 highlight = false
 hits_per_page = 50
 max_hits = 1_000
-multi_board_search = false
+multi_board_search = false # allow searching multiple boards at once?
 
 
 
 [index_search]
 enabled = true
-highlight = false
+highlight = false # highlight results?
 hits_per_page = 50
 max_hits = 1_000
 provider = 'lnx' # 'lnx', 'meili', 'manticore', 'typesense', 'quickwit'
 host = 'http://localhost:8000' # index search host. It should really be a LAN IP address like '192.168.1.122' - not 'localhost', nor a domain name.
-headers = { content-type = 'application/json' }
+headers = { content-type = 'application/json', Authorization = 'password' }
 version = '1' # only matters for quickwit
-multi_board_search = true
+multi_board_search = true # allow searching multiple boards at once?
 
 
 
