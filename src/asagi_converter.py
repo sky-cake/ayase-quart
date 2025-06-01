@@ -9,7 +9,7 @@ from functools import cache
 from itertools import batched
 from textwrap import dedent
 from async_lru import alru_cache
-from configs import archiveposting_conf
+from configs import archiveposting_conf, app_conf
 from db import db_q, db_a
 from posts.capcodes import Capcode
 from posts.comments import html_comment
@@ -564,7 +564,10 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
 
 
 async def get_op_thread_count(board: str) -> int:
-    rows = await db_q.query_tuple(f'select count(*) from `{board}` where op = 1;')
+    if app_conf.get('use_asagi_side_tables', True):
+        rows = await db_q.query_tuple(f'select count(*) from `{board}_threads`;')
+    else:
+        rows = await db_q.query_tuple(f'select count(*) from `{board}` where op = 1;')
     return rows[0][0]
 
 
@@ -605,17 +608,30 @@ async def generate_index(board: str, page_num: int=1):
     """
     index_post_count = 10
 
-    sql = f'''
-        select
-            thread_num,
-            count(*) - 1 as nreplies,
-            sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
-        from `{board}`
-        group by thread_num
-        order by thread_num desc
-        limit {index_post_count}
-        {get_offset(page_num - 1, index_post_count)}
-    '''
+    if app_conf.get('use_asagi_side_tables', True):
+        sql = f'''
+            select
+                thread_num,
+                nreplies,
+                nimages
+            from `{board}_threads`
+            order by time_op desc
+            limit {index_post_count}
+            {get_offset(page_num - 1, index_post_count)}
+        '''
+    else:
+        sql = f'''
+            select
+                thread_num,
+                count(*) - 1 as nreplies,
+                sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
+            from `{board}`
+            group by thread_num
+            order by thread_num desc
+            limit {index_post_count}
+            {get_offset(page_num - 1, index_post_count)}
+        '''
+
     if not (threads := await db_q.query_dict(sql)):
         return {'threads': []}, {}
 
@@ -694,18 +710,30 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
 
     local_db_q = db_X if db_X else db_q
 
-    threads_query = f'''
-        select
-            thread_num,
-            count(*) - 1 as nreplies,
-            sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
-        from `{board}`
-        group by thread_num
-        order by thread_num desc
-        limit {catalog_post_count}
-        {get_offset(page_num - 1, catalog_post_count)}
-    '''
-    print(threads_query)
+    if app_conf.get('use_asagi_side_tables', True):
+        threads_query = f'''
+            select
+                thread_num,
+                nreplies,
+                nimages
+            from `{board}_threads`
+            order by time_op desc
+            limit {catalog_post_count}
+            {get_offset(page_num - 1, catalog_post_count)}
+        '''
+    else:
+        threads_query = f'''
+            select
+                thread_num,
+                count(*) - 1 as nreplies,
+                sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
+            from `{board}`
+            group by thread_num
+            order by thread_num desc
+            limit {catalog_post_count}
+            {get_offset(page_num - 1, catalog_post_count)}
+        '''
+
     if not (rows := await local_db_q.query_tuple(threads_query)):
         return []
 
@@ -759,13 +787,24 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
     local_db_q = db_X if db_X else db_q
 
     phg = db_q.phg()
-    thread_query = f'''
-        select
-            count(*) - 1 as nreplies,
-            sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
-        from `{board}`
-        where thread_num = {phg}
-    ;'''
+
+    if app_conf.get('use_asagi_side_tables', True):
+        thread_query = f'''
+            select
+                nreplies,
+                nimages
+            from `{board}_threads`
+            where thread_num = {phg}
+        ;'''
+    else:
+        thread_query = f'''
+            select
+                count(*) - 1 as nreplies,
+                sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
+            from `{board}`
+            where thread_num = {phg}
+        ;'''
+
     posts_query = f'''
         {get_selector(board)}
         from `{board}`
