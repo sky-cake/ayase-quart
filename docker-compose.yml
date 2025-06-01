@@ -1,23 +1,25 @@
-services:
+# NOT SUPPORTED, NOT TESTED
 
-  ayase_quart:
-    build: . # tells docker to follow steps in Dockerfile
-    depends_on:
-      - search_engine
-    networks:
-      - ayase_network
+# services:
 
-  # drop in your search engine's docker compose block here
-  # see ./fts/ for some templates
-  search_engine:
-    image: chillfish8/lnx:0.9.0
-    network_mode: 'host'
-    stdin_open: true
-    environment:
-      - AUTHORIZATION_KEY=hello
-      - LOG_LEVEL=info
-    volumes:
-      - "./data:/etc/lnx/index"
+#   ayase_quart:
+#     build: . # tells docker to follow steps in Dockerfile
+#     depends_on:
+#       - search_engine
+#     networks:
+#       - ayase_network
 
-networks:
-  ayase_network:
+#   # drop in your search engine's docker compose block here
+#   # see ./fts/ for some templates
+#   search_engine:
+#     image: chillfish8/lnx:0.9.0
+#     network_mode: 'host'
+#     stdin_open: true
+#     environment:
+#       - AUTHORIZATION_KEY=hello
+#       - LOG_LEVEL=info
+#     volumes:
+#       - "./data:/etc/lnx/index"
+
+# networks:
+#   ayase_network:

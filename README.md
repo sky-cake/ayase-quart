@@ -93,18 +93,17 @@ Assuming you have a data source set up, you can:
 
         | Engine | GitHub | Notes |
         |-------------|--------|-------|
-        | [LNX      ](https://docs.lnx.rs/) | [lnx](https://github.com/lnx-search/lnx) | (1st recommendation) |
-        | [Meili    ](https://www.meilisearch.com/docs/learn/getting_started/installation) | [meilisearch](https://github.com/meilisearch/meilisearch) | (2nd recommendation) |
-        | [Manticore](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [manticoresearch](https://github.com/manticoresoftware/manticoresearch) | (supported, not tested) |
-        | [TypeSense](https://typesense.org/docs/guide/install-typesense.html) | [typesense](https://github.com/typesense/typesense) | (supported, not tested) |
-        | [QuickWit ](https://quickwit.io/docs/get-started/quickstart) | [quickwit](https://github.com/quickwit-oss/quickwit) | (supported, not tested) |
-        | [MySQL 8.x](https://dev.mysql.com/doc/refman/8.4/en/fulltext-search.html) | [mysql-server](https://github.com/mysql/mysql-server) | (not supported) |
+        | [LNX      ](https://docs.lnx.rs/) | [lnx](https://github.com/lnx-search/lnx) | (fully supported, tested) |
+        | [Meili    ](https://www.meilisearch.com/docs/learn/getting_started/installation) | [meilisearch](https://github.com/meilisearch/meilisearch) | (partial support, not tested) |
+        | [Manticore](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [manticoresearch](https://github.com/manticoresoftware/manticoresearch) | (partial support, not tested) |
+        | [TypeSense](https://typesense.org/docs/guide/install-typesense.html) | [typesense](https://github.com/typesense/typesense) | (partial support, not tested) |
+        | [QuickWit ](https://quickwit.io/docs/get-started/quickstart) | [quickwit](https://github.com/quickwit-oss/quickwit) | (partial support, not tested) |
 
     - Remember to check that your config port matches the docker container port.
     - Run `python3.13 -m search load --reset board1 [board2 [board3 ...]`.
       - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
-1. [Optional] Submit pull requests with fixes and new features!
+2. [Optional] Submit pull requests with fixes and new features!
 
 
 ## Set Up with Docker
@@ -112,9 +111,35 @@ Assuming you have a data source set up, you can:
 Not currently available. Feel free to help out with this!
 
 
+## LNX Setup
+
+Terminal A
+
+1. In a terminal, go to `~/ayase-quart/index_search/lnx/`
+   - If data was loaded into LNX before, delete the subdirectory `~/ayase-quart/index_search/lnx/data` LNX previously created.
+2. Review the configs in the file `~/ayase-quart/index_search/lnx/docker-compose.yml`
+3. Spin up LNX container with `sudo docker-compose up`
+   - Later, you can run `sudo docker-compose up -d`, but first we need to confirm it's being populated with data
+
+Terminal B
+
+1. If you haven't already, set the index search configs in `config.toml`.
+2. cd to `~/ayase-quart/src` then run `python3.13 -m search load --reset a b c g gif ...`
+3. You should see a bunch of loading bars progressing.
+4. In Terminal A, you should see LNX spraying a bunch of output. That's good and means it's working
+
+Now go ahead and try searching the index on you AQ instance in your browser.
+
+Terminal A
+
+1. Once the index loader in Terminal B completes, you can `ctrl-c` to stop the LNX docker container, and spin it back up with `sudo docker-compose up -d` to make it run in the background
+
+Right now, there is no way to incrementally update the LNX index, and you need to run through these same steps.
+
+
 ## Certificates
 
-Certificates are required for moderation (any web-based authentication). AQ will not work without them unless `moderation.auth.cookie_secure=true`.
+Certificates are required for moderation (any web-based authentication). AQ will not work without them unless `moderation.auth.cookie_secure=false`.
 
 If you're on Windows, you can use Git Bash to execute the command.
 
