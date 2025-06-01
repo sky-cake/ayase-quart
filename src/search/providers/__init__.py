@@ -23,10 +23,8 @@ search_index_fields = [
     SearchIndexField('comment', str, searchable=True, optional=True),
     SearchIndexField('board', int, filterable=True),
     SearchIndexField('media_filename', str, filterable=True, optional=True),
-    SearchIndexField('file_archived', bool, filterable=True, optional=True),
     SearchIndexField('title_length', int, filterable=True, optional=True),
     SearchIndexField('comment_length', int, filterable=True, optional=True),
-    SearchIndexField('media_orig', str, filterable=True, optional=True),
     SearchIndexField('media_hash', str, filterable=True, optional=True),
     SearchIndexField('trip', str, filterable=True, optional=True),
     SearchIndexField('num', int, filterable=True),
@@ -40,6 +38,12 @@ search_index_fields = [
     SearchIndexField('sticky', bool, filterable=True),
     SearchIndexField('data', str),
 ]
+
+if index_search_conf.get('use_file_archived'):
+    search_index_fields += [
+        SearchIndexField('file_archived', bool, filterable=True, optional=True),
+        SearchIndexField('media_orig', str, filterable=True, optional=True),
+    ]
 
 
 def get_index_search_provider():

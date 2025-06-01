@@ -54,7 +54,7 @@ wrapt==1.17.2
 wsproto==1.2.0
 WTForms==3.2.1
 yarl==1.20.0
-msgpack
-zlib_ng
+msgpack==1.1.0
+zlib_ng==0.5.1
 
 # timm # will install the necessary torch packages for image tagging

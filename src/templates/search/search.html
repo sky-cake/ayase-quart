@@ -51,9 +51,11 @@
         <div class="column">{{ render_field(form.min_title_length, placeholder='Min length', class='w5em') }}</div>
         <div class="column">{{ render_field(form.min_comment_length, placeholder='Min length', class='w5em') }}</div>
       </div>
+      {% if 'file_archived' in form %}
       <div class="row">
         <div class="column">{{ render_field(form.file_archived, title='Is the full media available on AQ?') }}</div>
       </div>
+      {% endif %}
       <div class="row">
         <div class="column">
           {{ render_field(form.has_file) }}

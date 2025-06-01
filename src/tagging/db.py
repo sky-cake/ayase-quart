@@ -278,7 +278,7 @@ async def _get_all_images() -> list[dict]:
 
 
 async def get_board_2_media_origs_by_tag_ids(tag_ids: list[int], f_tag: float, safe_search: SafeSearch, board_shortnames: list[str], page: int=None, per_page: int=None) -> dict[str, list]:
-    """Filenames are called `media_orig` in asagi"""
+    """Filesystem filenames are called `media_orig` in asagi"""
     sql_offset = ''
     if page is not None and per_page is not None:
         offset = int(max(page - 1, 0) * per_page)

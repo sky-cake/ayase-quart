@@ -11,11 +11,25 @@ port = 9001
 
 
 proxy_trusted_hops = 0
+
+# rate limit endpoints?
+# all rates are currently hard coded
+# adding configs for each endpoint would be an appreciated contribution
 rate_limiter = true
 
+
+# tells web crawlers if they can crawl your site or not, when they ask
 allow_robots = false # robots.txt
 
+# you can change this to increase your security
 login_endpoint = '/login'
+
+
+# whether or not the side tables `<board>_thread` and `<board>_images` should be utilized.
+# side tables offer considerable performance boosts
+# without side tables /catalog and /thread endpoints will probably not be viable at pages > 5 on larger archives
+# `<board>_deleted` tables are still required if you're doing moderation
+use_asagi_side_tables = true
 
 
 [site]
@@ -105,11 +119,17 @@ try_full_src_type_on_404 = false # let clients request full src (images only, no
 
 [vanilla_search]
 enabled = true
-highlight = false
+highlight = false # highlight results?
 hits_per_page = 50
 max_hits = 1_000
 multi_board_search = false # allow searching multiple boards at once?
 
+# In order to utilize the AQ search form field `file_archived`,
+# the tagging module script `src/tagging/tagger.py` needs to be ran at least once.
+# It creates a database table called `image` and populates it will all the images you have on your server
+# If this config is false, it does not rely on the `image` table, and searching will still work - you just won't
+# have the `file_archived` field in your **vanilla** search form.
+use_file_archived = true
 
 
 [index_search]
@@ -123,6 +143,13 @@ headers = { content-type = 'application/json', Authorization = 'password' }
 version = '1' # only matters for quickwit
 multi_board_search = true # allow searching multiple boards at once?
 
+
+# In order to utilize the AQ search form field `file_archived`,
+# the tagging module script `src/tagging/tagger.py` needs to be ran at least once.
+# It creates a database table called `image` and populates it will all the images you have on your server
+# If this config is false, it does not rely on the `image` table, and indexing will still work - you just won't
+# have the `file_archived` field in your **index** search form.
+use_file_archived = false
 
 
 [moderation]

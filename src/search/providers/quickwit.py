@@ -127,8 +127,8 @@ def get_qw_query(q: IndexSearchQuery):
         qb.append(f'board:IN [{" ".join(q.boards)}]')
     if q.num is not None:
         qb.append(f'num:{q.num}')
-    if q.media_file is not None:
-        qb.append(f'media_file:{q.media_file}')
+    if q.media_filename is not None:
+        qb.append(f'media_file:{q.media_filename}')
     if q.media_hash is not None:
         qb.append(f'media_hash:{q.media_hash}')
     if q.deleted is not None:
