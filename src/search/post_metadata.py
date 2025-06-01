@@ -5,6 +5,8 @@ from pybase64 import b64decode, b64encode
 from zlib_ng.zlib_ng import compress, decompress  # avx-512
 
 from posts.capcodes import id_2_capcode
+from utils import is_uint
+
 
 """
 To avoid frequent mysql/sqlite database lookups for random search queries, we store records in the search engine using generated, static PKs, and optimize for space using the following compression pipeline:
@@ -107,7 +109,7 @@ def board_2_int(board: str) -> int:
     for char in reversed(board):
         if char.isalpha():
             bits.append(ord(char) - 86)
-        elif char.isdigit():
+        elif is_uint(char):
             bits.append(int(char) + 1)
     res = 0
     for i, val in enumerate(bits):

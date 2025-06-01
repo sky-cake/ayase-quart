@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 from html import escape
 from typing import Generator
+from utils import startswith_uint_no0, get_prefix_uint_no0
 
 
 def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
@@ -34,6 +35,7 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
             post_2_quotelinks[quotelink].append(num)
     return post_2_quotelinks
 
+
 def extract_quotelinks(comment: str, html=False) -> list[int]:
     """Given some escaped post/comment, `text`, returns a list of all the quotelinks (>>123456) in it."""
     quotelinks = []
@@ -52,10 +54,13 @@ def extract_quotelinks(comment: str, html=False) -> list[int]:
             continue
         tokens = line.split(" ")
         for token in tokens:
-            if token[:8] == GTGT and token[8:].isdigit():
-                quotelinks.append(int(token[8:]))
+            # decided quotelinks like `>>0` and `>>0123` are invalid
+            if token[:8] == GTGT and startswith_uint_no0(token[8:]):
+                if (prefix_int := get_prefix_uint_no0(token[8:])) is not None:
+                    quotelinks.append(prefix_int)
 
     return quotelinks  # quotelinks = [20074095, 20074101]
+
 
 # TODO: perhaps we don't need esc version, rename to extract_quotelinks in the future
 raw_ql_re = re.compile(r'[^>]?>>(\d+)')
@@ -70,6 +75,7 @@ def extract_quotelinks_esc(comment: str) -> list[int]:
         int(match)
         for match in esc_ql_re.findall(comment)
     ]
+
 
 def html_quotelinks(comment: str, board: str, thread_num: int):
     def replacer(match):

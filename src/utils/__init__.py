@@ -49,3 +49,124 @@ class Perf:
             ) + f'\n{"total":<{longest}}: {total:.4f}'
         else:
             return ''
+
+
+string_of_uints = '0123456789'
+string_of_uints_no0 = '123456789'
+
+
+def startswith_uint(characters: str) -> bool:
+    """
+    ```
+    characters = '123'      --> True
+    characters = '0123'     --> True
+    characters = '123⑨⑨45' --> True
+    characters = '-123'     --> False
+    characters = '-00123'   --> False
+    characters = 'hi'       --> False
+    characters = ''         --> False
+    ```
+    """
+
+    for c in characters:
+
+        if c in string_of_uints:
+            return True
+        
+        # stop iterating if the streak of ints broken
+        # avoids subcript range checks on `characters`
+        return False
+
+    return False
+
+
+def startswith_uint_no0(characters: str) -> bool:
+    """
+    ```
+    characters = '123'      --> True
+    characters = '0123'     --> False
+    characters = '123⑨⑨45' --> True
+    characters = '-123'     --> False
+    characters = '-00123'   --> False
+    characters = 'hi'       --> False
+    characters = ''         --> False
+    ```
+    """
+
+    for c in characters:
+
+        if c in string_of_uints_no0:
+            return True
+        
+        # stop iterating if the streak of ints broken
+        # avoids subcript range checks on `characters`
+        return False
+
+    return False
+
+
+def is_uint(characters: str) -> bool:
+    """
+    The replacement for `str.isdigit()`.
+
+    ```
+    characters = '123'      --> True
+    characters = '0123'     --> True
+    characters = '123⑨⑨45' --> False
+    characters = '-123'     --> False
+    characters = '-00123'   --> False
+    characters = 'hi'       --> False
+    characters = ''         --> False
+    ```
+    """
+    if not len(characters):
+        return False
+
+    for c in characters:
+        if c not in string_of_uints:
+            return False
+    return True
+
+
+def get_prefix_uint(characters: str) -> int | None:
+    """
+    ```
+    characters = '123'      --> 123
+    characters = '0123'     --> 123
+    characters = '123⑨⑨45' --> 123
+    characters = '-123'     --> None
+    characters = '-00123'   --> None
+    characters = 'hi'       --> None
+    characters = ''         --> None
+    ```
+    """
+    number = ''
+    for c in characters:
+        if c in string_of_uints:
+            number += c
+        else:
+            # streak of real digits broken
+            break
+    return int(number) if number else None
+
+
+def get_prefix_uint_no0(characters: str) -> int | None:
+    """
+    ```
+    characters = '123'      --> 123
+    characters = '0123'     --> None
+    characters = '123⑨⑨45' --> 123
+    characters = '-123'     --> None
+    characters = '-00123'   --> None
+    characters = 'hi'       --> None
+    characters = ''         --> None
+    ```
+    """
+    number = ''
+    for c in characters:
+        if c in string_of_uints_no0:
+            number += c
+        else:
+            # streak of real digits broken
+            break
+    return int(number) if number else None
