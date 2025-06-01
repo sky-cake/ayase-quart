@@ -113,6 +113,8 @@ Not currently available. Feel free to help out with this!
 
 ## LNX Setup
 
+Only LNX 0.9.0 is supported. 0.10.0 is not a completed version of LNX.
+
 Terminal A
 
 1. In a terminal, go to `~/ayase-quart/index_search/lnx/`
@@ -135,6 +137,8 @@ Terminal A
 1. Once the index loader in Terminal B completes, you can `ctrl-c` to stop the LNX docker container, and spin it back up with `sudo docker-compose up -d` to make it run in the background
 
 Right now, there is no way to incrementally update the LNX index, and you need to run through these same steps.
+
+If page cache memory on your server, you can run `free && sync && echo 1 > /proc/sys/vm/drop_caches && free`. This does not affect actual application memory, only the filesystem cache. I don't know if the ram usage swell is from LNX or not, but it seems like it. Running this frees up enough RAM to run LNX again.
 
 
 ## Certificates
