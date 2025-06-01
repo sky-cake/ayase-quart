@@ -5,6 +5,7 @@ from orjson import dumps, loads
 from . import POST_PK, SearchIndexField, IndexSearchQuery, search_index_fields
 from .baseprovider import BaseSearch
 
+from configs import index_search_conf
 
 pk = POST_PK
 
@@ -193,7 +194,7 @@ class LnxSearch(BaseSearch):
                     'ctx': f'comment_length:>={q.min_comment_length}',
                 },
             })
-        if q.file_archived is not None:
+        if index_search_conf.get('use_file_archived') and q.file_archived is not None:
             query.append({
                 'occur': 'must',
                 'normal': {
@@ -291,16 +292,16 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.media_file is not None:
+        if q.media_filename is not None:
             query.append(
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'media_filename:{q.media_file}',
+                        'ctx': f'media_filename:{q.media_filename}',
                     },
                 }
             )
-        if q.media_origs is not None:
+        if index_search_conf.get('use_file_archived') and q.media_origs is not None:
             query.append(
                 {
                     'occur': 'must',
@@ -385,10 +386,11 @@ def pack_post(post: dict) -> dict:
 bool_fields = tuple(f.field for f in search_index_fields if f.field_type is bool)
 # str_fields = ('comment', 'title', 'media_filename', 'media_hash')
 str_fields = tuple(f.field for f in search_index_fields if f.field_type is str)
+do_not_downcast_str_fields = ('media_filename', 'media_orig',) if index_search_conf.get('use_file_archived') else ('media_filename',)
 def downcast_fields(post: dict):
     for field in bool_fields:
         post[field] = int(bool(post[field]))
     for field in str_fields:
-        if post[field] is None and field not in ('media_filename', 'media_orig'):
+        if post[field] is None and field not in do_not_downcast_str_fields:
             post[field] = ''
     return post

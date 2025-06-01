@@ -9,7 +9,7 @@ from functools import cache
 from itertools import batched
 from textwrap import dedent
 from async_lru import alru_cache
-from configs import archiveposting_conf, app_conf
+from configs import archiveposting_conf, app_conf, vanilla_search_conf
 from db import db_q, db_a
 from posts.capcodes import Capcode
 from posts.comments import html_comment
@@ -371,7 +371,7 @@ def get_where_clause(board: str, where_query: str, form_data: dict, tag_id_board
     where_query += get_min_comment_length_where(where_query, form_data)
     where_query += get_facet_where(board, where_query, form_data)
     where_query += get_sha256_where(board, where_query, form_data)
-    where_query += get_file_archived_where(board, where_query, form_data)
+    where_query += get_file_archived_where(board, where_query, form_data) if vanilla_search_conf.get('use_file_archived') else ''
     where_query += tag_id_board_2_sql_where.get(board, '')
     return where_query
 
@@ -395,7 +395,7 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int):
         sql = f"""
         select count(*)
         from `{board}`
-            {get_sql_join_file_archived(form_data, board)}
+            {get_sql_join_file_archived(form_data, board) if vanilla_search_conf.get('use_file_archived') else ''}
         {get_where_clause(board, where_query, form_data, tag_id_board_2_sql_where)}
         ;"""
         query_tuple_calls.append(db_q.query_tuple(sql, params=params))
@@ -491,7 +491,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
         sql = f"""
             {get_selector(board)}
             from `{board}`
-                {get_sql_join_file_archived(form_data, board)}
+                {get_sql_join_file_archived(form_data, board) if vanilla_search_conf.get('use_file_archived') else ''}
             {get_where_clause(board, where_query, form_data, tag_id_board_2_sql_where)}
             order by ts_unix {order_by}
             limit {hits_per_board_to_query[board]}

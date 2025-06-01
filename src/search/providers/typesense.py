@@ -119,8 +119,8 @@ def _build_filter(q: IndexSearchQuery):
     filters.append(f'board: [{", ".join(q.boards)}]')
     if q.num is not None:
         filters.append(f'num := `{q.num}`')
-    if q.media_file is not None:
-        filters.append(f'media_filename := `{q.media_file}`')
+    if q.media_filename is not None:
+        filters.append(f'media_filename := `{q.media_filename}`')
     if q.media_hash is not None:
         filters.append(f'media_hash := `{q.media_hash}`')
     if q.trip is not None:

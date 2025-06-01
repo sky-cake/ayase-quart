@@ -159,7 +159,6 @@ class SearchForm(StripForm):
     tripcode = StringField("Tripcode", validators=[Optional(), Length(8, 15)])
     date_after = DateField('Start', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
     date_before = DateField('End', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
-    file_archived = BooleanField('File Archived', default=False, validators=[Optional()])
     has_file = BooleanField('Has file', default=False, validators=[Optional()])
     has_no_file = BooleanField('No file', default=False, validators=[Optional()])
 
@@ -203,11 +202,17 @@ class SearchForm(StripForm):
 class VanillaSearchForm(SearchForm):
     boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if vanilla_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
     hits_per_page = IntegerField('Per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
+    
+    if vanilla_search_conf.get('use_file_archived'):
+        file_archived = BooleanField('File Archived', default=False, validators=[Optional()])
 
 
 class IndexSearchForm(VanillaSearchForm):
     boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if index_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
     hits_per_page = IntegerField('Per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
+    
+    if index_search_conf.get('use_file_archived'):
+        file_archived = BooleanField('File Archived', default=False, validators=[Optional()])
 
 
 def strip_2_none(s: str) -> str | None:
