@@ -55,9 +55,8 @@ def extract_quotelinks(comment: str, html=False) -> list[int]:
         tokens = line.split(" ")
         for token in tokens:
             # decided quotelinks like `>>0` and `>>0123` are invalid
-            if token[:8] == GTGT and startswith_uint_no0(token[8:]):
-                if (prefix_int := get_prefix_uint_no0(token[8:])) is not None:
-                    quotelinks.append(prefix_int)
+            if token[:8] == GTGT and (prefix_int := get_prefix_uint_no0(token[8:])) is not None:
+                quotelinks.append(prefix_int)
 
     return quotelinks  # quotelinks = [20074095, 20074101]
 
