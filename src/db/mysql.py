@@ -17,24 +17,25 @@ class AttrDictCursor(aiomysql.DictCursor):
 
 
 class MysqlPoolManager(BasePoolManager):
-    def __init__(self, mysql_conf=None):
-        self.mysql_conf = mysql_conf or {}
-        self.pools = {}
+    def __init__(self, mysql_conf: dict | None=None):
+        """
+        `mysql_conf` is consumed by `aiomysql.create_pool` as kwargs. E.g. `host`, `port`, `db`, `user`, `minsize`, `maxsize`, etc.
+
+        `autocommit` is set to `True` by default.
+        """
+        self.mysql_conf = mysql_conf or dict()
+        self.pools = dict()
 
     async def create_pool(self, p_id=DbPool.main):
         if p_id in self.pools:
             return self.pools[p_id]
-        d = dict(
-            host=self.mysql_conf['mysql']['host'],
-            port=self.mysql_conf['mysql']['port'],
-            db=self.mysql_conf['mysql']['db'],
-            user=self.mysql_conf['mysql']['user'],
-            password=self.mysql_conf['mysql']['password'],
-            minsize=self.mysql_conf['mysql']['minsize'],
-            maxsize=self.mysql_conf['mysql']['maxsize'],
-        )
-        pool = await aiomysql.create_pool(**d, autocommit=True)
+
+        d = dict(**self.mysql_conf['mysql'])
+        d['autocommit'] = True
+
+        pool = await aiomysql.create_pool(**d)
         self.pools[p_id] = pool
+    
         return pool
 
     async def get_pool(self, p_id=DbPool.main, store=True):
