@@ -19,7 +19,7 @@ Ayase Quart (AQ) is an interface for 4chan/Lainchan archives using the Asagi dat
 - Image searching via tags.
   - Test it out at [https://ayasequart.org/fts](https://ayasequart.org/fts).
 - Text to speech using [flite](https://github.com/festvox/flite).
-  - Here is the [tts audio](preview/g_thread_9652082__mode__op_and_repies_to_op__voice__manbot__speed_1.wav) of flite reading the thread [https://ayasequart.org/g/thread/96520802](https://ayasequart.org/g/thread/96520802) is `op_and_op_replies` mode.
+  - Here is the [tts audio](preview/g_thread_9652082__mode__op_and_repies_to_op__voice__manbot__speed_1.wav) of flite reading the thread [https://ayasequart.org/g/thread/96520802](https://ayasequart.org/g/thread/96520802) in `op_and_op_replies` mode.
   - DFS, BFS, and OP only modes are also available.
 
 AQ supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper), [Hayden (MySQL)](https://github.com/bbepis/Hayden), and [Ritual (SQLite)](https://github.com/sky-cake/Ritual) archive downloaders.
