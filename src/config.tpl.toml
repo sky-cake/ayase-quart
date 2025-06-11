@@ -210,3 +210,40 @@ use_cpu = false # cpu or gpu
 max_page_retries = 2 # query the tag database up to <max_page_retries> times, or until <hits_per_page> is reached
 
 load_sqlite_into_memory = true # this must be false to persist data
+
+
+[vox]
+# text to speech module that allows the client to fetch the endpoint
+# /<string:board_shortname>/thread/<int:thread_id>/vox
+# for .wav files to read threads
+enabled = true
+
+# Right now, only flite is supported:
+# - https://github.com/festvox/flite
+# - https://www.cs.cmu.edu/~awb/festival_demos/general.html
+# - http://festvox.org/packed/festival/2.4/voices/
+path_to_flite_binary = '/absolute/path/to/flite/bin/flite'
+path_to_flite_voices = '/absolute/path/to/flite/voices'
+
+# only supports 1 voice selection so far, the narrator's voice will be used for both voices
+voice_narrator = 'MANBOT' # 'SIRI','MANBOT','SOYJAK','FEMBOT','BRITBONG','SANGITA'
+voice_anon = 'MANBOT' # 'SIRI','MANBOT','SOYJAK','FEMBOT','BRITBONG','SANGITA'
+
+# You'll need to download the voices/cmu.* files you want to use from http://festvox.org/packed/festival/2.4/voices/
+# Here is a mapping. Note I tested the other voices, and these were the best ones.
+# MANBOT = "cmu_us_bdl"
+# SIRI = "cmu_us_clb"
+# SOYJAK = "cmu_us_aew"
+# FEMBOT = "cmu_us_slt"
+# BRITBONG = "cmu_us_fem"
+# SANGITA = "cmu_indic_pan_amp"
+
+serve_outside_static = true # true, false
+
+# `vox_root_path` is the full path to the root vox directory on your server
+#       i.e. if you have images like '/mnt/dl/<board_shortname>/vox' set this to '/mnt/dl'
+# .wav files will be generated in the fs structure '/mnt/dl/<board_shortname>/vox/<post_num>.wav'
+vox_root_path = '/absolute/path/to/vox'
+
+# only serve files with these extension from outside the static path
+valid_extensions = ['wav']

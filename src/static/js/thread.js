@@ -22,10 +22,11 @@ document.querySelectorAll('.media_cont').forEach(container => {
         }
     });
 });
-  
 
-const op = document.querySelector('.op');
-const thread_num = op ? op.getAttribute('id').split('p')[1] : null;
+
+const tools = document.getElementById('tools');
+const board = tools.getAttribute('data-board_shortname');
+const thread_num = tools.getAttribute('data-thread_num');
 const quotelinks = document.querySelectorAll("a.quotelink");
 
 quotelinks.forEach((quotelink) => {
@@ -135,4 +136,41 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.style.left = `${left}px`;
     preview.style.border = "1px solid white";
     preview.style.backgroundColor = "#282a2e";
+}
+
+if (document.getElementById('vox')){
+const vox_button = document.createElement('button');
+vox_button.textContent = 'Load Thread Reader';
+tools.appendChild(vox_button);
+
+vox_button.addEventListener('click', () => {
+    vox_button.remove();
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120_000);
+
+    const url = `/${board}/thread/${thread_num}/vox`;
+    fetch(url, { signal: controller.signal })
+    .then(response => {
+        clearTimeout(timeoutId);
+        if (!response.ok) {
+            throw new Error('Response not ok.');
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = document.createElement('audio');
+        audio.src = audioUrl;
+        audio.controls = true;
+        audio.autoplay = true;
+        tools.appendChild(audio);
+    })
+    .catch(error => {
+        console.error('Fetch error or timeout:', error);
+        const errorMsg = document.createElement('p');
+        errorMsg.textContent = 'Failed to load audio.';
+        tools.appendChild(errorMsg);
+    });
+});
 }

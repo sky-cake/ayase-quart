@@ -1,4 +1,4 @@
-from configs import media_conf, mod_conf, index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf, stats_conf
+from configs import media_conf, mod_conf, index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf, stats_conf, vox_conf
 
 from blueprints.web.bp_app         import bp as bp_web_app
 from blueprints.api.bp_app         import bp as bp_api_app
@@ -12,21 +12,31 @@ blueprints = [
     bp_web_app,
 ]
 
+
 if index_search_conf['enabled']:
     from blueprints.web.bp_index_search    import bp as bp_web_index_search
     blueprints += [bp_web_index_search]
+
 
 if vanilla_search_conf['enabled']:
     from blueprints.web.bp_vanilla_search  import bp as bp_web_vanilla_search
     blueprints += [bp_web_vanilla_search]
 
+
 if tag_conf['enabled']:
     from blueprints.web.bp_tagging         import bp as bp_web_tagging
     blueprints += [bp_web_tagging]
 
+
+if vox_conf['enabled']:
+    from blueprints.web.bp_vox         import bp as bp_web_vox
+    blueprints += [bp_web_vox]
+
+
 if archiveposting_conf['enabled']:
     from blueprints.web.bp_archiveposting  import bp as bp_web_archiveposting
     blueprints += [bp_web_archiveposting]
+
 
 if mod_conf['enabled']:
     from blueprints.web.bp_auth        import bp as bp_web_auth

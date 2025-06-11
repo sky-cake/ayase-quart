@@ -10,7 +10,7 @@ from asagi_converter import (
     get_counts_from_posts
 )
 from boards import get_title
-from configs import SITE_NAME, app_conf
+from configs import SITE_NAME, app_conf, vox_conf
 from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
@@ -304,11 +304,11 @@ async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, lo
     return render
 
 
-@bp.get("/<string:board_shortname>/thread/<int:thread_id>")
+@bp.get("/<string:board_shortname>/thread/<int:thread_num>")
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def v_thread(is_admin: bool, board_shortname: str, thread_id: int, logged_in: bool):
+async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged_in: bool):
     """
     Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.
     queries : 0.0150
@@ -326,7 +326,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_id: int, logged_
 
     p = Perf('thread', enabled=app_conf.get('testing'))
     # use the existing json app function to grab the data
-    post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
+    post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_num)
     p.check('queries')
 
     thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'])
@@ -340,7 +340,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_id: int, logged_
     posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)
     p.check('posts_t')
 
-    title = f"/{board_shortname}/ #{thread_id}"
+    title = f"/{board_shortname}/ #{thread_num}"
 
     render = template_thread.render(
         posts_t=posts_t,
@@ -348,8 +348,10 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_id: int, logged_
         nreplies=nreplies,
         nimages=nimages,
         board=board_shortname,
+        thread_num=thread_num,
         title=title,
         tab_title=title,
+        vox_enabled=vox_conf['enabled'],
         logged_in=logged_in,
         is_admin=is_admin,
     )

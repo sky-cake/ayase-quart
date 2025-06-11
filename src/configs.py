@@ -3,6 +3,7 @@ import tomllib
 
 from enums import DbType, PublicAccess
 from utils import make_src_path
+from vox import VoiceFlite
 
 
 def _load_config_toml():
@@ -63,19 +64,32 @@ if mod_conf['enabled'] and db_mod_conf['database']:
             f"You set [moderation][sqlite][database] = {db_mod_conf['database']}"
         )
 
+
 archiveposting_conf = conf.get('archiveposting', {})
 db_archiveposting_conf = archiveposting_conf
 if archiveposting_conf['enabled'] and (' ' in archiveposting_conf['board_name'] or not archiveposting_conf['board_name'].replace('_', '').isalnum()):
     raise ValueError()
 
+
 stats_conf = conf.get('stats', {'enabled': False})
+
+
+vox_conf = conf.get('vox', {'enabled': False})
+if vox_conf['enabled']:
+    assert os.path.isfile(vox_conf['path_to_flite_binary'])
+    assert os.path.isdir(vox_conf['path_to_flite_voices'])
+    assert os.path.isdir(vox_conf['vox_root_path'])
+    assert vox_conf['voice_narrator'] in VoiceFlite._member_names_
+    assert vox_conf['valid_extensions'] == ['wav']
+    vox_conf['valid_extensions'] = tuple(vox_conf['valid_extensions'])
+
 
 tag_conf = conf.get('tagging', {})
 db_tag_conf = tag_conf # only supports sqlite atm
-
 # # database might not be created yet, so we should not enforce this here
 # if db_tag_conf['database'] and not os.path.isfile(db_tag_conf['database']):
 #     raise ValueError(f'Can not find {db_tag_conf['database']}')
+
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)

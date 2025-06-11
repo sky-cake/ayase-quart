@@ -775,9 +775,9 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
 async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]:
     """Generates a thread.
 
-    Returns the dict:
+    The post tuple is tuple[1]:
     ```
-        {'posts': [{...}, {...}, {...}, ...]}
+        {'posts': [{...}, {...}, {...}, ...]}, 
     ```
 
     OPs have these extra fields added to them compared to comments:
