@@ -351,7 +351,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
         thread_num=thread_num,
         title=title,
         tab_title=title,
-        vox_enabled=vox_conf['enabled'],
+        vox_enabled=vox_conf['enabled'] and board_shortname in vox_conf['allowed_boards'],
         logged_in=logged_in,
         is_admin=is_admin,
     )

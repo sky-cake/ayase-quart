@@ -5,6 +5,7 @@ import re
 from urllib.parse import urlparse
 from enum import Enum
 from werkzeug.security import safe_join
+import requests
 
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -81,8 +82,8 @@ def get_post_num_order(g: Graph, mode: TranscriptMode) -> list[int]:
             return g.get_op_and_replies_to_op()
 
 
-def get_vox_filepath(vox_root_path: str, board_shortname: str, num: int) -> str:
-    return safe_join(vox_root_path, board_shortname, f'{num}.wav')
+def get_vox_filepath(vox_root_path: str, board_shortname: str, num: int, ext: str) -> str:
+    return safe_join(vox_root_path, board_shortname, f'{num}.{ext}')
 
 
 def make_transcript(g: Graph, mode: TranscriptMode) -> str:
@@ -94,8 +95,6 @@ def make_transcript(g: Graph, mode: TranscriptMode) -> str:
     for pnum in order:
         post = g.num_2_posts[pnum]
         if is_op:
-            texts.append((Speaker.narrator, f'Board Name: {' '.join(post['board_shortname'])}. Thread Number: {post['num']}'))
-
             if post['title']:
                 texts.append((Speaker.narrator, 'O P Subject: '))
                 texts.append((Speaker.anon, post['title']))
@@ -110,18 +109,19 @@ def make_transcript(g: Graph, mode: TranscriptMode) -> str:
 
             is_op = 0
         else:
-            texts.append((Speaker.narrator, f"From {post['name']}: "))
+            name = 'Anon' if post['name'] == 'Anonymous' else post['name']
+            texts.append((Speaker.narrator, f'{name}: '))
             texts.append((Speaker.anon, post['comment']))
 
     return clean_text(' '.join(t[1] for t in texts)) if texts else ''
 
 
 class VoxIO:
-    def read(text: str):
+    def read(self, text: str):
         """Read the text to speakers"""
         raise NotImplementedError()
 
-    def write(text: str, filepath: str):
+    def write(self, text: str, filepath: str):
         """Write the tts to a .wav file."""
         raise NotImplementedError()
 
@@ -310,6 +310,27 @@ class VoxFlite(VoxIO):
         self.read(text=text, voice=VoiceFlite.FEMBOT, print_words=True)
         self.read(text=text, voice=VoiceFlite.BRITBONG, print_words=True)
         self.read(text=text, voice=VoiceFlite.SANGITA, print_words=True)
+
+
+class VoxKokoro(VoxIO):
+    def write(self, text: str, filepath: str):
+        response = requests.post(
+            "http://localhost:8880/v1/audio/speech",
+            json={
+                "model": "kokoro",  
+                "input": text,
+                "voice": "af_bella",
+                "response_format": "mp3",  # mp3, wav, opus, flac
+                "speed": 1.0
+            }
+        )
+
+        dname = os.path.dirname(filepath)
+        if not os.path.isdir(dname):
+            os.makedirs(dname)
+
+        with open(filepath, "wb") as f:
+            f.write(response.content)
 
 
 if __name__ == '__main__':

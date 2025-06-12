@@ -8,7 +8,7 @@ from configs import app_conf, vox_conf
 from moderation.filter_cache import fc
 from utils import Perf, get_graph_from_thread
 from utils.validation import validate_board, validate_threads
-from vox import VoxFlite, make_transcript, TranscriptMode, get_vox_filepath
+from vox import VoxFlite, make_transcript, get_vox_filepath, VoxKokoro
 
 
 bp = Blueprint("bp_web_vox", __name__)
@@ -33,26 +33,30 @@ async def vox_thread(board_shortname: str, thread_id: int):
     validate_threads(thread_dict['posts'])
     p.check('validate')
 
-    vox_filepath = get_vox_filepath(vox_conf['vox_root_path'], board_shortname, thread_id)
+    ext = 'mp3'
+    if vox_conf['engine'] == 'flite':
+        ext = 'wav'
+
+    vox_filepath = get_vox_filepath(vox_conf['vox_root_path'], board_shortname, thread_id, ext)
     if not os.path.isfile(vox_filepath):
 
         g = get_graph_from_thread(post_2_quotelinks, thread_dict['posts'])
         p.check('graph')
 
-        # several options available:
-        # transcript = make_transcript(g, mode=TranscriptMode.dfs)
-        # transcript = make_transcript(g, mode=TranscriptMode.bfs)
-        # transcript = make_transcript(g, mode=TranscriptMode.op)
-        transcript = make_transcript(g, mode=TranscriptMode.op_and_replies_to_op)
+        transcript = make_transcript(g, mode=vox_conf['reader_mode'])
         p.check('transcript')
 
-        VoxFlite(vox_conf).write(transcript, spoken_speed=1.0, wav_output_filepath=vox_filepath)
+        if vox_conf['engine'] == 'flite':
+            VoxFlite(vox_conf).write(transcript, spoken_speed=1.0, wav_output_filepath=vox_filepath)
+        else:
+            VoxKokoro().write(transcript, vox_filepath)
+
         p.check('vox')
 
         if not vox_filepath:
             abort(404)
 
-        if not vox_filepath.split('.')[-1].lower().endswith(vox_conf['valid_extensions']):
+        if not vox_filepath.split('.')[-1].lower().endswith(ext):
             abort(404)
 
         if not vox_filepath.startswith(vox_conf['vox_root_path']):

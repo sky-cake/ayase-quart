@@ -338,7 +338,7 @@ def get_graph_from_thread(quotelinks: dict[int, list[int]], posts: list[dict]):
         if not is_op and pnum not in qls:
             g.add_edge(op['num'], pnum)
 
-        if not g.is_connected(pnum):
+        if not g.is_connected(pnum) and quotelinks:
             g.remove_node(pnum)
 
         is_op = 0

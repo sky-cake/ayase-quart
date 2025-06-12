@@ -218,7 +218,29 @@ load_sqlite_into_memory = true # this must be false to persist data
 # for .wav files to read threads
 enabled = true
 
-# Right now, only flite is supported:
+engine = 'kokoro' # 'kokoro', 'flite'
+
+reader_mode = 'bfs' # 'dfs', 'bfs', 'op', 'op_and_replies_to_op'
+
+allowed_boards = ['g', 'ck']
+serve_outside_static = true # true, false
+
+# `vox_root_path` is the full path to the root vox directory on your server
+#       i.e. if you have images like '/mnt/dl/<board_shortname>/vox' set this to '/mnt/dl'
+# .wav/.mp3 files will be generated in the fs structure '/mnt/dl/<board_shortname>/vox/<post_num>.wav/.mp3'
+vox_root_path = '/home/xx/Documents/code/vox'
+
+
+## KOKORO #########################
+# GPU only, 3GB VRAM needed, amazing voices
+# Kokoro is a fastapi service running on the same server as AQ
+# Install instructions:
+# https://github.com/sky-cake/Kokoro-FastAPI-Debloated
+
+## FLITE ##########################
+# CPU only, robotic voices
+# Flite is a binary located on the same server as AQ
+# Install instructions:
 # - https://github.com/festvox/flite
 # - https://www.cs.cmu.edu/~awb/festival_demos/general.html
 # - http://festvox.org/packed/festival/2.4/voices/
@@ -237,13 +259,4 @@ voice_anon = 'MANBOT' # 'SIRI','MANBOT','SOYJAK','FEMBOT','BRITBONG','SANGITA'
 # FEMBOT = "cmu_us_slt"
 # BRITBONG = "cmu_us_fem"
 # SANGITA = "cmu_indic_pan_amp"
-
-serve_outside_static = true # true, false
-
-# `vox_root_path` is the full path to the root vox directory on your server
-#       i.e. if you have images like '/mnt/dl/<board_shortname>/vox' set this to '/mnt/dl'
-# .wav files will be generated in the fs structure '/mnt/dl/<board_shortname>/vox/<post_num>.wav'
-vox_root_path = '/absolute/path/to/vox'
-
-# only serve files with these extension from outside the static path
-valid_extensions = ['wav']
+###################################

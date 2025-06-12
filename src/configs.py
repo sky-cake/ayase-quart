@@ -3,7 +3,7 @@ import tomllib
 
 from enums import DbType, PublicAccess
 from utils import make_src_path
-from vox import VoiceFlite
+from vox import VoiceFlite, TranscriptMode
 
 
 def _load_config_toml():
@@ -76,12 +76,20 @@ stats_conf = conf.get('stats', {'enabled': False})
 
 vox_conf = conf.get('vox', {'enabled': False})
 if vox_conf['enabled']:
-    assert os.path.isfile(vox_conf['path_to_flite_binary'])
-    assert os.path.isdir(vox_conf['path_to_flite_voices'])
-    assert os.path.isdir(vox_conf['vox_root_path'])
-    assert vox_conf['voice_narrator'] in VoiceFlite._member_names_
-    assert vox_conf['valid_extensions'] == ['wav']
-    vox_conf['valid_extensions'] = tuple(vox_conf['valid_extensions'])
+    if vox_conf['reader_mode'] == 'dfs':
+        vox_conf['reader_mode'] = TranscriptMode.dfs
+    elif vox_conf['reader_mode'] == 'bfs':
+        vox_conf['reader_mode'] = TranscriptMode.bfs
+    elif vox_conf['reader_mode'] == 'op':
+        vox_conf['reader_mode'] = TranscriptMode.op
+    else:
+        vox_conf['reader_mode'] = TranscriptMode.op_and_replies_to_op
+
+    if vox_conf['engine'] == 'flite':
+        assert os.path.isfile(vox_conf['path_to_flite_binary'])
+        assert os.path.isdir(vox_conf['path_to_flite_voices'])
+        assert os.path.isdir(vox_conf['vox_root_path'])
+        assert vox_conf['voice_narrator'] in VoiceFlite._member_names_
 
 
 tag_conf = conf.get('tagging', {})
