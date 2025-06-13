@@ -6,7 +6,8 @@ from datetime import timedelta
 from asagi_converter import generate_thread
 from configs import app_conf, vox_conf
 from moderation.filter_cache import fc
-from utils import Perf, get_graph_from_thread
+from threads import get_graph_from_thread
+from utils import Perf
 from utils.validation import validate_board, validate_threads
 from vox import VoxFlite, make_transcript, get_vox_filepath, VoxKokoro
 
