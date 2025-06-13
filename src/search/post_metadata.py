@@ -5,7 +5,7 @@ from pybase64 import b64decode, b64encode
 from zlib_ng.zlib_ng import compress, decompress  # avx-512
 
 from posts.capcodes import id_2_capcode
-from utils import is_uint
+from utils.integers import is_uint
 
 
 """
