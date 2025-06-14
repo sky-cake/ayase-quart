@@ -4,6 +4,8 @@ from asyncio import Task, create_task, gather, wrap_future
 from concurrent.futures import ProcessPoolExecutor as Executor
 from itertools import batched
 from typing import AsyncGenerator, Callable, List
+from contextlib import asynccontextmanager
+import traceback
 
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
@@ -336,6 +338,85 @@ async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerat
 
         after_thread_num = rows[-1][0] # thread_num
 
+# BEGIN incremental load
+
+async def get_board_db_last_num(board: str) -> int|None:
+    sql = f'select num from {board} order by num desc limit 1;'
+    if not(rows := await db_q.query_tuple(sql)):
+        return None
+    return rows[0][0]
+
+async def get_board_db_threads_after_num(board: str, num: int) -> list[int]:
+    sql = f'select distinct(thread_num) from {board} where num >= {db_q.phg()};'
+    rows = await db_q.query_tuple(sql, (num,))
+    return [row[0] for row in rows]
+
+async def index_board_threads_slow(board: str, sp: BaseSearch, thread_nums: list[int], post_pack_fn: Callable[[dict], dict], batch_pack_fn: Callable[[list[dict]], bytes]):
+    board_int = board_2_int(board)
+    post_rows = await get_post_rows(board, thread_nums)
+    pks = [board_int_num_2_pk(board_int, p[DOC_ID_IDX]) for p in post_rows]
+    wait_del_index = sp.remove_posts(pks)
+    post_batches = process_post_rows(board, post_rows, post_pack_fn, batch_pack_fn)
+    await wait_del_index
+    for _, post_batch in post_batches:
+        await sp.add_posts_bytes(post_batch)
+
+async def incremental_index_slow(sp: BaseSearch, boards: list[str]):
+    post_pack_fn = sp.get_post_pack_fn()
+    batch_pack_fn = sp.get_batch_pack_fn()
+    for board in boards:
+        board_int = board_2_int(board)
+        last_db_num, last_indexed_num = await gather(
+            get_board_db_last_num(board),
+            sp.board_last_num(board_int),
+        )
+        if not all((last_db_num, last_indexed_num)):
+            # either no rows to index in db, or board not indexed yet
+            continue
+        if last_indexed_num >= last_db_num:
+            # index up to date, nothing to do
+            continue
+        threadnums = await get_board_db_threads_after_num(board, last_indexed_num)
+        for thread_nums in batched(threadnums, THREAD_BATCH):
+            await index_board_threads_slow(board, sp, thread_nums, post_pack_fn, batch_pack_fn)
+    await sp.finalize()
+
+# END incremental load
+        
+@asynccontextmanager
+async def search_provider_ctx():
+    from .providers import get_index_search_provider
+    sp = get_index_search_provider()
+    try:
+        yield sp
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+    finally:
+        await gather(
+            sp.close(),
+            db_q.close_db_pool(),
+        )
+
+async def load_incremental(boards: list[str]):
+    if not boards:
+        return
+    async with search_provider_ctx() as sp:
+        await incremental_index_slow(sp, boards)
+
+async def load_full(boards: list[str], reset: bool=False):
+    if not boards:
+        return
+    async with search_provider_ctx() as sp:
+        if reset:
+            try:
+                await sp.posts_wipe()
+            except Exception:
+                print('No existing index.')
+            await sp.init_indexes()
+        for board in boards:
+            await index_board(board, sp)
+        await sp.finalize()
 
 async def main(boards: list[str], reset: bool=False):
     from .providers import get_index_search_provider
