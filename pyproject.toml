@@ -1,0 +1,114 @@
+[project]
+name = 'Ayase-Quart'
+version = '0.0.1'
+requires-python = '>=3.12'
+description = 'A web interface for imageboard archives using the Asagi database schema'
+readme = 'README.md'
+license = 'AGPLv3'
+license-files = ['LICENSE']
+authors = [
+	{ name = 'sky-cake', email = 'ayasequart@proton.me' },
+]
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Environment :: Web Environment',
+    'Environment :: Console',
+    'Framework :: Flask',
+    'Intended Audience :: Developers',
+	'Intended Audience :: System Administrators',
+	'Intended Audience :: Science/Research',
+	'License :: OSI Approved :: GNU Affero General Public License v3',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Topic :: Communications :: BBS',
+    'Topic :: Database',
+    'Topic :: Sociology :: History',
+    'Topic :: System :: Archiving',
+]
+
+dependencies = [
+    'aiofiles',
+    'aiohttp',
+    'aiosqlite',
+    'async-lru',
+	'coredis',
+	'flask-paginate',
+	'Flask-WTF',
+	'msgpack',
+    'orjson',
+	'Quart',
+	'quart-wtforms',
+	'quart-auth',
+	'quart-rate-limiter',
+	'quart-schema[pydantic]',
+	'quart-uploads',
+	'pillow',
+	'python-dateutil',
+	'pybase64',
+	'tqdm',
+	'zlib-ng',
+]
+
+[project.urls]
+Donate = 'https://github.com/sky-cake/ayase-quart#donate--support'
+Documentation = 'https://github.com/sky-cake/ayase-quart#basic-set-up'
+Changes = 'https://ayasequart.org/about#news'
+Source = 'https://github.com/sky-cake/ayase-quart'
+Demo = 'https://ayasequart.org'
+
+# [project.optional-dependencies]
+
+# [project.scripts]
+# ayaseq = 'cli.report:main'
+
+[dependency-groups]
+dev = [
+    'ruff',
+]
+tests = [
+    'pytest',
+    'pytest-asyncio',
+]
+mysql = [
+    'aiomysql',
+    'cryptography',
+]
+postgresql = [
+    'asyncpg',
+]
+vox = [
+	'beautifulsoup4',
+]
+
+[tool.uv]
+default-groups = ['dev', 'tests']
+
+# [tool.pytest.ini_options]
+# testpaths = ['tests']
+# addopts = '--no-cov-on-fail --showlocals --strict-markers'
+# asyncio_default_fixture_loop_scope = 'session'
+# asyncio_mode = 'auto'
+# filterwarnings = [
+#     'error',
+# ]
+
+# [tool.ruff]
+# src = ['src']
+# fix = false
+# show-fixes = false
+# output-format = 'full'
+
+# [tool.ruff.lint]
+# select = [
+# ]
+# ignore = [
+# ]
+
+# [tool.pyright]
+# pythonVersion = '3.12'
+# include = ['src', 'tests']
+# typeCheckingMode = 'basic'
+
+# [build-system]
+# requires = ['setuptools']
+# build-backend = 'setuptools.build_meta'
