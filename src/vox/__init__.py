@@ -10,7 +10,7 @@ import requests
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from utils import Graph
+from utils.graphs import Graph
 
 
 file_exts = ['jpg', 'png', 'webm', 'mp4',]
@@ -113,7 +113,7 @@ def make_transcript(g: Graph, mode: TranscriptMode) -> str:
             texts.append((Speaker.narrator, f'{name}: '))
             texts.append((Speaker.anon, post['comment']))
 
-    return clean_text(' '.join(t[1] for t in texts)) if texts else ''
+    return clean_text(' '.join(t[1] for t in texts if t[1])) if texts else ''
 
 
 class VoxIO:
