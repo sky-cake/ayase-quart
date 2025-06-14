@@ -1,16 +1,19 @@
-from enum import Enum
-
 from coredis import Redis
 
 from configs import redis_conf
 
+def get_redis(db: int) -> Redis:
+    if not hasattr(get_redis, 'clients'):
+        get_redis.clients = {}
+    if db not in get_redis.clients:
+        client = Redis(**redis_conf, db=db)
+        get_redis.clients[db] = client
+    return get_redis.clients[db]
 
-class RedisDbNumber(Enum):
-    auth: int = 1
-
-async def get_redis(db: RedisDbNumber) -> Redis:
-    if not hasattr(get_redis, 'client'):
-        get_redis.client = Redis(host=redis_conf['host'], port=redis_conf['port'], db=db.value)
-        await get_redis.client.flushdb()
-        return get_redis.client
-    return get_redis.client
+def close_redis():
+    if not hasattr(get_redis, 'clients'):
+        return
+    clients: dict[int, Redis] = get_redis.clients
+    for client in clients.values():
+        client.connection_pool.disconnect()
+    del get_redis.clients

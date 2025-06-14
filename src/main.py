@@ -16,6 +16,7 @@ from moderation import init_moderation
 from tagging.db import init_tagging
 from moderation.filter_cache import fc
 from render import render_controller
+from redis_cache import close_redis
 from templates import render_constants, template_error_message
 from archiveposting import init_archiveposting
 
@@ -45,6 +46,10 @@ async def app_exception(e: Exception):
     render = await render_controller(template_error_message, message=message, tab_title='Error', title='Uh-oh...')
     return render, 500
 
+async def close_dbs():
+    wait_close_db = db_q.close_db_pool()
+    close_redis()
+    await wait_close_db
 
 async def create_app():
     file_dir = os.path.dirname(__file__)
@@ -75,7 +80,7 @@ async def create_app():
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
-    app.after_serving(db_q.close_db_pool)
+    app.after_serving(close_dbs)
 
     if mod_conf['enabled']:
         from moderation.auth import auth_api, auth_web
