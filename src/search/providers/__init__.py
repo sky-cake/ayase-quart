@@ -27,7 +27,7 @@ search_index_fields = [
     SearchIndexField('comment_length', int, filterable=True, optional=True),
     SearchIndexField('media_hash', str, filterable=True, optional=True),
     SearchIndexField('trip', str, filterable=True, optional=True),
-    SearchIndexField('num', int, filterable=True),
+    SearchIndexField('num', int, sortable=True, filterable=True),
     SearchIndexField('thread_num', int, filterable=True, optional=True),
     SearchIndexField('media_w', int, filterable=True, optional=True),
     SearchIndexField('media_h', int, filterable=True, optional=True),
