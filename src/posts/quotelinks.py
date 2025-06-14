@@ -2,7 +2,7 @@ import re
 from collections import defaultdict
 from html import escape
 from typing import Generator
-from utils import startswith_uint_no0, get_prefix_uint_no0
+from utils.integers import get_prefix_uint_no0
 
 
 def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
