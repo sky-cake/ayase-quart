@@ -3,15 +3,16 @@ import quart_flask_patch  # no qa
 import json
 from datetime import datetime
 from enum import Enum
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Any
 
 from quart_auth import AuthUser, Action
 from werkzeug.security import check_password_hash, generate_password_hash
-from configs import redis_conf
+from configs import mod_conf
 from db import db_m
+from db.redis import get_redis
 from enums import DbPool
-from redis_cache import RedisDbNumber, get_redis
 
+REDIS_MOD_DB: int = mod_conf.get('redis_db', 1)
 
 class Permissions(Enum):
     user_create = 'user_create'
@@ -36,13 +37,13 @@ class Permissions(Enum):
     messages_view = 'messages_view'
 
 
-async def redis_set_user_data(user_id: int, user_data: dict[str, str|int|float|set|list|tuple], expire_seconds: int = None):
+async def redis_set_user_data(user_id: int, user_data: dict[str, Any], expire_seconds: int = None):
     """
     Redis does not take dict values, so we json serialize it.
     Keep that in mind when using this.
     E.g. sets will be returned as lists.
     """
-    r = await get_redis(RedisDbNumber.auth)
+    r = get_redis(REDIS_MOD_DB)
 
     serialized = dict()
     for key, value in user_data.items():
@@ -66,7 +67,7 @@ async def redis_get_user_data(user_id: int) -> dict | None:
     Keep that in mind when using this.
     E.g. sets will be returned as lists.
     """
-    r = await get_redis(RedisDbNumber.auth)
+    r = get_redis(REDIS_MOD_DB)
     user_data = await r.hgetall(user_id)
 
     if not user_data:
@@ -85,7 +86,7 @@ async def redis_get_user_data(user_id: int) -> dict | None:
 
 
 async def redis_delete_user_data(user_id: int):
-    r = await get_redis(RedisDbNumber.auth)
+    r = get_redis(REDIS_MOD_DB)
     await r.delete(user_id)
 
 
@@ -299,13 +300,13 @@ class User(AuthUser):
             return
 
         u = None
-        if redis_conf['redis']:
+        if mod_conf['redis']:
             u = await redis_get_user_data(self.auth_id) # could not exist, or possibly be expired
 
         if not u:
             u = await get_user_by_id(self.auth_id)
 
-            if redis_conf['redis']:
+            if mod_conf['redis']:
                 key = self.auth_id
                 val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
                 await redis_set_user_data(key, val, expire_seconds)

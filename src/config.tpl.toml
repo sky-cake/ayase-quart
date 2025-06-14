@@ -71,12 +71,12 @@ min_size = 1
 max_size = 50
 
 
-
+# creates a connection pool per db per process
+# db is set per functionality (ex: [moderation])
 [redis] # follow coredis connection keys
-redis = true # true, false. AQ uses redis to cache user auth, and filter posts that have been reported
 host = "127.0.0.1"
 port = 6379
-db = 0 # redis database id
+max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
 
 
 [stats]
@@ -170,6 +170,11 @@ path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/rel
 # path where hidden images should go
 # if empty, images can still be served if their URLs are known
 hidden_images_path = '' # e.g. '/home/garbage/disposal'
+
+# Use redis to cache user auth and filter reported posts
+# Ensure redis connection is valid (see [redis])
+redis = true # true, false.
+redis_db = 1 # redis database id
 
 [moderation.sqlite]
 database = 'path/to/moderation.db' # path to the moderation database
