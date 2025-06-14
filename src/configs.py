@@ -14,7 +14,7 @@ def _load_config_toml():
 
 conf = _load_config_toml()
 app_conf = conf.get('app', {})
-app_conf['login_endpoint'] = f'/{app_conf['login_endpoint'].strip('/')}'
+app_conf['login_endpoint'] = f"/{app_conf['login_endpoint'].strip('/')}"
 
 site_conf = conf.get('site', {})
 archive_conf = conf.get('archive', {'name': '4chan'})
