@@ -7,7 +7,7 @@ readme = 'README.md'
 license = 'AGPLv3'
 license-files = ['LICENSE']
 authors = [
-	{ name = 'sky-cake', email = 'ayasequart@proton.me' },
+    { name = 'sky-cake', email = 'ayasequart@proton.me' },
 ]
 classifiers = [
     'Development Status :: 4 - Beta',
@@ -15,9 +15,9 @@ classifiers = [
     'Environment :: Console',
     'Framework :: Flask',
     'Intended Audience :: Developers',
-	'Intended Audience :: System Administrators',
-	'Intended Audience :: Science/Research',
-	'License :: OSI Approved :: GNU Affero General Public License v3',
+    'Intended Audience :: System Administrators',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: GNU Affero General Public License v3',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Topic :: Communications :: BBS',
@@ -31,22 +31,22 @@ dependencies = [
     'aiohttp',
     'aiosqlite',
     'async-lru',
-	'coredis',
-	'flask-paginate',
-	'Flask-WTF',
-	'msgpack',
+    'coredis',
+    'flask-paginate',
+    'Flask-WTF',
+    'msgpack',
     'orjson',
-	'Quart',
-	'quart-wtforms',
-	'quart-auth',
-	'quart-rate-limiter',
-	'quart-schema[pydantic]',
-	'quart-uploads',
-	'pillow',
-	'python-dateutil',
-	'pybase64',
-	'tqdm',
-	'zlib-ng',
+    'Quart',
+    'quart-wtforms',
+    'quart-auth',
+    'quart-rate-limiter',
+    'quart-schema[pydantic]',
+    'quart-uploads',
+    'pillow',
+    'python-dateutil',
+    'pybase64',
+    'tqdm',
+    'zlib-ng',
 ]
 
 [project.urls]
@@ -77,7 +77,7 @@ postgresql = [
     'asyncpg',
 ]
 vox = [
-	'beautifulsoup4',
+    'beautifulsoup4',
 ]
 
 [tool.uv]
