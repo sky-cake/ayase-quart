@@ -59,7 +59,7 @@ Demo = 'https://ayasequart.org'
 # [project.optional-dependencies]
 
 # [project.scripts]
-# ayaseq = 'cli.report:main'
+# ayaseq = 'src.cli'
 
 [dependency-groups]
 dev = [
