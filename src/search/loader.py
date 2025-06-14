@@ -255,7 +255,7 @@ if SHOULD_INDEX_MEDIA:
     row_keys = selector_columns + ('doc_id', 'title', 'timestamp', 'comment_length', 'title_length', 'file_archived')
 else:
     row_keys = selector_columns + ('doc_id', 'title', 'timestamp', 'comment_length', 'title_length')
-
+DOC_ID_IDX = row_keys.index('doc_id')
 # can be a bit more lenient in regargs to efficiency, we're farming this out to multiprocessing
 def process_post_rows(board: str, rows: list[tuple], post_pack_fn: Callable[[dict], dict], byte_pack_fn: Callable[[list[dict]], bytes]):
     # the board_int is the same for all the posts
