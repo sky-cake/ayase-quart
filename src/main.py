@@ -12,11 +12,11 @@ from quart_rate_limiter import RateLimiter
 from blueprints import blueprints # importing timm and torch down the import hole makes this slow
 from configs import QuartConfig, app_conf, mod_conf, tag_conf, archiveposting_conf
 from db import db_q
+from db.redis import close_redis
 from moderation import init_moderation
 from tagging.db import init_tagging
 from moderation.filter_cache import fc
 from render import render_controller
-from redis_cache import close_redis
 from templates import render_constants, template_error_message
 from archiveposting import init_archiveposting
 
