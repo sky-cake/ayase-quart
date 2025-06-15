@@ -130,6 +130,18 @@ class BaseSearch(ABC):
     async def finalize(self):
         await self._finalize(INDEXES.posts.value)
 
+    async def board_last_num(self, board: int) -> int|None:
+        q = IndexSearchQuery(
+            boards=[board],
+            sort='desc',
+            sort_by='num',
+            hits_per_page=1,
+        )
+        results, total_hits = await self.search_posts(q)
+        if not total_hits:
+            return None
+        return results[0]['num']
+
 
 """
 For deleting entries in indexes before adding them
