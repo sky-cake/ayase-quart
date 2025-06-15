@@ -338,6 +338,7 @@ async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerat
 
         after_thread_num = rows[-1][0] # thread_num
 
+
 # BEGIN incremental load
 
 async def get_board_db_last_num(board: str) -> int|None:
@@ -346,12 +347,14 @@ async def get_board_db_last_num(board: str) -> int|None:
         return None
     return rows[0][0]
 
+
 async def get_board_db_threads_after_num(board: str, num: int) -> list[int]:
     sql = f'select distinct(thread_num) from {board} where num >= {db_q.phg()};'
     rows = await db_q.query_tuple(sql, (num,))
     return [row[0] for row in rows]
 
-async def index_board_threads_slow(board: str, sp: BaseSearch, thread_nums: list[int], post_pack_fn: Callable[[dict], dict], batch_pack_fn: Callable[[list[dict]], bytes]):
+
+async def index_board_threads_single_thread(board: str, sp: BaseSearch, thread_nums: list[int], post_pack_fn: Callable[[dict], dict], batch_pack_fn: Callable[[list[dict]], bytes]):
     board_int = board_2_int(board)
     post_rows = await get_post_rows(board, thread_nums)
     pks = [board_int_num_2_pk(board_int, p[DOC_ID_IDX]) for p in post_rows]
@@ -361,7 +364,8 @@ async def index_board_threads_slow(board: str, sp: BaseSearch, thread_nums: list
     for _, post_batch in post_batches:
         await sp.add_posts_bytes(post_batch)
 
-async def incremental_index_slow(sp: BaseSearch, boards: list[str]):
+
+async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
     post_pack_fn = sp.get_post_pack_fn()
     batch_pack_fn = sp.get_batch_pack_fn()
     for board in boards:
@@ -376,13 +380,14 @@ async def incremental_index_slow(sp: BaseSearch, boards: list[str]):
         if last_indexed_num >= last_db_num:
             # index up to date, nothing to do
             continue
-        threadnums = await get_board_db_threads_after_num(board, last_indexed_num)
-        for thread_nums in batched(threadnums, THREAD_BATCH):
-            await index_board_threads_slow(board, sp, thread_nums, post_pack_fn, batch_pack_fn)
+        thread_nums = await get_board_db_threads_after_num(board, last_indexed_num)
+        for thread_nums_batched in batched(thread_nums, THREAD_BATCH):
+            await index_board_threads_single_thread(board, sp, thread_nums_batched, post_pack_fn, batch_pack_fn)
     await sp.finalize()
 
 # END incremental load
-        
+
+
 @asynccontextmanager
 async def search_provider_ctx():
     from .providers import get_index_search_provider
@@ -398,11 +403,13 @@ async def search_provider_ctx():
             db_q.close_db_pool(),
         )
 
+
 async def load_incremental(boards: list[str]):
     if not boards:
         return
     async with search_provider_ctx() as sp:
-        await incremental_index_slow(sp, boards)
+        await incremental_index_single_thread(sp, boards)
+
 
 async def load_full(boards: list[str], reset: bool=False):
     if not boards:
@@ -417,6 +424,7 @@ async def load_full(boards: list[str], reset: bool=False):
         for board in boards:
             await index_board(board, sp)
         await sp.finalize()
+
 
 async def main(boards: list[str], reset: bool=False):
     from .providers import get_index_search_provider
