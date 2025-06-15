@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `%%BOARD%%_images` (
     `banned` smallint unsigned NOT NULL DEFAULT '0',
 
     PRIMARY KEY (`media_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_nopad_bin;
+) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin;
 
 CREATE TABLE IF NOT EXISTS `%%BOARD%%_users` (
     `user_id` int unsigned NOT NULL auto_increment,

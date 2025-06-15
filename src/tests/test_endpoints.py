@@ -26,7 +26,7 @@ class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
             '/stats',
         ]
 
-        # print('Did you start the server manually with `python3.13 main.py`?')
+        # print('Did you start the server manually with `python main.py`?')
         for endpoint in endpoints:
             url = f'http://127.0.0.1:{app_conf.get('port')}{endpoint}'
             response = requests.get(url)
