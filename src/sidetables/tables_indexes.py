@@ -15,9 +15,9 @@ class SidetableTemplate:
 
     def get_command_template(self, command: str):
         match command:
-            case 'create':
+            case 'createtable':
                 return self.create_table
-            case 'drop':
+            case 'droptable':
                 return self.drop_table
             case 'dropindex':
                 return self.drop_index
@@ -125,16 +125,20 @@ sidetable_templates = {
     ),
 }
 
+
 def generate_from_template(template: str, boards: list[str]):
     return '\n'.join(
         template.replace('%%BOARD%%', board)
         for board in boards	
     )
 
+
 async def run_table_command(command: str, boards: list[str]):
     if not (templates := sidetable_templates.get(db_type, None)):
+        print(f'Table command not supported for database {db_type}')
         return
     if not (template := templates.get_command_template(command)):
+        print(f'Table command {command} not found.')
         return
     try:
         sql = generate_from_template(template, boards)

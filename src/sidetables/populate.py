@@ -18,15 +18,15 @@ thread_columns = tuple('thread_num time_op time_last time_bump time_last_modifie
 
 async def board_rows_gen(board: str, after_doc_id: int=0) -> AsyncGenerator:
     batch_size = BATCH_POSTS
-    
+
+    sql = f"""
+    select {','.join(post_columns)}
+    from `{board}`
+    where doc_id > {db_q.phg()}
+    order by doc_id asc
+    limit {batch_size}
+    ;"""
     while True:
-        sql = f"""
-        select {','.join(post_columns)}
-        from `{board}`
-        where doc_id > {db_q.phg()}
-        order by doc_id asc
-        limit {batch_size}
-        ;"""
         rows = await db_q.query_tuple(sql, (after_doc_id,))
         if not rows:
             break
