@@ -12,6 +12,9 @@ Commands:
         only primary keys set, no other indexes
     droptable board1 [board2 [board3 ...]]
         drop side tables for selected boards
+    backuptable board1 [board2 [board3 ...]]
+        rename side tables for selected boards with _bak suffix
+        ensure that side tables exist beforehand
     dropindex board1 [board2 [board3 ...]]
         drop indexes for selected boards side tables
         ensure that side tables exist beforehand
@@ -31,7 +34,7 @@ def main(args: list[str]):
     if not args: help_exit()
     command, args = args[0], args[1:]
     match command:
-        case 'createtable' | 'droptable' | 'dropindex' | 'addindex':
+        case 'createtable' | 'droptable' | 'backuptable' | 'dropindex' | 'addindex':
             if not args: help_exit()
             boards = args
             asyncio.run(run_table_command(command, boards))

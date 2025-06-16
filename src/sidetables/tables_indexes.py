@@ -5,11 +5,13 @@ from configs import db_conf
 from db import db_q
 
 db_type: DbType = db_conf['db_type']
+backup_suffix = 'bak'
 
 @dataclass
 class SidetableTemplate:
     create_table: str = ''
     drop_table: str = ''
+    backup_table: str = ''
     add_index: str = ''
     drop_index: str = ''
 
@@ -19,6 +21,8 @@ class SidetableTemplate:
                 return self.create_table
             case 'droptable':
                 return self.drop_table
+            case 'backuptable':
+                return self.backup_table
             case 'dropindex':
                 return self.drop_index
             case 'addindex':
@@ -91,6 +95,14 @@ DROP TABLE IF EXISTS `%%BOARD%%_images`;
 DROP TABLE IF EXISTS `%%BOARD%%_users`;
 """
 
+backup_table_mysql = f"""
+rename table `%%BOARD%%_daily` to `%%BOARD%%_daily_{backup_suffix}`;
+rename table `%%BOARD%%_deleted` to `%%BOARD%%_deleted_{backup_suffix}`;
+rename table `%%BOARD%%_images` to `%%BOARD%%_images_{backup_suffix}`;
+rename table `%%BOARD%%_threads` to `%%BOARD%%_threads_{backup_suffix}`;
+rename table `%%BOARD%%_users` to `%%BOARD%%_users_{backup_suffix}`;
+"""
+
 drop_index_mysql = """
 drop index `time_op_index` on `%%BOARD%%_threads`;
 drop index `time_bump_index` on `%%BOARD%%_threads`;
@@ -120,6 +132,7 @@ sidetable_templates = {
     DbType.mysql: SidetableTemplate(
         create_table=create_table_mysql,
         drop_table=drop_table_mysql,
+        backup_table=backup_table_mysql,
         drop_index=drop_index_mysql,
         add_index=add_index_mysql,
     ),
