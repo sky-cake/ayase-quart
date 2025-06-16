@@ -381,8 +381,8 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
             # index up to date, nothing to do
             continue
         thread_nums = await get_board_db_threads_after_num(board, last_indexed_num)
-        for thread_nums_batched in batched(thread_nums, THREAD_BATCH):
-            await index_board_threads_single_thread(board, sp, thread_nums_batched, post_pack_fn, batch_pack_fn)
+        for thread_nums_batch in batched(thread_nums, THREAD_BATCH):
+            await index_board_threads_single_thread(board, sp, thread_nums_batch, post_pack_fn, batch_pack_fn)
     await sp.finalize()
 
 # END incremental load

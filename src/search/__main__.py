@@ -8,7 +8,7 @@ from search.loader import load_full, load_incremental
 from search.providers import get_index_search_provider
 
 help_text = """
-Usage: python3.13 -m search COMMANDS [args]
+Usage: python -m search COMMANDS [args]
        Run this from the directory `./ayase-quart/src`
 Commands:
     create
@@ -20,11 +20,11 @@ Commands:
     delete
         delete search indexes
 All use cases:
-    ./ayase-quart/src$ python3.13 -m search load --full         g ck biz
-    ./ayase-quart/src$ python3.13 -m search load --full --reset g ck biz
-    ./ayase-quart/src$ python3.13 -m search load --incr         g ck biz
-    ./ayase-quart/src$ python3.13 -m search create
-    ./ayase-quart/src$ python3.13 -m search delete
+    ./ayase-quart/src$ python -m search load --full         g ck biz
+    ./ayase-quart/src$ python -m search load --full --reset g ck biz
+    ./ayase-quart/src$ python -m search load --incr         g ck biz
+    ./ayase-quart/src$ python -m search create
+    ./ayase-quart/src$ python -m search delete
 """
 
 

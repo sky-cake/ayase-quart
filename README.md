@@ -54,14 +54,14 @@ Also, it is expected you will not remove or hide any existing links or reference
 
 Use Python 3.12.x or 3.13.x.
 
-At least version SQLite 3.35.0 is required if you want to use the moderation tools. AQ was developed against 3.47.0. You can check your installed version with `python3.13 -c "import sqlite3; print(sqlite3.sqlite_version)"`.
+At least version SQLite 3.35.0 is required if you want to use the moderation tools. AQ was developed against 3.47.0. You can check your installed version with `python -c "import sqlite3; print(sqlite3.sqlite_version)"`.
 
 Assuming you have a data source set up, you can:
 
 1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
 2. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
-		- Run `python3.13 -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
+		- Run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
       - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
@@ -72,9 +72,9 @@ Assuming you have a data source set up, you can:
 4. Create a virtualenv and install dependencies,
    
     ```bash
-    python3.13 -m venv venv
+    python -m venv venv
     source venv/bin/activate
-    python3.13 -m pip install -r requirements.txt
+    python -m pip install -r requirements.txt
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
@@ -88,9 +88,9 @@ Assuming you have a data source set up, you can:
     sudo systemctl restart redis
     sudo systemctl status redis
     ```
-6. `python3.13 main.py`
-7. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
-8. [Optional] Set up a full text search (FTS) database for index searching.
+1. `python main.py`
+1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
+1. [Optional] Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`.
    - Learn about configuring search engines [here](https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart).
    - Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing phase for your discretion.
@@ -104,7 +104,7 @@ Assuming you have a data source set up, you can:
         | [QuickWit ](https://quickwit.io/docs/get-started/quickstart) | [quickwit](https://github.com/quickwit-oss/quickwit) | (partial support, not tested) |
 
     - Remember to check that your config port matches the docker container port.
-    - Run `python3.13 -m search load --reset board1 [board2 [board3 ...]`.
+    - Run `python -m search load --reset board1 [board2 [board3 ...]`.
       - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
 9. [Optional] Submit pull requests with fixes and new features!
@@ -130,7 +130,7 @@ Terminal A
 Terminal B
 
 1. If you haven't already, set the index search configs in `config.toml`.
-2. cd to `~/ayase-quart/src` then run `python3.13 -m search load --reset a b c g gif ...`
+2. cd to `~/ayase-quart/src` then run `python -m search load --reset a b c g gif ...`
 3. You should see a bunch of loading bars progressing.
 4. In Terminal A, you should see LNX spraying a bunch of output. That's good and means it's working
 
@@ -182,9 +182,9 @@ The moderation system requires authentication. The default username and password
 
 Here is a test drive of the cli.
 
-`python3.13 ./src/cli/reports.py`
+`python ./src/cli/reports.py`
 ```bash
-Usage: python3.13 ./src/cli/reports.py [OPTIONS] COMMAND [ARGS]...
+Usage: python ./src/cli/reports.py [OPTIONS] COMMAND [ARGS]...
 
 Options:
 --help  Show this message and exit.
@@ -197,12 +197,12 @@ cli-get-reports
 cli-reports-action
 ```
 
-`python3.13 ./src/cli/reports.py cli-get-report-count`
+`python ./src/cli/reports.py cli-get-report-count`
 ```bash
 Report count: 4
 ```
 
-`python3.13 ./src/cli/reports.py cli-get-reports --public_access v --created_at_gte "2024-01-01"`
+`python ./src/cli/reports.py cli-get-reports --public_access v --created_at_gte "2024-01-01"`
 ```bash
 |   report_parent_id | board_shortname   |      num |   thread_num | public_access   | mod_status   | mod_notes   |   ip_count | submitter_category          | submitter_notes   | link                                                |
 |--------------------+-------------------+----------+--------------+-----------------+--------------+-------------+------------+-----------------------------+-------------------+-----------------------------------------------------|
@@ -210,7 +210,7 @@ Report count: 4
 |                  3 | r9k               | 80365280 |     80365251 | v               | o            |             |          1 | DCMA                        | aaaaaa            | http://127.0.0.1:9001/r9k/thread/80365251#p80365280 |
 ```
 
-`python3.13 ./src/cli/reports.py cli-reports-action --help`
+`python ./src/cli/reports.py cli-reports-action --help`
 ```bash
 Usage: reports.py cli-reports-action [OPTIONS]
 
@@ -230,7 +230,7 @@ Do **not** sort imports automatically. Tools will not respect `#noqa`, and will 
 
 Lint checking can be performed with,
 
-`python3.13 -m pip install ruff`
+`python -m pip install ruff`
 
 `ruff check src/ --ignore F401`
 
