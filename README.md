@@ -59,7 +59,7 @@ At least version SQLite 3.35.0 is required if you want to use the moderation too
 Assuming you have a data source set up, you can:
 
 1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
-2. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
+1. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
 		- Run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
@@ -68,8 +68,8 @@ Assuming you have a data source set up, you can:
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
       - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-3. (Optional) Create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
-4. Create a virtualenv and install dependencies,
+1. (Optional) Create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
+1. Create a virtualenv and install dependencies,
    
     ```bash
     python -m venv venv
@@ -78,7 +78,7 @@ Assuming you have a data source set up, you can:
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
-5. Set up redis.
+1. Set up redis.
 
     ```bash
     # Set line `supervised no` to `supervised systemd`.
@@ -107,7 +107,7 @@ Assuming you have a data source set up, you can:
     - Run `python -m search load --reset board1 [board2 [board3 ...]`.
       - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
-9. [Optional] Submit pull requests with fixes and new features!
+1. [Optional] Submit pull requests with fixes and new features!
 
 
 ## Set Up with Docker
