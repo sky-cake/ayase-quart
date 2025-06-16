@@ -40,8 +40,8 @@ def main(args: list[str]):
             asyncio.run(run_table_command(command, boards))
         case 'populate':
             if not args: help_exit()
-            board = args[0]
-            run_populate(board)
+            boards = args
+            run_populate(boards)
         case _:
             help_exit()
 
