@@ -1,7 +1,7 @@
 [project]
 name = 'Ayase-Quart'
 version = '0.0.1'
-requires-python = '>=3.12'
+requires-python = '>=3.12,<3.14'
 description = 'A web interface for imageboard archives using the Asagi database schema'
 readme = 'README.md'
 license = 'AGPLv3'

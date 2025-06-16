@@ -116,8 +116,11 @@ def get_post_d(p: dict) -> dict:
         'timestamp': int(time.time()),
         'thread_num': p.get('thread_num'),
         'op': 1 if p.get('op') else 0,
-        'title': html.escape(p.get('title')) if p.get('title') else None,
-        'comment': html.escape(p.get('comment')) if p.get('comment') else None,
+
+        # escape these when rendering html
+        'title': p.get('title', None),
+        'comment': p.get('comment', None),
+
         'capcode': p.get('capcode') if p.get('capcode') else Capcode.user,
         'name': None,
         'trip': None,

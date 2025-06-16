@@ -5,7 +5,11 @@ from configs import archive_conf
 
 
 def html_comment(comment: str, thread_num: int, board: str):
-    """Yes, there are multiple `in comment` statements, but this is 1-2ms faster than looping over `comment` once, believe it or not."""
+    """Will escape html if needed.
+    
+    Note: Yes, there are multiple `in comment` statements,
+    but this is 1-2ms faster than looping over `comment` once, believe it or not.
+    """
     if not comment:
         return comment
 

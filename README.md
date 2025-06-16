@@ -18,9 +18,8 @@ Ayase Quart (AQ) is an interface for 4chan/Lainchan archives using the Asagi dat
   - Web, API, and CLI support.
 - Image searching via tags.
   - Test it out at [https://ayasequart.org/fts](https://ayasequart.org/fts).
-- Text to speech using [flite](https://github.com/festvox/flite).
-  - Here is the [tts audio](https://voca.ro/16czryMpnexI) of flite reading the thread [https://ayasequart.org/g/thread/96520802](https://ayasequart.org/g/thread/96520802) in `op_and_op_replies` mode.
-  - DFS, BFS, and OP only modes are also available.
+- Text to speech using [flite](https://github.com/festvox/flite) or [kokoro](https://github.com/sky-cake/Kokoro-FastAPI-Debloated) (recommended).
+  - `DFS`, `BFS`, `OP only`, and `OP and replies to OP` modes are available.
 
 AQ supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper), [Hayden (MySQL)](https://github.com/bbepis/Hayden), and [Ritual (SQLite)](https://github.com/sky-cake/Ritual) archive downloaders.
 
@@ -53,14 +52,14 @@ Also, it is expected you will not remove or hide any existing links or reference
 
 ## Basic Set Up
 
-Python 3.13.x is required.
+Use Python 3.12.x or 3.13.x.
 
 At least version SQLite 3.35.0 is required if you want to use the moderation tools. AQ was developed against 3.47.0. You can check your installed version with `python3.13 -c "import sqlite3; print(sqlite3.sqlite_version)"`.
 
 Assuming you have a data source set up, you can:
 
 1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
-1. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
+2. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
 		- Run `python3.13 -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
@@ -69,8 +68,8 @@ Assuming you have a data source set up, you can:
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
       - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) Create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
-1. Create a virtualenv and install dependencies,
+3. (Optional) Create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
+4. Create a virtualenv and install dependencies,
    
     ```bash
     python3.13 -m venv venv
@@ -79,7 +78,7 @@ Assuming you have a data source set up, you can:
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
-1. Set up redis.
+5. Set up redis.
 
     ```bash
     # Set line `supervised no` to `supervised systemd`.
@@ -89,9 +88,9 @@ Assuming you have a data source set up, you can:
     sudo systemctl restart redis
     sudo systemctl status redis
     ```
-1. `python3.13 main.py`
-1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
-1. [Optional] Set up a full text search (FTS) database for index searching.
+6. `python3.13 main.py`
+7. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
+8. [Optional] Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`.
    - Learn about configuring search engines [here](https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart).
    - Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing phase for your discretion.
@@ -108,7 +107,7 @@ Assuming you have a data source set up, you can:
     - Run `python3.13 -m search load --reset board1 [board2 [board3 ...]`.
       - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
-2. [Optional] Submit pull requests with fixes and new features!
+9. [Optional] Submit pull requests with fixes and new features!
 
 
 ## Set Up with Docker
