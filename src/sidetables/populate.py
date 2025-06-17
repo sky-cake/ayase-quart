@@ -90,13 +90,14 @@ async def aggregate_posts(board: str, after_doc_id: int=0):
     async for row_batch in tqdm_a(board_rows_gen(board, after_doc_id), desc=f'load posts'):
         for _, num, thread_num, timestamp, media_hash, sticky, locked in row_batch:
             thread = threads[thread_num]
-            thread.replies += 1
+
             if media_hash:
                 thread.images += 1
                 media_hashes[media_hash] += 1
 
             if timestamp > thread.time_bump:
                 thread.time_bump = timestamp
+                # not sure how these are done
                 thread.time_last = timestamp
                 thread.time_last_modified = timestamp
 
@@ -104,6 +105,8 @@ async def aggregate_posts(board: str, after_doc_id: int=0):
                 thread.time_op = timestamp
                 thread.locked = locked
                 thread.sticky = sticky
+            else:
+                thread.replies += 1
     
     return threads, media_hashes
 
