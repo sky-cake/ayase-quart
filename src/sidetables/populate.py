@@ -12,7 +12,7 @@ from db import db_q
 
 BATCH_POSTS = 10000
 BATCH_THREADS = 4000
-BATCH_IMAGES = 3000
+BATCH_IMAGES = 6000
 
 split_tuple =  lambda columns: tuple(columns.split())
 
