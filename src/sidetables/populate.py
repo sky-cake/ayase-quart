@@ -78,6 +78,27 @@ async def board_rows_gen(board: str, after_doc_id: int=0) -> AsyncGenerator:
             break
         after_doc_id = rows[-1][0] # last doc_id
 
+# update threads from just a forward range of doc_ids
+# only mysql for now, stub for trigger replacements
+# mysql: {rows} as excluded on duplicate key update val = val + excluded.val
+#   https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+# sqlite: on conflict(thread_num) do update val = val + excluded.val
+#   https://sqlite.org/lang_upsert.html#examples
+# postgresql: on conflict (thread_num) do update set val = val + excluded.val
+#   https://stackoverflow.com/a/1109198
+async def increment_threads(board: str, rows: list[tuple]):
+    ph = ','.join(db_q.phg() for _ in range(len(rows)))
+    sql = f"""insert into `{board}_{SideTable.threads}`({",".join(thread_columns)})
+    values {ph}
+    as excluded on duplicate key update
+        nreplies = nreplies + excluded.nreplies,
+        nimages = nimages + excluded.nimages,
+        time_last = excluded.time_last,
+        time_bump = excluded.time_bump,
+        time_last_modified = excluded.time_last_modified
+    ;"""
+    await db_q.query_tuple(sql, (*rows,))
+
 async def insert_sidetable_fresh(sidetable: SideTable, columns: Iterable[str], board: str, rows: list[tuple]):
     ph = ','.join(db_q.phg() for _ in range(len(rows)))
     sql = f'insert into `{board}_{sidetable}`({",".join(columns)}) values {ph};'
