@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enums import DbType
 from configs import db_conf
 from db import db_q
+from . import SideTableCmd as Cmd
 
 db_type: DbType = db_conf['db_type']
 backup_suffix = 'bak'
@@ -17,15 +18,15 @@ class SidetableTemplate:
 
     def get_command_template(self, command: str):
         match command:
-            case 'createtable':
+            case Cmd.table_create:
                 return self.create_table
-            case 'droptable':
+            case Cmd.table_drop:
                 return self.drop_table
-            case 'backuptable':
+            case Cmd.table_backup:
                 return self.backup_table
-            case 'dropindex':
+            case Cmd.index_drop:
                 return self.drop_index
-            case 'addindex':
+            case Cmd.index_add:
                 return self.add_index
             case _:
                 return None

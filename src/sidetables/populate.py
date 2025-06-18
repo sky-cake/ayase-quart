@@ -12,7 +12,7 @@ from db import db_q
 
 BATCH_POSTS = 10000
 BATCH_THREADS = 4000
-BATCH_IMAGES = 3000
+BATCH_IMAGES = 6000
 
 split_tuple =  lambda columns: tuple(columns.split())
 
@@ -78,6 +78,27 @@ async def board_rows_gen(board: str, after_doc_id: int=0) -> AsyncGenerator:
             break
         after_doc_id = rows[-1][0] # last doc_id
 
+# update threads from just a forward range of doc_ids
+# only mysql for now, stub for trigger replacements
+# mysql: {rows} as excluded on duplicate key update val = val + excluded.val
+#   https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+# sqlite: on conflict(thread_num) do update val = val + excluded.val
+#   https://sqlite.org/lang_upsert.html#examples
+# postgresql: on conflict (thread_num) do update set val = val + excluded.val
+#   https://stackoverflow.com/a/1109198
+async def increment_threads(board: str, rows: list[tuple]):
+    ph = ','.join(db_q.phg() for _ in range(len(rows)))
+    sql = f"""insert into `{board}_{SideTable.threads}`({",".join(thread_columns)})
+    values {ph}
+    as excluded on duplicate key update
+        nreplies = nreplies + excluded.nreplies,
+        nimages = nimages + excluded.nimages,
+        time_last = excluded.time_last,
+        time_bump = excluded.time_bump,
+        time_last_modified = excluded.time_last_modified
+    ;"""
+    await db_q.query_tuple(sql, (*rows,))
+
 async def insert_sidetable_fresh(sidetable: SideTable, columns: Iterable[str], board: str, rows: list[tuple]):
     ph = ','.join(db_q.phg() for _ in range(len(rows)))
     sql = f'insert into `{board}_{sidetable}`({",".join(columns)}) values {ph};'
@@ -90,13 +111,14 @@ async def aggregate_posts(board: str, after_doc_id: int=0):
     async for row_batch in tqdm_a(board_rows_gen(board, after_doc_id), desc=f'load posts'):
         for _, num, thread_num, timestamp, media_hash, sticky, locked in row_batch:
             thread = threads[thread_num]
-            thread.replies += 1
+
             if media_hash:
                 thread.images += 1
                 media_hashes[media_hash] += 1
 
             if timestamp > thread.time_bump:
                 thread.time_bump = timestamp
+                # not sure how these are done
                 thread.time_last = timestamp
                 thread.time_last_modified = timestamp
 
@@ -104,6 +126,8 @@ async def aggregate_posts(board: str, after_doc_id: int=0):
                 thread.time_op = timestamp
                 thread.locked = locked
                 thread.sticky = sticky
+            else:
+                thread.replies += 1
     
     return threads, media_hashes
 
