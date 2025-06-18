@@ -33,15 +33,17 @@ def help_exit():
 
 def main(args: list[str]):
     if not args: help_exit()
-    command, args = args[0], args[1:]
+    command, boards = args[0], args[1:]
+
+    if not isinstance(boards, list):
+        raise ValueError(f'Boards should be a list, got {type(boards)} {boards=}')
+
+    if not boards: help_exit()
+
     match command:
         case Cmd.table_create | Cmd.table_drop | Cmd.table_backup | Cmd.index_drop | Cmd.index_add:
-            if not args: help_exit()
-            boards = args
             asyncio.run(run_table_command(command, boards))
         case 'populate':
-            if not args: help_exit()
-            boards = args
             run_populate(boards)
         case _:
             help_exit()
