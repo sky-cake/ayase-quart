@@ -3,27 +3,7 @@ string_of_uints_no0 = '123456789'
 
 def startswith_uint(characters: str) -> bool:
     """
-    ```
-    assert startswith_uint('1')        == True
-    assert startswith_uint('1x')       == True
-    assert startswith_uint('x')        == False
-    assert startswith_uint('x0')       == False
-    assert startswith_uint('10')       == True
-    assert startswith_uint('123')      == True
-    assert startswith_uint('0123')     == True
-    assert startswith_uint('01')       == True
-    assert startswith_uint('01203')    == True
-    assert startswith_uint('12300')    == True
-    assert startswith_uint('123.')     == True
-    assert startswith_uint('123x')     == True
-    assert startswith_uint('x123')     == False
-    assert startswith_uint('123⑨⑨45') == True
-    assert startswith_uint('⑨')       == False
-    assert startswith_uint('-123')     == False
-    assert startswith_uint('-00123')   == False
-    assert startswith_uint('xx')       == False
-    assert startswith_uint('')         == False
-    ```
+    See tests for behavior
     """
 
     for c in characters:
@@ -40,27 +20,7 @@ def startswith_uint(characters: str) -> bool:
 
 def startswith_uint_no0(characters: str) -> bool:
     """
-    ```
-    assert startswith_uint_no0('1')        == True
-    assert startswith_uint_no0('1x')       == True
-    assert startswith_uint_no0('x')        == False
-    assert startswith_uint_no0('x0')       == False
-    assert startswith_uint_no0('10')       == True
-    assert startswith_uint_no0('123')      == True
-    assert startswith_uint_no0('0123')     == False
-    assert startswith_uint_no0('01')       == False
-    assert startswith_uint_no0('01203')    == False
-    assert startswith_uint_no0('12300')    == True
-    assert startswith_uint_no0('123.')     == True
-    assert startswith_uint_no0('123x')     == True
-    assert startswith_uint_no0('x123')     == False
-    assert startswith_uint_no0('123⑨⑨45') == True
-    assert startswith_uint_no0('⑨')       == False
-    assert startswith_uint_no0('-123')     == False
-    assert startswith_uint_no0('-00123')   == False
-    assert startswith_uint_no0('xx')       == False
-    assert startswith_uint_no0('')         == False
-    ```
+    See tests for behavior
     """
 
     for c in characters:
@@ -77,22 +37,7 @@ def startswith_uint_no0(characters: str) -> bool:
 
 def is_uint(characters: str) -> bool:
     """
-    The replacement for `str.isdigit()`.
-
-    ```
-    assert is_uint('123')      == True
-    assert is_uint('0123')     == True
-    assert is_uint('01203')    == True
-    assert is_uint('12300')    == True
-    assert is_uint('123.')     == False
-    assert is_uint('123x')     == False
-    assert is_uint('x123')     == False
-    assert is_uint('123⑨⑨45') == False
-    assert is_uint('-123')     == False
-    assert is_uint('-00123')   == False
-    assert is_uint('hi')       == False
-    assert is_uint('')         == False
-    ```
+    See tests for behavior
     """
     if not characters:
         return False
@@ -101,23 +46,7 @@ def is_uint(characters: str) -> bool:
 
 def get_prefix_uint(characters: str) -> int | None:
     """
-    ```
-    assert get_prefix_uint('01')       == 1
-    assert get_prefix_uint('1x')       == 1
-    assert get_prefix_uint('1')        == 1
-    assert get_prefix_uint('123')      == 123
-    assert get_prefix_uint('0123')     == 123
-    assert get_prefix_uint('01203')    == 1203
-    assert get_prefix_uint('12300')    == 12300
-    assert get_prefix_uint('123.')     == 123
-    assert get_prefix_uint('123x')     == 123
-    assert get_prefix_uint('x123')     == None
-    assert get_prefix_uint('123⑨⑨45') == 123
-    assert get_prefix_uint('-123')     == None
-    assert get_prefix_uint('-00123')   == None
-    assert get_prefix_uint('hi')       == None
-    assert get_prefix_uint('')         == None
-    ```
+    See tests for behavior
     """
     number = ''
     for c in characters:
@@ -132,27 +61,7 @@ def get_prefix_uint(characters: str) -> int | None:
 def get_prefix_uint_no0(characters: str) -> int | None:
     """This function exists because we want a way to skip a fake quotelinks like >>0123.
     Quotelinks don't have left-0 padding.
-    ```
-    assert get_prefix_uint_no0('1')        == 1
-    assert get_prefix_uint_no0('1x')       == 1
-    assert get_prefix_uint_no0('x')        == None
-    assert get_prefix_uint_no0('x0')       == None
-    assert get_prefix_uint_no0('10')       == 10
-    assert get_prefix_uint_no0('123')      == 123
-    assert get_prefix_uint_no0('0123')     == None
-    assert get_prefix_uint_no0('01')       == None
-    assert get_prefix_uint_no0('01203')    == None
-    assert get_prefix_uint_no0('12300')    == 12300
-    assert get_prefix_uint_no0('123.')     == 123
-    assert get_prefix_uint_no0('123x')     == 123
-    assert get_prefix_uint_no0('x123')     == None
-    assert get_prefix_uint_no0('123⑨⑨45') == 123
-    assert get_prefix_uint_no0('⑨')       == None
-    assert get_prefix_uint_no0('-123')     == None
-    assert get_prefix_uint_no0('-00123')   == None
-    assert get_prefix_uint_no0('xx')       == None
-    assert get_prefix_uint_no0('')         == None
-    ```
+    See tests for behavior
     """
     if not characters:
         return None
@@ -168,3 +77,14 @@ def get_prefix_uint_no0(characters: str) -> int | None:
             # streak of real digits broken
             break
     return int(number)
+
+
+def clamp_positive_int(value: int|float|str, lower: int=0, upper: int=None) -> int:
+    """Clamps a value within the range:
+
+    `lower <= abs(int(value)) <= upper`
+    """
+    value = max(abs(int(value)), lower)
+    if upper is not None:
+        value = min(value, upper)
+    return value
