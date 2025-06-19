@@ -31,7 +31,7 @@ from enums import SubmitterCategory
 from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
 from configs import index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf
-from utils.validation import clamp_positive_int
+from utils.integers import clamp_positive_int
 import re
 from tagging.enums import SafeSearch
 from collections import Counter

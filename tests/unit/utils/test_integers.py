@@ -4,6 +4,7 @@ from utils.integers import (
     is_uint,
     get_prefix_uint,
     get_prefix_uint_no0,
+    clamp_positive_int,
 )
 
 def test_startswith_uint():
@@ -99,3 +100,27 @@ def test_get_prefix_uint_no0():
     assert get_prefix_uint_no0('-00123') == None
     assert get_prefix_uint_no0('xx') == None
     assert get_prefix_uint_no0('') == None
+
+def test_clamp_positive_int():
+    assert clamp_positive_int(5) == 5
+    assert clamp_positive_int(-5) == 5
+    assert clamp_positive_int(10, lower=5) == 10
+    assert clamp_positive_int(10, lower=5, upper=15) == 10
+    assert clamp_positive_int(20, lower=5, upper=15) == 15
+  
+    assert clamp_positive_int(5.5) == 5
+    assert clamp_positive_int(-5.5) == 5
+    assert clamp_positive_int(10.5, lower=5) == 10
+    assert clamp_positive_int(10.5, lower=5, upper=15) == 10
+    assert clamp_positive_int(20.5, lower=5, upper=15) == 15
+  
+    assert clamp_positive_int('5') == 5
+    assert clamp_positive_int('-5') == 5
+    assert clamp_positive_int('10', lower=5) == 10
+    assert clamp_positive_int('10', lower=5, upper=15) == 10
+    assert clamp_positive_int('20', lower=5, upper=15) == 15
+  
+    assert clamp_positive_int(0) == 0
+    assert clamp_positive_int(-0) == 0
+    assert clamp_positive_int(0, lower=5) == 5
+    assert clamp_positive_int(0, lower=5, upper=10) == 5

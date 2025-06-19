@@ -77,3 +77,14 @@ def get_prefix_uint_no0(characters: str) -> int | None:
             # streak of real digits broken
             break
     return int(number)
+
+
+def clamp_positive_int(value: int|float|str, lower: int=0, upper: int=None) -> int:
+    """Clamps a value within the range:
+
+    `lower <= abs(int(value)) <= upper`
+    """
+    value = max(abs(int(value)), lower)
+    if upper is not None:
+        value = min(value, upper)
+    return value
