@@ -27,7 +27,7 @@ def _load_boards_toml():
 
 def get_shorts_objects(boards: dict):
     '''return (board_shorts, board_objects)'''
-    board_shorts = [board for board in boards]
+    board_shorts = sorted([board for board in boards])
     board_objects = [{'shortname': short, 'name': long} for short, long in boards.items()]
     board_objects.sort(key=lambda x: x['shortname'])
     return board_shorts, board_objects
