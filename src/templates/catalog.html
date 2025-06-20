@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
     {% include 'archiveposting_form.html' %}
+    {% include 'pagination.html' %}
     <div id="catalog_threads">
         {{threads|safe}}
     </div>
