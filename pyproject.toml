@@ -56,12 +56,10 @@ Changes = 'https://ayasequart.org/about#news'
 Source = 'https://github.com/sky-cake/ayase-quart'
 Demo = 'https://ayasequart.org'
 
-# [project.optional-dependencies]
-
 # [project.scripts]
 # ayaseq = 'src.cli'
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     'ruff',
 ]
@@ -84,9 +82,12 @@ vox = [
 [tool.uv]
 default-groups = ['dev', 'tests']
 
-# [tool.pytest.ini_options]
-# testpaths = ['tests']
-# addopts = '--no-cov-on-fail --showlocals --strict-markers'
+[tool.pytest.ini_options]
+testpaths = [
+	'tests',
+]
+pythonpath = 'src'
+addopts = '-p no:anyio'
 # asyncio_default_fixture_loop_scope = 'session'
 # asyncio_mode = 'auto'
 # filterwarnings = [
