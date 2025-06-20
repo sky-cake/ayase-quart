@@ -1,23 +1,3 @@
-function p2other(e) {
-  var ext = e.getAttribute("data-ext");
-  if (ext === "webm" || ext === "mp4") {
-    return;
-  }
-
-  const current_src = e.getAttribute('src');
-  const thumb_src = e.getAttribute('data-thumb_src');
-  const full_media_src = e.getAttribute('data-full_media_src');
-
-  if (current_src === thumb_src && full_media_src) {
-    e.src = full_media_src;
-  }
-  else {
-    e.src = thumb_src;
-  }
-
-  e.onerror = null;
-}
-
 function removeClonedImages() {
   document.querySelectorAll('#img_cloned').forEach(i => i.remove());
 }
