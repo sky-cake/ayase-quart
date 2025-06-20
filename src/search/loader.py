@@ -369,6 +369,7 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
     post_pack_fn = sp.get_post_pack_fn()
     batch_pack_fn = sp.get_batch_pack_fn()
     for board in boards:
+        print(f'Loading {board}')
         board_int = board_2_int(board)
         last_db_num, last_indexed_num = await gather(
             get_board_db_last_num(board),
