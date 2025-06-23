@@ -4,6 +4,7 @@ const file_upload = document.getElementById('file_upload');
 searchform.addEventListener('submit', function (event) {
   const checked_boards = document.querySelectorAll('input[name="boards"]:checked');
   if (checked_boards.length === 0) {
+    event.preventDefault();
     alert('Please select at least one board.');
     return;
   }
@@ -28,6 +29,10 @@ searchform.addEventListener('submit', function (event) {
 
     for (const [key, value] of formData.entries()) {
       if (value === "") continue;
+      if (key === 'capcode' && value === "default") continue;
+      if (key === 'hits_per_page' && value === "50") continue;
+      if (key === 'order_by' && value === "desc") continue;
+      if (key === 'safe_search' && value === "2") continue;
 
       if (key === "boards") {
         boards.push(value);
