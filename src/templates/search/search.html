@@ -147,7 +147,7 @@
   </form>
   </div>
 
-  <div>
+  <div id="resulttop">
     {% if page_post_count %}
       {{yield_message|safe}}<br>On this page: {{page_post_count}}
       {% if page_links %}<br>Pages{{ page_links|safe }}{% endif %}

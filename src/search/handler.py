@@ -186,7 +186,7 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
 
         endpoint_path = url_for('bp_web_index_search.v_index_search_get') if search_type == SearchType.idx else url_for('bp_web_vanilla_search.v_vanilla_search_get')
         page_count = total_pages(total_hits, form_data['hits_per_page'])
-        page_links = template_pagination_links(endpoint_path, form_data, page_count)
+        page_links = template_pagination_links(endpoint_path, form_data, page_count, section='resulttop')
 
         p.check('templated links')
         cur_page = form_data.get('page', cur_page)

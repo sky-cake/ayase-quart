@@ -23,7 +23,7 @@ def total_pages(total: int, hits_per_page: int) -> int:
     return d
 
 
-def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=None):
+def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=None, section: str=None):
     text = page if text is None else text
 
     if is_active:
@@ -32,11 +32,16 @@ def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=No
     else:
         is_active = ''
 
-    link = f'<a href="{base_link}&page={page}">{text}</a>'
+    if section:
+        section = f'#{section}'
+    else:
+        section = ''
+
+    link = f'<a href="{base_link}&page={page}{section}">{text}</a>'
     wrapped = f'<li{is_active}>{link}</li>'
     return wrapped
 
-def template_pagination_links(path: str, params: dict, total_pages: int):
+def template_pagination_links(path: str, params: dict, total_pages: int, section: str=None):
     """
     Given
         total_pages:int
@@ -95,9 +100,9 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
     links = []
 
     if cur_page > 1: # not first page
-        links.append(get_page_link(base_link, 1, text='First'))
+        links.append(get_page_link(base_link, 1, text='First', section=section))
         links.append('<br>')
-        links.append(get_page_link(base_link, cur_page - 1, text='Previous'))
+        links.append(get_page_link(base_link, cur_page - 1, text='Previous', section=section))
         links.append('<br>')
 
     page_range = 10 # 0, 1, 2, ..., (10 - cur), 11, 12, ..., 20
@@ -109,13 +114,13 @@ def template_pagination_links(path: str, params: dict, total_pages: int):
 
     for page_i in range(lower, upper + 1): # numbered links
         is_active = page_i == cur_page
-        links.append(get_page_link(base_link, page_i, is_active=is_active))
+        links.append(get_page_link(base_link, page_i, is_active=is_active, section=section))
 
     if cur_page < total_pages: # not last page
         links.append('<br>')
-        links.append(get_page_link(base_link, cur_page + 1, text='Next'))
+        links.append(get_page_link(base_link, cur_page + 1, text='Next', section=section))
         links.append('<br>')
-        links.append(get_page_link(base_link, total_pages, text='Last'))
+        links.append(get_page_link(base_link, total_pages, text='Last', section=section))
 
     links = ''.join(links)
     return f'<div class="paginate"><ul>{links}</ul></div>'
