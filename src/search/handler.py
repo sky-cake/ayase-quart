@@ -73,21 +73,23 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
 
     if request.method == 'GET':
         params = {**request.args}
-        params['boards'] = request.args.getlist('boards') if search_conf['multi_board_search'] else request.args.get('boards')
+        params['boards'] = request.args.get('boards')
 
     elif request.method == 'POST':
         formdata = await request.form
         params = {**formdata}
-        params['boards'] = formdata.getlist('boards') if search_conf['multi_board_search'] else formdata.get('boards')
+        params['boards'] = formdata.get('boards')
 
         files = await request.files
         file_image: FileStorage = files.get('file_upload')
 
-    form: SearchForm = await search_form.create_form(meta={'csrf': False}, **params)
-    if form.boards.data and not isinstance(form.boards.data, list):
-        form.boards.data = [form.boards.data]
-    params['boards'] = form.boards.data
+    if params['boards']:
+        params['boards'] = params['boards'].split(',')
 
+        if not search_conf['multi_board_search']:
+            params['boards'] = [params['boards'][0]]
+
+    form: SearchForm = await search_form.create_form(meta={'csrf': False}, **params)
     is_search_request = bool(form.boards.data)
 
     if is_search_request and (await form.validate()):
@@ -189,9 +191,6 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         p.check('templated links')
         cur_page = form_data.get('page', cur_page)
 
-
-        if not isinstance(form.boards.data, list):
-            raise ValueError(type(form.boards.data))
         form.boards.data = form.boards.data if search_conf['multi_board_search'] else form.boards.data[0]
 
     yield_message = ''

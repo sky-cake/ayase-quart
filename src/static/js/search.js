@@ -2,8 +2,8 @@ const searchform = document.getElementById('searchform');
 const file_upload = document.getElementById('file_upload');
 
 searchform.addEventListener('submit', function (event) {
-  const checkboxes = document.querySelectorAll('input[name="boards"]:checked');
-  if (checkboxes.length === 0) {
+  const checked_boards = document.querySelectorAll('input[name="boards"]:checked');
+  if (checked_boards.length === 0) {
     alert('Please select at least one board.');
     return;
   }
@@ -20,15 +20,35 @@ searchform.addEventListener('submit', function (event) {
   else
   {
     event.preventDefault();
+
     const form = event.target;
+    const formData = new FormData(form);
     const params = new URLSearchParams();
-    (new FormData(form)).forEach((value, key) => {
-      if (value !== "") {
+    const boards = [];
+
+    for (const [key, value] of formData.entries()) {
+      if (value === "") continue;
+
+      if (key === "boards") {
+        boards.push(value);
+      } else {
         params.append(key, value);
       }
-    });
-    const h = window.location.pathname + '?' + params.toString();
-    window.location.href = h;
+    }
+
+    let query = '';
+    if (boards.length > 0) {
+      query += `boards=${boards.join(',')}`;
+    }
+
+    const rest = params.toString();
+    if (rest) {
+      if (query) query += '&';
+      query += rest;
+    }
+
+    const url = `${window.location.pathname}?${query}`;
+    window.location.href = url;
   }
 });
 
