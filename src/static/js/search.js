@@ -103,6 +103,7 @@ e=l(e,c,a,d,b[f+6],15,-1560198380),d=l(d,e,c,a,b[f+13],21,1309151649),a=l(a,d,e,
 
 const dropZone = document.getElementById('drop_zone');
 const mediaHashInput = document.getElementById('media_hash');
+const media_hash_file_input = document.getElementById('media_hash_file_input');
 
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
@@ -119,6 +120,17 @@ dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
   dropZone.style.borderColor = '#aaa';
   const file = e.dataTransfer.files[0];
+  if (file) {
+    generateMediaHash(file);
+  }
+});
+
+dropZone.addEventListener('click', () => {
+  media_hash_file_input.click();
+});
+
+media_hash_file_input.addEventListener('change', () => {
+  const file = media_hash_file_input.files[0];
   if (file) {
     generateMediaHash(file);
   }

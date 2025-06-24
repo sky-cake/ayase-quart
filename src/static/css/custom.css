@@ -116,8 +116,8 @@ span.subject {
 #drop_zone {
     border: 1px dashed #aaa;
     text-align: center;
-    user-select: none;
     padding: 3px;
+    cursor: pointer;
 }
 
 .inlinegrid {

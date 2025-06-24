@@ -95,7 +95,8 @@
           <div class="column">
             {{ render_field(form.media_filename, placeholder='Filename', class='w5em') }}
             {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
-            <div id="drop_zone">Drop file here</div>
+            <div id="drop_zone">Select/Drop File</div>
+            <input id="media_hash_file_input" style="display: none;" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
           </div>
         </div>
         {{ render_field(form.order_by) }}
