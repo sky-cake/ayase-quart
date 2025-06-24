@@ -90,6 +90,11 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
             params['boards'] = [params['boards'][0]]
 
     form: SearchForm = await search_form.create_form(meta={'csrf': False}, **params)
+
+    # form initialization will make boards a string on prod, but not dev?
+    if form.boards.data and not isinstance(form.boards.data, list):
+        form.boards.data = [form.boards.data]
+
     is_search_request = bool(form.boards.data)
 
     if is_search_request and (await form.validate()):
