@@ -1,4 +1,4 @@
-from quart import flash, redirect, request, url_for
+from quart import flash, redirect, request, url_for, current_app
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
 from configs import (
@@ -89,14 +89,14 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         if not search_conf['multi_board_search']:
             params['boards'] = [params['boards'][0]]
 
-    print(params['boards'])
+    current_app.logger.info(params['boards'])
     form: SearchForm = await search_form.create_form(meta={'csrf': False}, **params)
 
     # form initialization will make boards a string on prod, but not dev?
     if form.boards.data and not isinstance(form.boards.data, list):
         form.boards.data = [form.boards.data]
 
-    print(form.boards.data)
+    current_app.logger.info(form.boards.data)
 
     is_search_request = bool(form.boards.data)
 
