@@ -37,7 +37,7 @@ async def http_exception(e: HTTPException):
 
 
 async def app_exception(e: Exception):
-    current_app.logger.error(e)
+    current_app.logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     message = 'We\'re sorry, our server ran into an issue.'
     if app_conf.get('testing'):
@@ -46,10 +46,12 @@ async def app_exception(e: Exception):
     render = await render_controller(template_error_message, message=message, tab_title='Error', title='Uh-oh...')
     return render, 500
 
+
 async def close_dbs():
     wait_close_db = db_q.close_db_pool()
     close_redis()
     await wait_close_db
+
 
 async def create_app():
     file_dir = os.path.dirname(__file__)
