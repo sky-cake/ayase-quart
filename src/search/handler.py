@@ -87,10 +87,15 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         params['boards'] = params['boards'].split(',')
 
         if not search_conf['multi_board_search']:
-            params['boards'] = [params['boards'][0]]
+            params['boards'] = params['boards'][0] # must be a str if single-board-search since it initializes a RadioField
 
-    current_app.logger.error(f"{type(params['boards'])}  {params['boards']}")
     form: SearchForm = await search_form.create_form(meta={'csrf': False}, **params)
+
+    # single-board-search
+    if form.boards.data and not isinstance(form.boards.data, list):
+        form.boards.data = [form.boards.data]
+    params['boards'] = form.boards.data
+
     current_app.logger.error(f"{type(params['boards'])}  {params['boards']}  {type(form.boards.data)}  {form.boards.data}")
 
     is_search_request = bool(form.boards.data)
@@ -194,6 +199,7 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         p.check('templated links')
         cur_page = form_data.get('page', cur_page)
 
+        # convert back to form format
         form.boards.data = form.boards.data if search_conf['multi_board_search'] else form.boards.data[0]
 
     yield_message = ''
