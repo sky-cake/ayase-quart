@@ -94,9 +94,7 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
     # single-board-search
     if form.boards.data and not isinstance(form.boards.data, list):
         form.boards.data = [form.boards.data]
-    params['boards'] = form.boards.data
-
-    current_app.logger.error(f"{type(params['boards'])}  {params['boards']}  {type(form.boards.data)}  {form.boards.data}")
+    # current_app.logger.error(f"{type(params['boards'])} {params['boards']} {type(form.boards.data)} {form.boards.data}")
 
     is_search_request = bool(form.boards.data)
 
