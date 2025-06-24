@@ -91,7 +91,7 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
 
     current_app.logger.error(f"{type(params['boards'])}  {params['boards']}")
     form: SearchForm = await search_form.create_form(meta={'csrf': False}, **params)
-    current_app.logger.error(f"{type(params['boards'])}  {params['boards']}  {form.boards.data}")
+    current_app.logger.error(f"{type(params['boards'])}  {params['boards']}  {type(form.boards.data)}  {form.boards.data}")
 
     is_search_request = bool(form.boards.data)
 
