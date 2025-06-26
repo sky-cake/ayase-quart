@@ -298,7 +298,7 @@ async def run_table_command(command: str, boards: list[str]):
         return
     try:
         sql = generate_from_template(template, boards)
-        await db_q.query_tuple(sql)
+        await db_q.run_script(sql)
     except Exception as e:
         raise e
     finally:
