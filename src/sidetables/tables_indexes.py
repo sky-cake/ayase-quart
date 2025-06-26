@@ -32,56 +32,56 @@ class SidetableTemplate:
                 return None
 
 create_table_mysql = """
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_deleted` LIKE `%%BOARD%%`;
+create table if not exists `%%BOARD%%_deleted` like `%%BOARD%%`;
 
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_threads` (
-    `thread_num` int unsigned NOT NULL,
-    `time_op` int unsigned NOT NULL,
-    `time_last` int unsigned NOT NULL,
-    `time_bump` int unsigned NOT NULL,
-    `time_ghost` int unsigned DEFAULT NULL,
-    `time_ghost_bump` int unsigned DEFAULT NULL,
-    `time_last_modified` int unsigned NOT NULL,
-    `nreplies` int unsigned NOT NULL DEFAULT '0',
-    `nimages` int unsigned NOT NULL DEFAULT '0',
-    `sticky` bool NOT NULL DEFAULT '0',
-    `locked` bool NOT NULL DEFAULT '0',
+create table if not exists `%%BOARD%%_threads` (
+    `thread_num` int unsigned not null,
+    `time_op` int unsigned not null,
+    `time_last` int unsigned not null,
+    `time_bump` int unsigned not null,
+    `time_ghost` int unsigned default null,
+    `time_ghost_bump` int unsigned default null,
+    `time_last_modified` int unsigned not null,
+    `nreplies` int unsigned not null default '0',
+    `nimages` int unsigned not null default '0',
+    `sticky` bool not null default '0',
+    `locked` bool not null default '0',
 
-    PRIMARY KEY (`thread_num`)
+    primary key (`thread_num`)
 ) ENGINE=InnoDB CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_images` (
-    `media_id` int unsigned NOT NULL auto_increment,
-    `media_hash` varchar(25) NOT NULL,
+create table if not exists `%%BOARD%%_images` (
+    `media_id` int unsigned not null auto_increment,
+    `media_hash` varchar(25) not null,
     `media` varchar(20),
     `preview_op` varchar(20),
     `preview_reply` varchar(20),
-    `total` int(10) unsigned NOT NULL DEFAULT '0',
-    `banned` smallint unsigned NOT NULL DEFAULT '0',
+    `total` int(10) unsigned not null default '0',
+    `banned` smallint unsigned not null default '0',
 
-    PRIMARY KEY (`media_id`)
+    primary key (`media_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin;
 
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_users` (
-    `user_id` int unsigned NOT NULL auto_increment,
-    `name` varchar(100) NOT NULL DEFAULT '',
-    `trip` varchar(25) NOT NULL DEFAULT '',
-    `firstseen` int(11) NOT NULL,
-    `postcount` int(11) NOT NULL,
+create table if not exists `%%BOARD%%_users` (
+    `user_id` int unsigned not null auto_increment,
+    `name` varchar(100) not null default '',
+    `trip` varchar(25) not null default '',
+    `firstseen` int(11) not null,
+    `postcount` int(11) not null,
 
-    PRIMARY KEY (`user_id`)
+    primary key (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_daily` (
-    `day` int(10) unsigned NOT NULL,
-    `posts` int(10) unsigned NOT NULL,
-    `images` int(10) unsigned NOT NULL,
-    `sage` int(10) unsigned NOT NULL,
-    `anons` int(10) unsigned NOT NULL,
-    `trips` int(10) unsigned NOT NULL,
-    `names` int(10) unsigned NOT NULL,
+create table if not exists `%%BOARD%%_daily` (
+    `day` int(10) unsigned not null,
+    `posts` int(10) unsigned not null,
+    `images` int(10) unsigned not null,
+    `sage` int(10) unsigned not null,
+    `anons` int(10) unsigned not null,
+    `trips` int(10) unsigned not null,
+    `names` int(10) unsigned not null,
 
-    PRIMARY KEY (`day`)
+    primary key (`day`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
