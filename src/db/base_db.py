@@ -37,6 +37,11 @@ class BaseQueryRunner(ABC):
         """Executes a fast query mainly by avoiding the creation of dict objects."""
         pass
 
+    @abstractmethod
+    async def run_script(self, query: str, p_id=DbPool.main):
+        """Executes multiple sql statements, no params available"""
+        pass
+
 
 class BasePlaceHolderGen():
     __slots__ = ()
