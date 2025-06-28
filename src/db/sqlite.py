@@ -123,6 +123,15 @@ class SqliteQueryRunner(BaseQueryRunner):
                 await pool.commit()
 
             return results
+        
+    async def run_script(self, query: str, p_id=DbPool.main):
+        pool = await self.pool_manager.get_pool(p_id)
+
+        if self.sql_echo:
+            print('::SQL::', query)
+
+        await pool.executescript(query)
+        await pool.commit()
 
 
 class SqlitePlaceholderGen(BasePlaceHolderGen):

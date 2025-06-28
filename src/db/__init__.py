@@ -87,6 +87,9 @@ class DbHandler:
 
     async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
         return await self.query_runner.run_query(query, params=params, commit=commit, p_id=p_id, dict_row=dict_row)
+    
+    async def run_script(self, query: str, p_id=DbPool.main):
+        return await self.query_runner.run_script(query, p_id=p_id)
 
 
 def close_all_databases(func):
