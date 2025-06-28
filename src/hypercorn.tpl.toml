@@ -1,0 +1,41 @@
+
+# https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html
+
+workers=3
+
+#keyfile='/mnt/aq/src/key.pem'
+#certfile='/mnt/aq/src/cert.pem'
+
+bind='0.0.0.0:9003'
+
+accesslog='/mnt/logs/access_aq.log'
+errorlog='/mnt/logs/error_aq.log'
+
+
+# h      Remote address  
+# l      '-'  
+# u      User name  
+# t      Date of the request  
+# r      Status line without query string (e.g. GET / h11)  
+# R      Status line with query string (e.g. GET /?a=b h11)  
+# m      Request method  
+# U      URL path without query string  
+# Uq     URL path with query string  
+# q      Query string  
+# H      Protocol  
+# s      Status  
+# st     Status phrase (e.g. OK, Forbidden, Not Found)  
+# S      Scheme {http, https, ws, wss}  
+# B      Response length  
+# b      Response length or '-' (CLF format)  
+# f      Referer  
+# a      User agent  
+# T      Request time in seconds  
+# D      Request time in microseconds  
+# L      Request time in decimal seconds  
+# p      Process ID  
+# {Header}i   Request header  
+# {Header}o   Response header  
+# {Variable}e Environment variable  
+
+access_log_format='%({X-Forwarded-For}i)s %(s)s %(m)s %(Uq)s'
