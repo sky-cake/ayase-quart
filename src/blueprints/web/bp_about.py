@@ -2,7 +2,7 @@ from quart import Blueprint
 from render import render_controller
 from templates import template_about, template_soy
 from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
-from configs import mod_conf
+from configs import site_conf
 
 bp = Blueprint("bp_web_about", __name__)
 
@@ -18,7 +18,7 @@ async def about(is_admin: bool, logged_in: bool):
         tab_title='About',
         logged_in=logged_in,
         is_admin=is_admin,
-        site_email=mod_conf['site_email'],
+        site_email=site_conf['site_email'],
     )
 
 

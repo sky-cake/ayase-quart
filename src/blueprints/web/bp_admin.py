@@ -4,7 +4,7 @@ from quart import Blueprint, flash, redirect, request, url_for, current_app
 
 from asagi_converter import get_latest_ops_as_catalog
 from boards import board_shortnames
-from configs import mod_conf
+from configs import mod_conf, site_conf
 from forms import UserCreateForm, UserEditForm, MessageForm
 from moderation.user import (
     Permissions,
@@ -59,8 +59,8 @@ async def message(is_admin: bool, logged_in: bool):
         if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
             await create_message(username, form.title.data, form.comment.data)
             msg = 'Thank you for your anonymous submission. We will review it shortly.'
-            if mod_conf['site_email']:
-                msg += f'If this is urgent, you can also message us at {mod_conf['site_email']}.'
+            if site_conf['site_email']:
+                msg += f'If this is urgent, you can also message us at {site_conf['site_email']}.'
             await flash(msg)
             return redirect(url_for('bp_web_admin.message'))
         else:

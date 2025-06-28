@@ -35,6 +35,7 @@ use_asagi_side_tables = true
 [site]
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+site_email = ''
 
 
 [archive]
