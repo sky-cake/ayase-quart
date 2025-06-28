@@ -53,7 +53,7 @@ async def close_dbs():
     await wait_close_db
 
 
-async def create_app():
+def create_app():
     file_dir = os.path.dirname(__file__)
     os.chdir(file_dir)
 
@@ -71,14 +71,14 @@ async def create_app():
         app.register_blueprint(bp)
 
     if mod_conf['enabled']:
-        await init_moderation()
-        await fc.init()
+        app.before_serving(init_moderation)
+        app.before_serving(fc.init)
 
     if tag_conf['enabled']:
-        await init_tagging()
+        app.before_serving(init_tagging)
 
     if archiveposting_conf['enabled']:
-        await init_archiveposting()
+        app.before_serving(init_archiveposting)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
@@ -102,7 +102,8 @@ async def create_app():
     return app
 
 
-app = asyncio.run(create_app())
+app = create_app()
+
 
 if not app_conf.get('testing', False):
     print('Quart app created. Now, since you\'re not in dev mode, point hypercorn to this asgi app with something like,')
