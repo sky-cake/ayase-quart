@@ -104,6 +104,9 @@ class MysqlQueryRunner(BaseQueryRunner):
                     await conn.commit()
 
                 return results[0] if len(results) == 1 else results # prone to issues ?
+    
+    async def run_script(self, query: str, p_id=DbPool.main):
+        return await self.run_query_fast(query, p_id=p_id, commit=True)
 
 
 class MysqlPlaceholderGen(BasePlaceHolderGen):

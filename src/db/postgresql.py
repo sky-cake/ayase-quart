@@ -69,6 +69,9 @@ class PostgresqlQueryRunner(BaseQueryRunner):
 
     async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
         return await self.run_query(query, params, p_id=p_id, dict_row=False)
+    
+    async def run_script(self, query: str, p_id=DbPool.main):
+        return await self.run_query_fast(query, p_id=p_id)
 
 
 class PostgresqlPlaceholderGen(BasePlaceHolderGen):
