@@ -131,21 +131,6 @@ async def v_board_index(is_admin: bool, board_shortname: str, logged_in: bool):
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_board_index_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
-    """
-    Benchmarked with SQLite (local), 150 OPs, 8th gen i7.
-    validate: 0.0000
-    gen_indx: 0.0374
-    val_thrd: 0.0000
-    paginate: 0.0156
-    rendered: 1.100 +- 0.400
-
-    Benchmarked with MySQL (home server), ~2 million posts. Rendered on a 5700X
-    validate: 0.0000
-    gen_indx: 1.4598
-    val_thrd: 0.0000
-    paginate: 0.1702
-    rendered: 0.2564
-    """
     p = Perf('index page', enabled=app_conf.get('testing'))
     validate_board(board_shortname)
     p.check('validate board')
@@ -215,17 +200,6 @@ async def make_pagination_catalog(board_shortname: str, catalog: list[dict], pag
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
-    """
-    Benchmarked with SQLite, page 0, 8th gen i7.
-    query   : 0.0649
-    paginate: 0.0564
-    render  : 0.4166
-
-    Benchmarked with SQLite, page 0, 5700X.
-    query   : 0.8345
-    paginate: 0.1712
-    render  : 0.5372
-    """
     validate_board(board_shortname)
 
     p = Perf('catalog', enabled=app_conf.get('testing'))
@@ -264,12 +238,6 @@ async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
-    """
-    Benchmarked with SQLite, page 129, 5700X.
-    query   : 0.8202
-    paginate: 0.1734
-    render  : 0.5233
-    """
     validate_board(board_shortname)
 
     p = Perf('catalog page', enabled=app_conf.get('testing'))
@@ -308,19 +276,6 @@ async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, lo
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged_in: bool):
-    """
-    Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.
-    queries : 0.0150
-    validate: 0.0000
-    posts_t : 0.0293
-    rendered: 0.0053
-
-    Benchmarked with MYSQL (home server), /ck/ post with 284 comments, 5700X.
-    queries : 1.1000 +- 0.5000
-    validate: 0.0000
-    posts_t : 0.0274
-    rendered: 0.0419
-    """
     validate_board(board_shortname)
 
     p = Perf('thread', enabled=app_conf.get('testing'))
