@@ -2,10 +2,18 @@ from enum import StrEnum
 from html import escape
 
 from configs import media_conf
-from enums import SubmitterCategory
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
 
+THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
+IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
+BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
+BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
+TRY_FULL_SRC_TYPE_ON_404: bool = media_conf.get('try_full_src_type_on_404', False)
+
+# TODO: move these 2 to config
+ANONYMOUS_NAME = 'Anonymous'
+CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
 
 class MediaType(StrEnum):
     image = 'image'
@@ -117,13 +125,10 @@ def media_metadata_t(media_size: int, media_w: int, media_h: int):
 
 
 def get_media_path(media_filename: str, board: str, media_type: MediaType) -> str:
-    if not media_filename or not (media_conf['thumb_uri'] or media_conf['image_uri']):
+    if not media_filename or not (THUMB_URI or IMAGE_URI):
         return ''
 
-    uri = media_conf['thumb_uri']
-
-    if media_type == MediaType.image:
-        uri = media_conf['image_uri']
+    uri = IMAGE_URI if media_type == MediaType.image else THUMB_URI
 
     return f'{uri.format(board_shortname=board).rstrip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
 
@@ -183,8 +188,8 @@ def get_media_t(post: dict):
     spoiler = 'Spoiler,' if post['spoiler'] else ''
 
     classes = 'spoiler' if post['spoiler'] else ''
-    full_src = get_media_path(media_orig, board, MediaType.image) if board in media_conf['boards_with_image'] else ''
-    thumb_src = get_media_path(preview_orig, board, MediaType.thumb) if board in media_conf['boards_with_thumb'] else ''
+    full_src = get_media_path(media_orig, board, MediaType.image) if board in BOARDS_WITH_IMAGE else ''
+    thumb_src = get_media_path(preview_orig, board, MediaType.thumb) if board in BOARDS_WITH_THUMB else ''
 
     return f"""
 	<div class="file" id="f{num}">
@@ -206,9 +211,9 @@ def set_links(post: dict):
     num = post['num']
     thread_num = post['thread_num']
     post['t_thread_link_rel'] = f'/{board}/thread/{thread_num}'
-    post['t_thread_link_src'] = f'https://boards.4chan.org/{board}/thread/{thread_num}'
+    post['t_thread_link_src'] = f'{CANONICAL_HOST}/{board}/thread/{thread_num}'
     post['t_post_link_rel'] = f'/{board}/thread/{thread_num}#p{num}'
-    post['t_post_link_src'] = f'https://boards.4chan.org/{board}/thread/{thread_num}#p{num}'
+    post['t_post_link_src'] = f'{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}'
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
@@ -295,12 +300,12 @@ def get_quotelink_t(post: dict):
 
 
 def esc_user_data(post: dict):
-    post['name'] = escape(post['name']) if post.get('name') else 'Anonymous'
-    post['email'] = escape(post['email']) if post.get('email') else ''
+    post['name'] = escape(name) if (name := post.get('name')) else ANONYMOUS_NAME
+    post['email'] = escape(email) if (email := post.get('email')) else ''
 
 
 def get_name_t(post: dict):
-    name_t = f"""<span class="name {post.get('capcode', '')}" {get_exif_title(post)}>{post.get('name', 'Anonymous')}</span>"""
+    name_t = f"""<span class="name {post.get('capcode', '')}" {get_exif_title(post)}>{post.get('name', ANONYMOUS_NAME)}</span>"""
     return email_wrap(post, name_t)
 
 
@@ -371,7 +376,7 @@ def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
         /{board}/<br>
         <span class="post_controls">
             [<a href="/{ board }/thread/{ num }" class="btnr parent" >View</a>]
-            [<a href="https://boards.4chan.org/{ board }/thread/{ num }" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
+            [<a href="{CANONICAL_HOST}/{ board }/thread/{ num }" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         { wpt['t_cc'] }{nl}
         <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
