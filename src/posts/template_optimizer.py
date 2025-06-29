@@ -64,7 +64,7 @@ So I made a render_wrapped_post_t_thread that can switch for us
         render_wrapped_post_t(wrap_post_t(post))
 
 Other child functions had to be re-implemented for speed as well
-    They are all suffised with _thread
+    They are all suffixed with _thread
 
 Anything that would complexify the templating is not "plain jane":
     ops, mod/admin capcodes, sticky, locked, deleted, tripcodes, emails, etc...
@@ -115,7 +115,7 @@ def render_post_t_basic(post: dict):
     ts_unix = post['ts_unix']
     ts_formatted = ts_2_formatted(ts_unix)
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
-    media_t = get_media_t_thread(post, num, board, thread_num)
+    media_t = get_media_t_thread(post, num, board)
     return f'''
     <div id="pc{num}">
         <div class="sideArrows">&gt;&gt;</div>
@@ -178,7 +178,7 @@ def ext_is_image(ext: str) -> bool:
 def ext_is_video(ext: str) -> bool:
     return ext in ('webm', 'mp4')
 
-def get_media_t_thread(post: dict, num: int, board: str, thread_num: int):
+def get_media_t_thread(post: dict, num: int, board: str):
     if not (media_filename := post['media_filename']):
         return ''
 
@@ -190,8 +190,8 @@ def get_media_t_thread(post: dict, num: int, board: str, thread_num: int):
     spoiler = 'Spoiler,' if is_spoiler else ''
     classes = 'spoiler' if is_spoiler else ''
 
-    full_src = get_media_path_thread(media_orig, board, IMAGE_URI) if board_has_image(board) else ''
-    thumb_src = get_media_path_thread(preview_orig, board, THUMB_URI) if board_has_thumb(board) else ''
+    full_src = get_media_path_thread(media_orig, board, IMAGE_URI) if media_orig and board_has_image(board) else ''
+    thumb_src = get_media_path_thread(preview_orig, board, THUMB_URI) if preview_orig and board_has_thumb(board) else ''
 
     return f"""
 	<div class="file" id="f{num}">
