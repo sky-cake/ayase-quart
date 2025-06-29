@@ -376,7 +376,7 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
     boards_missing = []
 
     for board in boards:
-        print(f'\rLoading {board:<4}', end='', flush=True)
+        print(f'\rLoading {board:<4}', flush=True)
         board_int = board_2_int(board)
         last_db_num, last_indexed_num = await gather(
             get_board_db_last_num(board),
@@ -425,8 +425,11 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
         b = ' '.join(boards_missing)
         print(f'These boards were not found in database, and not in the index: {b}')
         print()
-    else:
+    if boards_up_to_date:
         b = ' '.join(boards_up_to_date)
+        print(f'These boards are already up-to-date: {b}')
+        print()
+    else:
         print('Index up to date, no boards required incremental updates.')
         print()
 
