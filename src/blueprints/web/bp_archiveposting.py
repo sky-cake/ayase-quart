@@ -17,7 +17,6 @@ from asagi_converter import (
 from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card_archiveposting,
-    report_modal_t,
     wrap_post_t,
     get_posts_t_archiveposting,
 )
@@ -270,7 +269,6 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
         archiveposting_form=form,
         form_message='Reply',
         posts_t=posts_t,
-        report_modal_t=report_modal_t,
         nreplies=nreplies,
         nimages=nimages,
         board=board_shortname,

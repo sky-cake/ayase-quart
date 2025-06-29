@@ -15,9 +15,9 @@ from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
     render_wrapped_post_t,
-    report_modal_t,
     wrap_post_t,
     get_posts_t,
+    get_posts_t_thread,
 )
 from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
 from render import render_controller
@@ -34,6 +34,8 @@ from random import randint
 
 bp = Blueprint("bp_web_app", __name__)
 
+VOX_ENABLED = vox_conf['enabled'] 
+VOX_ALLOWED_BOARDS = vox_conf.get('allowed_boards', []) if VOX_ENABLED else []
 
 async def make_pagination_board_index(board_shortname: str, index: dict, page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board_shortname)
@@ -132,21 +134,6 @@ async def v_board_index(is_admin: bool, board_shortname: str, logged_in: bool):
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_board_index_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
-    """
-    Benchmarked with SQLite (local), 150 OPs, 8th gen i7.
-    validate: 0.0000
-    gen_indx: 0.0374
-    val_thrd: 0.0000
-    paginate: 0.0156
-    rendered: 1.100 +- 0.400
-
-    Benchmarked with MySQL (home server), ~2 million posts. Rendered on a 5700X
-    validate: 0.0000
-    gen_indx: 1.4598
-    val_thrd: 0.0000
-    paginate: 0.1702
-    rendered: 0.2564
-    """
     p = Perf('index page', enabled=app_conf.get('testing'))
     validate_board(board_shortname)
     p.check('validate board')
@@ -216,17 +203,6 @@ async def make_pagination_catalog(board_shortname: str, catalog: list[dict], pag
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
-    """
-    Benchmarked with SQLite, page 0, 8th gen i7.
-    query   : 0.0649
-    paginate: 0.0564
-    render  : 0.4166
-
-    Benchmarked with SQLite, page 0, 5700X.
-    query   : 0.8345
-    paginate: 0.1712
-    render  : 0.5372
-    """
     validate_board(board_shortname)
 
     p = Perf('catalog', enabled=app_conf.get('testing'))
@@ -265,12 +241,6 @@ async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
-    """
-    Benchmarked with SQLite, page 129, 5700X.
-    query   : 0.8202
-    paginate: 0.1734
-    render  : 0.5233
-    """
     validate_board(board_shortname)
 
     p = Perf('catalog page', enabled=app_conf.get('testing'))
@@ -309,19 +279,6 @@ async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, lo
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged_in: bool):
-    """
-    Benchmarked with SQLite (local), /ck/ post with 219 comments, 5700X.
-    queries : 0.0150
-    validate: 0.0000
-    posts_t : 0.0293
-    rendered: 0.0053
-
-    Benchmarked with MYSQL (home server), /ck/ post with 284 comments, 5700X.
-    queries : 1.1000 +- 0.5000
-    validate: 0.0000
-    posts_t : 0.0274
-    rendered: 0.0419
-    """
     validate_board(board_shortname)
 
     p = Perf('thread', enabled=app_conf.get('testing'))
@@ -337,21 +294,21 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
     validate_threads(thread_dict['posts'])
     p.check('validate')
 
-    posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)
+    # posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)
+    posts_t = get_posts_t_thread(thread_dict['posts'], post_2_quotelinks)
     p.check('posts_t')
 
     title = f"/{board_shortname}/ #{thread_num}"
 
     render = template_thread.render(
         posts_t=posts_t,
-        report_modal_t=report_modal_t,
         nreplies=nreplies,
         nimages=nimages,
         board=board_shortname,
         thread_num=thread_num,
         title=title,
         tab_title=title,
-        vox_enabled=vox_conf['enabled'] and board_shortname in vox_conf['allowed_boards'],
+        vox_enabled=VOX_ENABLED and board_shortname in VOX_ALLOWED_BOARDS,
         logged_in=logged_in,
         is_admin=is_admin,
     )
