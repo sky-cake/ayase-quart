@@ -11,24 +11,6 @@ class MediaType(StrEnum):
     image = 'image'
     thumb = 'thumb'
 
-
-def pre_html_comment(post: str):
-    pass
-
-
-def post_html_comment(comment: str):
-    pass
-
-
-needed_keys = {
-    'num',
-    'ts_unix',
-    'board_shortname',
-    'quotelinks',
-    'comment',
-}
-
-
 def wrap_post_t(post: dict):
     if not (post and post.get('num')):
         return post
