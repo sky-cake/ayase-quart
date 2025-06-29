@@ -368,6 +368,13 @@ async def index_board_threads_single_thread(board: str, sp: BaseSearch, thread_n
 async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
     post_pack_fn = sp.get_post_pack_fn()
     batch_pack_fn = sp.get_batch_pack_fn()
+
+    boards_up_to_date = []
+    boards_updated = []
+    boards_only_db = []
+    boards_only_index = []
+    boards_missing = []
+
     for board in boards:
         print(f'\rLoading {board:<4}', end='', flush=True)
         board_int = board_2_int(board)
@@ -375,17 +382,54 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
             get_board_db_last_num(board),
             sp.board_last_num(board_int),
         )
-        if not all((last_db_num, last_indexed_num)):
+
+        if last_db_num and not last_indexed_num:
+            boards_only_db.append(board)
+            continue
+
+        if not last_db_num and last_indexed_num:
+            boards_only_index.append(board)
+            continue
+
+        if not (last_db_num and last_indexed_num):
             # either no rows to index in db, or board not indexed yet
+            boards_missing.append(board)
             continue
+
         if last_indexed_num >= last_db_num:
-            # index up to date, nothing to do
+            boards_up_to_date.append(board)
             continue
+
         thread_nums = await get_board_db_threads_after_num(board, last_indexed_num)
         for thread_nums_batch in batched(thread_nums, THREAD_BATCH):
             await index_board_threads_single_thread(board, sp, thread_nums_batch, post_pack_fn, batch_pack_fn)
+        boards_updated.append(board)
+
     await sp.finalize()
-    print(f'\nThese boards were incrementally updated: {','.join(boards)}')
+
+    print()
+    if boards_updated:
+        b = ' '.join(boards_updated)
+        print(f'These boards were incrementally updated: {b}')
+        print()
+    if boards_only_db:
+        b = ' '.join(boards_only_db)
+        print(f'These boards were found in the database, but not in the index: {b}')
+        print(f'You can load these with: python -m search load --full {b}')
+        print()
+    if boards_only_index:
+        b = ' '.join(boards_only_index)
+        print(f'These boards were found in the index, but not in the database: {b}')
+        print()
+    if boards_missing:
+        b = ' '.join(boards_missing)
+        print(f'These boards were not found in database, and not in the index: {b}')
+        print()
+    else:
+        b = ' '.join(boards_up_to_date)
+        print('Index up to date, no boards required incremental updates.')
+        print()
+
 
 # END incremental load
 
