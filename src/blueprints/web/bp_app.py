@@ -33,6 +33,8 @@ from random import randint
 
 bp = Blueprint("bp_web_app", __name__)
 
+VOX_ENABLED = vox_conf['enabled'] 
+VOX_ALLOWED_BOARDS = vox_conf.get('allowed_boards', []) if VOX_ENABLED else []
 
 async def make_pagination_board_index(board_shortname: str, index: dict, page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board_shortname)
@@ -304,7 +306,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
         thread_num=thread_num,
         title=title,
         tab_title=title,
-        vox_enabled=vox_conf['enabled'] and board_shortname in vox_conf['allowed_boards'],
+        vox_enabled=VOX_ENABLED and board_shortname in VOX_ALLOWED_BOARDS,
         logged_in=logged_in,
         is_admin=is_admin,
     )
