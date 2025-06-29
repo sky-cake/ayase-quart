@@ -15,7 +15,6 @@ from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
     render_wrapped_post_t,
-    report_modal_t,
     wrap_post_t,
     get_posts_t,
 )
@@ -344,7 +343,6 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
 
     render = template_thread.render(
         posts_t=posts_t,
-        report_modal_t=report_modal_t,
         nreplies=nreplies,
         nimages=nimages,
         board=board_shortname,
