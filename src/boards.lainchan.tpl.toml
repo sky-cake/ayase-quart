@@ -1,3 +1,10 @@
+
+# comma delimited
+# λ,Ω,Δ,sec,inter,lit,music,vis,hum,drg,zzz,layer,q,r
+
+# space delimited
+# λ Ω Δ sec inter lit music vis hum drg zzz layer q r
+
 [boards]
 'λ' = 'Programming'
 'Ω' = 'Technology'

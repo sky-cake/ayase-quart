@@ -1,5 +1,4 @@
 import quart_flask_patch  # noqa
-import asyncio
 import os
 import traceback
 
