@@ -1,5 +1,6 @@
 from enum import StrEnum
 from html import escape
+from functools import cache
 
 from configs import media_conf
 from posts.capcodes import Capcode
@@ -20,7 +21,7 @@ class MediaType(StrEnum):
     thumb = 'thumb'
 
 def wrap_post_t(post: dict):
-    if not (post and post.get('num')):
+    if not (post and post.get('num')): # Are there cases when post doesn't have a num?
         return post
     esc_user_data(post)
     set_links(post)
@@ -47,11 +48,172 @@ def wrap_post_t(post: dict):
         post['comment'] = ''
     return post
 
+### BEGIN post_t crisis
+'''
+For threads with large amounts of posts (1.5k+), things are slow (the crisis in question)
+Threads are the only pages where we can't limit the amount of data on the page via pagination
+The normal path should still be used everywhere else, ex:
+    search results
+    index & catalog view
+    hovers
 
-def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+So I made a render_wrapped_post_t_thread that can switch for us
+    If it's a plain jane reply post, we use the express lane:
+        render_post_t_basic(post)
+    Otherwise, we use the normal path:
+        render_wrapped_post_t(wrap_post_t(post))
+
+Other child functions had to be re-implemented for speed as well
+    They are all suffised with _thread
+
+Anything that would complexify the templating is not "plain jane":
+    ops, mod/admin capcodes, sticky, locked, deleted, tripcodes, emails, etc...
+
+Despite media posts being complex, they return an empty string early if there is no media
+    So we don't need to consider them as special
+'''
+
+def set_posts_quotelinks(posts: list[dict], post_2_quotelinks: dict[int, list[int]]):
     for post in posts:
         post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
 
+rare_keys = (
+    # 'media_filename', # not needed, get_media_t_thread exits early
+    'title',
+    'op',
+    'sticky',
+    'locked',
+    'deleted',
+    'poster_country',
+    'troll_country',
+    'poster_hash',
+    'since4pass',
+    'trip',
+    'capcode', # should be last
+)
+def render_wrapped_post_t_thread(post: dict):
+    rare_vals = [post.get(k) for k in rare_keys]
+    if rare_vals[-1] == 'N': # in asagi, N is normal people capcode, which evals to true
+        rare_vals[-1] = None
+
+    if not any(rare_vals): # basic text/image reply post
+        esc_user_data(post) # not sure this is the correct logic...
+        return render_post_t_basic(post)
+
+    # anything remotely special uses official wrap_post_t
+    return render_wrapped_post_t(wrap_post_t(post))
+
+def get_posts_t_thread(posts: list[dict], post_2_quotelinks: dict[int, list[int]]):
+    set_posts_quotelinks(posts, post_2_quotelinks)
+    return ''.join(render_wrapped_post_t_thread(p) for p in posts)
+
+def render_post_t_basic(post: dict):
+    num = post['num']
+    thread_num = post['thread_num']
+    comment = post['comment'] or ''
+    board = post['board_shortname']
+    ts_unix = post['ts_unix']
+    ts_formatted = ts_2_formatted(ts_unix)
+    quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
+    media_t = get_media_t_thread(post, num, board, thread_num)
+    return f'''
+    <div id="pc{num}">
+        <div class="sideArrows">&gt;&gt;</div>
+        <div id="p{num}" class="post reply">
+            <div class="postInfoM mobile" id="pim{num}">
+            <span class="nameBlock">
+                <span class="name">{ANONYMOUS_NAME}</span>
+                <br>
+            </span>
+            <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
+            <a href="#{num}">No. {num}</a>
+            </div>
+            <div class="postInfo" id="pi{num}">
+                <span class="inblk"><b>/{board}/</b> </span>
+                <span class="name N">{ANONYMOUS_NAME}</span>
+                <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
+                <span class="postNum">
+                    <a href="/{board}/thread/{thread_num}#p{num}">No.{num}</a>
+                </span>
+                <button class="btnlink" onclick="copy_link(this, '/{board}/thread/{thread_num}#p{num}')">⎘</button>
+                <span class="inblk">
+                [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">
+                Report</button>]
+                [<a href="/{board}/thread/{thread_num}#p{num}" target="_blank">View</a>]
+                [<a href="{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}" rel="noreferrer" target="_blank">Source</a>]
+                </span>
+            </div>
+            <div>
+                {media_t}
+                <blockquote class="postMessage" id="m{num}">{comment}</blockquote>
+            </div>
+            <div style="clear:both;"></div>
+            {quotelinks_t}
+        </div>
+    </div>
+    '''
+
+def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
+    if not quotelinks:
+        return ''
+    quotelink_gen = (
+        f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board_shortname="{board}">&gt;&gt;{quotelink}</a></span>'
+        for quotelink in quotelinks
+    )
+    return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
+
+@cache
+def board_has_image(board: str) -> bool:
+    return board in BOARDS_WITH_IMAGE and IMAGE_URI
+
+@cache
+def board_has_thumb(board: str) -> bool:
+    return board in BOARDS_WITH_THUMB and THUMB_URI
+
+@cache
+def ext_is_image(ext: str) -> bool:
+    return ext in ('jpg', 'jpeg', 'png', 'bmp', 'webp') # gifs not included
+
+@cache
+def ext_is_video(ext: str) -> bool:
+    return ext in ('webm', 'mp4')
+
+def get_media_t_thread(post: dict, num: int, board: str, thread_num: int):
+    if not (media_filename := post['media_filename']):
+        return ''
+
+    media_orig = post['media_orig']
+    preview_orig = post['preview_orig']
+    md5h = post['media_hash']
+
+    is_spoiler = post['spoiler']
+    spoiler = 'Spoiler,' if is_spoiler else ''
+    classes = 'spoiler' if is_spoiler else ''
+
+    full_src = get_media_path_thread(media_orig, board, IMAGE_URI) if board_has_image(board) else ''
+    thumb_src = get_media_path_thread(preview_orig, board, THUMB_URI) if board_has_thumb(board) else ''
+
+    return f"""
+	<div class="file" id="f{num}">
+        <div class="fileText" id="fT{num}">
+            File:
+            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            (<span title="{md5h}">
+                {spoiler}
+                {media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}
+            </span>)
+        </div>
+        {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src, classes=classes)}
+    </div>
+	"""
+
+def get_media_path_thread(media_filename: str, board: str, uri: str) -> str:
+    return f'{uri.format(board_shortname=board)}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
+
+### END post_t crisis
+
+def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+    set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
 
@@ -148,11 +310,11 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
     if classes is None:
         classes = 'cover spoiler' if post['spoiler'] else 'cover'
     if full_src is None:
-        full_src = get_media_path(post['media_orig'], board, MediaType.image) if not media_conf['boards_with_image'] or board in media_conf['boards_with_image'] else ''
+        full_src = get_media_path(post['media_orig'], board, MediaType.image) if not BOARDS_WITH_IMAGE or board in BOARDS_WITH_IMAGE else ''
     if thumb_src is None:
-        thumb_src = get_media_path(post['preview_orig'], board, MediaType.thumb) if not media_conf['boards_with_thumb'] or board in media_conf['boards_with_thumb'] else ''
+        thumb_src = get_media_path(post['preview_orig'], board, MediaType.thumb) if not BOARDS_WITH_THUMB or board in BOARDS_WITH_THUMB else ''
 
-    onerror = 'onerror="p2other(this)"' if media_conf['try_full_src_type_on_404'] and is_img else ''
+    onerror = 'onerror="p2other(this)"' if TRY_FULL_SRC_TYPE_ON_404 and is_img else ''
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
@@ -353,7 +515,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
     </div>
     <div>
         { wpt['t_media'] if not is_op else '' }
-        <blockquote class="postMessage" id="m{num}">{wpt.get('comment', '') if wpt.get('comment', '') else ''}</blockquote>
+        <blockquote class="postMessage" id="m{num}">{wpt['comment']}</blockquote>
     </div>
     <div style="clear:both;"></div>
     { wpt['t_quotelink'] }
@@ -421,9 +583,7 @@ def render_catalog_card_archiveposting(wpt: dict) -> str: # a thread card is jus
 
 
 def get_posts_t_archiveposting(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
-    for post in posts:
-        post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
-
+    set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t_archiveposting(wrap_post_t(p)) for p in posts)
     return posts_t
 

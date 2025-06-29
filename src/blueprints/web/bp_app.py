@@ -17,6 +17,7 @@ from posts.template_optimizer import (
     render_wrapped_post_t,
     wrap_post_t,
     get_posts_t,
+    get_posts_t_thread,
 )
 from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
 from render import render_controller
@@ -293,7 +294,8 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
     validate_threads(thread_dict['posts'])
     p.check('validate')
 
-    posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)
+    # posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)
+    posts_t = get_posts_t_thread(thread_dict['posts'], post_2_quotelinks)
     p.check('posts_t')
 
     title = f"/{board_shortname}/ #{thread_num}"
