@@ -376,7 +376,7 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
     boards_missing = []
 
     for board in boards:
-        print(f'\rLoading {board:<4}', flush=True)
+        print(f'\rLoading {board:<4}', end='', flush=True)
         board_int = board_2_int(board)
         last_db_num, last_indexed_num = await gather(
             get_board_db_last_num(board),
@@ -407,6 +407,7 @@ async def incremental_index_single_thread(sp: BaseSearch, boards: list[str]):
 
     await sp.finalize()
 
+    print()
     print()
     if boards_updated:
         b = ' '.join(boards_updated)
