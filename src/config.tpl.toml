@@ -42,6 +42,11 @@ site_email = ''
 name = '4chan' # '4chan' 'lainchan'
 
 
+[stats]
+enabled = true # true/false - allow endpoints for users to view [(posts / YYYY-MM) / board]
+redis = true
+redis_db = 2
+
 
 [db]
 db_type = 'mysql' # mysql, sqlite, postgresql
@@ -78,10 +83,6 @@ max_size = 50
 host = "127.0.0.1"
 port = 6379
 max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
-
-
-[stats]
-enabled = false # true/false - allow endpoints for users to view [(posts / YYYY-MM) / board]
 
 
 [media]
