@@ -15,7 +15,6 @@ from posts.comments import html_comment, html_highlight
 from posts.template_optimizer import (
     get_media_img_t,
     render_wrapped_post_t,
-    report_modal_t,
     wrap_post_t
 )
 from search.pagination import template_pagination_links, total_pages
@@ -216,7 +215,6 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         gallery_mode=gallery_mode,
         form=form,
         posts_t=posts_t,
-        report_modal_t=report_modal_t,
         page_links=page_links,
         page_post_count=len(posts),
         searched=searched,

@@ -13,6 +13,43 @@ from leafs import post_files_delete, post_files_hide, post_files_show
 from moderation.filter_cache import fc
 from utils.validation import validate_board
 
+# this can actually just be a jinja form that is compiled once...
+def generate_report_modal():
+    category_options = "\n".join(
+        f"""
+        <div>
+          <input type="radio" id="{category.name}" name="submitter_category" value="{category.value}" required>
+          <label for="{category.name}">{category.value}</label>
+        </div>
+        """ for category in SubmitterCategory
+    )
+    modal_html = f"""
+    <div id="modal_overlay" hidden>
+        <div id="report_modal" class="form" hidden>
+            <div class="modal_header">
+                <div class="modal_title">Report</div>
+                <div id="report_close" class="btn">Close</div>
+            </div>
+            <form class="form" id="report_form" action="" method="POST">
+                <div>
+                    <label for="submitter_category">Category:</label>
+                    {category_options}
+                </div>
+                <br>
+                <div>
+                    <label for="submitter_notes">Details:</label>
+                    <textarea id="submitter_notes" name="submitter_notes" cols="48" rows="8" maxlength="512" placeholder="Provide details about the issue."></textarea>
+                </div>
+                <br>
+                <div id="feedback_report"></div>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+    </div>
+    """
+    return modal_html
+
+report_modal_t = generate_report_modal()
 
 async def get_report_count(
     report_parent_id: Optional[int] = None,

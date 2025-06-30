@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 
 from boards import board_objects
+from moderation.report import report_modal_t
 from configs import app_conf, media_conf, site_conf, vanilla_search_conf, index_search_conf, tag_conf, archiveposting_conf, mod_conf, stats_conf
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
@@ -23,6 +24,7 @@ render_constants = dict(
     get_flashed_messages=get_flashed_messages,
     format_ts=ts_2_formatted,
     board_objects=board_objects,
+    report_modal_t=report_modal_t,
     testing=app_conf['testing'],
 )
 
@@ -37,7 +39,6 @@ env.globals.update(render_constants)
 template_index = env.get_template("index.html")
 template_board_index = env.get_template("board_index.html")
 template_catalog = env.get_template("catalog.html")
-template_thread = env.get_template("thread.html")
 
 template_about = env.get_template("about.html")
 template_soy = env.get_template("soy.html")
@@ -72,6 +73,5 @@ safe_env = Environment(
     keep_trailing_newline=True,
     autoescape=False,
 )
-safe_env.globals.update(dict(
-    format_ts=ts_2_formatted,
-))
+safe_env.globals.update(render_constants)
+template_thread = safe_env.get_template("thread.html")
