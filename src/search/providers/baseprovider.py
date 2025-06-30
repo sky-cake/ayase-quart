@@ -112,8 +112,8 @@ class BaseSearch(ABC):
     async def add_posts_bytes(self, posts: bytes):
         await self._add_docs_bytes(INDEXES.posts.value, posts)
 
-    async def remove_posts(self, doc_ids: list[int]):
-        await self._remove_docs(INDEXES.posts.value, doc_ids)
+    async def remove_posts(self, pk_ids: list[int]):
+        await self._remove_docs(INDEXES.posts.value, pk_ids)
 
     async def posts_ready(self):
         return await self._index_ready(INDEXES.posts.value)

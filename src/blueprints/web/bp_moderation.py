@@ -58,6 +58,10 @@ async def route_create_report(board_shortname: str, thread_num: int, num: int):
     if await form.validate_on_submit():
         submitter_category = form.submitter_category.data
         submitter_notes = form.submitter_notes.data
+        
+        post = await get_post(board_shortname, num, db_X=db_X)
+        if not post:
+            return jsonify({'message': 'we dont have this post archived'})
 
         op = thread_num == num
         await create_report(
@@ -71,10 +75,10 @@ async def route_create_report(board_shortname: str, thread_num: int, num: int):
             ModStatus.open,
             None,
         )
+
         if mod_conf['default_reported_post_public_access'] == PublicAccess.hidden:
-            await fc.insert_post(board_shortname, num, op)
-            post = await get_post(board_shortname, num, db_X=db_X)
             post_files_hide(post)
+            await fc.insert_post(board_shortname, num, op)
 
         return jsonify({'message': 'thank you'})
     return jsonify({'message': f'error: {form.data}: {form.errors}'})

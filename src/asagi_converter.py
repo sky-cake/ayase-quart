@@ -911,6 +911,7 @@ async def move_post_to_delete_table(board: str, post_id: int) -> tuple[dict, str
     ;"""
     await local_db_q.query_dict(sql, params=(post_id,), commit=True)
 
+    post['board_shortname'] = board
     return (post, 'Post transfered to asagi\'s delete table. It is no longer in the board table.')
 
 

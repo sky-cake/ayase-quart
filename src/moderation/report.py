@@ -1,17 +1,19 @@
 from datetime import datetime
 from typing import Optional
 
-from quart_auth import AuthUser
-
 from moderation.user import Permissions
 
 from asagi_converter import get_post, move_post_to_delete_table
-from configs import mod_conf, archiveposting_conf
+from configs import mod_conf, archiveposting_conf, index_search_conf
 from db import db_m, db_a, db_q
 from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory, ReportAction
 from leafs import post_files_delete, post_files_hide, post_files_show
 from moderation.filter_cache import fc
+from moderation.user import User
 from utils.validation import validate_board
+from search.providers import get_index_search_provider
+from search.post_metadata import board_2_int, board_int_num_2_pk
+
 
 # this can actually just be a jinja form that is compiled once...
 def generate_report_modal():
@@ -307,7 +309,29 @@ async def delete_report_if_exists(report_parent_id: int) -> dict:
     return report
 
 
-async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:
+async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entire_thread_if_post_is_op: bool=False) -> bool:
+    if not index_search_conf['enabled']:
+        return False
+
+    validate_board(bs)
+
+    index_searcher = get_index_search_provider()
+    board_int = board_2_int(bs)
+
+    if remove_entire_thread_if_post_is_op and post['op']:
+        doc_ids = await db_q.query_dict(f"""select doc_id from `{bs}` where thread_num = {db_q.phg()}""", params=(post['thread_num'],))
+    else:
+        doc_ids = await db_q.query_dict(f"""select doc_id from `{bs}` where num = {db_q.phg()}""", params=(post['num'],))
+
+    pk_ids = [board_int_num_2_pk(board_int, doc_id) for doc_id in doc_ids]
+    if not pk_ids:
+        return False
+
+    index_searcher.remove_posts(pk_ids)
+    return True
+
+
+async def reports_action_routine(current_usr: User, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:
 
     report = await get_report_by_id(report_parent_id)
     if not report:
@@ -335,7 +359,6 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
             if report:
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
                 flash_msg = 'Report deleted.'
-            return flash_msg, 200
 
         case ReportAction.post_delete:
             if not current_usr.has_permissions([Permissions.post_delete]):
@@ -344,11 +367,22 @@ async def reports_action_routine(current_usr: AuthUser, report_parent_id: int, a
             # Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
             post, flash_msg = await move_post_to_delete_table(report.board_shortname, report.num)
             if not post:
-                return 'Could not find post. ' + flash_msg, 404
+                return 'Could not find post in database. ' + flash_msg, 404
+
+            if (await delete_post_from_index_if_applicable(bs, post)):
+                flash_msg += ' Deleted post from index.'
 
             full_del, prev_del = post_files_delete(post)
             flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
             flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
+
+            # delete report cus the post no longer exists, otherwise a bunch of empty reports will accumulate
+            report = await delete_report_if_exists(report_parent_id)
+            if report:
+                await fc.delete_post(report['board_shortname'], report['num'], report['op'])
+                flash_msg += ' Report deleted.'
+            else:
+                flash_msg += ' Report seems to already be deleted.'
 
         case ReportAction.media_delete:
             if not current_usr.has_permissions([Permissions.media_delete]):

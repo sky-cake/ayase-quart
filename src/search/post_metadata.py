@@ -140,8 +140,10 @@ def board_num_2_pk(board: str, num: int) -> int:
     return (board_bits << 32) + num
 
 
-def board_int_num_2_pk(board_int: int, num: int) -> int:
+def board_int_num_2_pk(board_int: int, doc_id: int) -> int:
     """
+    doc_id is the asagi <board> table doc_id.
+
     Combine u32 board + u32 num to u64 pk.
     Useful if the u32 board has been generated already.
 
@@ -154,7 +156,7 @@ def board_int_num_2_pk(board_int: int, num: int) -> int:
 
     The result is a 64-bit integer (pk) where the upper 32 bits represent `board_int` and the lower 32 bits represent `num`.
     """
-    return (board_int << 32) + num
+    return (board_int << 32) + doc_id
 
 
 board_mask = 0xFFFFFFFF << 32
