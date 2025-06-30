@@ -3,7 +3,7 @@ import quart_flask_patch
 from quart import Blueprint, jsonify
 from quart_schema import validate_request
 
-from asagi_converter import get_row_counts, get_latest_ops_as_catalog
+from asagi_converter import get_latest_ops_as_catalog
 from boards import board_shortnames
 from configs import mod_conf
 from moderation.user import (
@@ -38,17 +38,6 @@ async def latest(current_api_usr_id: int):
     if catalog:
         return jsonify(catalog), 200
     return {'error': 'No data found'}, 404
-
-
-@bp.get("/stats")
-@login_api_usr_required
-@require_api_usr_is_active
-@require_api_usr_permissions([Permissions.archive_stats_view])
-async def stats(current_api_usr_id: int):
-    table_row_counts = await get_row_counts(board_shortnames)
-    if table_row_counts:
-        return jsonify(table_row_counts), 200
-    return {'error': 'No info found'}, 404
 
 
 @bp.get("/configs")

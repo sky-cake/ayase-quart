@@ -45,7 +45,6 @@ template_soy = env.get_template("soy.html")
 template_message = env.get_template("message.html")
 template_messages = env.get_template("messages.html")
 template_stats = env.get_template("stats.html")
-template_stats_board = env.get_template("stats_board.html")
 template_login = env.get_template('login.html')
 template_configs = env.get_template('configs.html')
 

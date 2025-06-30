@@ -9,7 +9,7 @@ from functools import cache
 from itertools import batched
 from textwrap import dedent
 from async_lru import alru_cache
-from configs import archiveposting_conf, app_conf, vanilla_search_conf
+from configs import archiveposting_conf, app_conf, vanilla_search_conf, stats_conf
 from db import db_q, db_a
 from posts.capcodes import Capcode
 from posts.comments import html_comment
@@ -21,7 +21,9 @@ from posts.quotelinks import (
 from tagging.enums import SafeSearch
 from tagging.db import get_phg
 from werkzeug.security import safe_join
-from utils.validation import validate_boards
+from utils.validation import validate_board
+
+from db.redis import get_redis
 
 
 # these comments state the API field names, and descriptions, if applicable
@@ -961,38 +963,46 @@ async def is_post_op(board_shortname: str, num: int) -> bool:
 
 
 @alru_cache(ttl=60*60*24)
-async def _get_row_counts(board_shortnames: str):
-    board_shortnames = board_shortnames.split(',')
-    validate_boards(board_shortnames)
-    rows = await asyncio.gather(*(
-        db_q.query_dict(
-            f"""select
-                '{board_shortname}' as board,
-                strftime('%Y-%m', datetime(timestamp, 'unixepoch')) AS year_month,
-                min(num) as min_post_num,
-                max(num) as max_post_num,
-                count(*) as post_count,
-                round(count(*) * 100.0 / (max(num) - min(num)), 1) as fraction
-            from `{board_shortname}`
-            group by 1, 2
-            order by 1, 2"""
-        )
-        for board_shortname in board_shortnames
-    ))
-    rs = []
-    for r in rows:
-        for row in r:
-            row['min_post_num'] = f'{row["min_post_num"]:,}'
-            row['max_post_num'] = f'{row["max_post_num"]:,}'
-            row['post_count'] = f'{row["post_count"]:,}'
-            rs.append(row)
-    return rs
+async def _get_post_counts_per_month_by_board(board_shortname: str):
+    validate_board(board_shortname)
+    rows = await db_q.query_dict(
+        f"""
+        select
+            '{board_shortname}' as board,
+            strftime('%Y-%m', datetime(timestamp, 'unixepoch')) AS year_month,
+            min(num) as min_post_num,
+            max(num) as max_post_num,
+            count(*) as post_count,
+            round(count(*) * 100.0 / (max(num) - min(num)), 1) as fraction
+        from `{board_shortname}`
+        group by 1, 2
+        order by 1, 2
+        ;"""
+    )
+    for row in rows:
+        row['fraction'] = min(row['fraction'], 1.0) if row['fraction'] else None
+    return rows
 
 
-async def get_row_counts(board_shortnames: list[str]) -> list[dict]:
-    r = await _get_row_counts(','.join(board_shortnames)) # str for hashing / caching
-    # print(_get_row_counts.cache_info())
-    return r
+async def get_post_counts_per_month_by_board(board_shortname: str) -> str:
+    """Returns json formatted string.
+    """
+    if stats_conf['redis']:
+        r = get_redis(stats_conf['redis_db'])
+
+        key = f'post_counts_{board_shortname}'
+        post_counts = await r.get(key)
+        if post_counts:
+            return post_counts # do not loads(), cache dumps()
+
+        post_counts = await _get_post_counts_per_month_by_board(board_shortname)
+        post_counts = json.dumps(post_counts)
+        if post_counts:
+            await r.set(key, post_counts)
+        return post_counts
+
+    post_counts = await _get_post_counts_per_month_by_board(board_shortname)
+    return json.dumps(post_counts)
 
 
 async def get_latest_ops_as_catalog(board_shortnames):
