@@ -7,6 +7,8 @@ from configs import archive_conf
 IS_LAIN_ARCHIVE = archive_conf['name'][0] == 'l'
 
 def html_comment(comment: str, thread_num: int, board: str):
+    # TODO: we should probably convert the Nones into empty strings here, save having to check against None everywhere downstream
+    # comment must be renderd to html at some point if we're doing all this escaping anyways (json api another story) and not display None
     if not comment:
         return comment
 
