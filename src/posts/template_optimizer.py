@@ -115,7 +115,7 @@ def render_post_t_basic(post: dict):
     comment = post['comment'] or ''
     board = post['board_shortname']
     ts_unix = post['ts_unix']
-    ts_formatted = ts_2_formatted(ts_unix)
+    ts_formatted = '' # ts_2_formatted(ts_unix)
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     return f'''
@@ -124,13 +124,13 @@ def render_post_t_basic(post: dict):
         <div id="p{num}" class="post reply">
             <div class="postInfoM mobile" id="pim{num}">
                 <span class="nameBlock"><span class="name">{ANONYMOUS_NAME}</span><br></span>
-                <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
+                <span class="dateTime inblk" data-utc="{ts_unix}"></span>
                 <a href="#{num}">No. {num}</a>
             </div>
             <div class="postInfo" id="pi{num}">
                 <span class="inblk"><b>/{board}/</b></span>
                 <span class="name N">{ANONYMOUS_NAME}</span>
-                <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
+                <span class="dateTime inblk" data-utc="{ts_unix}"></span>
                 <span class="postNum"><a href="/{board}/thread/{thread_num}#p{num}">No.{num}</a></span>
                 <button class="btnlink" onclick="copy_link(this, '/{board}/thread/{thread_num}#p{num}')">⎘</button>
                 <span class="inblk">
