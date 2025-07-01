@@ -3,52 +3,57 @@ import html
 from posts.quotelinks import html_quotelinks
 from configs import archive_conf
 
+# TODO: very collision prone...
+IS_LAIN_ARCHIVE = archive_conf['name'][0] == 'l'
 
 def html_comment(comment: str, thread_num: int, board: str):
+    if not comment:
+        return comment
+
+    if IS_LAIN_ARCHIVE:
+        return _html_comment_lain(comment)
+    else:
+        return _html_comment_default(comment, thread_num, board)
+
+def _html_comment_default(comment: str, thread_num: int, board: str):
     """Will escape html if needed.
     
     Note: Yes, there are multiple `in comment` statements,
     but this is 1-2ms faster than looping over `comment` once, believe it or not.
     """
-    if not comment:
-        return comment
+    has_angle_r = '>' in comment
+    has_square_l = '[' in comment
+    if has_angle_r or '<' in comment:
+        comment = html.escape(comment)
+    if has_angle_r:
+        comment = html_quotelinks(comment, board, thread_num)
+    if has_square_l:
+        comment = html_bbcode(comment)
+    if has_angle_r:
+        comment = html_greentext(comment)
+    if 'http' in comment:
+        comment = clickable_links(comment)
 
-    # lainchan
-    if archive_conf['name'][0] == 'l':
-        """Lainchan's API has already has escaped the html. It's ready to be displayed."""
-
-        has_angle_r = '<a' in comment
-        if has_angle_r:
-            # before: <a onclick="highlightReply('14202', event);" href="/sec/res/14192.html#14202">&gt;&gt;14202</a>
-            # after: <a class="quotelink" data-board_shortname="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
-
-            comment = re.sub(r'\s*onclick="[^"]*"', '', comment)
-
-            pattern = r'(<a)([^>]*\bhref="/)([^/]+)(/res/)([^"]*?)(\.html)?(#)?(\d+)(")'
-            replacement = r'\1 class="quotelink" data-board_shortname="\3"\2\3/thread/\5\7p\8\9'
-            comment = re.sub(pattern, replacement, comment)
-
-    # 4chan
+    if has_square_l: # only do expensive [code] processing if there were bbtags at all
+        comment = replace_newlines_except_in_code(comment)
     else:
-        has_angle_r = '>' in comment
-        has_square_l = '[' in comment
-        if has_angle_r or '<' in comment:
-            comment = html.escape(comment)
-        if has_angle_r:
-            comment = html_quotelinks(comment, board, thread_num)
-        if has_square_l:
-            comment = html_bbcode(comment)
-        if has_angle_r:
-            comment = html_greentext(comment)
-        if 'http' in comment:
-            comment = clickable_links(comment)
-
-        if has_square_l: # only do expensive [code] processing if there were bbtags at all
-            comment = replace_newlines_except_in_code(comment)
-        else:
-            comment = comment.replace('\n', '<br>')
-
+        comment = comment.replace('\n', '<br>')
     return comment
+
+lain_comment_re = re.compile(r'\s*onclick="[^"]*"')
+lain_ql_pat_re = re.compile(r'(<a)([^>]*\bhref="/)([^/]+)(/res/)([^"]*?)(\.html)?(#)?(\d+)(")')
+def _html_comment_lain(comment: str):
+    """Lainchan's API has already has escaped the html. It's ready to be displayed."""
+    # only a few tweaks needed
+    has_angle_r = '<a' in comment
+    if has_angle_r:
+        # before: <a onclick="highlightReply('14202', event);" href="/sec/res/14192.html#14202">&gt;&gt;14202</a>
+        # after: <a class="quotelink" data-board_shortname="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
+
+        comment = lain_comment_re.sub('', comment)
+        
+        replacement = r'\1 class="quotelink" data-board_shortname="\3"\2\3/thread/\5\7p\8\9'
+        comment = lain_ql_pat_re.sub(replacement, comment)
 
 
 def replace_newlines_except_in_code(html: str):
