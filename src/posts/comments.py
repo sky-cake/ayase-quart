@@ -43,7 +43,10 @@ def html_comment(comment: str, thread_num: int, board: str):
         if 'http' in comment:
             comment = clickable_links(comment)
 
-        comment = replace_newlines_except_in_code(comment)
+        if has_square_l: # only do expensive [code] processing if there were bbtags at all
+            comment = replace_newlines_except_in_code(comment)
+        else:
+            comment = comment.replace('\n', '<br>')
 
     return comment
 
