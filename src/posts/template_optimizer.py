@@ -1,6 +1,6 @@
 from enum import StrEnum
 from html import escape
-from functools import cache
+from functools import cache, lru_cache
 
 from configs import media_conf
 from posts.capcodes import Capcode
@@ -118,6 +118,7 @@ def render_post_t_basic(post: dict):
     ts_formatted = '' # ts_2_formatted(ts_unix)
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
+    post_path_t = get_post_path(board, thread_num, num)
     return f'''
     <div id="pc{num}">
         <div class="sideArrows">&gt;&gt;</div>
@@ -131,12 +132,12 @@ def render_post_t_basic(post: dict):
                 <span class="inblk"><b>/{board}/</b></span>
                 <span class="name N">{ANONYMOUS_NAME}</span>
                 <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-                <span class="postNum"><a href="/{board}/thread/{thread_num}#p{num}">No.{num}</a></span>
-                <button class="btnlink" onclick="copy_link(this, '/{board}/thread/{thread_num}#p{num}')">⎘</button>
+                <span class="postNum"><a href="/{post_path_t}">No.{num}</a></span>
+                <button class="btnlink" onclick="copy_link(this, '/{post_path_t}')">⎘</button>
                 <span class="inblk">
                     [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
-                    [<a href="/{board}/thread/{thread_num}#p{num}" target="_blank">View</a>]
-                    [<a href="{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}" rel="noreferrer" target="_blank">Source</a>]
+                    [<a href="/{post_path_t}" target="_blank">View</a>]
+                    [<a href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank">Source</a>]
                 </span>
             </div>
             <div>
@@ -157,6 +158,13 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
+
+@lru_cache(maxsize=2048)
+def get_thread_path(board: str, thread_num: int) -> str:
+    return f'{board}/thread/{thread_num}'
+
+def get_post_path(board: str, thread_num: int, num: int) -> str:
+    return f'{get_thread_path(board, thread_num)}#p{num}'
 
 @cache
 def board_has_image(board: str) -> bool:
