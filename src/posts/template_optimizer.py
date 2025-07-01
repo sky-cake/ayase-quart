@@ -16,6 +16,8 @@ TRY_FULL_SRC_TYPE_ON_404: bool = media_conf.get('try_full_src_type_on_404', Fals
 ANONYMOUS_NAME = 'Anonymous'
 CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
 
+type QuotelinkD = dict[int, list[int]]
+
 class MediaType(StrEnum):
     image = 'image'
     thumb = 'thumb'
@@ -73,7 +75,7 @@ Despite media posts being complex, they return an empty string early if there is
     So we don't need to consider them as special
 '''
 
-def set_posts_quotelinks(posts: list[dict], post_2_quotelinks: dict[int, list[int]]):
+def set_posts_quotelinks(posts: list[dict], post_2_quotelinks: QuotelinkD):
     for post in posts:
         post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
 
@@ -103,7 +105,7 @@ def render_wrapped_post_t_thread(post: dict):
     # anything remotely special uses official wrap_post_t
     return render_wrapped_post_t(wrap_post_t(post))
 
-def get_posts_t_thread(posts: list[dict], post_2_quotelinks: dict[int, list[int]]):
+def get_posts_t_thread(posts: list[dict], post_2_quotelinks: QuotelinkD):
     set_posts_quotelinks(posts, post_2_quotelinks)
     return ''.join(render_wrapped_post_t_thread(p) for p in posts)
 
@@ -212,13 +214,13 @@ def get_media_path_thread(media_filename: str, board: str, uri: str) -> str:
 
 ### END post_t crisis
 
-def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
     set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
 
 
-def get_report_t(post):
+def get_report_t(post: dict) -> str:
     return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">
         Report
     </button>]"""
@@ -582,7 +584,7 @@ def render_catalog_card_archiveposting(wpt: dict) -> str: # a thread card is jus
     """
 
 
-def get_posts_t_archiveposting(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+def get_posts_t_archiveposting(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
     set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t_archiveposting(wrap_post_t(p)) for p in posts)
     return posts_t
