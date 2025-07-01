@@ -175,6 +175,15 @@ def board_has_thumb(board: str) -> bool:
     return board in BOARDS_WITH_THUMB and THUMB_URI
 
 @cache
+def get_image_baseuri(board: str) -> str:
+    return IMAGE_URI.format(board_shortname=board)
+
+@cache
+def get_thumb_baseuri(board: str) -> str:
+    return THUMB_URI.format(board_shortname=board)
+
+
+@cache
 def ext_is_image(ext: str) -> bool:
     return ext in ('jpg', 'jpeg', 'png', 'bmp', 'webp') # gifs not included
 
@@ -194,8 +203,8 @@ def get_media_t_thread(post: dict, num: int, board: str):
     spoiler = 'Spoiler,' if is_spoiler else ''
     classes = 'spoiler' if is_spoiler else ''
 
-    full_src = get_media_path_thread(media_orig, board, IMAGE_URI) if media_orig and board_has_image(board) else ''
-    thumb_src = get_media_path_thread(preview_orig, board, THUMB_URI) if preview_orig and board_has_thumb(board) else ''
+    full_src = get_image_path(board, media_orig)
+    thumb_src = get_thumb_path(board, preview_orig)
 
     return f"""
 	<div class="file" id="f{num}">
@@ -211,8 +220,19 @@ def get_media_t_thread(post: dict, num: int, board: str):
     </div>
 	"""
 
-def get_media_path_thread(media_filename: str, board: str, uri: str) -> str:
-    return f'{uri.format(board_shortname=board)}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
+def get_image_path(board: str, filename: str) -> str:
+    if not(filename and board_has_image(board)):
+        return ''
+    return f'{get_image_baseuri(board)}/{media_fs_partition(filename)}'
+
+def get_thumb_path(board: str, filename: str) -> str:
+    if not(filename and board_has_thumb(board)):
+        return ''
+    return f'{get_thumb_baseuri(board)}/{media_fs_partition(filename)}'
+
+# should move to configs or somewhere else for customizability
+def media_fs_partition(filename: str) -> str:
+    return f'{filename[0:4]}/{filename[4:6]}/{filename}'
 
 ### END post_t crisis
 
@@ -296,7 +316,7 @@ def get_media_path(media_filename: str, board: str, media_type: MediaType) -> st
 
     uri = IMAGE_URI if media_type == MediaType.image else THUMB_URI
 
-    return f'{uri.format(board_shortname=board).rstrip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
+    return f'{uri.format(board_shortname=board)}/{media_fs_partition(media_filename)}'
 
 
 def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes: str=None, is_search=False, is_catalog=False):
