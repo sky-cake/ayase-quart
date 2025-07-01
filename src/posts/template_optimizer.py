@@ -123,26 +123,20 @@ def render_post_t_basic(post: dict):
         <div class="sideArrows">&gt;&gt;</div>
         <div id="p{num}" class="post reply">
             <div class="postInfoM mobile" id="pim{num}">
-            <span class="nameBlock">
-                <span class="name">{ANONYMOUS_NAME}</span>
-                <br>
-            </span>
-            <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
-            <a href="#{num}">No. {num}</a>
+                <span class="nameBlock"><span class="name">{ANONYMOUS_NAME}</span><br></span>
+                <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
+                <a href="#{num}">No. {num}</a>
             </div>
             <div class="postInfo" id="pi{num}">
-                <span class="inblk"><b>/{board}/</b> </span>
+                <span class="inblk"><b>/{board}/</b></span>
                 <span class="name N">{ANONYMOUS_NAME}</span>
                 <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
-                <span class="postNum">
-                    <a href="/{board}/thread/{thread_num}#p{num}">No.{num}</a>
-                </span>
+                <span class="postNum"><a href="/{board}/thread/{thread_num}#p{num}">No.{num}</a></span>
                 <button class="btnlink" onclick="copy_link(this, '/{board}/thread/{thread_num}#p{num}')">⎘</button>
                 <span class="inblk">
-                [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">
-                Report</button>]
-                [<a href="/{board}/thread/{thread_num}#p{num}" target="_blank">View</a>]
-                [<a href="{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}" rel="noreferrer" target="_blank">Source</a>]
+                    [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
+                    [<a href="/{board}/thread/{thread_num}#p{num}" target="_blank">View</a>]
+                    [<a href="{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}" rel="noreferrer" target="_blank">Source</a>]
                 </span>
             </div>
             <div>
