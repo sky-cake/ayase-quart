@@ -3,7 +3,7 @@ from typing import Optional
 
 from moderation.user import Permissions
 
-from asagi_converter import get_post, move_post_to_delete_table
+from asagi_converter import get_post, move_post_to_delete_table, get_local_db_q
 from configs import mod_conf, archiveposting_conf, index_search_conf
 from db import db_m, db_a, db_q
 from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory, ReportAction
@@ -319,11 +319,11 @@ async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entir
     board_int = board_2_int(bs)
 
     if remove_entire_thread_if_post_is_op and post['op']:
-        doc_ids = await db_q.query_dict(f"""select doc_id from `{bs}` where thread_num = {db_q.phg()}""", params=(post['thread_num'],))
+        rows = await db_q.query_dict(f"""select doc_id from `{bs}` where thread_num = {db_q.phg()}""", params=(post['num'],))
     else:
-        doc_ids = await db_q.query_dict(f"""select doc_id from `{bs}` where num = {db_q.phg()}""", params=(post['num'],))
+        rows = await db_q.query_dict(f"""select doc_id from `{bs}` where num = {db_q.phg()}""", params=(post['num'],))
 
-    pk_ids = [board_int_num_2_pk(board_int, doc_id) for doc_id in doc_ids]
+    pk_ids = [board_int_num_2_pk(board_int, row['doc_id']) for row in rows]
     if not pk_ids:
         return False
 
@@ -364,13 +364,27 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             if not current_usr.has_permissions([Permissions.post_delete]):
                 return f'Need permissions for {Permissions.post_delete.name}', 401
 
-            # Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
-            post, flash_msg = await move_post_to_delete_table(report.board_shortname, report.num)
-            if not post:
-                return 'Could not find post in database. ' + flash_msg, 404
+            flash_msg = ''
 
+            local_db_q = get_local_db_q(report.board_shortname)
+            post = await get_post(report.board_shortname, report.num, db_X=local_db_q)
+            if not post:
+                # This block shouldn't be executed much, if at all.
+                # We delete the post from the index, THEN delete the post from the database.
+                # If we get here, there are other forces at play which are deleting post from the asagi database.
+                flash_msg += ' Did not find post in asagi database.'
+
+                # could implement this here to double check the post is not in the index
+                # https://docs.lnx.rs/#tag/Managing-documents/operation/Delete_Documents_By_Query_indexes__index__documents_query_delete
+
+                return flash_msg, 200
+
+            # must come before deleting post from <board> table
             if (await delete_post_from_index_if_applicable(bs, post)):
                 flash_msg += ' Deleted post from index.'
+
+            # Old Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
+            flash_msg += (await move_post_to_delete_table(post))
 
             full_del, prev_del = post_files_delete(post)
             flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'

@@ -860,7 +860,7 @@ def get_local_db_q(board: str):
 
 
 async def get_post(board: str, post_id: int, db_X=None) -> dict:
-    """Returns {thread_num: 123, comment: 'hello', ...} wihtout quotelinks"""
+    """Returns {thread_num: 123, comment: 'hello', ...} without quotelinks"""
 
     local_db_q = get_local_db_q(board) if not db_X else db_X
 
@@ -877,42 +877,56 @@ async def get_post(board: str, post_id: int, db_X=None) -> dict:
     return posts[0]
 
 
-async def move_post_to_delete_table(board: str, post_id: int) -> tuple[dict, str]:
+async def get_post_with_doc_id(board: str, post_id: int, db_X=None) -> dict:
+    """Returns {thread_num: 123, comment: 'hello', ...} without quotelinks"""
+
+    local_db_q = get_local_db_q(board) if not db_X else db_X
+
+    sql = f"""
+        doc_id,
+        {get_selector(board)}
+        from `{board}`
+        where num = {local_db_q.phg()}
+    ;"""
+    posts = await local_db_q.query_dict(sql, params=(post_id,))
+
+    if not posts:
+        return dict()
+
+    return posts[0]
+
+
+async def move_post_to_delete_table(post: dict) -> str:
     """Insert post into `<board>_deleted` table first. If we fail at that, do nothing.
 
-    Returns the post dict, and a flash message.
+    Returns a flash message.
     """
+    board = post['board_shortname']
+
+    post_for_insert = {selector_columns_map[k]: v for k, v in post.items() if k in selector_columns_map}
+    post_for_insert = post_for_insert | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
 
     local_db_q = get_local_db_q(board)
-
-    post = await get_post(board, post_id, db_X=local_db_q)
-    if not post:
-        return (post, 'Did not locate post in asagi database. Did nothing as a result.')
-
-    post = {selector_columns_map[k]: v for k, v in post.items() if k in selector_columns_map}
-    post = post | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
-
     phg = local_db_q.phg()
-    sql_cols = ', '.join(post)
-    sql_conflict = ', '.join([f'{col}={phg}' for col in post])
+    sql_cols = ', '.join(post_for_insert)
+    sql_conflict = ', '.join([f'{col}={phg}' for col in post_for_insert])
 
-    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({local_db_q.phg.size(post)}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
-    values = list(post.values())
+    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({local_db_q.phg.size(post_for_insert)}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
+    values = list(post_for_insert.values())
     parameters = values + values
     num = await local_db_q.query_dict(sql, params=parameters, commit=True)
 
     if not num:
-        return (post, 'Did not transfer post to asagi\'s delete table. It is still in the board table.')
+        return ' Did not transfer post to asagi\'s delete table. It is still in the board table.'
 
     sql = f"""
         delete
         from `{board}`
         where num = {phg}
     ;"""
-    await local_db_q.query_dict(sql, params=(post_id,), commit=True)
+    await local_db_q.query_dict(sql, params=(post['num'],), commit=True)
 
-    post['board_shortname'] = board
-    return (post, 'Post transfered to asagi\'s delete table. It is no longer in the board table.')
+    return ' Post transfered to asagi\'s delete table. It is no longer in the board table.'
 
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:
