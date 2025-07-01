@@ -289,6 +289,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
     thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'])
     p.check('filter_reported')
 
+    # TODO: only count manually if we can't get the counts from the side tables
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 
     validate_threads(thread_dict['posts'])

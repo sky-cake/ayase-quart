@@ -702,7 +702,7 @@ async def generate_index(board: str, page_num: int=1):
 def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     """Returns (nreplies, nimages)"""
     nreplies = len(posts) - 1
-    nimages = len([1 for p in posts if p.get('media_filename')])
+    nimages = sum(1 for p in posts if p['media_filename'])
     return nreplies, nimages
 
 
