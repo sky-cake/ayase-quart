@@ -1,18 +1,11 @@
 import os
-import tomllib
 
 from enums import DbType, PublicAccess
 from utils import make_src_path
 from vox import VoiceFlite, TranscriptMode
+from .conf_loader import load_config_file
 
-
-def _load_config_toml():
-    if not hasattr(_load_config_toml, 'conf'):
-        with open(make_src_path('config.toml'), 'rb') as f:
-           _load_config_toml.conf = tomllib.load(f)
-    return _load_config_toml.conf
-
-conf = _load_config_toml()
+conf = load_config_file()
 app_conf = conf.get('app', {})
 app_conf['login_endpoint'] = f"/{app_conf['login_endpoint'].strip('/')}"
 
