@@ -4,16 +4,17 @@ from enums import DbType, PublicAccess
 from utils import make_src_path
 from vox import VoiceFlite, TranscriptMode
 from .conf_loader import load_config_file
+from .conf_common import massage_key
 
 conf = load_config_file()
 app_conf = conf.get('app', {})
-app_conf['login_endpoint'] = f"/{app_conf['login_endpoint'].strip('/')}"
+massage_key(app_conf, 'login_endpoint', lambda x: f"/{x.strip('/')}")
 
 site_conf = conf.get('site', {})
 archive_conf = conf.get('archive', {'name': '4chan'})
 
 db_conf = conf.get('db', {})
-db_conf['db_type'] = DbType[db_conf['db_type']]
+massage_key(db_conf, 'db_type', lambda x: DbType[x])
 
 index_search_conf = conf.get('index_search', {})
 vanilla_search_conf = conf.get('vanilla_search', {})
@@ -24,8 +25,13 @@ media_conf = conf.get('media', {})
 if not media_conf.get('media_root_path') and media_conf['serve_outside_static']:
     raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_conf.get('media_root_path'))
 
-media_conf['boards_with_image'] = [x.strip() for x in media_conf['boards_with_image'].strip(',').split(',')] if media_conf['boards_with_image'] else []
-media_conf['boards_with_thumb'] = [x.strip() for x in media_conf['boards_with_thumb'].strip(',').split(',')] if media_conf['boards_with_thumb'] else []
+def split_csv(csv_vals: str=None):
+    if not csv_vals:
+        return []
+    return [x.strip() for x in csv_vals.strip(',').split(',')]
+
+massage_key(media_conf, 'boards_with_image', split_csv)
+massage_key(media_conf, 'boards_with_thumb', split_csv)
 
 if media_conf['serve_outside_static']:
     if not os.path.isdir(media_conf.get('media_root_path')):
