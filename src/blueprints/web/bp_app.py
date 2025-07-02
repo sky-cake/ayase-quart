@@ -10,7 +10,7 @@ from asagi_converter import (
     get_counts_from_posts
 )
 from boards import get_title
-from configs import SITE_NAME, app_conf, vox_conf
+from configs import app_conf, vox_conf
 from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
@@ -64,8 +64,6 @@ async def v_index(is_admin: bool, logged_in: bool):
     return await render_controller(
         template_index,
         logo_filename=f'logo{randint(1, 3)}.png',
-        tab_title=SITE_NAME,
-        title='',
         logged_in=logged_in,
         is_admin=is_admin,
     )
