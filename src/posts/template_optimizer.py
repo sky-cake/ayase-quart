@@ -556,22 +556,24 @@ def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
     ts_unix = wpt['ts_unix']
     classes = 'spoiler' if wpt['spoiler'] else ''
     nl = '<br>' if wpt['t_cc'] else ''
+    thread_path = get_thread_path(board, num)
+    post_path = get_post_path(board, num, num)
 
     return f"""
-    <div id="{ num }" class="thread doc_id_{ num }" tabindex="0">
+    <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
         /{board}/<br>
         <span class="post_controls">
-            [<a href="/{ board }/thread/{ num }" class="btnr parent" >View</a>]
-            [<a href="{CANONICAL_HOST}/{ board }/thread/{ num }" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
+            [<a href="/{thread_path}" class="btnr parent" >View</a>]
+            [<a href="{CANONICAL_HOST}/{thread_path}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         { wpt['t_cc'] }{nl}
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
-            <a href="/{ board }/thread/{ num }#p{ num }" data-function="highlight" data-post="{ num }">No. { num }</a>
+            <a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>
         </span>
         </div>
-    <a href="/{ board }/thread/{ num }" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
+    <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
     {get_thread_stats_t(wpt)}
     <div class="teaser">
         { title_t }
@@ -588,16 +590,17 @@ def render_catalog_card_archiveposting(wpt: dict) -> str: # a thread card is jus
     ts_unix = wpt['ts_unix']
     classes = 'spoiler' if wpt['spoiler'] else ''
     nl = '<br>' if wpt['t_cc'] else ''
+    thread_path = get_thread_path(board, num)
 
-    return f"""<div id="{ num }" class="form thread doc_id_{ num }" tabindex="0">
-      <a href="/{ board }/thread/{ num }" class="btnr parent">
+    return f"""<div id="{num}" class="form thread doc_id_{num}" tabindex="0">
+      <a href="/{thread_path}" class="btnr parent">
       <div class="post_data">
         { wpt['t_filedeleted'] }
         { wpt['t_cc'] }{nl}
-        <span class="postNum">No. { num }</span>
+        <span class="postNum">No. {num}</span>
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
       </div>
-      <a href="/{ board }/thread/{ num }" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
+      <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
       <div class="teaser">
         { title_t + '<br>' if title_t else '' }
         { wpt.get('comment', '')}
