@@ -21,10 +21,12 @@ function media_mouseover(event) {
     document.body.appendChild(img_cloned);
 }
 
-const media_containers = doc_query_all('.media_cont');
-for (const container of media_containers) {
-    container.addEventListener('mouseover', media_mouseover);
-    container.addEventListener('mouseout', media_mouseout);
+function setup_media_events() {
+	const media_containers = doc_query_all('.media_cont');
+	for (const container of media_containers) {
+		container.addEventListener('mouseover', media_mouseover);
+		container.addEventListener('mouseout', media_mouseout);
+	}
 }
 
 function quoteline_mouseover(event) {
@@ -57,10 +59,13 @@ function quoteline_mouseover(event) {
         quotelink_preview_show(target_post, quotelink, backlink_num);
     }
 }
-const quotelinks = doc_query_all("a.quotelink");
-for (const quotelink of quotelinks) {
-    quotelink.addEventListener("mouseover", quoteline_mouseover);
-    quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+
+function setup_quotelink_events() {
+	const quotelinks = doc_query_all("a.quotelink");
+	for (const quotelink of quotelinks) {
+		quotelink.addEventListener("mouseover", quoteline_mouseover);
+		quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+	}
 }
 
 function get_quotelink_preview_default_string() {
@@ -135,8 +140,8 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.style.backgroundColor = "#282a2e";
 }
 
-if (document.getElementById('vox')){
-    const vox_button = document.createElement('button');
+function setup_vox_events() {
+	const vox_button = document.createElement('button');
     vox_button.textContent = 'Load Thread Reader';
     const tools = document.getElementById('tools');
     const board = tools.getAttribute('data-board_shortname');
@@ -171,3 +176,13 @@ if (document.getElementById('vox')){
         });
     });
 }
+
+function init_thread() {
+	setup_media_events();
+	setup_quotelink_events();
+	if (document.getElementById('vox')) {
+		setup_vox_events();
+	}
+}
+
+init_thread();
