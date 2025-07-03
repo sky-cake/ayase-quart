@@ -144,17 +144,19 @@ function copy_code(button_element, code, copy_text='⎘', success_text='&checkma
     });
 }
 
-for (const codeElement of doc_query_all('code')) {
-    const copyButton = document.createElement('button');
-    copyButton.innerHTML = `copy`;
-    copyButton.classList.add('codecopybtn');
-
-    codeElement.parentNode.insertBefore(copyButton, codeElement.nextSibling);
-
-    copyButton.addEventListener('click', function () {
-        const codeContent = codeElement.textContent;
-        copy_code(copyButton, codeContent.replaceAll('<br>', '\n').replaceAll('&gt;', '>').replaceAll('&lt;', '<'), 'copy', 'copied', 'failed');
-    });
+function setup_code_clipboard() {
+	for (const codeElement of doc_query_all('code')) {
+		const copyButton = document.createElement('button');
+		copyButton.innerHTML = `copy`;
+		copyButton.classList.add('codecopybtn');
+	
+		codeElement.parentNode.insertBefore(copyButton, codeElement.nextSibling);
+	
+		copyButton.addEventListener('click', function () {
+			const codeContent = codeElement.textContent;
+			copy_code(copyButton, codeContent.replaceAll('<br>', '\n').replaceAll('&gt;', '>').replaceAll('&lt;', '<'), 'copy', 'copied', 'failed');
+		});
+	}
 }
 
 function updateDateTimes() {
@@ -168,32 +170,43 @@ function updateDateTimes() {
         }
     }
 }
-updateDateTimes();
 
-for (const el of doc_query_all("[data-toggle]")) {
-    el.addEventListener("click", () => {
-        const idee = el.getAttribute("data-toggle");
-        const target = document.getElementById(idee);
-        if (target) {
-        const isVisible = getComputedStyle(target).display !== "none";
-        target.style.display = isVisible ? "none" : "block";
-        }
-    });
+// fts & tagging
+function setup_data_toggles() {
+	for (const el of doc_query_all("[data-toggle]")) {
+		el.addEventListener("click", () => {
+			const idee = el.getAttribute("data-toggle");
+			const target = document.getElementById(idee);
+			if (target) {
+				const isVisible = getComputedStyle(target).display !== "none";
+				target.style.display = isVisible ? "none" : "block";
+			}
+		});
+	}
 }
 
-const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-        const video = entry.target;
-        if (!(video instanceof HTMLVideoElement)) return;
-
-        if (!entry.isIntersecting && !video.paused) {
-            video.pause();
-        }
-    }}, {
-        threshold: 0.1 // video is "visible" if at least 10% is in view
-    }
-);
-    
-for (const video of doc_query_all('video')) {
-    observer.observe(video);
+function setup_video_intersection_events() {
+	const observer = new IntersectionObserver((entries) => {
+		for (const entry of entries) {
+			const video = entry.target;
+			if (!(video instanceof HTMLVideoElement)) return;
+	
+			if (!entry.isIntersecting && !video.paused) {
+				video.pause();
+			}
+		}}, {
+			threshold: 0.1 // video is "visible" if at least 10% is in view
+		}
+	);
+	for (const video of doc_query_all('video')) {
+		observer.observe(video);
+	}
 }
+
+function init_index() {
+	updateDateTimes();
+	setup_data_toggles();
+	setup_video_intersection_events();
+}
+
+init_index();
