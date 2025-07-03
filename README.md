@@ -237,30 +237,7 @@ Lint checking can be performed with,
 
 ## Production
 
-Here is what a systemctl service file could look like for Ayase Quart.
-
-`sudo nano /etc/systemd/system/aq.service`
-
-```
-[Unit]
-Description=ayase_quart_hypercorn
-After=network.target
-
-[Service]
-User=USER1
-Group=USER1
-
-WorkingDirectory=/path/to/ayase_quart/src
-Environment="PATH=/path/to/venv/bin"
-ExecStart=/path/to/venv/bin/hypercorn -w 2 -b 127.0.0.1:9001 'main:app'
-
-Type=simple
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
+Check `systemd.conf` for and example systemd config file.
 
 
 ## Troubleshooting

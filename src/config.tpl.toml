@@ -48,6 +48,17 @@ redis = true
 redis_db = 2
 
 
+[traffic_log]
+# if enabled, this will create a sqlite database with insightful traffic fields for every request
+# this is unrelated to the hypercorn logging, and is purely application side logging
+enabled = true
+database = '/path/to/traffic.db'
+
+# do not log URL paths that begin with this,
+ignore_path_startswith = ['/srv', '/static', '/favico'] # list
+# ignore_path_startswith = '/srv' # string (if singular)
+
+
 [db]
 db_type = 'mysql' # mysql, sqlite, postgresql
 echo = false # if true, print rendered sql statements to console

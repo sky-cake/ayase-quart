@@ -9,7 +9,7 @@ from hypercorn.middleware import ProxyFixMiddleware
 from quart_rate_limiter import RateLimiter
 
 from blueprints import blueprints # importing timm and torch down the import hole makes this slow
-from configs import QuartConfig, app_conf, mod_conf, tag_conf, archiveposting_conf
+from configs import QuartConfig, app_conf, mod_conf, tag_conf, archiveposting_conf, traffic_log_conf
 from db import db_q
 from db.redis import close_redis
 from moderation import init_moderation
@@ -18,6 +18,7 @@ from moderation.filter_cache import fc
 from render import render_controller
 from templates import render_constants, template_error_message
 from archiveposting import init_archiveposting
+from traffic_log import traffic_log_init, traffic_log_request_before, traffic_log_request_after
 
 
 async def print_exception(e: Exception):
@@ -79,6 +80,11 @@ def create_app():
     if archiveposting_conf['enabled']:
         app.before_serving(init_archiveposting)
 
+    if traffic_log_conf.get('enabled'):
+        traffic_log_init()
+        app.before_request(traffic_log_request_before)
+        app.after_request(traffic_log_request_after)
+
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(close_dbs)
@@ -105,10 +111,14 @@ app = create_app()
 
 
 if not app_conf.get('testing', False):
-    print('Quart app created. Now, since you\'re not in dev mode, point hypercorn to this asgi app with something like,')
-    print('    hypercorn --config hypercorn.toml ./src/main:app')
-    print('Hypercorn config docs at: https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html')
-    print('If you want to exit, use ctrl-c and/or ctrl-z.')
+    print('Quart app initialized in production mode.')
+    print('If you want to run this in production, you should stop this process with CTRL-C')
+    print('and point hypercorn to this asgi app with one of the following:')
+    print('    1. /aq/venv/bin/hypercorn --config file:/aq/src/hypercorn_conf.py /aq/src/main:app')
+    print('    2. hypercorn --config hypercorn.toml /aq/src/main:app')
+    print('    3. hypercorn --bind 0.0.0.0:9003 --workers 3 /aq/src/main:app')
+    print('Note: these are examples only. You ought to study the configs you use.')
+    print('Hypercorn configs are documented at https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html')
 
 elif __name__ == '__main__':
     app.run(
@@ -120,4 +130,4 @@ elif __name__ == '__main__':
         use_reloader=app_conf.get('autoreload', True),
     )
 else:
-    print('Nothing to do.')
+    print('Quart app initialized in production mode. - AQ')
