@@ -16,7 +16,7 @@ from posts.capcodes import capcode_2_id
 from posts.quotelinks import get_quotelink_lookup
 from configs import index_search_conf
 
-from .post_metadata import board_2_int, board_int_num_2_pk, pack_metadata
+from .post_metadata import board_2_int, board_int_doc_id_2_pk, pack_metadata
 from .providers import search_index_fields
 from .providers.baseprovider import BaseSearch
 
@@ -287,7 +287,7 @@ def process_post(post: dict, board_int: int, post_2_quotelinks: dict, post_pack_
     post['quotelinks'] = post_2_quotelinks.get(post['num'], []) # need replies before packing metadata
     post['capcode'] = capcode_2_id(post['capcode']) # cast the capcode to int also in the metadata
     post['data'] = pack_metadata(post)
-    post['pk'] = board_int_num_2_pk(board_int, post["doc_id"])
+    post['pk'] = board_int_doc_id_2_pk(board_int, post["doc_id"])
     post['board'] = board_int
 
     set_bool_fields(post)
@@ -357,7 +357,7 @@ async def get_board_db_threads_after_num(board: str, num: int) -> list[int]:
 async def index_board_threads_single_thread(board: str, sp: BaseSearch, thread_nums: list[int], post_pack_fn: Callable[[dict], dict], batch_pack_fn: Callable[[list[dict]], bytes]):
     board_int = board_2_int(board)
     post_rows = await get_post_rows(board, thread_nums)
-    pks = [board_int_num_2_pk(board_int, p[DOC_ID_IDX]) for p in post_rows]
+    pks = [board_int_doc_id_2_pk(board_int, p[DOC_ID_IDX]) for p in post_rows]
     wait_del_index = sp.remove_posts(pks)
     post_batches = process_post_rows(board, post_rows, post_pack_fn, batch_pack_fn)
     await wait_del_index

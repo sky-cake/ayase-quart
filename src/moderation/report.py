@@ -12,7 +12,7 @@ from moderation.filter_cache import fc
 from moderation.user import User
 from utils.validation import validate_board
 from search.providers import get_index_search_provider
-from search.post_metadata import board_2_int, board_int_num_2_pk
+from search.post_metadata import board_2_int, board_int_doc_id_2_pk
 
 
 # this can actually just be a jinja form that is compiled once...
@@ -323,7 +323,7 @@ async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entir
     else:
         rows = await db_q.query_dict(f"""select doc_id from `{bs}` where num = {db_q.phg()}""", params=(post['num'],))
 
-    pk_ids = [board_int_num_2_pk(board_int, row['doc_id']) for row in rows]
+    pk_ids = [board_int_doc_id_2_pk(board_int, row['doc_id']) for row in rows]
     if not pk_ids:
         return False
 

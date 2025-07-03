@@ -90,7 +90,7 @@ def unpack_metadata(data: str, comment: str) -> dict:
 # START SEARCH ENGINE'S PRIMARY KEY GENERATION
 """
 64 bits unsigned int primary key
-    lower 32 bits for num
+    lower 32 bits for doc_id
     upper 32 bits for board
 
 1 null + 10 digits + 26 letters = 37 possibilities => round up to 64 => 6 bits_per_char
@@ -134,40 +134,40 @@ def int_2_board(board_int: int) -> str:
     return ''.join(reversed(chars))
 
 
-def board_num_2_pk(board: str, num: int) -> int:
-    """Combine str board + u32 num to u64 pk"""
+def board_doc_id_2_pk(board: str, doc_id: int) -> int:
+    """Combine str board + u32 doc_id to u64 pk"""
     board_bits = board_2_int(board)
-    return (board_bits << 32) + num
+    return (board_bits << 32) + doc_id
 
 
-def board_int_num_2_pk(board_int: int, doc_id: int) -> int:
+def board_int_doc_id_2_pk(board_int: int, doc_id: int) -> int:
     """
     doc_id is the asagi <board> table doc_id.
 
-    Combine u32 board + u32 num to u64 pk.
+    Combine u32 board + u32 doc_id to u64 pk.
     Useful if the u32 board has been generated already.
 
     Example:
 
-    If `board_int` = 0x12345678 and `num` = 0x9ABCDEF0, the function would perform:
+    If `board_int` = 0x12345678 and `doc_id` = 0x9ABCDEF0, the function would perform:
 
     board_int << 32 --> 0x1234567800000000
-    Add num --> 0x123456789ABCDEF0
+    Add doc_id --> 0x123456789ABCDEF0
 
-    The result is a 64-bit integer (pk) where the upper 32 bits represent `board_int` and the lower 32 bits represent `num`.
+    The result is a 64-bit integer (pk) where the upper 32 bits represent `board_int` and the lower 32 bits represent `doc_id`.
     """
     return (board_int << 32) + doc_id
 
 
 board_mask = 0xFFFFFFFF << 32
-num_mask = 0xFFFFFFFF
-def pk_2_board_num(pk: int) -> tuple[str, int]:
-    """Reverse of `board_int_num_2_pk()`.
+doc_id_mask = 0xFFFFFFFF
+def pk_2_board_doc_id(pk: int) -> tuple[str, int]:
+    """Reverse of `board_doc_id_2_pk()`.
 
-    Reverts u64 `pk` to str `board` and u32 `num` tuple
+    Reverts u64 `pk` to str `board` and u32 `doc_id` tuple
     """
-    num = pk & num_mask
+    doc_id = pk & doc_id_mask
     board = int_2_board((pk & board_mask) >> 32)
-    return board, num
+    return board, doc_id
 
 # END SEARCH ENGINE'S PRIMARY KEY GENERATION
