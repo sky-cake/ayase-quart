@@ -1,4 +1,4 @@
-import sqlite3
+import aiosqlite
 from datetime import datetime, timezone
 from time import perf_counter
 
@@ -27,7 +27,7 @@ traffic_fields = [
 sql_insert_traffic_params = ','.join(['?'] * len(traffic_fields))
 sql_insert_traffic = f"""insert into traffic ({','.join(traffic_fields)}) values ({sql_insert_traffic_params});"""
 
-def insert_traffic_record(request: Request, duration: float):
+async def insert_traffic_record(request: Request, duration: float):
     traffic_record = dict(
         x_forwarded_for=request.headers.get("X-Forwarded-For", None),
         remote_addr=request.headers.get("Remote-Addr", None),
@@ -46,9 +46,9 @@ def insert_traffic_record(request: Request, duration: float):
         # content_md5=request.content_md5,
         # scheme=request.scheme,
     )
-    with sqlite3.connect(traffic_log_conf['database']) as db:
-        db.execute(sql_insert_traffic, tuple(traffic_record.get(k) for k in traffic_fields))
-        db.commit()
+    async with aiosqlite.connect(traffic_log_conf['database']) as db:
+        await db.execute(sql_insert_traffic, tuple(traffic_record.get(k) for k in traffic_fields))
+        await db.commit()
 
 
 sql_create_traffic_table = """
@@ -75,10 +75,10 @@ create table if not exists traffic (
 # scheme           text
 
 
-def traffic_log_init():
-    with sqlite3.connect(traffic_log_conf['database']) as db:
-        db.execute(sql_create_traffic_table)
-        db.commit()
+async def traffic_log_init():
+    async with aiosqlite.connect(traffic_log_conf['database']) as db:
+        await db.execute(sql_create_traffic_table)
+        await db.commit()
 
 
 traffic_log_enabled = traffic_log_conf.get('enabled')
@@ -91,7 +91,7 @@ def traffic_log_request_before():
         g.start_time = perf_counter()
 
 
-def traffic_log_request_after(response: Response):
+async  def traffic_log_request_after(response: Response):
     if g.start_time:
-        insert_traffic_record(request, round(perf_counter() - g.start_time, 5))
+        await insert_traffic_record(request, round(perf_counter() - g.start_time, 5))
     return response
