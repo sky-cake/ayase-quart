@@ -14,11 +14,10 @@ function expandMedia(e) {
         if (toggleSpan) toggleSpan.textContent = open ? "Close" : "Play";
     };
 
-    const isVideo = ext === "webm" || ext === "mp4";
     const isVideoExpanded = e.tagName.toLowerCase() === "video";
     const isImageExpanded = e.getAttribute("data-expanded") === "true";
 
-    if (isVideo && !isVideoExpanded) {
+    if (ext_is_video(ext) && !isVideoExpanded) {
         const fullSrc = e.getAttribute("data-full_media_src");
         if (!fullSrc) return;
 
@@ -39,7 +38,7 @@ function expandMedia(e) {
 
         const source = document.createElement("source");
         source.src = fullSrc;
-        source.type = ext === "webm" ? "video/webm" : "video/mp4";
+        source.type = get_video_mimetype(ext);
         video.appendChild(source);
         observer.observe(video); // pause videos when out of view
 
@@ -85,7 +84,7 @@ function expandMedia(e) {
 // see template_optimizer.py
 function p2other(el) {
     var ext = el.getAttribute("data-ext");
-    if (ext === "webm" || ext === "mp4") {
+    if (ext_is_video(ext)) {
  	   return;
     }
     const current_src = el.getAttribute('src');

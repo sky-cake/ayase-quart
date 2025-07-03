@@ -4,11 +4,11 @@ function media_mouseout(event) {
         removeClonedImages();
     }
 }
-const video_extensionss = new Set(['mp4', 'webm']);
+
 function media_mouseover(event) {
     const img = event.target;
     const extension = img.getAttribute('data-ext');
-    if (!extension || video_extensionss.has(extension)) return;
+    if (!extension || ext_is_video(extension)) return;
     if (img.getAttribute('data-expanded') === "true") return;
     if (!(img instanceof HTMLImageElement)) return;
     if (!img.hasAttribute('data-full_media_src') && !img.hasAttribute('data-thumb_src')) return;
