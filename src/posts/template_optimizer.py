@@ -395,10 +395,12 @@ def set_links(post: dict):
     board = post['board_shortname']
     num = post['num']
     thread_num = post['thread_num']
-    post['t_thread_link_rel'] = f'/{board}/thread/{thread_num}'
-    post['t_thread_link_src'] = f'{CANONICAL_HOST}/{board}/thread/{thread_num}'
-    post['t_post_link_rel'] = f'/{board}/thread/{thread_num}#p{num}'
-    post['t_post_link_src'] = f'{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}'
+    thread_path = get_thread_path(board, thread_num)
+    post_path = get_post_path(board, thread_num, num)
+    post['t_thread_link_rel'] = thread_path
+    post['t_thread_link_src'] = f'{CANONICAL_HOST}/{thread_path}'
+    post['t_post_link_rel'] = post_path
+    post['t_post_link_src'] = f'{CANONICAL_HOST}/{post_path}'
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
