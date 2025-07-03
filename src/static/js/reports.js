@@ -18,42 +18,53 @@ function show_modal(report_button) {
     reportModal.style.display = 'block';
 }
 
-for (const button of reportButtons) {
-    button.addEventListener('click', show_modal.bind(null, button), false);
+function setup_report_buttons() {
+	for (const button of reportButtons) {
+		button.addEventListener('click', show_modal.bind(null, button), false);
+	}
 }
 
-closeReportButton.addEventListener('click', () => {
-    modalOverlay.style.display = 'none';
-    reportModal.style.display = 'none';
-});
+function setup_report_modal() {
+	closeReportButton.addEventListener('click', () => {
+		modalOverlay.style.display = 'none';
+		reportModal.style.display = 'none';
+	});
+	
+	modalOverlay.addEventListener('click', (event) => {
+		if (event.target === modalOverlay) {
+			modalOverlay.style.display = 'none';
+			reportModal.style.display = 'none';
+		}
+	});
+	
+	reportForm.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const formData = new FormData(reportForm);
+		try {
+			const response = await fetch(reportForm.action, {
+				method: 'POST',
+				body: formData,
+			});
+			if (response.ok) {
+				modalOverlay.style.display = 'none';
+				reportModal.style.display = 'none';
+				feedbackReport.textContent = 'Report submitted successfully!';
+				feedbackReport.style.color = 'green';
+			} else {
+				const errorData = await response.json();
+				feedbackReport.textContent = errorData.message || 'An error occurred.';
+				feedbackReport.style.color = 'red';
+			}
+		} catch (error) {
+			feedbackReport.textContent = 'Unable to submit report. Please try again.';
+			feedbackReport.style.color = 'red';
+		}
+	});
+}
 
-modalOverlay.addEventListener('click', (event) => {
-    if (event.target === modalOverlay) {
-        modalOverlay.style.display = 'none';
-        reportModal.style.display = 'none';
-    }
-});
+function init_report() {
+	setup_report_buttons();
+	setup_report_modal();
+}
 
-reportForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const formData = new FormData(reportForm);
-    try {
-        const response = await fetch(reportForm.action, {
-            method: 'POST',
-            body: formData,
-        });
-        if (response.ok) {
-            modalOverlay.style.display = 'none';
-            reportModal.style.display = 'none';
-            feedbackReport.textContent = 'Report submitted successfully!';
-            feedbackReport.style.color = 'green';
-        } else {
-            const errorData = await response.json();
-            feedbackReport.textContent = errorData.message || 'An error occurred.';
-            feedbackReport.style.color = 'red';
-        }
-    } catch (error) {
-        feedbackReport.textContent = 'Unable to submit report. Please try again.';
-        feedbackReport.style.color = 'red';
-    }
-});
+init_report();
