@@ -35,15 +35,6 @@ function p2other(e) {
     e.onerror = null;
 }
 </script>
-{% if endpoint() in [
-    'bp_web_app.v_thread',
-    'bp_web_app.v_board_index',
-    'bp_web_app.v_board_index_page',
-    'bp_web_vanilla_search.v_vanilla_search_get',
-    'bp_web_index_search.v_index_search_get',
-] %}
-<script type="text/javascript" src="/static/js/thread.js" defer></script>
-{% endif %}
     <div id="body">
         {% include 'nav.html' %}
         {% include 'macros/flash.html' %}

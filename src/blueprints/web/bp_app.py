@@ -305,7 +305,6 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
         nimages=nimages,
         board=board_shortname,
         thread_num=thread_num,
-        title=title,
         tab_title=title,
         vox_enabled=VOX_ENABLED and board_shortname in VOX_ALLOWED_BOARDS,
         logged_in=logged_in,
