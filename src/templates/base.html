@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-{% if tab_title %}<title>{{ tab_title }}</title>{% else %}<title>Ayase Quart</title>{% endif %}
+{% if tab_title %}<title>{{ tab_title }}</title>{% else %}<title>{{site_name}}</title>{% endif %}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="/static/css/inline.css" rel="stylesheet" type="text/css">
 <link href="/static/css/{{theme}}.css" rel="stylesheet" type="text/css">
@@ -12,9 +12,11 @@
 <link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
 {% endif %}
 <link href="/static/css/custom.css" rel="stylesheet" type="text/css">
+{% block scripts %}
+	<script type="text/javascript" src="/static/js/index.js" defer></script>
+{% endblock scripts %}
 </head>
 <body>
-<script type="text/javascript" src="/static/js/index.js" defer></script>
 <script>
 function p2other(e) {
     var ext = e.getAttribute("data-ext");
@@ -33,15 +35,6 @@ function p2other(e) {
     e.onerror = null;
 }
 </script>
-{% if endpoint() in [
-    'bp_web_app.v_thread',
-    'bp_web_app.v_board_index',
-    'bp_web_app.v_board_index_page',
-    'bp_web_vanilla_search.v_vanilla_search_get',
-    'bp_web_index_search.v_index_search_get',
-] %}
-<script type="text/javascript" src="/static/js/thread.js" defer></script>
-{% endif %}
     <div id="body">
         {% include 'nav.html' %}
         {% include 'macros/flash.html' %}
@@ -64,8 +57,6 @@ function p2other(e) {
             <span id="bottom_hidden"></span>
         {% endif %}
     </div>
-<footer id="footer">
-Archive Powered By: <a href="https://github.com/sky-cake/ayase-quart" target="_blank">Ayase Quart</a>
-</footer>
+	{% include "footer.html" %}
 </body>
 </html>

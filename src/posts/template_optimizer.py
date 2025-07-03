@@ -1,6 +1,6 @@
 from enum import StrEnum
 from html import escape
-from functools import cache
+from functools import cache, lru_cache
 
 from configs import media_conf
 from posts.capcodes import Capcode
@@ -15,6 +15,8 @@ TRY_FULL_SRC_TYPE_ON_404: bool = media_conf.get('try_full_src_type_on_404', Fals
 # TODO: move these 2 to config
 ANONYMOUS_NAME = 'Anonymous'
 CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
+
+type QuotelinkD = dict[int, list[int]]
 
 class MediaType(StrEnum):
     image = 'image'
@@ -73,7 +75,7 @@ Despite media posts being complex, they return an empty string early if there is
     So we don't need to consider them as special
 '''
 
-def set_posts_quotelinks(posts: list[dict], post_2_quotelinks: dict[int, list[int]]):
+def set_posts_quotelinks(posts: list[dict], post_2_quotelinks: QuotelinkD):
     for post in posts:
         post['quotelinks'] = post_2_quotelinks.get(post['num'], [])
 
@@ -103,7 +105,7 @@ def render_wrapped_post_t_thread(post: dict):
     # anything remotely special uses official wrap_post_t
     return render_wrapped_post_t(wrap_post_t(post))
 
-def get_posts_t_thread(posts: list[dict], post_2_quotelinks: dict[int, list[int]]):
+def get_posts_t_thread(posts: list[dict], post_2_quotelinks: QuotelinkD):
     set_posts_quotelinks(posts, post_2_quotelinks)
     return ''.join(render_wrapped_post_t_thread(p) for p in posts)
 
@@ -113,34 +115,29 @@ def render_post_t_basic(post: dict):
     comment = post['comment'] or ''
     board = post['board_shortname']
     ts_unix = post['ts_unix']
-    ts_formatted = ts_2_formatted(ts_unix)
+    ts_formatted = '' # ts_2_formatted(ts_unix)
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
+    post_path_t = get_post_path(board, thread_num, num)
     return f'''
     <div id="pc{num}">
         <div class="sideArrows">&gt;&gt;</div>
         <div id="p{num}" class="post reply">
             <div class="postInfoM mobile" id="pim{num}">
-            <span class="nameBlock">
-                <span class="name">{ANONYMOUS_NAME}</span>
-                <br>
-            </span>
-            <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
-            <a href="#{num}">No. {num}</a>
+                <span class="nameBlock"><span class="name">{ANONYMOUS_NAME}</span><br></span>
+                <span class="dateTime inblk" data-utc="{ts_unix}"></span>
+                <a href="#{num}">No. {num}</a>
             </div>
             <div class="postInfo" id="pi{num}">
-                <span class="inblk"><b>/{board}/</b> </span>
+                <span class="inblk"><b>/{board}/</b></span>
                 <span class="name N">{ANONYMOUS_NAME}</span>
-                <span class="dateTime inblk" data-utc="{ts_unix}">{ts_formatted}</span>
-                <span class="postNum">
-                    <a href="/{board}/thread/{thread_num}#p{num}">No.{num}</a>
-                </span>
-                <button class="btnlink" onclick="copy_link(this, '/{board}/thread/{thread_num}#p{num}')">⎘</button>
+                <span class="dateTime inblk" data-utc="{ts_unix}"></span>
+                <span class="postNum"><a href="/{post_path_t}">No.{num}</a></span>
+                <button class="btnlink" onclick="copy_link(this, '/{post_path_t}')">⎘</button>
                 <span class="inblk">
-                [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">
-                Report</button>]
-                [<a href="/{board}/thread/{thread_num}#p{num}" target="_blank">View</a>]
-                [<a href="{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}" rel="noreferrer" target="_blank">Source</a>]
+                    [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
+                    [<a href="/{post_path_t}" target="_blank">View</a>]
+                    [<a href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank">Source</a>]
                 </span>
             </div>
             <div>
@@ -162,6 +159,13 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
 
+@lru_cache(maxsize=2048)
+def get_thread_path(board: str, thread_num: int) -> str:
+    return f'{board}/thread/{thread_num}'
+
+def get_post_path(board: str, thread_num: int, num: int) -> str:
+    return f'{get_thread_path(board, thread_num)}#p{num}'
+
 @cache
 def board_has_image(board: str) -> bool:
     return board in BOARDS_WITH_IMAGE and IMAGE_URI
@@ -169,6 +173,15 @@ def board_has_image(board: str) -> bool:
 @cache
 def board_has_thumb(board: str) -> bool:
     return board in BOARDS_WITH_THUMB and THUMB_URI
+
+@cache
+def get_image_baseuri(board: str) -> str:
+    return IMAGE_URI.format(board_shortname=board)
+
+@cache
+def get_thumb_baseuri(board: str) -> str:
+    return THUMB_URI.format(board_shortname=board)
+
 
 @cache
 def ext_is_image(ext: str) -> bool:
@@ -190,8 +203,8 @@ def get_media_t_thread(post: dict, num: int, board: str):
     spoiler = 'Spoiler,' if is_spoiler else ''
     classes = 'spoiler' if is_spoiler else ''
 
-    full_src = get_media_path_thread(media_orig, board, IMAGE_URI) if media_orig and board_has_image(board) else ''
-    thumb_src = get_media_path_thread(preview_orig, board, THUMB_URI) if preview_orig and board_has_thumb(board) else ''
+    full_src = get_image_path(board, media_orig)
+    thumb_src = get_thumb_path(board, preview_orig)
 
     return f"""
 	<div class="file" id="f{num}">
@@ -207,18 +220,29 @@ def get_media_t_thread(post: dict, num: int, board: str):
     </div>
 	"""
 
-def get_media_path_thread(media_filename: str, board: str, uri: str) -> str:
-    return f'{uri.format(board_shortname=board)}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
+def get_image_path(board: str, filename: str) -> str:
+    if not(filename and board_has_image(board)):
+        return ''
+    return f'{get_image_baseuri(board)}/{media_fs_partition(filename)}'
+
+def get_thumb_path(board: str, filename: str) -> str:
+    if not(filename and board_has_thumb(board)):
+        return ''
+    return f'{get_thumb_baseuri(board)}/{media_fs_partition(filename)}'
+
+# should move to configs or somewhere else for customizability
+def media_fs_partition(filename: str) -> str:
+    return f'{filename[0:4]}/{filename[4:6]}/{filename}'
 
 ### END post_t crisis
 
-def get_posts_t(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
     set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
 
 
-def get_report_t(post):
+def get_report_t(post: dict) -> str:
     return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">
         Report
     </button>]"""
@@ -292,7 +316,7 @@ def get_media_path(media_filename: str, board: str, media_type: MediaType) -> st
 
     uri = IMAGE_URI if media_type == MediaType.image else THUMB_URI
 
-    return f'{uri.format(board_shortname=board).rstrip('/')}/{media_filename[0:4]}/{media_filename[4:6]}/{media_filename}'
+    return f'{uri.format(board_shortname=board)}/{media_fs_partition(media_filename)}'
 
 
 def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes: str=None, is_search=False, is_catalog=False):
@@ -582,7 +606,7 @@ def render_catalog_card_archiveposting(wpt: dict) -> str: # a thread card is jus
     """
 
 
-def get_posts_t_archiveposting(posts: list[dict], post_2_quotelinks: dict[int, list[int]]) -> str:
+def get_posts_t_archiveposting(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
     set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t_archiveposting(wrap_post_t(p)) for p in posts)
     return posts_t

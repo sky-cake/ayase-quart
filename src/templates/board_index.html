@@ -1,4 +1,10 @@
 {% extends "base.html" %}
+
+{% block scripts %}
+	{{ super() }}
+	<script type="text/javascript" src="/static/js/thread.js" defer></script>
+{% endblock %}
+
 {% block body %}
     <div class="board">
         {{ threads|safe }}

@@ -10,7 +10,7 @@ from asagi_converter import (
     get_counts_from_posts
 )
 from boards import get_title
-from configs import SITE_NAME, app_conf, vox_conf
+from configs import app_conf, vox_conf
 from moderation.filter_cache import fc
 from posts.template_optimizer import (
     render_catalog_card,
@@ -64,8 +64,6 @@ async def v_index(is_admin: bool, logged_in: bool):
     return await render_controller(
         template_index,
         logo_filename=f'logo{randint(1, 3)}.png',
-        tab_title=SITE_NAME,
-        title='',
         logged_in=logged_in,
         is_admin=is_admin,
     )
@@ -289,6 +287,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
     thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'])
     p.check('filter_reported')
 
+    # TODO: only count manually if we can't get the counts from the side tables
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 
     validate_threads(thread_dict['posts'])
@@ -306,7 +305,6 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
         nimages=nimages,
         board=board_shortname,
         thread_num=thread_num,
-        title=title,
         tab_title=title,
         vox_enabled=VOX_ENABLED and board_shortname in VOX_ALLOWED_BOARDS,
         logged_in=logged_in,
