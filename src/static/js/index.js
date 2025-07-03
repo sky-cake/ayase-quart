@@ -6,7 +6,7 @@ function removeClonedImages() {
 
 function expandMedia(e) {
     removeClonedImages();
-    const ext = e.getAttribute("data-ext");
+    const ext = get_data_string(e, 'ext')
     const container = e.closest('.media_cont');
     const toggleSpan = container?.querySelector('.media_togg');
 
@@ -26,11 +26,11 @@ function expandMedia(e) {
         video.controls = true;
         video.autoplay = true;
         video.style = "max-height: 60vh; max-width: 80vw;";
-        video.setAttribute("data-ext", ext);
-        video.setAttribute("data-thumb_src", e.getAttribute("data-thumb_src"));
-        video.setAttribute("data-full_media_src", fullSrc);
-        video.setAttribute("data-width", e.getAttribute("width"));
-        video.setAttribute("data-height", e.getAttribute("height"));
+        video.dataset.ext = ext;
+        video.dataset.thumb_src = e.getAttribute("data-thumb_src");
+        video.dataset.full_media_src = fullSrc;
+        video.dataset.width = e.getAttribute("width");
+        video.dataset.height = e.getAttribute("height");
         if (e.getAttribute("class")) {
             video.setAttribute("data-class", e.getAttribute("class"));
         }
@@ -40,7 +40,7 @@ function expandMedia(e) {
         source.src = fullSrc;
         source.type = get_video_mimetype(ext);
         video.appendChild(source);
-        observer.observe(video); // pause videos when out of view
+        video_interobs.observe(video); // pause videos when out of view
 
         container.replaceChild(video, e);
         updateToggleLabel(true);
@@ -83,13 +83,13 @@ function expandMedia(e) {
 // try full source for thumbnail if thumnail doesn't exist
 // see template_optimizer.py
 function p2other(el) {
-    var ext = el.getAttribute("data-ext");
+    var ext = get_data_string(el, 'ext');
     if (ext_is_video(ext)) {
  	   return;
     }
     const current_src = el.getAttribute('src');
-    const thumb_src = el.getAttribute('data-thumb_src');
-    const full_media_src = el.getAttribute('data-full_media_src');
+    const thumb_src = get_data_string(el, 'thumb_src');
+    const full_media_src = get_data_string(el, 'full_media_src');
     if (current_src === thumb_src && full_media_src) {
 	    el.src = full_media_src;
     } else {
@@ -175,7 +175,7 @@ function updateDateTimes() {
 function setup_data_toggles() {
 	for (const el of doc_query_all("[data-toggle]")) {
 		el.addEventListener("click", () => {
-			const idee = el.getAttribute("data-toggle");
+			const idee = get_data_string(el, 'toggle');
 			const target = document.getElementById(idee);
 			if (target) {
 				const isVisible = getComputedStyle(target).display !== "none";
@@ -185,21 +185,23 @@ function setup_data_toggles() {
 	}
 }
 
-function setup_video_intersection_events() {
-	const observer = new IntersectionObserver((entries) => {
-		for (const entry of entries) {
-			const video = entry.target;
-			if (!(video instanceof HTMLVideoElement)) return;
-	
-			if (!entry.isIntersecting && !video.paused) {
-				video.pause();
-			}
-		}}, {
-			threshold: 0.1 // video is "visible" if at least 10% is in view
+// global variable video expand
+const video_interobs = new IntersectionObserver((entries) => {
+	for (const entry of entries) {
+		const video = entry.target;
+		if (!(video instanceof HTMLVideoElement)) return;
+
+		if (!entry.isIntersecting && !video.paused) {
+			video.pause();
 		}
-	);
+	}}, {
+		threshold: 0.1 // video is "visible" if at least 10% is in view
+	}
+);
+
+function setup_video_intersection_events() {
 	for (const video of doc_query_all('video')) {
-		observer.observe(video);
+		video_interobs.observe(video);
 	}
 }
 

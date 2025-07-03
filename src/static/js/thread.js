@@ -7,9 +7,9 @@ function media_mouseout(event) {
 
 function media_mouseover(event) {
     const img = event.target;
-    const extension = img.getAttribute('data-ext');
+    const extension = get_data_string(img, 'ext')
     if (!extension || ext_is_video(extension)) return;
-    if (img.getAttribute('data-expanded') === "true") return;
+    if (get_data_string(img, 'expanded') === "true") return;
     if (!(img instanceof HTMLImageElement)) return;
     if (!img.hasAttribute('data-full_media_src') && !img.hasAttribute('data-thumb_src')) return;
     if (document.getElementById('img_cloned')) return;
@@ -34,7 +34,7 @@ function quoteline_mouseover(event) {
     const backlink = quotelink.parentElement.parentElement.id;
 
     const num = quotelink.getAttribute("href").split("#p")[1];
-    const board_shortname = quotelink.getAttribute('data-board_shortname');
+    const board_shortname = get_data_string(quotelink, 'board_shortname');
     let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
 
     const id_post_num = "#p" + num;
@@ -86,13 +86,13 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.id = "quote-preview";
 
     // highlight the recipient of the reply to help when there are multiple quotelinks
-    const board_shortname = quotelink.getAttribute("data-board_shortname");
+    const board = get_data_string(quotelink, 'board_shortname');
     const recipients = preview.querySelectorAll(`a.quotelink`);
     for (const recipient of recipients) {
         const recipient_post_num = recipient.getAttribute("href").split("#p")[1];
-        const recipient_board_shortname = recipient.getAttribute("data-board_shortname");
+        const recipient_board = get_data_string(recipient, 'board_shortname');
 
-        if (recipient_post_num === backlink_num && recipient_board_shortname === board_shortname) {
+        if (recipient_post_num === backlink_num && recipient_board === board) {
             recipient.classList.add("hl_dark");
             break;
         }
@@ -144,8 +144,8 @@ function setup_vox_events() {
 	const vox_button = document.createElement('button');
     vox_button.textContent = 'Load Thread Reader';
     const tools = document.getElementById('tools');
-    const board = tools.getAttribute('data-board_shortname');
-    const thread_num = tools.getAttribute('data-thread_num');
+    const board = get_data_string(tools, 'board_shortname')
+    const thread_num = get_data_string(tools, 'thread_num')
     tools.appendChild(vox_button);
 
     vox_button.addEventListener('click', () => {
