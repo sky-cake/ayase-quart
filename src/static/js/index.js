@@ -81,6 +81,24 @@ function expandMedia(e) {
     container.replaceChild(img, e);
 }
 
+// try full source for thumbnail if thumnail doesn't exist
+// see template_optimizer.py
+function p2other(el) {
+    var ext = el.getAttribute("data-ext");
+    if (ext === "webm" || ext === "mp4") {
+ 	   return;
+    }
+    const current_src = el.getAttribute('src');
+    const thumb_src = el.getAttribute('data-thumb_src');
+    const full_media_src = el.getAttribute('data-full_media_src');
+    if (current_src === thumb_src && full_media_src) {
+	    el.src = full_media_src;
+    } else {
+	    el.src = thumb_src;
+    }
+    el.onerror = null;
+}
+
 function checkAllBoards() {
     const checkboxes = document.querySelectorAll('#boards input[type="checkbox"]');
     for (const checkbox of checkboxes) {
