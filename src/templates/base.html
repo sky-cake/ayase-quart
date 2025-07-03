@@ -16,28 +16,19 @@
 {%- endblock scripts %}
 </head>
 <body>
+    <span id="top_hidden"></span>
     <div id="body">
         {% include 'nav.html' %}
         {% include 'macros/flash.html' %}
 
-        {% block body %}
-        {% endblock %}
+        {% block body %}{% endblock %}
 
         {% if report_modal_t %}
             {{ report_modal_t|safe }}
             <script type="text/javascript" src="/static/js/reports.js" defer></script>
         {% endif %}
-
-        {% if endpoint() in [
-            'bp_web_app.v_thread',
-            'bp_web_app.v_board_index',
-            'bp_web_app.v_catalog',
-            'bp_web_vanilla_search.v_vanilla_search_get',
-            'bp_web_index_search.v_index_search_get',
-        ] %}
-            <span id="bottom_hidden"></span>
-        {% endif %}
     </div>
+    <span id="bottom_hidden"></span>
 	{% include "footer.html" %}
 </body>
 </html>
