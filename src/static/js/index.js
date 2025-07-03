@@ -119,16 +119,14 @@ function copy_link(button_element, path) {
     path = path.replace(/^\/+/, '');
     const link = `${domain}/${path}`;
 
-    navigator.clipboard.writeText(link)
-        .then(() => {
-            button_element.innerHTML = `&checkmark;`;
-            setTimeout(() => {
-                button_element.textContent = `⎘`;
-            }, 1000);
-        })
-        .catch(err => {
-            button_element.textContent = `x`;
-        });
+    navigator.clipboard.writeText(link).then(() => {
+		button_element.innerHTML = `&checkmark;`;
+		setTimeout(() => {
+			button_element.textContent = `⎘`;
+		}, 1000);
+	}).catch(err => {
+		button_element.textContent = `x`;
+	});
 }
 
 function copy_code(button_element, code, copy_text='⎘', success_text='&checkmark;', fail_text='x') {
