@@ -7,7 +7,7 @@ from datetime import timedelta
 import hashlib
 import time
 from posts.capcodes import Capcode
-from configs import SITE_NAME, archiveposting_conf
+from configs import archiveposting_conf
 from db import db_a
 from asagi_converter import (
     generate_catalog,
@@ -204,7 +204,6 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
         form_message='New Thread',
         threads=threads,
         board=board_shortname,
-        title=SITE_NAME,
         tab_title=f"/{board_shortname}/ Catalog",
         logged_in=logged_in,
         is_admin=is_admin,
