@@ -20,12 +20,30 @@ async function fetch_all_tags() {
     init();
 }
 
+/**
+ * Retrieve selected tags from an array of tag_ids
+ * @param {Map<number, Record<number, any>>} tag_lookup Map<tag_id, {0:tag_id, ...}>
+ * @param {Array<number>} tag_ids array of tag ids
+ * @returns {Array<Object>} tags
+ */
+function get_tags_from_id(tag_lookup, tag_ids) {
+	const results = [];
+	for (const tag_id of tag_ids) {
+		const tag = tag_lookup.get(tag_id);
+		if (tag !== undefined) {
+			results.push(tag);
+		}
+	}
+	return results;
+}
+
 function init() {
     const chars = document.getElementById('file_tags_character').value;
     const gens = document.getElementById('file_tags_general').value;
     const char_ids = chars ? chars.split(',').map(Number) : [];
     const gen_ids = gens ? gens.split(',').map(Number) : [];
 
+	// TODO: test replace with get_tags_from_id
     selected_character_tags = char_ids.map(id => {
         const v = all_tags.get(id);
         return v ? { tag_id: v[0], tag_name: v[1] } : null;
