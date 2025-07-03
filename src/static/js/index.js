@@ -158,47 +158,6 @@ for (const codeElement of document.querySelectorAll('code')) {
     });
 }
 
-
-function format_timestamp(ts, now) {
-    const postDate = new Date(ts * 1000);
-    const _now = now ?? new Date();
-    const delta = _now - postDate;
-    
-    const options = {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short' 
-    };
-    const formattedDate = postDate.toLocaleString(undefined, options);
-    
-    const seconds = Math.floor(delta / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-    
-    let relativeTime = 'now';
-    if (years > 0) {
-        relativeTime = `${years} year${years > 1 ? 's' : ''} ago`;
-    } else if (months > 0) {
-        relativeTime = `${months} month${months > 1 ? 's' : ''} ago`;
-    } else if (days > 0) {
-        relativeTime = `${days} day${days > 1 ? 's' : ''} ago`;
-    } else if (hours > 0) {
-        relativeTime = `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else if (minutes > 0) {
-        relativeTime = `${minutes} min${minutes > 1 ? 's' : ''} ago`;
-    } else if (seconds > 0) {
-        relativeTime = `${seconds} sec${seconds > 1 ? 's' : ''} ago`;
-    }
-    
-    return `${formattedDate} (${relativeTime})`;
-}
-
 function updateDateTimes() {
     const dateTimeElements = document.querySelectorAll('.dateTime');
     const now = new Date();
