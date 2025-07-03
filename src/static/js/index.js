@@ -1,5 +1,7 @@
 function removeClonedImages() {
-  document.querySelectorAll('#img_cloned').forEach(i => i.remove());
+    for (const img of document.querySelectorAll('#img_cloned')) {
+        img.remove();
+    }
 }
 
 function expandMedia(e) {
@@ -80,15 +82,17 @@ function expandMedia(e) {
 }
 
 function checkAllBoards() {
-  document.querySelectorAll('#boards input[type="checkbox"]').forEach(function (checkbox) {
-    checkbox.checked = true;
-  });
+    const checkboxes = document.querySelectorAll('#boards input[type="checkbox"]');
+    for (const checkbox of checkboxes) {
+        checkbox.checked = true;
+    }
 }
 
 function uncheckAllBoards() {
-  document.querySelectorAll('#boards input[type="checkbox"]').forEach(function (checkbox) {
-    checkbox.checked = false;
-  });
+    const checkboxes = document.querySelectorAll('#boards input[type="checkbox"]');
+    for (const checkbox of checkboxes) {
+        checkbox.checked = false;
+    }
 }
 
 function copy_link(button_element, path) {
@@ -125,7 +129,7 @@ function copy_code(button_element, code, copy_text='⎘', success_text='&checkma
     });
 }
 
-document.querySelectorAll('code').forEach(function (codeElement) {
+for (const codeElement of document.querySelectorAll('code')) {
   const copyButton = document.createElement('button');
   copyButton.innerHTML = `copy`;
   copyButton.classList.add('codecopybtn');
@@ -136,7 +140,7 @@ document.querySelectorAll('code').forEach(function (codeElement) {
     const codeContent = codeElement.textContent;
     copy_code(copyButton, codeContent.replaceAll('<br>', '\n').replaceAll('&gt;', '>').replaceAll('&lt;', '<'), 'copy', 'copied', 'failed');
   });
-});
+}
 
 
 function tsToFormatted(ts) {
@@ -181,18 +185,18 @@ function tsToFormatted(ts) {
 
 function updateDateTimes() {
   const dateTimeElements = document.querySelectorAll('.dateTime');
-  dateTimeElements.forEach(element => {
+  for (const element of dateTimeElements) {
       data_utc = element.getAttribute('data-utc');
       if (data_utc) {
         const utcTimestamp = parseInt(element.getAttribute('data-utc'), 10);
         const formattedString = tsToFormatted(utcTimestamp);
         element.textContent = formattedString;
       }
-  });
+  }
 }
 updateDateTimes();
 
-document.querySelectorAll("[data-toggle]").forEach(el => {
+for (const el of document.querySelectorAll("[data-toggle]")) {
   el.addEventListener("click", () => {
     const idee = el.getAttribute("data-toggle");
     const target = document.getElementById(idee);
@@ -201,21 +205,21 @@ document.querySelectorAll("[data-toggle]").forEach(el => {
       target.style.display = isVisible ? "none" : "block";
     }
   });
-});
+}
 
 const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
+  for (const entry of entries) {
     const video = entry.target;
     if (!(video instanceof HTMLVideoElement)) return;
 
     if (!entry.isIntersecting && !video.paused) {
       video.pause();
     }
-  });
+  }
 }, {
   threshold: 0.1 // video is "visible" if at least 10% is in view
 });
 
-document.querySelectorAll('video').forEach(video => {
+for (const video of document.querySelectorAll('video')) {
   observer.observe(video);
-});
+}

@@ -1,5 +1,6 @@
 // image hover display
-document.querySelectorAll('.media_cont').forEach(container => {
+const media_containers = document.querySelectorAll('.media_cont');
+for (const container of media_containers) {
     // removeClonedImages();
     container.addEventListener('mouseover', function (e) {
         const img = e.target;
@@ -21,11 +22,11 @@ document.querySelectorAll('.media_cont').forEach(container => {
         removeClonedImages();
         }
     });
-});
+}
 
 
 const quotelinks = document.querySelectorAll("a.quotelink");
-quotelinks.forEach((quotelink) => {
+for (const quotelink of quotelinks) {
     const num = quotelink.getAttribute("href").split("#p")[1];
     const board_shortname = quotelink.getAttribute('data-board_shortname');
 
@@ -62,7 +63,7 @@ quotelinks.forEach((quotelink) => {
     quotelink.addEventListener("mouseleave", () => {
         quotelink_preview_hide();
     });
-});
+}
 
 function get_quotelink_preview_default_string() {
     return `<div class="postContainer replyContainer"><div class="post reply">
@@ -72,7 +73,9 @@ function get_quotelink_preview_default_string() {
 }
 
 function quotelink_preview_hide() {
-    document.querySelectorAll("#quote-preview").forEach(qp => { qp.remove() });
+    for (const qp of document.querySelectorAll("#quote-preview")) {
+        qp.remove();
+    }
 }
 
 function quotelink_preview_show(target_post, quotelink, backlink_num) {

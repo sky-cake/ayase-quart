@@ -5,20 +5,22 @@ const reportButtons = document.querySelectorAll('button[report_url]');
 const feedbackReport = document.getElementById('feedback_report');
 const modalOverlay = document.getElementById('modal_overlay');
 
-reportButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        const replyModal = document.getElementById('reply_modal');
-        if (replyModal) {
-            replyModal.style.display = 'none';
-        }
+function show_modal(report_button) {
+	const replyModal = document.getElementById('reply_modal');
+	if (replyModal) {
+		replyModal.style.display = 'none';
+	}
 
-        const reportUrl = button.getAttribute('report_url');
-        reportForm.setAttribute('action', reportUrl);
-        feedbackReport.textContent = '';
-        modalOverlay.style.display = 'block';
-        reportModal.style.display = 'block';
-    });
-});
+	const reportUrl = report_button.getAttribute('report_url');
+	reportForm.setAttribute('action', reportUrl);
+	feedbackReport.textContent = '';
+	modalOverlay.style.display = 'block';
+	reportModal.style.display = 'block';
+}
+
+for (const button of reportButtons) {
+	button.addEventListener('click', show_modal.bind(null, button), false);
+}
 
 closeReportButton.addEventListener('click', () => {
     modalOverlay.style.display = 'none';
