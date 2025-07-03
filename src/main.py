@@ -81,7 +81,7 @@ def create_app():
         app.before_serving(init_archiveposting)
 
     if traffic_log_conf.get('enabled'):
-        traffic_log_init()
+        app.before_serving(traffic_log_init)
         app.before_request(traffic_log_request_before)
         app.after_request(traffic_log_request_after)
 
