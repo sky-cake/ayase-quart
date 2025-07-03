@@ -143,10 +143,11 @@ for (const codeElement of document.querySelectorAll('code')) {
 }
 
 
-function tsToFormatted(ts) {
+function tsToFormatted(ts, now) {
   const postDate = new Date(ts * 1000);
-  const now = new Date();
-  const delta = now - postDate;
+
+  const _now = now ?? new Date();
+  const delta = _now - postDate;
 
   const options = {
       year: 'numeric',
@@ -185,11 +186,12 @@ function tsToFormatted(ts) {
 
 function updateDateTimes() {
   const dateTimeElements = document.querySelectorAll('.dateTime');
+  const now = new Date();
   for (const element of dateTimeElements) {
       data_utc = element.getAttribute('data-utc');
       if (data_utc) {
         const utcTimestamp = parseInt(element.getAttribute('data-utc'), 10);
-        const formattedString = tsToFormatted(utcTimestamp);
+        const formattedString = tsToFormatted(utcTimestamp, now);
         element.textContent = formattedString;
       }
   }
