@@ -621,6 +621,8 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     num = wpt['num']
     ts_unix = wpt['ts_unix']
     thread_num_label = f'<div id="op_thread_num" data-num="{num}" class="hidden"></div>' if is_op else ''
+    comment = wpt['comment'] or ''
+
     return f"""{ thread_num_label }
     { wpt['t_header'] }
     <div class="postInfoM mobile" id="pim{num}">
@@ -647,7 +649,7 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     </div>
     <div>
         { wpt['t_media'] if not is_op else '' }
-        <blockquote class="postMessage" id="m{num}">{wpt.get('comment', '') if wpt.get('comment', '') else ''}</blockquote>
+        <blockquote class="postMessage" id="m{num}">{comment}</blockquote>
     </div>
     <div style="clear:both;"></div>
     { wpt['t_quotelink'] }
