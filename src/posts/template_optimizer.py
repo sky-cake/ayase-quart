@@ -595,7 +595,7 @@ def render_catalog_card_archiveposting(wpt: dict) -> str: # a thread card is jus
         { wpt['t_filedeleted'] }
         { wpt['t_cc'] }{nl}
         <span class="postNum">No. { num }</span>
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
       </div>
       <a href="/{ board }/thread/{ num }" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
       <div class="teaser">
@@ -632,7 +632,7 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
         <span class="nameBlock { wpt['t_cc_class'] }">
             { wpt['t_cc'] }
         </span>
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
             <a href="{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
