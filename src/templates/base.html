@@ -1,20 +1,19 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-<meta charset="utf-8">
-{% if tab_title %}<title>{{ tab_title }}</title>{% else %}<title>{{site_name}}</title>{% endif %}
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="/static/css/inline.css" rel="stylesheet" type="text/css">
-<link href="/static/css/{{theme}}.css" rel="stylesheet" type="text/css">
+	<meta charset="utf-8">
+	<title>{% if tab_title %}{{ tab_title }}{% else %}{{ site_name }}{% endif %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="/static/css/inline.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/{{theme}}.css" rel="stylesheet" type="text/css">
 {% if include_flag_css %}
-<link href="/static/css/flags.css" rel="stylesheet" type="text/css">
-<link href="/static/css/polflags.css" rel="stylesheet" type="text/css">
-<link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/flags.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/polflags.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
 {% endif %}
-<link href="/static/css/custom.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/custom.css" rel="stylesheet" type="text/css">
 {% block scripts %}
 	<script type="text/javascript" src="/static/js/index.js" defer></script>
-{% endblock scripts %}
+{%- endblock scripts %}
 </head>
 <body>
 <script>

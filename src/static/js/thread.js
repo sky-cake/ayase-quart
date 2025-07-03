@@ -67,7 +67,7 @@ function get_quotelink_preview_default_string() {
     return `<div class="postContainer replyContainer"><div class="post reply">
     <div class="postInfo desktop"><span class="nameBlock"><span class="name">Ayase Quart</span></span></div>
     <blockquote class="postMessage">Could not find post.</blockquote>
-</div></div>`;
+    </div></div>`;
 }
 
 function quotelink_preview_hide() {
@@ -150,23 +150,20 @@ if (document.getElementById('vox')){
         const timeoutId = setTimeout(() => controller.abort(), 120_000);
 
         const url = `/${board}/thread/${thread_num}/vox`;
-        fetch(url, { signal: controller.signal })
-        .then(response => {
+        fetch(url, { signal: controller.signal }).then(response => {
             clearTimeout(timeoutId);
             if (!response.ok) {
                 throw new Error('Response not ok.');
             }
             return response.blob();
-        })
-        .then(blob => {
+        }).then(blob => {
             const audioUrl = URL.createObjectURL(blob);
             const audio = document.createElement('audio');
             audio.src = audioUrl;
             audio.controls = true;
             audio.autoplay = true;
             tools.appendChild(audio);
-        })
-        .catch(error => {
+        }).catch(error => {
             console.error('Fetch error or timeout:', error);
             const errorMsg = document.createElement('p');
             errorMsg.textContent = 'Failed to load audio.';

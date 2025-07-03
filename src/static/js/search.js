@@ -2,84 +2,82 @@ const searchform = document.getElementById('searchform');
 const file_upload = document.getElementById('file_upload');
 
 searchform.addEventListener('submit', function (event) {
-  const checked_boards = document.querySelectorAll('input[name="boards"]:checked');
-  if (checked_boards.length === 0) {
-    event.preventDefault();
-    alert('Please select at least one board.');
-    return;
-  }
+    const checked_boards = document.querySelectorAll('input[name="boards"]:checked');
+    if (checked_boards.length === 0) {
+        event.preventDefault();
+        alert('Please select at least one board.');
+        return;
+    }
 
-  if (searchform && file_upload) {
-    if (file_upload.files.length > 0) {
-      searchform.method = 'post';
-      searchform.enctype = 'multipart/form-data';
+    if (searchform && file_upload) {
+        if (file_upload.files.length > 0) {
+            searchform.method = 'post';
+            searchform.enctype = 'multipart/form-data';
+        } else {
+            searchform.method = 'get';
+            searchform.enctype = '';
+        }
     } else {
-      searchform.method = 'get';
-      searchform.enctype = '';
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+        const boards = [];
+
+        for (const [key, value] of formData.entries()) {
+            if (value === "") continue;
+            if (key === 'capcode' && value === "default") continue;
+            if (key === 'hits_per_page' && value === "50") continue;
+            if (key === 'order_by' && value === "desc") continue;
+            if (key === 'safe_search' && value === "2") continue;
+
+            if (key === "boards") {
+                boards.push(value);
+            } else {
+                params.append(key, value);
+            }
+        }
+
+        let query = '';
+        if (boards.length > 0) {
+            query += `boards=${boards.join(',')}`;
+        }
+
+        const rest = params.toString();
+        if (rest) {
+            if (query) query += '&';
+            query += rest;
+        }
+
+        const url = `${window.location.pathname}?${query}`;
+        window.location.href = url;
     }
-  }
-  else
-  {
-    event.preventDefault();
-
-    const form = event.target;
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-    const boards = [];
-
-    for (const [key, value] of formData.entries()) {
-      if (value === "") continue;
-      if (key === 'capcode' && value === "default") continue;
-      if (key === 'hits_per_page' && value === "50") continue;
-      if (key === 'order_by' && value === "desc") continue;
-      if (key === 'safe_search' && value === "2") continue;
-
-      if (key === "boards") {
-        boards.push(value);
-      } else {
-        params.append(key, value);
-      }
-    }
-
-    let query = '';
-    if (boards.length > 0) {
-      query += `boards=${boards.join(',')}`;
-    }
-
-    const rest = params.toString();
-    if (rest) {
-      if (query) query += '&';
-      query += rest;
-    }
-
-    const url = `${window.location.pathname}?${query}`;
-    window.location.href = url;
-  }
 });
 
 if (file_upload) {
-  file_upload.addEventListener('change', function (event) {
-    const files = event.target.files;
-    if (files.length > 1) {
-      alert('Please select only one file.');
-      event.target.value = '';
-      return;
-    }
-    const file = files[0];
-    if (file) {
-      const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Invalid file type. Please select a PNG, JPEG, or GIF image.');
-        event.target.value = '';
-        return;
-      }
-      if (file.size > 4.05 * 1024 * 1024) {
-        alert('File size exceeds 4MB. Please select a smaller file.');
-        event.target.value = '';
-        return;
-      }
-    }
-  });
+    file_upload.addEventListener('change', function (event) {
+        const files = event.target.files;
+        if (files.length > 1) {
+            alert('Please select only one file.');
+            event.target.value = '';
+            return;
+        }
+        const file = files[0];
+        if (file) {
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Invalid file type. Please select a PNG, JPEG, or GIF image.');
+                event.target.value = '';
+                return;
+            }
+            if (file.size > 4.05 * 1024 * 1024) {
+                alert('File size exceeds 4MB. Please select a smaller file.');
+                event.target.value = '';
+                return;
+            }
+        }
+    });
 }
 
 /*
@@ -106,48 +104,48 @@ const mediaHashInput = document.getElementById('media_hash');
 const media_hash_file_input = document.getElementById('media_hash_file_input');
 
 dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'copy';
-  dropZone.style.borderColor = '#333';
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    dropZone.style.borderColor = '#333';
 });
 
 dropZone.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  dropZone.style.borderColor = '#aaa';
+    e.preventDefault();
+    dropZone.style.borderColor = '#aaa';
 });
 
 dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.style.borderColor = '#aaa';
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    generateMediaHash(file);
-  }
+    e.preventDefault();
+    dropZone.style.borderColor = '#aaa';
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        generateMediaHash(file);
+    }
 });
 
 dropZone.addEventListener('click', () => {
-  media_hash_file_input.click();
+    media_hash_file_input.click();
 });
 
 media_hash_file_input.addEventListener('change', () => {
-  const file = media_hash_file_input.files[0];
-  if (file) {
-    generateMediaHash(file);
-  }
+    const file = media_hash_file_input.files[0];
+    if (file) {
+        generateMediaHash(file);
+    }
 });
 
 function generateMediaHash(file) {
-  var reader = new FileReader();
-  reader.onloadend = function(e){
-    if (e.target.readyState == FileReader.DONE) {
-      var fileContents = e.target.result;
-      var digestBytes = Crypto.MD5(Crypto.charenc.Binary.stringToBytes(fileContents), {
-        asBytes: true
-      });
-      var digestBase64 = Crypto.util.bytesToBase64(digestBytes);
-      // var digestBase64URL = digestBase64.replace('==', '').replace(/\//g, '_').replace(/\+/g, '-');
-      mediaHashInput.value = digestBase64;
-    }
-  };
-  reader.readAsBinaryString(file);
+    var reader = new FileReader();
+    reader.onloadend = function(e){
+        if (e.target.readyState == FileReader.DONE) {
+            var fileContents = e.target.result;
+            var digestBytes = Crypto.MD5(Crypto.charenc.Binary.stringToBytes(fileContents), {
+                asBytes: true
+            });
+            var digestBase64 = Crypto.util.bytesToBase64(digestBytes);
+            // var digestBase64URL = digestBase64.replace('==', '').replace(/\//g, '_').replace(/\+/g, '-');
+            mediaHashInput.value = digestBase64;
+        }
+    };
+    reader.readAsBinaryString(file);
 };
