@@ -115,7 +115,6 @@ def render_post_t_basic(post: dict):
     comment = post['comment'] or ''
     board = post['board_shortname']
     ts_unix = post['ts_unix']
-    ts_formatted = '' # ts_2_formatted(ts_unix)
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
@@ -441,7 +440,7 @@ def get_mobile_t(post: dict):
         <span class="name">{post['name']}</span>
         <br>
     </span>
-    <span class="dateTime inblk" data-utc="{timestamp}">{ts_2_formatted(timestamp)}</span>
+    <span class="dateTime inblk" data-utc="{timestamp}"></span>
     <a href="#{post['num']}">No. {post['num']}</a>
 	"""
 
@@ -525,7 +524,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_since4pass'] }
         { wpt['t_country'] }
         { wpt['t_troll_country'] }
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
             <a href="{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
@@ -565,7 +564,7 @@ def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
             [<a href="{CANONICAL_HOST}/{ board }/thread/{ num }" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         { wpt['t_cc'] }{nl}
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
             <a href="/{ board }/thread/{ num }#p{ num }" data-function="highlight" data-post="{ num }">No. { num }</a>
         </span>
