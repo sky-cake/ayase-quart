@@ -78,7 +78,7 @@ async def board_rows_gen(board: str, after_doc_id: int=0) -> AsyncGenerator:
             break
         after_doc_id = rows[-1][0] # last doc_id
 
-# update threads from just a forward range of pk_ids
+# update threads from just a forward range of doc_ids
 # only mysql for now, stub for trigger replacements
 # mysql: {rows} as excluded on duplicate key update val = val + excluded.val
 #   https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
