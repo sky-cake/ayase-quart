@@ -162,10 +162,9 @@ function updateDateTimes() {
     const dateTimeElements = document.querySelectorAll('.dateTime');
     const now = new Date();
     for (const element of dateTimeElements) {
-        data_utc = element.getAttribute('data-utc');
+        const data_utc = get_data_integer(element, 'utc');
         if (data_utc) {
-            const utcTimestamp = parseInt(element.getAttribute('data-utc'), 10);
-            const formattedString = format_timestamp(utcTimestamp, now);
+            const formattedString = format_timestamp(data_utc, now);
             element.textContent = formattedString;
         }
     }
