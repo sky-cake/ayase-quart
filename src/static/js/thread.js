@@ -21,7 +21,7 @@ function media_mouseover(event) {
     document.body.appendChild(img_cloned);
 }
 
-const media_containers = document.querySelectorAll('.media_cont');
+const media_containers = doc_query_all('.media_cont');
 for (const container of media_containers) {
     container.addEventListener('mouseover', media_mouseover);
     container.addEventListener('mouseout', media_mouseout);
@@ -57,7 +57,7 @@ function quoteline_mouseover(event) {
         quotelink_preview_show(target_post, quotelink, backlink_num);
     }
 }
-const quotelinks = document.querySelectorAll("a.quotelink");
+const quotelinks = doc_query_all("a.quotelink");
 for (const quotelink of quotelinks) {
     quotelink.addEventListener("mouseover", quoteline_mouseover);
     quotelink.addEventListener("mouseleave", quotelink_preview_hide);
@@ -71,7 +71,7 @@ function get_quotelink_preview_default_string() {
 }
 
 function quotelink_preview_hide() {
-    for (const qp of document.querySelectorAll("#quote-preview")) {
+    for (const qp of doc_query_all("#quote-preview")) {
         qp.remove();
     }
 }

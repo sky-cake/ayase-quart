@@ -1,5 +1,5 @@
 function removeClonedImages() {
-    for (const img of document.querySelectorAll('#img_cloned')) {
+    for (const img of doc_query_all('#img_cloned')) {
         img.remove();
     }
 }
@@ -100,14 +100,14 @@ function p2other(el) {
 }
 
 function checkAllBoards() {
-    const checkboxes = document.querySelectorAll('#boards input[type="checkbox"]');
+    const checkboxes = doc_query_all('#boards input[type="checkbox"]');
     for (const checkbox of checkboxes) {
         checkbox.checked = true;
     }
 }
 
 function uncheckAllBoards() {
-    const checkboxes = document.querySelectorAll('#boards input[type="checkbox"]');
+    const checkboxes = doc_query_all('#boards input[type="checkbox"]');
     for (const checkbox of checkboxes) {
         checkbox.checked = false;
     }
@@ -145,7 +145,7 @@ function copy_code(button_element, code, copy_text='⎘', success_text='&checkma
     });
 }
 
-for (const codeElement of document.querySelectorAll('code')) {
+for (const codeElement of doc_query_all('code')) {
     const copyButton = document.createElement('button');
     copyButton.innerHTML = `copy`;
     copyButton.classList.add('codecopybtn');
@@ -159,7 +159,7 @@ for (const codeElement of document.querySelectorAll('code')) {
 }
 
 function updateDateTimes() {
-    const dateTimeElements = document.querySelectorAll('.dateTime');
+    const dateTimeElements = doc_query_all('.dateTime');
     const now = new Date();
     for (const element of dateTimeElements) {
         const data_utc = get_data_integer(element, 'utc');
@@ -171,7 +171,7 @@ function updateDateTimes() {
 }
 updateDateTimes();
 
-for (const el of document.querySelectorAll("[data-toggle]")) {
+for (const el of doc_query_all("[data-toggle]")) {
     el.addEventListener("click", () => {
         const idee = el.getAttribute("data-toggle");
         const target = document.getElementById(idee);
@@ -195,6 +195,6 @@ const observer = new IntersectionObserver((entries) => {
     }
 );
     
-for (const video of document.querySelectorAll('video')) {
+for (const video of doc_query_all('video')) {
     observer.observe(video);
 }

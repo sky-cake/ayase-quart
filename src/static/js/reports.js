@@ -1,7 +1,7 @@
 const reportModal = document.getElementById('report_modal');
 const reportForm = document.getElementById('report_form');
 const closeReportButton = document.getElementById('report_close');
-const reportButtons = document.querySelectorAll('button[report_url]');
+const reportButtons = doc_query_all('button[report_url]');
 const feedbackReport = document.getElementById('feedback_report');
 const modalOverlay = document.getElementById('modal_overlay');
 

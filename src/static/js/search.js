@@ -2,7 +2,7 @@ const searchform = document.getElementById('searchform');
 const file_upload = document.getElementById('file_upload');
 
 searchform.addEventListener('submit', function (event) {
-    const checked_boards = document.querySelectorAll('input[name="boards"]:checked');
+    const checked_boards = doc_query_all('input[name="boards"]:checked');
     if (checked_boards.length === 0) {
         event.preventDefault();
         alert('Please select at least one board.');
