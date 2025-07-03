@@ -69,7 +69,7 @@ function add_child_event(parent_elem, child_selector, event, callback_fn) {
 /**
  * Attempt to extract data-int-property as number from parent element
  * @param {Element} elem dom element
- * @param {string} ancestor_selector css selector for child element
+ * @param {string} ancestor_selector css selector to find ancestor element
  * @param {string} attr data attribute without 'data-' prefix
  * @returns {number} number or null
  */
@@ -94,9 +94,9 @@ function plural_past(val) {
 
 /**
  * Render utc unix timestamp to client locale + relative humanized
- * @param {number} ts css selector for child element
+ * @param {number} ts utc unix timestamp
  * @param {Date|undefined} now optional Date() object when calculating many
- * @returns {string} number or null
+ * @returns {string} formatted timestamp
  */
 function format_timestamp(ts, now=undefined) {
     const postDate = new Date(ts * 1000);
