@@ -133,7 +133,7 @@ function format_timestamp(ts, now=undefined) {
 const video_extensions = new Map([
 	['mp4', 'video/mp4'],
 	['webm', 'video/webm'],
-])
+]);
 const image_extensions = new Set([
 	'jpg',
 	'jpeg',
@@ -141,7 +141,7 @@ const image_extensions = new Set([
 	'bmp',
 	'gif',
 	'webp',
-])
+]);
 
 /**
  * Determine if file extension is for video files
@@ -149,7 +149,7 @@ const image_extensions = new Set([
  * @returns {bool} true if extension is used for videos
  */
 function ext_is_video(ext) {
-	return video_extensions.has(ext)
+	return video_extensions.has(ext);
 }
 
 /**
@@ -158,7 +158,7 @@ function ext_is_video(ext) {
  * @returns {string} mimetype if found or empty string
  */
 function get_video_mimetype(ext) {
-	return video_extensions.get(ext) ?? ''
+	return video_extensions.get(ext) ?? '';
 }
 
 /**
@@ -167,5 +167,5 @@ function get_video_mimetype(ext) {
  * @returns {bool} true if extension is used for images
  */
 function ext_is_image(ext) {
-	return image_extensions.has(ext)
+	return image_extensions.has(ext);
 }
