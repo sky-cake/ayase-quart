@@ -8,4 +8,4 @@ services:
       - AUTHORIZATION_KEY=hello
       - LOG_LEVEL=info
     volumes:
-      - "./data:/etc/lnx/index"
+      - "./data:/index"
