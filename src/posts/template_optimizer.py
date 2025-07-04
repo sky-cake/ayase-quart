@@ -1,4 +1,3 @@
-from enum import StrEnum
 from html import escape
 from functools import cache, lru_cache
 
@@ -17,10 +16,6 @@ ANONYMOUS_NAME = 'Anonymous'
 CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
 
 type QuotelinkD = dict[int, list[int]]
-
-class MediaType(StrEnum):
-    image = 'image'
-    thumb = 'thumb'
 
 def wrap_post_t(post: dict):
     if not (post and post.get('num')): # Are there cases when post doesn't have a num?
@@ -307,15 +302,6 @@ def media_metadata_t(media_size: int, media_w: int, media_h: int):
     if media_size >= mb_junc:
         return f'{media_size / mb_d :.2f} MB, {media_w}x{media_h}'
     return f'{media_size / kb_d :.1f} KB, {media_w}x{media_h}'
-
-
-def get_media_path(media_filename: str, board: str, media_type: MediaType) -> str:
-    if not media_filename or not (THUMB_URI or IMAGE_URI):
-        return ''
-
-    uri = IMAGE_URI if media_type == MediaType.image else THUMB_URI
-
-    return f'{uri.format(board_shortname=board)}/{media_fs_partition(media_filename)}'
 
 
 def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes: str=None, is_search=False, is_catalog=False):
