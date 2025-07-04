@@ -91,7 +91,8 @@ def traffic_log_request_before():
         g.start_time = perf_counter()
 
 
-async  def traffic_log_request_after(response: Response):
+async def traffic_log_request_after(response: Response):
     if g.start_time:
-        await insert_traffic_record(request, round(perf_counter() - g.start_time, 5))
+        duration = round(perf_counter() - g.start_time, 5)
+        await insert_traffic_record(request, duration)
     return response

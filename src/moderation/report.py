@@ -44,7 +44,7 @@ def generate_report_modal():
                 </div>
                 <br>
                 <div id="feedback_report"></div>
-                <input type="submit" value="Submit">
+                <input type="submit" value="Submit" class="mb05">
             </form>
         </div>
     </div>
