@@ -333,9 +333,9 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
     if classes is None:
         classes = 'cover spoiler' if post['spoiler'] else 'cover'
     if full_src is None:
-        full_src = get_media_path(post['media_orig'], board, MediaType.image) if not BOARDS_WITH_IMAGE or board in BOARDS_WITH_IMAGE else ''
+        full_src = get_image_path(board, post['media_orig'])
     if thumb_src is None:
-        thumb_src = get_media_path(post['preview_orig'], board, MediaType.thumb) if not BOARDS_WITH_THUMB or board in BOARDS_WITH_THUMB else ''
+        thumb_src = get_thumb_path(board, post['preview_orig'])
 
     onerror = 'onerror="p2other(this)"' if TRY_FULL_ON_404_THUMB and is_img else ''
 
@@ -373,8 +373,8 @@ def get_media_t(post: dict):
     spoiler = 'Spoiler,' if post['spoiler'] else ''
 
     classes = 'spoiler' if post['spoiler'] else ''
-    full_src = get_media_path(media_orig, board, MediaType.image) if board in BOARDS_WITH_IMAGE else ''
-    thumb_src = get_media_path(preview_orig, board, MediaType.thumb) if board in BOARDS_WITH_THUMB else ''
+    full_src = get_image_path(board, media_orig)
+    thumb_src = get_thumb_path(board, preview_orig)
 
     return f"""
 	<div class="file" id="f{num}">
