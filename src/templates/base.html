@@ -1,62 +1,35 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-<meta charset="utf-8">
-{% if tab_title %}<title>{{ tab_title }}</title>{% else %}<title>{{site_name}}</title>{% endif %}
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="/static/css/inline.css" rel="stylesheet" type="text/css">
-<link href="/static/css/{{theme}}.css" rel="stylesheet" type="text/css">
+	<meta charset="utf-8">
+	<title>{% if tab_title %}{{ tab_title }}{% else %}{{ site_name }}{% endif %}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="/static/css/inline.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/{{theme}}.css" rel="stylesheet" type="text/css">
 {% if include_flag_css %}
-<link href="/static/css/flags.css" rel="stylesheet" type="text/css">
-<link href="/static/css/polflags.css" rel="stylesheet" type="text/css">
-<link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/flags.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/polflags.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
 {% endif %}
-<link href="/static/css/custom.css" rel="stylesheet" type="text/css">
+	<link href="/static/css/custom.css" rel="stylesheet" type="text/css">
 {% block scripts %}
+	<script type="text/javascript" src="/static/js/utils.js" defer></script>
 	<script type="text/javascript" src="/static/js/index.js" defer></script>
-{% endblock scripts %}
+{%- endblock scripts %}
 </head>
 <body>
-<script>
-function p2other(e) {
-    var ext = e.getAttribute("data-ext");
-    if (ext === "webm" || ext === "mp4") {
-    return;
-    }
-    const current_src = e.getAttribute('src');
-    const thumb_src = e.getAttribute('data-thumb_src');
-    const full_media_src = e.getAttribute('data-full_media_src');
-    if (current_src === thumb_src && full_media_src) {
-    e.src = full_media_src;
-    }
-    else {
-    e.src = thumb_src;
-    }
-    e.onerror = null;
-}
-</script>
+    <span id="top_hidden"></span>
     <div id="body">
         {% include 'nav.html' %}
         {% include 'macros/flash.html' %}
 
-        {% block body %}
-        {% endblock %}
+        {% block body %}{% endblock %}
 
         {% if report_modal_t %}
             {{ report_modal_t|safe }}
             <script type="text/javascript" src="/static/js/reports.js" defer></script>
         {% endif %}
-
-        {% if endpoint() in [
-            'bp_web_app.v_thread',
-            'bp_web_app.v_board_index',
-            'bp_web_app.v_catalog',
-            'bp_web_vanilla_search.v_vanilla_search_get',
-            'bp_web_index_search.v_index_search_get',
-        ] %}
-            <span id="bottom_hidden"></span>
-        {% endif %}
     </div>
+    <span id="bottom_hidden"></span>
 	{% include "footer.html" %}
 </body>
 </html>

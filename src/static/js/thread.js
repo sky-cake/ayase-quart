@@ -4,12 +4,12 @@ function media_mouseout(event) {
         removeClonedImages();
     }
 }
-const video_extensionss = new Set(['mp4', 'webm']);
+
 function media_mouseover(event) {
     const img = event.target;
-    const extension = img.getAttribute('data-ext');
-    if (!extension || video_extensionss.has(extension)) return;
-    if (img.getAttribute('data-expanded') === "true") return;
+    const extension = get_data_string(img, 'ext')
+    if (!extension || ext_is_video(extension)) return;
+    if (get_data_string(img, 'expanded') === "true") return;
     if (!(img instanceof HTMLImageElement)) return;
     if (!img.hasAttribute('data-full_media_src') && !img.hasAttribute('data-thumb_src')) return;
     if (document.getElementById('img_cloned')) return;
@@ -21,10 +21,12 @@ function media_mouseover(event) {
     document.body.appendChild(img_cloned);
 }
 
-const media_containers = document.querySelectorAll('.media_cont');
-for (const container of media_containers) {
-    container.addEventListener('mouseover', media_mouseover);
-    container.addEventListener('mouseout', media_mouseout);
+function setup_media_events() {
+	const media_containers = doc_query_all('.media_cont');
+	for (const container of media_containers) {
+		container.addEventListener('mouseover', media_mouseover);
+		container.addEventListener('mouseout', media_mouseout);
+	}
 }
 
 function quoteline_mouseover(event) {
@@ -32,7 +34,7 @@ function quoteline_mouseover(event) {
     const backlink = quotelink.parentElement.parentElement.id;
 
     const num = quotelink.getAttribute("href").split("#p")[1];
-    const board_shortname = quotelink.getAttribute('data-board_shortname');
+    const board_shortname = get_data_string(quotelink, 'board_shortname');
     let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
 
     const id_post_num = "#p" + num;
@@ -57,21 +59,24 @@ function quoteline_mouseover(event) {
         quotelink_preview_show(target_post, quotelink, backlink_num);
     }
 }
-const quotelinks = document.querySelectorAll("a.quotelink");
-for (const quotelink of quotelinks) {
-    quotelink.addEventListener("mouseover", quoteline_mouseover);
-    quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+
+function setup_quotelink_events() {
+	const quotelinks = doc_query_all("a.quotelink");
+	for (const quotelink of quotelinks) {
+		quotelink.addEventListener("mouseover", quoteline_mouseover);
+		quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+	}
 }
 
 function get_quotelink_preview_default_string() {
     return `<div class="postContainer replyContainer"><div class="post reply">
     <div class="postInfo desktop"><span class="nameBlock"><span class="name">Ayase Quart</span></span></div>
     <blockquote class="postMessage">Could not find post.</blockquote>
-</div></div>`;
+    </div></div>`;
 }
 
 function quotelink_preview_hide() {
-    for (const qp of document.querySelectorAll("#quote-preview")) {
+    for (const qp of doc_query_all("#quote-preview")) {
         qp.remove();
     }
 }
@@ -81,13 +86,13 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.id = "quote-preview";
 
     // highlight the recipient of the reply to help when there are multiple quotelinks
-    const board_shortname = quotelink.getAttribute("data-board_shortname");
+    const board = get_data_string(quotelink, 'board_shortname');
     const recipients = preview.querySelectorAll(`a.quotelink`);
     for (const recipient of recipients) {
         const recipient_post_num = recipient.getAttribute("href").split("#p")[1];
-        const recipient_board_shortname = recipient.getAttribute("data-board_shortname");
+        const recipient_board = get_data_string(recipient, 'board_shortname');
 
-        if (recipient_post_num === backlink_num && recipient_board_shortname === board_shortname) {
+        if (recipient_post_num === backlink_num && recipient_board === board) {
             recipient.classList.add("hl_dark");
             break;
         }
@@ -135,12 +140,12 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.style.backgroundColor = "#282a2e";
 }
 
-if (document.getElementById('vox')){
-    const vox_button = document.createElement('button');
+function setup_vox_events() {
+	const vox_button = document.createElement('button');
     vox_button.textContent = 'Load Thread Reader';
     const tools = document.getElementById('tools');
-    const board = tools.getAttribute('data-board_shortname');
-    const thread_num = tools.getAttribute('data-thread_num');
+    const board = get_data_string(tools, 'board_shortname')
+    const thread_num = get_data_string(tools, 'thread_num')
     tools.appendChild(vox_button);
 
     vox_button.addEventListener('click', () => {
@@ -150,23 +155,20 @@ if (document.getElementById('vox')){
         const timeoutId = setTimeout(() => controller.abort(), 120_000);
 
         const url = `/${board}/thread/${thread_num}/vox`;
-        fetch(url, { signal: controller.signal })
-        .then(response => {
+        fetch(url, { signal: controller.signal }).then(response => {
             clearTimeout(timeoutId);
             if (!response.ok) {
                 throw new Error('Response not ok.');
             }
             return response.blob();
-        })
-        .then(blob => {
+        }).then(blob => {
             const audioUrl = URL.createObjectURL(blob);
             const audio = document.createElement('audio');
             audio.src = audioUrl;
             audio.controls = true;
             audio.autoplay = true;
             tools.appendChild(audio);
-        })
-        .catch(error => {
+        }).catch(error => {
             console.error('Fetch error or timeout:', error);
             const errorMsg = document.createElement('p');
             errorMsg.textContent = 'Failed to load audio.';
@@ -174,3 +176,13 @@ if (document.getElementById('vox')){
         });
     });
 }
+
+function init_thread() {
+	setup_media_events();
+	setup_quotelink_events();
+	if (document.getElementById('vox')) {
+		setup_vox_events();
+	}
+}
+
+init_thread();
