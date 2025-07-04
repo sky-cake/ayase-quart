@@ -10,7 +10,7 @@ THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
 IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
 BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
 BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
-TRY_FULL_SRC_TYPE_ON_404: bool = media_conf.get('try_full_src_type_on_404', False)
+TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
 
 # TODO: move these 2 to config
 ANONYMOUS_NAME = 'Anonymous'
@@ -337,7 +337,7 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
     if thumb_src is None:
         thumb_src = get_media_path(post['preview_orig'], board, MediaType.thumb) if not BOARDS_WITH_THUMB or board in BOARDS_WITH_THUMB else ''
 
-    onerror = 'onerror="p2other(this)"' if TRY_FULL_SRC_TYPE_ON_404 and is_img else ''
+    onerror = 'onerror="p2other(this)"' if TRY_FULL_ON_404_THUMB and is_img else ''
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
