@@ -1,4 +1,3 @@
-from enum import StrEnum
 from html import escape
 from functools import cache, lru_cache
 
@@ -10,17 +9,13 @@ THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
 IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
 BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
 BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
-TRY_FULL_SRC_TYPE_ON_404: bool = media_conf.get('try_full_src_type_on_404', False)
+TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
 
 # TODO: move these 2 to config
 ANONYMOUS_NAME = 'Anonymous'
 CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
 
 type QuotelinkD = dict[int, list[int]]
-
-class MediaType(StrEnum):
-    image = 'image'
-    thumb = 'thumb'
 
 def wrap_post_t(post: dict):
     if not (post and post.get('num')): # Are there cases when post doesn't have a num?
@@ -115,7 +110,6 @@ def render_post_t_basic(post: dict):
     comment = post['comment'] or ''
     board = post['board_shortname']
     ts_unix = post['ts_unix']
-    ts_formatted = '' # ts_2_formatted(ts_unix)
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
@@ -310,15 +304,6 @@ def media_metadata_t(media_size: int, media_w: int, media_h: int):
     return f'{media_size / kb_d :.1f} KB, {media_w}x{media_h}'
 
 
-def get_media_path(media_filename: str, board: str, media_type: MediaType) -> str:
-    if not media_filename or not (THUMB_URI or IMAGE_URI):
-        return ''
-
-    uri = IMAGE_URI if media_type == MediaType.image else THUMB_URI
-
-    return f'{uri.format(board_shortname=board)}/{media_fs_partition(media_filename)}'
-
-
 def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes: str=None, is_search=False, is_catalog=False):
     """Will render image with object-fit: cover by default"""
 
@@ -334,11 +319,11 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
     if classes is None:
         classes = 'cover spoiler' if post['spoiler'] else 'cover'
     if full_src is None:
-        full_src = get_media_path(post['media_orig'], board, MediaType.image) if not BOARDS_WITH_IMAGE or board in BOARDS_WITH_IMAGE else ''
+        full_src = get_image_path(board, post['media_orig'])
     if thumb_src is None:
-        thumb_src = get_media_path(post['preview_orig'], board, MediaType.thumb) if not BOARDS_WITH_THUMB or board in BOARDS_WITH_THUMB else ''
+        thumb_src = get_thumb_path(board, post['preview_orig'])
 
-    onerror = 'onerror="p2other(this)"' if TRY_FULL_SRC_TYPE_ON_404 and is_img else ''
+    onerror = 'onerror="p2other(this)"' if TRY_FULL_ON_404_THUMB and is_img else ''
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
@@ -374,8 +359,8 @@ def get_media_t(post: dict):
     spoiler = 'Spoiler,' if post['spoiler'] else ''
 
     classes = 'spoiler' if post['spoiler'] else ''
-    full_src = get_media_path(media_orig, board, MediaType.image) if board in BOARDS_WITH_IMAGE else ''
-    thumb_src = get_media_path(preview_orig, board, MediaType.thumb) if board in BOARDS_WITH_THUMB else ''
+    full_src = get_image_path(board, media_orig)
+    thumb_src = get_thumb_path(board, preview_orig)
 
     return f"""
 	<div class="file" id="f{num}">
@@ -396,10 +381,12 @@ def set_links(post: dict):
     board = post['board_shortname']
     num = post['num']
     thread_num = post['thread_num']
-    post['t_thread_link_rel'] = f'/{board}/thread/{thread_num}'
-    post['t_thread_link_src'] = f'{CANONICAL_HOST}/{board}/thread/{thread_num}'
-    post['t_post_link_rel'] = f'/{board}/thread/{thread_num}#p{num}'
-    post['t_post_link_src'] = f'{CANONICAL_HOST}/{board}/thread/{thread_num}#p{num}'
+    thread_path = get_thread_path(board, thread_num)
+    post_path = get_post_path(board, thread_num, num)
+    post['t_thread_link_rel'] = thread_path
+    post['t_thread_link_src'] = f'{CANONICAL_HOST}/{thread_path}'
+    post['t_post_link_rel'] = post_path
+    post['t_post_link_src'] = f'{CANONICAL_HOST}/{post_path}'
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
@@ -441,7 +428,7 @@ def get_mobile_t(post: dict):
         <span class="name">{post['name']}</span>
         <br>
     </span>
-    <span class="dateTime inblk" data-utc="{timestamp}">{ts_2_formatted(timestamp)}</span>
+    <span class="dateTime inblk" data-utc="{timestamp}"></span>
     <a href="#{post['num']}">No. {post['num']}</a>
 	"""
 
@@ -525,7 +512,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_since4pass'] }
         { wpt['t_country'] }
         { wpt['t_troll_country'] }
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
             <a href="{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
@@ -555,22 +542,24 @@ def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
     ts_unix = wpt['ts_unix']
     classes = 'spoiler' if wpt['spoiler'] else ''
     nl = '<br>' if wpt['t_cc'] else ''
+    thread_path = get_thread_path(board, num)
+    post_path = get_post_path(board, num, num)
 
     return f"""
-    <div id="{ num }" class="thread doc_id_{ num }" tabindex="0">
+    <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
         /{board}/<br>
         <span class="post_controls">
-            [<a href="/{ board }/thread/{ num }" class="btnr parent" >View</a>]
-            [<a href="{CANONICAL_HOST}/{ board }/thread/{ num }" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
+            [<a href="/{thread_path}" class="btnr parent" >View</a>]
+            [<a href="{CANONICAL_HOST}/{thread_path}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         { wpt['t_cc'] }{nl}
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
-            <a href="/{ board }/thread/{ num }#p{ num }" data-function="highlight" data-post="{ num }">No. { num }</a>
+            <a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>
         </span>
         </div>
-    <a href="/{ board }/thread/{ num }" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
+    <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
     {get_thread_stats_t(wpt)}
     <div class="teaser">
         { title_t }
@@ -587,16 +576,17 @@ def render_catalog_card_archiveposting(wpt: dict) -> str: # a thread card is jus
     ts_unix = wpt['ts_unix']
     classes = 'spoiler' if wpt['spoiler'] else ''
     nl = '<br>' if wpt['t_cc'] else ''
+    thread_path = get_thread_path(board, num)
 
-    return f"""<div id="{ num }" class="form thread doc_id_{ num }" tabindex="0">
-      <a href="/{ board }/thread/{ num }" class="btnr parent">
+    return f"""<div id="{num}" class="form thread doc_id_{num}" tabindex="0">
+      <a href="/{thread_path}" class="btnr parent">
       <div class="post_data">
         { wpt['t_filedeleted'] }
         { wpt['t_cc'] }{nl}
-        <span class="postNum">No. { num }</span>
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="postNum">No. {num}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
       </div>
-      <a href="/{ board }/thread/{ num }" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
+      <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
       <div class="teaser">
         { title_t + '<br>' if title_t else '' }
         { wpt.get('comment', '')}
@@ -617,6 +607,8 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     num = wpt['num']
     ts_unix = wpt['ts_unix']
     thread_num_label = f'<div id="op_thread_num" data-num="{num}" class="hidden"></div>' if is_op else ''
+    comment = wpt['comment'] or ''
+
     return f"""{ thread_num_label }
     { wpt['t_header'] }
     <div class="postInfoM mobile" id="pim{num}">
@@ -631,7 +623,7 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
         <span class="nameBlock { wpt['t_cc_class'] }">
             { wpt['t_cc'] }
         </span>
-        <span class="dateTime inblk" data-utc="{ts_unix}">{ts_2_formatted(ts_unix)}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
             <a href="{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
@@ -643,7 +635,7 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     </div>
     <div>
         { wpt['t_media'] if not is_op else '' }
-        <blockquote class="postMessage" id="m{num}">{wpt.get('comment', '') if wpt.get('comment', '') else ''}</blockquote>
+        <blockquote class="postMessage" id="m{num}">{comment}</blockquote>
     </div>
     <div style="clear:both;"></div>
     { wpt['t_quotelink'] }
