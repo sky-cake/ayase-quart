@@ -14,7 +14,7 @@ from db import db_q
 from db.redis import close_redis
 from moderation import init_moderation
 from tagging.db import init_tagging
-from moderation.filter_cache import fc
+from moderation import fc
 from render import render_controller
 from templates import render_constants, template_error_message
 from archiveposting import init_archiveposting

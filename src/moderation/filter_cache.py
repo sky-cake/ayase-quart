@@ -7,17 +7,42 @@ from asagi_converter import (
     get_numops_by_board_and_regex
 )
 from boards import board_shortnames
-from configs import mod_conf
 from db import db_m
 from enums import DbPool
 from utils import make_src_path, read_file
 
 
 class BaseFilterCache(ABC):
+    def __init__(self, mod_conf: dict):
+        self.mod_conf = mod_conf
+        super().__init__()
+
     async def init(self):
         await self._create_cache()
         if not await self._is_cache_populated():
             await self._populate_cache()
+
+    async def get_deleted_numops_per_board_iter(self):
+        """Returns a tuple[str, tuple[int, int]]
+
+        `(board_shortname, [(num, op), ...])`
+        """
+        if not (self.mod_conf["hide_4chan_deleted_posts"] and board_shortnames):
+            return
+        for board in board_shortnames:
+            numops = await get_deleted_numops_by_board(board)
+            yield board, numops
+
+    async def get_numops_by_board_and_regex_iter(self):
+        """Returns a tuple[str, tuple[int, int]]
+
+        `(board_shortname, [(num, op), ...])`
+        """
+        if not (self.mod_conf['regex_filter'] and board_shortnames):
+            return
+        for board in board_shortnames:
+            numops = await get_numops_by_board_and_regex(board, self.mod_conf['regex_filter'])
+            yield board, numops
 
     @abstractmethod
     async def _create_cache(self) -> None:
@@ -60,13 +85,13 @@ class BaseFilterCache(ABC):
         raise NotImplementedError()
 
     async def filter_reported_posts(self, posts: list[dict], is_authority: bool=False) -> list:
-        if not mod_conf['enabled']:
+        if not self.mod_conf['enabled']:
             return posts
 
         if not posts:
             return posts
 
-        remove_op_replies = mod_conf['remove_replies_to_hidden_op']
+        remove_op_replies = self.mod_conf['remove_replies_to_hidden_op']
 
         board_num_pairs = await self.get_board_num_pairs(posts)
 
@@ -99,6 +124,12 @@ class BaseFilterCache(ABC):
 
 
 class FilterCacheSqlite(BaseFilterCache):
+    """Uses a single table in the moderation sqlite database."""
+
+    def __init__(self, mod_conf: dict):
+        super().__init__(mod_conf)
+
+
     async def _create_cache(self) -> None:
         moderation_scripts = ["board_nums_cache.sql"]
         for script in moderation_scripts:
@@ -116,8 +147,8 @@ class FilterCacheSqlite(BaseFilterCache):
     async def _populate_cache(self) -> None:
         pool: Connection = await db_m.pool_manager.get_pool(p_id=DbPool.mod)
         iter_funcs = [
-            get_numops_by_board_and_regex_iter,
-            get_deleted_numops_per_board_iter,
+            self.get_numops_by_board_and_regex_iter,
+            self.get_deleted_numops_per_board_iter,
         ]
         for iter_func in iter_funcs:
             async for board_and_numops in iter_func():
@@ -141,7 +172,7 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def get_op_thread_removed_count(self, board_shortname: str) -> int:
-        if not mod_conf['enabled']:
+        if not self.mod_conf['enabled']:
             return 0
 
         rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.phg()} and op = 1', params=[board_shortname])
@@ -182,6 +213,7 @@ class FilterCacheSqlite(BaseFilterCache):
             commit=True,
         )
 
+
     async def delete_post(self, board_shortname: str, num: int, op: int):
         ph = db_m.phg()
         await db_m.query_dict(
@@ -191,36 +223,9 @@ class FilterCacheSqlite(BaseFilterCache):
         )
 
 
-async def get_deleted_numops_per_board_iter():
-    """Returns a tuple[str, tuple[int, int]]
-
-    `(board_shortname, [(num, op), ...])`
-    """
-    if not (mod_conf["hide_4chan_deleted_posts"] and board_shortnames):
-        return
-    for board in board_shortnames:
-        numops = await get_deleted_numops_by_board(board)
-        yield board, numops
-
-
-async def get_numops_by_board_and_regex_iter():
-    """Returns a tuple[str, tuple[int, int]]
-
-    `(board_shortname, [(num, op), ...])`
-    """
-    if not (mod_conf['regex_filter'] and board_shortnames):
-        return
-    for board in board_shortnames:
-        numops = await get_numops_by_board_and_regex(board, mod_conf['regex_filter'])
-        yield board, numops
-
-
-def _get_filter_cache() -> BaseFilterCache:
+def get_filter_cache(mod_conf: dict) -> BaseFilterCache:
     match mod_conf["filter_cache_type"]:
         case "sqlite":
-            return FilterCacheSqlite()
+            return FilterCacheSqlite(mod_conf)
         case _:
             raise NotImplementedError(f"Unsupported filter cache type: {mod_conf['filter_cache_type']}")
-
-
-fc: BaseFilterCache = _get_filter_cache()

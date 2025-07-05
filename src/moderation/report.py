@@ -8,7 +8,7 @@ from configs import mod_conf, archiveposting_conf, index_search_conf
 from db import db_m, db_a, db_q
 from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory, ReportAction
 from leafs import post_files_delete, post_files_hide, post_files_show
-from moderation.filter_cache import fc
+from moderation import fc
 from moderation.user import User
 from utils.validation import validate_board
 from search.providers import get_index_search_provider

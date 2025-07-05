@@ -5,7 +5,7 @@ from asagi_converter import (
     generate_index,
     generate_thread
 )
-from moderation.filter_cache import fc
+from moderation import fc
 from utils.validation import validate_board
 
 from configs import app_conf

@@ -14,7 +14,7 @@ from asagi_converter import (
     generate_thread,
     get_counts_from_posts,
 )
-from moderation.filter_cache import fc
+from moderation import fc
 from posts.template_optimizer import (
     render_catalog_card_archiveposting,
     wrap_post_t,

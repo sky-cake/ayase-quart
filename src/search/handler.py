@@ -10,7 +10,7 @@ from configs import (
 )
 from enums import SearchType
 from forms import IndexSearchForm, SearchForm, VanillaSearchForm
-from moderation.filter_cache import fc
+from moderation import fc
 from posts.comments import html_comment, html_highlight
 from posts.template_optimizer import (
     get_media_img_t,

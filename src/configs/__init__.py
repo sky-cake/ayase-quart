@@ -2,7 +2,6 @@ import os
 
 from enums import DbType, PublicAccess
 from utils import make_src_path
-from vox import VoiceFlite, TranscriptMode
 from .conf_loader import load_config_file
 from .conf_common import fuvii
 
@@ -83,6 +82,8 @@ elif not isinstance(traffic_log_conf['ignore_path_startswith'], str):
 
 vox_conf = conf.get('vox', {'enabled': False})
 if vox_conf['enabled']:
+    from vox import VoiceFlite, TranscriptMode
+
     if vox_conf['reader_mode'] == 'dfs':
         vox_conf['reader_mode'] = TranscriptMode.dfs
     elif vox_conf['reader_mode'] == 'bfs':

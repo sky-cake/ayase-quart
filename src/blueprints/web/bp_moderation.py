@@ -16,7 +16,7 @@ from leafs import (
     generate_post_html,
     post_files_hide,
 )
-from moderation.filter_cache import fc
+from moderation import fc
 from moderation.report import (
     create_report,
     get_report_count,

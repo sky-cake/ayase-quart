@@ -11,7 +11,7 @@ from asagi_converter import (
 )
 from boards import get_title
 from configs import app_conf, vox_conf
-from moderation.filter_cache import fc
+from moderation import fc
 from posts.template_optimizer import (
     render_catalog_card,
     render_wrapped_post_t,

@@ -234,7 +234,7 @@ load_sqlite_into_memory = true # this must be false to persist data
 # text to speech module that allows the client to fetch the endpoint
 # /<string:board_shortname>/thread/<int:thread_id>/vox
 # for .wav files to read threads
-enabled = true
+enabled = false
 
 engine = 'kokoro' # 'kokoro', 'flite'
 
