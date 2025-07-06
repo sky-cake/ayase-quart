@@ -46,7 +46,7 @@ async def latest(current_api_usr_id: int):
 @require_api_usr_permissions([Permissions.archive_configs_view])
 async def configs(current_api_usr_id: int):
     cs = [
-        'default_reported_post_public_access',
+        'hide_post_if_reported',
         'hide_4chan_deleted_posts',
         'remove_replies_to_hidden_op',
         'regex_filter',

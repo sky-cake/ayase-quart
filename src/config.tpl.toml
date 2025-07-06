@@ -171,7 +171,14 @@ enabled = true # true, false
 admin_user = 'admin'
 admin_password = 'admin'
 
-default_reported_post_public_access = 'hidden' # 'visible', 'hidden'
+
+hide_post_if_reported = true # true, false
+
+# if a post is reported N times from different IPs, then hide it
+# 'hide_post_if_reported' takes precedence
+n_reports_then_hide = 1
+
+
 hide_4chan_deleted_posts = true # hide 4chan staff deleted posts in archive
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 

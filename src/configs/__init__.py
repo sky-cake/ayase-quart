@@ -47,7 +47,6 @@ if media_conf['serve_outside_static']:
 
 
 mod_conf = conf['moderation']
-mod_conf['default_reported_post_public_access'] = PublicAccess.visible if mod_conf['default_reported_post_public_access'] == 'visible' else PublicAccess.hidden
 
 if hidden_images_path := mod_conf.get('hidden_images_path'):
     os.makedirs(hidden_images_path, exist_ok=True)

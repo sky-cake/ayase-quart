@@ -76,9 +76,15 @@ async def route_create_report(board_shortname: str, thread_num: int, num: int):
             None,
         )
 
-        if mod_conf['default_reported_post_public_access'] == PublicAccess.hidden:
+        if mod_conf['hide_post_if_reported']:
             post_files_hide(post)
             await fc.insert_post(board_shortname, num, op)
+
+        elif mod_conf['n_reports_then_hide'] > 0:
+            report_strikes = await get_report_count(board_shortnames=[board_shortname], num=num, number_of_reported_posts_only=False)
+            if report_strikes > mod_conf['n_reports_then_hide']:
+                post_files_hide(post)
+                await fc.insert_post(board_shortname, num, op)    
 
         return jsonify({'message': 'thank you'})
     return jsonify({'message': f'error: {form.data}: {form.errors}'})

@@ -125,7 +125,7 @@ async def latest(is_admin: bool):
 @web_usr_is_admin
 async def configs(is_admin: bool):
     cs = [
-        'default_reported_post_public_access',
+        'hide_post_if_reported',
         'hide_4chan_deleted_posts',
         'remove_replies_to_hidden_op',
         'regex_filter',

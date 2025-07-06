@@ -64,9 +64,14 @@ async def get_report_count(
     submitter_category: Optional[SubmitterCategory] = None,
     created_at_gte: Optional[str] = None,
     created_at_lte: Optional[str] = None,
-    **kwarg,
+    number_of_reported_posts_only: bool=True,
+    **kwargs,
 ) -> int:
-    """kwarg is just a convenience here, it gobbles up any extra, unused params for us."""
+    """
+    - `number_of_reported_posts_only` True -> the number of reported posts.
+    - `number_of_reported_posts_only` False -> the number of reports.
+    - `kwargs` is just a convenience here, it gobbles up any extra, unused params for us.
+    """
     ph = db_m.phg()
     where = []
     params = []
@@ -107,10 +112,16 @@ async def get_report_count(
         where_child.append(f'created_at =< {ph}')
         params.append(created_at_lte)
 
-    sql = """
+    sql_join = ''
+    if not number_of_reported_posts_only:
+        # get number of reports, not just reported post count
+        sql_join = 'join report_child using (report_parent_id)'
+
+    sql = f"""
         select
             count(*) as report_count
         from report_parent
+            {sql_join}
     """
     if where:
         sql += ' where ' + ' and '.join(where)
@@ -244,7 +255,7 @@ async def create_report(
     mod_notes: str = None
 ):
     now = datetime.now()
-    public_access = mod_conf['default_reported_post_public_access']
+    public_access = PublicAccess.hidden if mod_conf['hide_post_if_reported'] else PublicAccess.visible
 
     report_parent_id = await get_report_parent_id(board_shortname, num)
 
