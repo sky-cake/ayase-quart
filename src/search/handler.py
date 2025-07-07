@@ -154,7 +154,7 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         p.check('search done')
 
         post_count_i = len(posts)
-        posts = await fc.filter_reported_posts(posts)
+        posts = await fc.filter_reported_posts(posts, is_authority=logged_in)
         post_count_f = len(posts)
         total_hits = total_hits - (post_count_i - post_count_f)
 

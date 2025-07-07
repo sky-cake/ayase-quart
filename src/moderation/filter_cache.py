@@ -10,6 +10,7 @@ from boards import board_shortnames
 from db import db_m
 from enums import DbPool
 from utils import make_src_path, read_file
+import re
 
 
 class BaseFilterCache(ABC):
@@ -26,8 +27,6 @@ class BaseFilterCache(ABC):
             return
 
         await self._create_cache()
-        if not await self._is_cache_populated():
-            await self._populate_cache()
 
     async def get_deleted_numops_per_board_iter(self):
         """Returns a tuple[str, tuple[int, int]]
@@ -91,6 +90,17 @@ class BaseFilterCache(ABC):
         """`set[('g', 12345), ('x', 6789), ...]`"""
         raise NotImplementedError()
 
+    def should_filter(self, board_num_pairs: set, post: dict) -> bool:
+        return (
+            (self.remove_replies_to_hidden_op and (post['board_shortname'], post['thread_num']) in board_num_pairs)
+            or
+            ((post['board_shortname'], post['num']) in board_num_pairs)
+            or
+            (self.hide_4chan_deleted_posts and post['deleted'])
+            or
+            (self.regex_filter and re.search(self.regex_filter, post['comment'], re.IGNORECASE))
+        )
+
     async def filter_reported_posts(self, posts: list[dict], is_authority: bool=False) -> list:
         if not self.enabled:
             return posts
@@ -105,13 +115,8 @@ class BaseFilterCache(ABC):
         if is_authority:
             posts = [
                 post
-                if not (
-                    (self.remove_replies_to_hidden_op and (post['board_shortname'], post['thread_num']) in board_num_pairs)
-                    or
-                    ((post['board_shortname'], post['num']) in board_num_pairs)
-                )
-                else
-                    post | dict(deleted=note)
+                if not self.should_filter(board_num_pairs, post)
+                else post | dict(deleted=note)
                 for post in posts
             ]
             return posts
@@ -119,11 +124,7 @@ class BaseFilterCache(ABC):
         posts = [
             post
             for post in posts
-            if not (
-                (self.remove_replies_to_hidden_op and (post['board_shortname'], post['thread_num']) in board_num_pairs)
-                or
-                ((post['board_shortname'], post['num']) in board_num_pairs)
-            )
+            if not self.should_filter(board_num_pairs, post)
         ]
         return posts
 
@@ -150,6 +151,12 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def _populate_cache(self) -> None:
+        """
+        This isn't needed if we filter posts via python.
+        That would be better than creating another data set to track and query, especially for larger data sets.
+        It's also better than adding extra filters (is deleted, and regexes) in our database queries.
+        We will populate our cache with reported posts only.
+        """
         pool: Connection = await db_m.pool_manager.get_pool(p_id=DbPool.mod)
         iter_funcs = [
             self.get_numops_by_board_and_regex_iter,

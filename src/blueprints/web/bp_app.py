@@ -86,7 +86,7 @@ async def favicon():
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def v_board_index(is_admin: bool, board_shortname: str, logged_in: bool):
+async def v_board_index(board_shortname: str, is_admin: bool, logged_in: bool):
     """See `v_board_index_page()` for benchmarks.
     """
     validate_board(board_shortname)
@@ -95,7 +95,7 @@ async def v_board_index(is_admin: bool, board_shortname: str, logged_in: bool):
     index, quotelinks = await generate_index(board_shortname)
     p.check('query')
 
-    index['threads'] = [{'posts': await fc.filter_reported_posts(posts['posts'])} for posts in index['threads']]
+    index['threads'] = [{'posts': await fc.filter_reported_posts(posts['posts'], is_authority=logged_in)} for posts in index['threads']]
     p.check('filter_reported')
 
     validate_threads(index['threads'])
@@ -131,7 +131,7 @@ async def v_board_index(is_admin: bool, board_shortname: str, logged_in: bool):
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def v_board_index_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
+async def v_board_index_page(board_shortname: str, page_num: int, is_admin: bool, logged_in: bool):
     p = Perf('index page', enabled=app_conf.get('testing'))
     validate_board(board_shortname)
     p.check('validate board')
@@ -140,7 +140,7 @@ async def v_board_index_page(is_admin: bool, board_shortname: str, page_num: int
     p.check('generate index')
 
     for i in range(0, len(index['threads'])):
-        index['threads'][i]['posts'] = await fc.filter_reported_posts(index['threads'][i]['posts'])
+        index['threads'][i]['posts'] = await fc.filter_reported_posts(index['threads'][i]['posts'], is_authority=logged_in)
 
     p.check('filter_reported')
 
@@ -200,7 +200,7 @@ async def make_pagination_catalog(board_shortname: str, catalog: list[dict], pag
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
+async def v_catalog(board_shortname: str, is_admin: bool, logged_in: bool):
     validate_board(board_shortname)
 
     p = Perf('catalog', enabled=app_conf.get('testing'))
@@ -208,7 +208,7 @@ async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
     p.check('query')
 
     # `nreplies` won't always be correct, but it does not effect paging
-    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads']))} for page in catalog]
+    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
 
     pagination = await make_pagination_catalog(board_shortname, catalog, 0)
@@ -238,7 +238,7 @@ async def v_catalog(is_admin: bool, board_shortname: str, logged_in: bool):
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, logged_in: bool):
+async def v_catalog_page(board_shortname: str, page_num: int, is_admin: bool, logged_in: bool):
     validate_board(board_shortname)
 
     p = Perf('catalog page', enabled=app_conf.get('testing'))
@@ -246,7 +246,7 @@ async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, lo
     p.check('query')
 
     # `nreplies` won't always be correct, but it does not effect paging
-    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads']))} for page in catalog]
+    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
 
     pagination = await make_pagination_catalog(board_shortname, catalog, page_num)
@@ -276,7 +276,7 @@ async def v_catalog_page(is_admin: bool, board_shortname: str, page_num: int, lo
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged_in: bool):
+async def v_thread(board_shortname: str, thread_num: int, is_admin: bool, logged_in: bool):
     validate_board(board_shortname)
 
     p = Perf('thread', enabled=app_conf.get('testing'))
@@ -284,7 +284,7 @@ async def v_thread(is_admin: bool, board_shortname: str, thread_num: int, logged
     post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_num)
     p.check('queries')
 
-    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'])
+    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=logged_in)
     p.check('filter_reported')
 
     # TODO: only count manually if we can't get the counts from the side tables

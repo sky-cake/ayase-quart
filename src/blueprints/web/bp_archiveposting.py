@@ -191,7 +191,7 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
     catalog = await generate_catalog(board_shortname, db_X=db_a)
 
     # `nreplies` won't always be correct, but it does not effect paging
-    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=is_admin))} for page in catalog]
+    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
 
     threads = ''.join(
         render_catalog_card_archiveposting(wrap_post_t(op))
@@ -254,7 +254,7 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_num, db_X=db_a)
 
-    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=is_admin)
+    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=logged_in)
 
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 

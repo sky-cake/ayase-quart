@@ -173,3 +173,22 @@ def require_api_usr_permissions(permissions: Iterable[Permissions]):
             return await func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def api_usr_authenticated(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        authenticated = False
+        bearer_token = request.headers.get('Authorization', '')
+
+        if bearer_token.lower().startswith('bearer '):
+            token = bearer_token[7:]
+            if token:
+                user_id = auth_api.load_token(token)
+                if user_id:
+                    kwargs['current_api_usr_id'] = int(user_id)
+                    authenticated = True
+
+        return await func(*args, authenticated=authenticated, **kwargs)
+
+    return wrapper

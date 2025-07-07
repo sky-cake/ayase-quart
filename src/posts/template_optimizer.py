@@ -514,13 +514,13 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_troll_country'] }
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
-            <a href="{wpt['t_post_link_rel']}">No.{num}</a>
+            <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         </span>
-        <button class="btnlink" onclick="copy_link(this, '{wpt['t_post_link_rel']}')">⎘</button>
+        <button class="btnlink" onclick="copy_link(this, '/{wpt['t_post_link_rel']}')">⎘</button>
         <span class="inblk">
         { wpt['t_report'] }
-        [<a href="{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]
+        [<a href="/{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]
         [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
         </span>
     </div>
@@ -625,10 +625,10 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
         </span>
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
-            <a href="{wpt['t_post_link_rel']}">No.{num}</a>
+            <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         </span>
-        <button class="btnlink" onclick="copy_link(this, '{wpt['t_post_link_rel']}')">⎘</button>
+        <button class="btnlink" onclick="copy_link(this, '/{wpt['t_post_link_rel']}')">⎘</button>
         <span class="inblk">
         { wpt['t_report'] }
         </span>
