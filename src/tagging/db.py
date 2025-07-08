@@ -302,7 +302,7 @@ async def get_board_2_media_origs_by_tag_ids(tag_ids: list[int], f_tag: float, s
 
     params = tag_ids if tag_ids else None
     sql_calls = []
-    for board_shortname in board_shortnames:
+    for board in board_shortnames:
         sql = f"""
         SELECT
             filename
@@ -312,7 +312,7 @@ async def get_board_2_media_origs_by_tag_ids(tag_ids: list[int], f_tag: float, s
             FROM image JOIN image_tag USING(image_id)
             WHERE
                 -- image_tag.prob >= {float(f_tag)} AND
-                board = '{board_shortname}'
+                board = '{board}'
                 {sql_tag_ids}
                 {sql_safe_search}
             GROUP BY image_tag.image_id
@@ -332,9 +332,9 @@ async def get_board_2_media_origs_by_tag_ids(tag_ids: list[int], f_tag: float, s
         return {}
 
     board_2_filenames = dict()
-    for board_shortname, row in zip(board_shortnames, rows):
+    for board, row in zip(board_shortnames, rows):
         if row:
-            board_2_filenames[board_shortname] = [r[0] for r in row]
+            board_2_filenames[board] = [r[0] for r in row]
     return board_2_filenames
 
 
