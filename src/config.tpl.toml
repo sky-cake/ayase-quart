@@ -25,13 +25,6 @@ allow_robots = false # robots.txt
 login_endpoint = '/login'
 
 
-# whether or not the side tables `<board>_thread` and `<board>_images` should be utilized.
-# side tables offer considerable performance boosts
-# without side tables /catalog and /thread endpoints will probably not be viable at pages > 5 on larger archives
-# `<board>_deleted` tables are still required if you're doing moderation
-use_asagi_side_tables = true
-
-
 [site]
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
