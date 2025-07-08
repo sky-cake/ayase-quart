@@ -36,10 +36,14 @@ use_asagi_side_tables = true
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 site_email = ''
+anonymous_username = 'Anonymous'
 
 
 [archive]
-name = '4chan' # '4chan' 'lainchan'
+type = 'yotsuba' # 'yotsuba' (4chan), 'vichan' (lainchan, holotower)
+canonical_name = '4chan' # '4chan', 'Lainchan', 'Holotower'
+canonical_host = 'https://boards.4chan.org'
+comments_preescaped = false # false (4chan scrapers), true (vichan APIs)
 
 
 [stats]

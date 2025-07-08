@@ -11,7 +11,9 @@ app_conf = conf.get('app', {})
 fuvii(app_conf, 'login_endpoint', lambda x: f"/{x.strip('/')}")
 
 site_conf = conf.get('site', {})
-archive_conf = conf.get('archive', {'name': '4chan'})
+
+archive_conf = conf.get('archive', {})
+fuvii(archive_conf, 'canonical_host', lambda x: x.strip('/'))
 
 db_conf = conf.get('db', {})
 fuvii(db_conf, 'db_type', lambda x: DbType[x])

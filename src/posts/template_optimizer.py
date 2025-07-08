@@ -1,7 +1,7 @@
 from html import escape
 from functools import cache, lru_cache
 
-from configs import media_conf
+from configs import media_conf, archive_conf, site_conf
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
 
@@ -11,9 +11,12 @@ BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
 BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
 TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
 
-# TODO: move these 2 to config
-ANONYMOUS_NAME = 'Anonymous'
-CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
+ARCHIVE_TYPE = archive_conf['type']
+CANONICAL_HOST = archive_conf['canonical_host']
+CANONICAL_NAME = archive_conf['canonical_name']
+
+ANONYMOUS_NAME = site_conf['anonymous_username']
+
 
 type QuotelinkD = dict[int, list[int]]
 

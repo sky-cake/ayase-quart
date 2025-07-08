@@ -3,8 +3,10 @@ import html
 from posts.quotelinks import html_quotelinks
 from configs import archive_conf
 
-# TODO: very collision prone...
-IS_LAIN_ARCHIVE = archive_conf['name'][0] == 'l'
+
+IS_VICHAN_ARCHIVE = archive_conf['type'] == 'vichan'
+# COMMENTS_PREESCAPED = archive_conf['comments_preescaped'] # not used atm
+
 
 def html_comment(comment: str, thread_num: int, board: str):
     # TODO: we should probably convert the Nones into empty strings here, save having to check against None everywhere downstream
@@ -12,12 +14,13 @@ def html_comment(comment: str, thread_num: int, board: str):
     if not comment:
         return comment
 
-    if IS_LAIN_ARCHIVE:
-        return _html_comment_lain(comment)
+    if IS_VICHAN_ARCHIVE:
+        return _html_comment_vichan(comment)
     else:
-        return _html_comment_default(comment, thread_num, board)
+        return _html_comment_yotsuba(comment, thread_num, board)
 
-def _html_comment_default(comment: str, thread_num: int, board: str):
+
+def _html_comment_yotsuba(comment: str, thread_num: int, board: str):
     """Will escape html if needed.
     
     Note: Yes, there are multiple `in comment` statements,
@@ -42,20 +45,22 @@ def _html_comment_default(comment: str, thread_num: int, board: str):
         comment = comment.replace('\n', '<br>')
     return comment
 
-lain_comment_re = re.compile(r'\s*onclick="[^"]*"')
-lain_ql_pat_re = re.compile(r'(<a)([^>]*\bhref="/)([^/]+)(/res/)([^"]*?)(\.html)?(#)?(\d+)(")')
-def _html_comment_lain(comment: str):
-    """Lainchan's API has already has escaped the html. It's ready to be displayed."""
+
+# TODO support <span class="spoiler"></span> (see on vichan/holotower and vichan/lainchan)
+vichan_comment_re = re.compile(r'\s*onclick="[^"]*"')
+vichan_ql_pat_re = re.compile(r'(<a)([^>]*\bhref="/)([^/]+)(/res/)([^"]*?)(\.html)?(#)?(\d+)(")')
+def _html_comment_vichan(comment: str):
+    """Vichan's API has already has escaped the html. It's ready to be displayed."""
     # only a few tweaks needed
     has_angle_r = '<a' in comment
     if has_angle_r:
         # before: <a onclick="highlightReply('14202', event);" href="/sec/res/14192.html#14202">&gt;&gt;14202</a>
         # after: <a class="quotelink" data-board_shortname="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
 
-        comment = lain_comment_re.sub('', comment)
+        comment = vichan_comment_re.sub('', comment)
         
         replacement = r'\1 class="quotelink" data-board_shortname="\3"\2\3/thread/\5\7p\8\9'
-        comment = lain_ql_pat_re.sub(replacement, comment)
+        comment = vichan_ql_pat_re.sub(replacement, comment)
 
 
 def replace_newlines_except_in_code(html: str):
