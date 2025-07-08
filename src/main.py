@@ -18,7 +18,6 @@ from moderation import fc
 from render import render_controller
 from templates import render_constants, template_error_message
 from archiveposting import init_archiveposting
-from traffic_log import traffic_log_init, traffic_log_request_before, traffic_log_request_after
 
 
 async def print_exception(e: Exception):
@@ -79,11 +78,6 @@ def create_app():
 
     if archiveposting_conf['enabled']:
         app.before_serving(init_archiveposting)
-
-    if traffic_log_conf.get('enabled'):
-        app.before_serving(traffic_log_init)
-        app.before_request(traffic_log_request_before)
-        app.after_request(traffic_log_request_after)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
