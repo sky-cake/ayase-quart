@@ -173,11 +173,11 @@ def board_has_thumb(board: str) -> bool:
 
 @cache
 def get_image_baseuri(board: str) -> str:
-    return IMAGE_URI.format(board_shortname=board)
+    return IMAGE_URI.format(board=board)
 
 @cache
 def get_thumb_baseuri(board: str) -> str:
-    return THUMB_URI.format(board_shortname=board)
+    return THUMB_URI.format(board=board)
 
 
 @cache
