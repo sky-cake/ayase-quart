@@ -227,7 +227,6 @@ async def get_post_rows(board: str, thread_nums: list[int]):
     if SHOULD_INDEX_MEDIA:
         q = f"""
             {get_selector(board)},
-                doc_id,
                 title,
                 timestamp,
                 case when comment is not null then {db_q.length_method}(comment) else 0 end as comment_length,
@@ -239,7 +238,6 @@ async def get_post_rows(board: str, thread_nums: list[int]):
     else:
         q = f"""
             {get_selector(board)},
-                doc_id,
                 title,
                 timestamp,
                 case when comment is not null then {db_q.length_method}(comment) else 0 end as comment_length,
@@ -254,9 +252,9 @@ async def get_post_rows(board: str, thread_nums: list[int]):
 
 # these are [get_selector() columns] + [whatever is added in get_post_rows()]
 if SHOULD_INDEX_MEDIA:
-    row_keys = selector_columns + ('doc_id', 'title', 'timestamp', 'comment_length', 'title_length', 'file_archived')
+    row_keys = selector_columns + ('title', 'timestamp', 'comment_length', 'title_length', 'file_archived')
 else:
-    row_keys = selector_columns + ('doc_id', 'title', 'timestamp', 'comment_length', 'title_length')
+    row_keys = selector_columns + ('title', 'timestamp', 'comment_length', 'title_length')
 DOC_ID_IDX = row_keys.index('doc_id')
 # can be a bit more lenient in regargs to efficiency, we're farming this out to multiprocessing
 def process_post_rows(board: str, rows: list[tuple], post_pack_fn: Callable[[dict], dict], byte_pack_fn: Callable[[list[dict]], bytes]):

@@ -338,7 +338,7 @@ async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entir
     if not pk_ids:
         return False
 
-    index_searcher.remove_posts(pk_ids)
+    await index_searcher.remove_posts(pk_ids)
     return True
 
 

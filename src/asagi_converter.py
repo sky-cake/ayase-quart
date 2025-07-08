@@ -30,6 +30,7 @@ from db.redis import get_redis
 # see the API docs for more info
 # https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
 selector_columns = (
+    'doc_id',
     'num', # `no` - The numeric post ID
     'thread_num', # an archiver construct. The OP post ID.
     'op', # whether or not the post is the thread op (1 == yes, 0 == no)
@@ -62,6 +63,7 @@ selector_columns = (
 
 # map aliases of cols in board table, back to real board table names
 selector_columns_map = {
+    'doc_id':           'doc_id',
     'num':              'num',
     'thread_num':       'thread_num',
     'op':               'op',
@@ -152,6 +154,7 @@ def get_selector(board: str) -> str:
     """
     selector = f"""
     select
+    doc_id,
     num,
     `{board}`.thread_num,
     op as op,
@@ -845,7 +848,6 @@ async def get_post_with_doc_id(board: str, post_id: int, db_X=None) -> dict:
     local_db_q = get_local_db_q(board) if not db_X else db_X
 
     sql = f"""
-        doc_id,
         {get_selector(board)}
         from `{board}`
         where num = {local_db_q.phg()}
@@ -867,6 +869,7 @@ async def move_post_to_delete_table(post: dict) -> str:
 
     post_for_insert = {selector_columns_map[k]: v for k, v in post.items() if k in selector_columns_map}
     post_for_insert = post_for_insert | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
+    del post_for_insert['doc_id']
 
     local_db_q = get_local_db_q(board)
     phg = local_db_q.phg()
