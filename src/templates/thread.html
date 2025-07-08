@@ -8,7 +8,7 @@
 {% block body %}
     {% include 'archiveposting_form.html' %}
     <div id="main">
-        <div id="tools" data-board_shortname="{{board}}" data-thread_num="{{thread_num}}"></div>
+        <div id="tools" data-board="{{board}}" data-thread_num="{{thread_num}}"></div>
         {% if vox_enabled %}<div id="vox"></div>{% endif %}
         <div class="board">
             Replies: {{nreplies}} Files: {{nimages}}
