@@ -43,11 +43,11 @@ def insert(conn: Connection, log_data: dict) -> None:
         log_data.get('code'),
         log_data.get('uri'),
         log_data.get('q'),
-        float(log_data.get('unix', 0)),
+        log_data.get('unix'),
         log_data.get('local'),
-        float(log_data.get('dur', 0)),
+        log_data.get('dur'),
         log_data.get('ua'),
-        int(log_data.get('bsent', 0))
+        log_data.get('bsent'),
     ))
     conn.commit()
 
