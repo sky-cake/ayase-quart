@@ -1,15 +1,14 @@
 from html import escape
-from functools import cache, lru_cache
 
 from configs import media_conf, archive_conf, site_conf
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
 from threads import get_thread_path
+from media import (
+    get_image_path, get_thumb_path,
+    ext_is_video, ext_is_image,
+)
 
-THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
-IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
-BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
-BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
 TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
 
 ARCHIVE_TYPE = archive_conf['type']
@@ -160,31 +159,6 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
 def get_post_path(board: str, thread_num: int, num: int) -> str:
     return f'{get_thread_path(board, thread_num)}#p{num}'
 
-@cache
-def board_has_image(board: str) -> bool:
-    return board in BOARDS_WITH_IMAGE and IMAGE_URI
-
-@cache
-def board_has_thumb(board: str) -> bool:
-    return board in BOARDS_WITH_THUMB and THUMB_URI
-
-@cache
-def get_image_baseuri(board: str) -> str:
-    return IMAGE_URI.format(board_shortname=board)
-
-@cache
-def get_thumb_baseuri(board: str) -> str:
-    return THUMB_URI.format(board_shortname=board)
-
-
-@cache
-def ext_is_image(ext: str) -> bool:
-    return ext in ('jpg', 'jpeg', 'png', 'bmp', 'webp') # gifs not included
-
-@cache
-def ext_is_video(ext: str) -> bool:
-    return ext in ('webm', 'mp4')
-
 def get_media_t_thread(post: dict, num: int, board: str):
     if not (media_filename := post['media_filename']):
         return ''
@@ -213,20 +187,6 @@ def get_media_t_thread(post: dict, num: int, board: str):
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src, classes=classes)}
     </div>
 	"""
-
-def get_image_path(board: str, filename: str) -> str:
-    if not(filename and board_has_image(board)):
-        return ''
-    return f'{get_image_baseuri(board)}/{media_fs_partition(filename)}'
-
-def get_thumb_path(board: str, filename: str) -> str:
-    if not(filename and board_has_thumb(board)):
-        return ''
-    return f'{get_thumb_baseuri(board)}/{media_fs_partition(filename)}'
-
-# should move to configs or somewhere else for customizability
-def media_fs_partition(filename: str) -> str:
-    return f'{filename[0:4]}/{filename[4:6]}/{filename}'
 
 ### END post_t crisis
 
@@ -311,8 +271,8 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
         return ''
 
     ext = media_filename.rsplit('.', 1)[-1]
-    is_img = ext in ('jpg', 'jpeg', 'png') # gifs not included
-    is_video = ext in ('webm', 'mp4')
+    is_img = ext_is_image(ext)
+    is_video = ext_is_video(ext)
 
     board = post['board_shortname']
 
