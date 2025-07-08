@@ -1,119 +1,50 @@
 from configs import archiveposting_conf
 from db import db_a
 
-# No `doc_id` primary key. We use `num` instead.
-schema = """
-CREATE TABLE IF NOT EXISTS `%%BOARD%%` (
-    num INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    title TEXT,
-    comment TEXT,
-    thread_num INTEGER NOT NULL,
-    op INTEGER NOT NULL,
-    timestamp INTEGER NOT NULL,
-    media_id INTEGER NOT NULL,
-    poster_ip TEXT NOT NULL,
-    capcode TEXT NOT NULL,
-    email TEXT,
-    name TEXT,
-    trip TEXT,
-    subnum INTEGER NOT NULL,
-    timestamp_expired INTEGER NOT NULL,
-    preview_orig TEXT,
-    preview_w INTEGER NOT NULL,
-    preview_h INTEGER NOT NULL,
-    media_filename TEXT,
-    media_w INTEGER NOT NULL,
-    media_h INTEGER NOT NULL,
-    media_size INTEGER NOT NULL,
-    media_hash TEXT,
-    media_orig TEXT,
-    spoiler INTEGER NOT NULL,
-    deleted INTEGER NOT NULL,
-    delpass TEXT,
-    sticky INTEGER NOT NULL,
-    locked INTEGER NOT NULL,
-    poster_hash TEXT,
-    poster_country TEXT,
-    exif TEXT,
-    UNIQUE (num)
-);
-
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_images` (
-    media_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    media_hash TEXT NOT NULL,
-    media TEXT,
-    preview_op TEXT,
-    preview_reply TEXT,
-    total INTEGER NOT NULL,
-    banned INTEGER NOT NULL,
-    UNIQUE (media_hash)
-);
-
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_threads` (
-    thread_num INTEGER NOT NULL PRIMARY KEY,
-    time_op INTEGER NOT NULL,
-    time_last INTEGER NOT NULL,
-    time_bump INTEGER NOT NULL,
-    time_ghost INTEGER,
-    time_ghost_bump INTEGER,
-    time_last_modified INTEGER NOT NULL,
-    nreplies INTEGER NOT NULL,
-    nimages INTEGER NOT NULL,
-    sticky INTEGER NOT NULL,
-    locked INTEGER NOT NULL,
-    UNIQUE (thread_num)
-);
-
-CREATE TABLE IF NOT EXISTS `%%BOARD%%_deleted` (
-    num INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    media_id INTEGER NOT NULL,
-    poster_ip TEXT NOT NULL,
-    subnum INTEGER NOT NULL,
-    thread_num INTEGER NOT NULL,
-    op INTEGER NOT NULL,
-    timestamp INTEGER NOT NULL,
-    timestamp_expired INTEGER NOT NULL,
-    preview_orig TEXT,
-    preview_w INTEGER NOT NULL,
-    preview_h INTEGER NOT NULL,
-    media_filename TEXT,
-    media_w INTEGER NOT NULL,
-    media_h INTEGER NOT NULL,
-    media_size INTEGER NOT NULL,
-    media_hash TEXT,
-    media_orig TEXT,
-    spoiler INTEGER NOT NULL,
-    deleted INTEGER NOT NULL,
-    capcode TEXT NOT NULL,
-    email TEXT,
-    name TEXT,
-    trip TEXT,
-    title TEXT,
-    comment TEXT,
-    delpass TEXT,
-    sticky INTEGER NOT NULL,
-    locked INTEGER NOT NULL,
-    poster_hash TEXT,
-    poster_country TEXT,
-    exif TEXT,
-    UNIQUE (num)
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_%%BOARD%%_num ON `%%BOARD%%` (num);
-CREATE INDEX IF NOT EXISTS idx_%%BOARD%%_media_id ON `%%BOARD%%` (media_id);
-CREATE INDEX IF NOT EXISTS idx_%%BOARD%%_thread_num ON `%%BOARD%%` (thread_num);
-CREATE INDEX IF NOT EXISTS idx_%%BOARD%%_timestamp ON `%%BOARD%%` (timestamp);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_%%BOARD%%_num ON `%%BOARD%%_images` (media_id);
-CREATE INDEX IF NOT EXISTS idx_%%BOARD%%_num ON `%%BOARD%%_images` (media_hash);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_%%BOARD%%_num ON `%%BOARD%%_threads` (thread_num);
-"""
+from sidetables.tables_indexes import create_table_sqlite
 
 
 async def init_archiveposting():
     await create_non_existing_tables()
 
+
+sql_create_board = """
+create table if not exists `%%BOARD%%` (
+    doc_id integer not null primary key autoincrement,
+    media_id integer not null,
+    poster_ip text not null,
+    num integer not null,
+    subnum integer not null,
+    thread_num integer not null,
+    op integer not null,
+    timestamp integer not null,
+    timestamp_expired integer not null,
+    preview_orig text,
+    preview_w integer not null,
+    preview_h integer not null,
+    media_filename text,
+    media_w integer not null,
+    media_h integer not null,
+    media_size integer not null,
+    media_hash text,
+    media_orig text,
+    spoiler integer not null,
+    deleted integer not null,
+    capcode text not null,
+    email text,
+    name text,
+    trip text,
+    title text,
+    comment text,
+    delpass text,
+    sticky integer not null,
+    locked integer not null,
+    poster_hash text,
+    poster_country text,
+    exif text
+);"""
+
+create_all_tables = sql_create_board + create_table_sqlite
 
 async def create_non_existing_tables():
     if not archiveposting_conf['enabled']:
@@ -125,7 +56,7 @@ async def create_non_existing_tables():
         await db_a.query_tuple(sql)
         print(f'Archiveposting table [{board}] already exist.')
     except Exception:
-        sqls = schema.replace('%%BOARD%%', board).split(';')
+        sqls = create_all_tables.replace('%%BOARD%%', board).split(';')
         for sql in sqls:
             await db_a.query_tuple(sql, commit=True)
         print(f'Archiveposting table [{board}] created.')

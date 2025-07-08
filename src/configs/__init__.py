@@ -74,13 +74,6 @@ if archiveposting_conf['enabled'] and (' ' in archiveposting_conf['board_name'] 
 stats_conf = conf.get('stats', {'enabled': False})
 
 
-traffic_log_conf = conf.get('traffic_log', {'enabled': False})
-if isinstance(traffic_log_conf['ignore_path_startswith'], list):
-    traffic_log_conf['ignore_path_startswith'] = tuple(traffic_log_conf['ignore_path_startswith'])
-elif not isinstance(traffic_log_conf['ignore_path_startswith'], str):
-    raise ValueError(traffic_log_conf['ignore_path_startswith'])
-
-
 vox_conf = conf.get('vox', {'enabled': False})
 if vox_conf['enabled']:
     from vox import VoiceFlite, TranscriptMode
