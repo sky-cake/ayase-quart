@@ -10,12 +10,9 @@ from media import (
 )
 
 TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
-
-ARCHIVE_TYPE = archive_conf['type']
-CANONICAL_HOST = archive_conf['canonical_host']
-CANONICAL_NAME = archive_conf['canonical_name']
-
-ANONYMOUS_NAME = site_conf['anonymous_username']
+CANONICAL_HOST: str = archive_conf['canonical_host']
+CANONICAL_NAME: str = archive_conf['canonical_name']
+ANONYMOUS_NAME: str = site_conf['anonymous_username']
 
 
 type QuotelinkD = dict[int, list[int]]
@@ -222,11 +219,11 @@ def get_cc_class_t(post: dict):
     return cc_class.get(post['capcode'], '')
 
 
-cc_t_admin = '<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">'
-cc_t_founder = '<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">'
-cc_t_moderator = '<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">'
-cc_t_dev = '<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">'
-cc_t_manager = '<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">'
+cc_t_admin = f'<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a {CANONICAL_NAME} Administrator." class="identityIcon retina">'
+cc_t_founder = f'<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the {CANONICAL_NAME} Founder." class="identityIcon retina">'
+cc_t_moderator = f'<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a {CANONICAL_NAME} Moderator." class="identityIcon retina">'
+cc_t_dev = f'<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a {CANONICAL_NAME} Developer." class="identityIcon retina">'
+cc_t_manager = f'<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a {CANONICAL_NAME} Manager." class="identityIcon retina">'
 cc_t_verified = '<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>'
 def cc_t_unknown(cc):
     return f'<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {cc}</strong>'
@@ -350,15 +347,11 @@ def set_links(post: dict):
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
-
-
 def get_sticky_t(post: dict):
     return sticky_t if post.get('sticky') else ''
 
 
 closed_t = '<img src="/static/images/closed.gif" alt="Closed" title="Closed" class="closedIcon retina">'
-
-
 def get_closed_t(post: dict):
     return closed_t if post.get('locked') else ''
 
@@ -383,13 +376,12 @@ def get_trip_t(post: dict):
 
 def get_mobile_t(post: dict):
     timestamp = post['ts_unix']
+    num = post['num']
+    name = post['name'] or ANONYMOUS_NAME
     return f"""
-	<span class="nameBlock">
-        <span class="name">{post['name']}</span>
-        <br>
-    </span>
+	<span class="nameBlock"><span class="name">{name}</span><br></span>
     <span class="dateTime inblk" data-utc="{timestamp}"></span>
-    <a href="#{post['num']}">No. {post['num']}</a>
+    <a href="#{num}">No. {num}</a>
 	"""
 
 
@@ -604,9 +596,9 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     """
 
 def get_title_t(thread: dict):
-    if not (title := thread.get('title', '')):
+    if not (title := thread['title']):
         return ''
-    return f"""<span class="post_title">{ title }</span>"""
+    return f"""<span class="post_title">{title}</span>"""
 
 # almost same as threads.render_thread_stats...
 def get_thread_stats_t(thread: dict) -> str:
