@@ -4,6 +4,7 @@ from functools import cache, lru_cache
 from configs import media_conf, archive_conf, site_conf
 from posts.capcodes import Capcode
 from utils.timestamps import ts_2_formatted
+from threads import get_thread_path
 
 THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
 IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
@@ -155,10 +156,6 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
-
-@lru_cache(maxsize=2048)
-def get_thread_path(board: str, thread_num: int) -> str:
-    return f'{board}/thread/{thread_num}'
 
 def get_post_path(board: str, thread_num: int, num: int) -> str:
     return f'{get_thread_path(board, thread_num)}#p{num}'
