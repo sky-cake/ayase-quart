@@ -1,7 +1,7 @@
 // image hover display
 function media_mouseout(event) {
     if (event.target.tagName.toLowerCase() === 'img') {
-        removeClonedImages();
+        remove_cloned_image();
     }
 }
 
@@ -29,7 +29,7 @@ function setup_media_events() {
 	}
 }
 
-function quoteline_mouseover(event) {
+function quotelink_mouseover(event) {
     const quotelink = event.target;
     const backlink = quotelink.parentElement.parentElement.id;
 
@@ -42,7 +42,7 @@ function quoteline_mouseover(event) {
 
     quotelink_preview_hide();
 
-    if (target_post == null) {
+    if (target_post === null) {
         fetch(`/${board}/post/${num}`).then(response => {
             return response.ok ? response.json() : Promise.reject();
         }).then(data => {
@@ -63,7 +63,7 @@ function quoteline_mouseover(event) {
 function setup_quotelink_events() {
 	const quotelinks = doc_query_all("a.quotelink");
 	for (const quotelink of quotelinks) {
-		quotelink.addEventListener("mouseover", quoteline_mouseover);
+		quotelink.addEventListener("mouseover", quotelink_mouseover);
 		quotelink.addEventListener("mouseleave", quotelink_preview_hide);
 	}
 }
@@ -76,7 +76,8 @@ function get_quotelink_preview_default_string() {
 }
 
 function quotelink_preview_hide() {
-    for (const qp of doc_query_all("#quote-preview")) {
+    const qp = document.getElementById('quote-preview');
+    if (qp) {
         qp.remove();
     }
 }
