@@ -121,3 +121,4 @@ class QuartConfig():
     SECRET_KEY = secret_key
 
 SITE_NAME = site_conf.get('name', 'Ayase Quart')
+TESTING = app_conf.get('testing', False)
