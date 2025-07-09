@@ -1,5 +1,3 @@
-import quart_flask_patch
-
 from quart import Blueprint
 from moderation.auth import auth_api
 from moderation.user import is_valid_creds

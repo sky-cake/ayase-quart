@@ -1,9 +1,7 @@
-import quart_flask_patch
-
 from collections import defaultdict
 from html import escape
 
-from flask_paginate import Pagination
+from paginate import Pagination
 from quart import Blueprint, flash, jsonify, redirect, request, url_for
 from moderation.auth import login_web_usr_required
 

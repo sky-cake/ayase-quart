@@ -11,10 +11,9 @@ attrs==25.3.0
 blinker==1.9.0
 click==8.2.1
 coredis==4.22.0
-cryptography==45.0.3
+cryptography==45.0.5
 Deprecated==1.2.18
 Flask==3.1.1
-flask-paginate==2024.4.12
 frozenlist==1.6.0
 h11==0.16.0
 h2==4.2.0
@@ -40,7 +39,6 @@ PyMySQL==1.1.1
 python-dateutil==2.9.0.post0
 Quart==0.20.0
 quart-auth==0.11.0
-quart-flask-patch==0.3.0
 quart-rate-limiter==0.12.0
 quart-schema==0.22.0
 quart-uploads==0.0.4
@@ -57,6 +55,6 @@ WTForms==3.2.1
 yarl==1.20.0
 msgpack==1.1.0
 zlib_ng==0.5.1
-requests
+requests==2.32.3
 
 # timm # will install the necessary torch packages for image tagging

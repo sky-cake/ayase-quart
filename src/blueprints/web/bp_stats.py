@@ -1,5 +1,3 @@
-import quart_flask_patch
-
 from quart import Blueprint, Response
 from asagi_converter import get_post_counts_per_month_by_board
 from boards import board_objects

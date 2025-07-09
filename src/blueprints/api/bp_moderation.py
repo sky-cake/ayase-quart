@@ -1,5 +1,3 @@
-import quart_flask_patch
-
 from quart import Blueprint, jsonify
 from boards import board_shortnames
 from enums import ModStatus, PublicAccess, ReportAction

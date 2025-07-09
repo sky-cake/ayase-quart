@@ -1,188 +1,71 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
+Modified by sky-cake for use in Ayase Quart with the following modifications:
+
+- ported to quart
+- removed current_app config extract
+- bs4 styles only
+- utf-8 only
+
 flask_paginate
 ~~~~~~~~~~~~~~~~~~
+Copyright (c) 2012 by Lix Xu.
 
-Adds pagination support to your flask application.
+Some rights reserved.
 
-:copyright: (c) 2012 by Lix Xu.
-:license: BSD, see LICENSE for more details
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above
+  copyright notice, this list of conditions and the following
+  disclaimer in the documentation and/or other materials provided
+  with the distribution.
+
+* The names of the contributors may not be used to endorse or
+  promote products derived from this software without specific
+  prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from __future__ import unicode_literals
-
-import sys
-
-from flask import current_app, request, url_for
+from quart import request, url_for
 from markupsafe import Markup
 
-__version__ = "2024.04.12"
+PREV_PAGES = """<li class="page-item">
+<a class="page-link" href="{0}" aria-label="Previous"{2}>
+<span aria-hidden="true">{1}</span>
+<span class="sr-only">Previous</span></a></li>"""
 
-PY2 = sys.version_info[0] == 2
+NEXT_PAGES = '''<li class="page-item">
+<a class="page-link" href="{0}" aria-label="Next"{2}>
+<span aria-hidden="true">{1}</span>
+<span class="sr-only">Next</span></a></li>'''
 
-# previous link
-_bs = '<li class="previous"><a href="{0}"{2}>{1}</a></li>'
-_bs33 = '<li><a href="{0}" aria-label="Previous"{2}>\
-<span aria-hidden="true">{1}</span></a></li>'
-_bs4 = '<li class="page-item">\
-<a class="page-link" href="{0}" aria-label="Previous"{2}>\
-<span aria-hidden="true">{1}</span>\
-<span class="sr-only">Previous</span></a></li>'
-_bs5 = '<li class="page-item">\
-<a class="page-link" href="{0}" aria-label="Previous"{2}>\
-<span aria-hidden="true">{1}</span></a></li>'
-_bulma = '<a class="pagination-previous" href="{0}" aria-label="Previous"{2}>{1}</a>'
-_materialize = '<li class="waves-effect"><a href="{0}"{1}>\
-<i class="material-icons">chevron_left</i></a></li>'
+CURRENT_PAGES = '''<li class="page-item active"><a class="page-link">{0}
+<span class="sr-only">(current)</span></a></li>'''
 
-PREV_PAGES = dict(
-    bootstrap=_bs,
-    bootstrap2=_bs,
-    bootstrap3=_bs,
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic='<a class="item arrow" href="{0}"{2}>{1}</a>',
-    foundation='<li class="arrow"><a href="{0}"{2}>{1}</a></li>',
-    bulma=_bulma,
-    materialize=_materialize,
-)
+LINK = '<li class="page-item"><a class="page-link" href="{0}">{1}</a></li>'
 
-# next link
-_bs = '<li class="next"><a href="{0}"{2}>{1}</a></li>'
-_bs33 = '<li><a href="{0}" aria-label="Next"{2}>\
-<span aria-hidden="true">{1}</span></a></li>'
-_bs4 = '<li class="page-item">\
-<a class="page-link" href="{0}" aria-label="Next"{2}>\
-<span aria-hidden="true">{1}</span>\
-<span class="sr-only">Next</span></a></li>'
-_bs5 = '<li class="page-item">\
-<a class="page-link" href="{0}" aria-label="Next"{2}>\
-<span aria-hidden="true">{1}</span></a></li>'
-_bulma = '<a class="pagination-next" href="{0}" aria-label="Next"{2}>{1}</a>'
-_materialize = '<li class="waves-effect"><a href="{0}"{1}>\
-<i class="material-icons">chevron_right</i></a></li>'
-NEXT_PAGES = dict(
-    bootstrap=_bs,
-    bootstrap2=_bs,
-    bootstrap3=_bs,
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic='<a class="item arrow" href="{0}"{2}>{1}</a>',
-    foundation='<li class="arrow"><a href="{0}"{2}>{1}</a></li>',
-    bulma=_bulma,
-    materialize=_materialize,
-)
+GAP_MARKERS = '<li class="page-item disabled"><span class="page-link">...</span></li>'
 
-# current page
-_bs = '<li class="active"><a>{0}</a></li>'
-_bs33 = '<li class="active"><span>{0} \
-<span class="sr-only">(current)</span></span></li>'
-_bs4 = '<li class="page-item active"><a class="page-link">{0} \
-<span class="sr-only">(current)</span></a></li>'
-_bs5 = '<li class="page-item active" aria-current="page">\
-<span class="page-link">{0}</span></li>'
-_bulma = '<li><a class="pagination-link is-current" aria-current="page">\
-{0}</a></li>'
-_materialize = '<li class="active"><a href="#!">{0}</a></li>'
-CURRENT_PAGES = dict(
-    bootstrap=_bs,
-    bootstrap2=_bs,
-    bootstrap3=_bs,
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic='<a class="item active">{0}</a>',
-    foundation='<li class="current"><a>{0}</a></li>',
-    bulma=_bulma,
-    materialize=_materialize,
-)
+PREV_DISABLED_PAGES = '''<li class="page-item disabled"><span class="page-link"> {0}
+</span></li>'''
 
-# normal link
-LINK = '<li><a href="{0}">{1}</a></li>'
-SEMANTIC_LINK = '<a class="item" href="{0}">{1}</a>'
-BS4_LINK = '<li class="page-item"><a class="page-link" href="{0}">{1}</a></li>'
-BS5_LINK = '<li class="page-item"><a class="page-link" href="{0}">{1}</a></li>'
-BULMA_LINK = '<li><a class="pagination-link" href="{0}">{1}</a></li>'
-MATERIALIZE_LINK = '<li><a class="waves-effect" href="{0}">{1}</a></li>'
-
-# disabled link
-_bs = '<li class="disabled"><a>...</a></li>'
-_bs33 = '<li class="disabled"><span>\
-<span aria-hidden="true">...</span></span></li>'
-_bs4 = '<li class="page-item disabled"><span class="page-link">...</span></li>'
-_bs5 = '<li class="page-item disabled"><span class="page-link">...</span></li>'
-_se = '<a class="disabled item">...</a>'
-_fa = '<li class="unavailable"><a>...</a></li>'
-_bulma = '<li><span class="pagination-ellipsis">&hellip;</span></li>'
-_materialize = '<li class="disabled"><a>...</a></li>'
-GAP_MARKERS = dict(
-    bootstrap=_bs,
-    bootstrap2=_bs,
-    bootstrap3=_bs,
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic=_se,
-    foundation=_fa,
-    bulma=_bulma,
-    materialize=_materialize,
-)
-
-# previous disabled link
-_bs = '<li class="previous disabled unavailable"><a> {0} </a></li>'
-_bs33 = '<li class="disabled"><span>\
-<span aria-hidden="true">{0}</span></span></li>'
-_bs4 = '<li class="page-item disabled"><span class="page-link"> {0} \
-</span></li>'
-_bs5 = '<li class="page-item disabled">\
-<a class="page-link">{0}</a></li>'
-_se = '<a class="item arrow disabled">{0}</a>'
-_fa = '<li class="unavailable"><a>{0}</a></li>'
-_bulma = '<a class="pagination-previous" disabled>{0}</a>'
-_materialize = '<li class="disabled"><a href="#!">\
-<i class="material-icons">chevron_left</i></a></li>'
-PREV_DISABLED_PAGES = dict(
-    bootstrap=_bs,
-    bootstrap2=_bs,
-    bootstrap3=_bs,
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic=_se,
-    foundation=_fa,
-    bulma=_bulma,
-    materialize=_materialize,
-)
-
-# next disabled link
-_bs = '<li class="next disabled"><a> {0} </a></li>'
-_bs33 = '<li class="disabled"><span>\
-<span aria-hidden="true">{0}</span></span></li>'
-_bs4 = '<li class="page-item disabled"><span class="page-link"> {0} \
-</span></li>'
-_bs5 = '<li class="page-item disabled">\
-<a class="page-link">{0}</a></li>'
-_se = '<a class="item arrow disabled">{0}</a>'
-_fa = '<li class="unavailable"><a>{0}</a></li>'
-_bulma = '<a class="pagination-next" disabled>{0}</a>'
-_materialize = '<li class="disabled"><a href="#!">\
-<i class="material-icons">chevron_right</i></a></li>'
-NEXT_DISABLED_PAGES = dict(
-    bootstrap=_bs,
-    bootstrap2=_bs,
-    bootstrap3=_bs,
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic=_se,
-    foundation=_fa,
-    bulma=_bulma,
-    materialize=_materialize,
-)
+NEXT_DISABLED_PAGES = '''<li class="page-item disabled"><span class="page-link"> {0}
+</span></li>'''
 
 PREV_LABEL = "&laquo;"
 NEXT_LABEL = "&raquo;"
@@ -194,38 +77,9 @@ total <b>{total}</b>"
 SEARCH_MSG = "found <b>{found}</b> {record_name}, \
 displaying <b>{start} - {end}</b>"
 
-_bs4 = '<nav aria-label="..."><ul class="pagination {0} {1}">'
-_bs5 = '<nav aria-label="..."><ul class="pagination {0} {1}">'
-_bs33 = '<nav aria-label="..."><ul class="pagination {0} {1}">'
-_bulma = '<nav class="pagination {0} {1} {2}" role="navigation">\
-{3}{4}<ul class="pagination-list">'
-CSS_LINKS = dict(
-    bootstrap='<div class="pagination {0} {1}"><ul>',
-    bootstrap2='<div class="pagination {0} {1}"><ul>',
-    bootstrap3='<ul class="pagination {0} {1}">',
-    bootstrap3_3=_bs33,
-    bootstrap4=_bs4,
-    bootstrap5=_bs5,
-    semantic='<div class="ui pagination menu">',
-    foundation='<ul class="pagination {0} {1}">',
-    bulma=_bulma,
-    materialize='<ul class="pagination">',
-)
-CSS_LINKS_END = dict(
-    bootstrap="</ul></div>",
-    bootstrap2="</ul></div>",
-    bootstrap3="</ul>",
-    bootstrap3_3="</ul></nav>",
-    bootstrap4="</ul></nav>",
-    bootstrap5="</ul></nav>",
-    semantic="</div>",
-    foundation="</ul>",
-    bulma="</ul></nav>",
-    materialize="</ul>",
-)
+CSS_LINKS = '<nav aria-label="..."><ul class="pagination {0} {1}">'
 
-# foundation alignment
-F_ALIGNMENT = '<div class="pagination-{0}">'
+CSS_LINKS_END = "</ul></nav>"
 
 
 def get_parameter(param=None, args=None, default="page"):
@@ -236,8 +90,6 @@ def get_parameter(param=None, args=None, default="page"):
     if not param:
         pk = "page_parameter" if default == "page" else "per_page_parameter"
         param = args.get(pk)
-        if not param:
-            param = current_app.config.get(pk.upper())
 
     return param or default
 
@@ -270,7 +122,7 @@ def get_page_args(
     page = int(args.get(page_name, 1, type=int))
     per_page = args.get(per_page_name, type=int)
     if not per_page:
-        per_page = int(current_app.config.get("PER_PAGE", 10))
+        per_page = 10
     else:
         per_page = int(per_page)
 
@@ -284,8 +136,7 @@ def get_param_value(name, kwargs={}, default=None, cfg_name="", prefix="paginati
     if prefix:
         config_name = "{}_{}".format(prefix, config_name)
 
-    cfg_value = current_app.config.get(config_name.upper(), default)
-    return kwargs.get(name, cfg_value)
+    return kwargs.get(name, default)
 
 
 class Pagination(object):
@@ -336,10 +187,6 @@ class Pagination(object):
             **show_single_page**: decide whether or not a single page \
             returns pagination
 
-            **bs_version**: the version of bootstrap, default is **4**
-
-            **css_framework**: the css framework, default is **bootstrap4**
-
             **anchor**: anchor parameter, appends to page href
 
             **format_total**: number format total, like **1,234**, \
@@ -347,10 +194,6 @@ class Pagination(object):
 
             **format_number**: number format start and end, like **1,234**, \
             default is False
-
-            **url_coding**: coding for url encoding, default is **utf-8**
-
-            **bulma_style**: page link style for bulma css framework
 
             **prev_rel**: rel of previous page
 
@@ -388,53 +231,13 @@ class Pagination(object):
         self.total = kwargs.get("total", 0)
         self.format_total = get_param_value("format_total", kwargs, False)
         self.format_number = get_param_value("format_number", kwargs, False)
-        self.url_coding = get_param_value("url_coding", kwargs, "utf-8")
         self.display_msg = get_param_value("display_msg", kwargs, DISPLAY_MSG)
         self.search_msg = get_param_value("search_msg", kwargs, SEARCH_MSG)
         self.record_name = get_param_value("record_name", kwargs, RECORD_NAME)
-        self.css_framework = get_param_value(
-            "css_framework", kwargs, "bootstrap4"
-        ).lower()
-        if self.css_framework not in CURRENT_PAGES:
-            self.css_framework = "bootstrap4"
-
-        if self.css_framework.startswith("bootstrap"):
-            bs_version = self.css_framework[9:]
-            if bs_version in ("3_3", "3.3"):
-                self.bs_version = "3.3"
-            elif bs_version:
-                self.bs_version = bs_version
-            else:
-                self.bs_version = get_param_value("bs_version", kwargs, 4)
-                if self.bs_version in (2, "2"):
-                    self.css_framework = "bootstrap"
-                elif self.bs_version in (3, "3"):
-                    self.css_framework = "bootstrap3"
-                elif self.bs_version in ("3.3", "3_3"):
-                    self.css_framework = "bootstrap3_3"
-                elif self.bs_version in (4, "4"):
-                    self.css_framework = "bootstrap4"
-                elif self.bs_version in (5, "5"):
-                    self.css_framework = "bootstrap5"
-
-            if not isinstance(self.bs_version, int):
-                if self.bs_version.isdigit():
-                    self.bs_version = int(self.bs_version)
-                else:
-                    self.bs_version = float(self.bs_version)
 
         self.link_size = get_param_value("link_size", kwargs, "")
         if self.link_size:
-            if self.css_framework == "foundation":
-                self.link_size = ""
-            elif self.css_framework == "bulma":
-                self.link_size = " is-{0}".format(self.link_size)
-            else:
-                self.link_size = " pagination-{0}".format(self.link_size)
-
-        self.bulma_style = get_param_value("bulma_style", kwargs, "")
-        if self.bulma_style:
-            self.bulma_style = " is-{0}".format(self.bulma_style)
+            self.link_size = " pagination-{0}".format(self.link_size)
 
         self.prev_rel = get_param_value("prev_rel", kwargs, "")
         if self.prev_rel:
@@ -445,47 +248,25 @@ class Pagination(object):
             self.next_rel = ' rel="{}"'.format(self.next_rel)
 
         self.alignment = get_param_value("alignment", kwargs, "")
-        if self.alignment and self.css_framework.startswith("bootstrap"):
-            if self.css_framework in ("bootstrap4", "bootstrap5"):
-                if self.alignment == "center":
-                    self.alignment = " justify-content-center"
-                elif self.alignment in ("right", "end"):
-                    self.alignment = " justify-content-end"
-
-            elif self.css_framework == "bootstrap2":
-                self.alignment = " pagination-{0}".format(self.alignment)
-            else:
-                # v3 does not support this way
-                # use this way: <div class="text-center/right">...</div>
-                self.alignment = ""
-
-        if self.alignment and self.css_framework == "bulma":
-            self.alignment = " is-{0}".format(self.alignment)
+        if self.alignment:
+            if self.alignment == "center":
+                self.alignment = " justify-content-center"
+            elif self.alignment in ("right", "end"):
+                self.alignment = " justify-content-end"
 
         self.href = kwargs.get("href")
         self.anchor = kwargs.get("anchor")
         self.show_single_page = get_param_value("show_single_page", kwargs, False)
 
         self.link = LINK
-        if self.css_framework == "bootstrap4":
-            self.link = BS4_LINK
-        elif self.css_framework == "bootstrap5":
-            self.link = BS5_LINK
-        elif self.css_framework == "semantic":
-            self.link = SEMANTIC_LINK
-        elif self.css_framework == "bulma":
-            self.link = BULMA_LINK
-        elif self.css_framework == "materialize":
-            self.link = MATERIALIZE_LINK
-
-        self.current_page_fmt = CURRENT_PAGES[self.css_framework]
-        self.link_css_fmt = CSS_LINKS[self.css_framework]
-        self.gap_marker_fmt = GAP_MARKERS[self.css_framework]
-        self.prev_disabled_page_fmt = PREV_DISABLED_PAGES[self.css_framework]
-        self.next_disabled_page_fmt = NEXT_DISABLED_PAGES[self.css_framework]
-        self.prev_page_fmt = PREV_PAGES[self.css_framework]
-        self.next_page_fmt = NEXT_PAGES[self.css_framework]
-        self.css_end_fmt = CSS_LINKS_END[self.css_framework]
+        self.current_page_fmt = CURRENT_PAGES
+        self.link_css_fmt = CSS_LINKS
+        self.gap_marker_fmt = GAP_MARKERS
+        self.prev_disabled_page_fmt = PREV_DISABLED_PAGES
+        self.next_disabled_page_fmt = NEXT_DISABLED_PAGES
+        self.prev_page_fmt = PREV_PAGES
+        self.next_page_fmt = NEXT_PAGES
+        self.css_end_fmt = CSS_LINKS_END
         self.include_first_page_number = get_param_value(
             "include_first_page_number", kwargs, False
         )
@@ -500,10 +281,6 @@ class Pagination(object):
                 url = url_for(self.endpoint, _anchor=self.anchor, **self.args)
             else:
                 url = url_for(self.endpoint, **self.args)
-
-        # Need to return a unicode object
-        if self.url_coding:
-            return url.decode(self.url_coding) if PY2 else url
 
         return url
 
@@ -537,10 +314,7 @@ class Pagination(object):
                 page = None
 
             url = self.page_href(page)
-            if self.css_framework == "materialize":
-                args = (url, self.prev_rel)
-            else:
-                args = (url, self.prev_label, self.prev_rel)
+            args = (url, self.prev_label, self.prev_rel)
 
             return self.prev_page_fmt.format(*args)
 
@@ -550,10 +324,7 @@ class Pagination(object):
     def next_page(self):
         if self.has_next:
             url = self.page_href(self.page + 1)
-            if self.css_framework == "materialize":
-                args = (url, self.next_rel)
-            else:
-                args = (url, self.next_label, self.next_rel)
+            args = (url, self.next_label, self.next_rel)
 
             return self.next_page_fmt.format(*args)
 
@@ -637,9 +408,6 @@ class Pagination(object):
         s.append(self.single_page(1))
         s.append(self.next_page)
         s.append(self.css_end_fmt)
-        if self.css_framework == "foundation" and self.alignment:
-            s.insert(0, F_ALIGNMENT.format(self.alignment))
-            s.append("</div>")
 
         return Markup("".join(s))
 
@@ -652,31 +420,13 @@ class Pagination(object):
 
             return ""
 
-        if self.css_framework == "bulma":
-            s = [
-                self.link_css_fmt.format(
-                    self.link_size,
-                    self.alignment,
-                    self.bulma_style,
-                    self.prev_page,
-                    self.next_page,
-                )
-            ]
-            for page in self.pages:
-                s.append(self.single_page(page) if page else self.gap_marker_fmt)
+        s = [self.link_css_fmt.format(self.link_size, self.alignment)]
+        s.append(self.prev_page)
+        for page in self.pages:
+            s.append(self.single_page(page) if page else self.gap_marker_fmt)
 
-            s.append(self.css_end_fmt)
-        else:
-            s = [self.link_css_fmt.format(self.link_size, self.alignment)]
-            s.append(self.prev_page)
-            for page in self.pages:
-                s.append(self.single_page(page) if page else self.gap_marker_fmt)
-
-            s.append(self.next_page)
-            s.append(self.css_end_fmt)
-            if self.css_framework == "foundation" and self.alignment:
-                s.insert(0, F_ALIGNMENT.format(self.alignment))
-                s.append("</div>")
+        s.append(self.next_page)
+        s.append(self.css_end_fmt)
 
         return Markup("".join(s))
 

@@ -1,5 +1,3 @@
-import quart_flask_patch
-
 from quart import Blueprint, flash, redirect, request, url_for, current_app
 
 from asagi_converter import get_latest_ops_as_catalog

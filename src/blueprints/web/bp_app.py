@@ -1,4 +1,4 @@
-from flask_paginate import Pagination
+from paginate import Pagination
 from quart import Blueprint, jsonify, abort, current_app, Response
 
 from asagi_converter import (

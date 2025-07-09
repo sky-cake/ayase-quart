@@ -1,5 +1,3 @@
-import quart_flask_patch
-
 from functools import wraps
 
 from quart import Blueprint, current_app, flash, redirect, url_for

@@ -1,5 +1,3 @@
-import quart_flask_patch
-
 from quart import Blueprint, jsonify
 from quart_schema import validate_request
 

@@ -1,4 +1,3 @@
-import quart_flask_patch  # noqa
 import os
 import traceback
 
