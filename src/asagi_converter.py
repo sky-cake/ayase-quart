@@ -9,7 +9,7 @@ from functools import cache
 from itertools import batched
 from textwrap import dedent
 from async_lru import alru_cache
-from configs import archiveposting_conf, app_conf, vanilla_search_conf, stats_conf
+from configs import archiveposting_conf, vanilla_search_conf, stats_conf
 from db import db_q, db_a
 from posts.capcodes import Capcode
 from posts.comments import html_comment
