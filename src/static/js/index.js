@@ -1,11 +1,12 @@
-function removeClonedImages() {
-    for (const img of doc_query_all('#img_cloned')) {
-        img.remove();
+function remove_cloned_image() {
+    const cloned_img = document.getElementById('img_cloned');
+    if (cloned_img) {
+        cloned_img.remove();
     }
 }
 
 function expandMedia(e) {
-    removeClonedImages();
+    remove_cloned_image();
     const ext = get_data_string(e, 'ext')
     const container = e.closest('.media_cont');
     const toggleSpan = container?.querySelector('.media_togg');
