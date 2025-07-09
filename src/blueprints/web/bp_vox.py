@@ -16,20 +16,20 @@ from vox import VoxFlite, make_transcript, get_vox_filepath, VoxKokoro
 bp = Blueprint("bp_web_vox", __name__)
 
 
-@bp.get("/<string:board_shortname>/thread/<int:thread_id>/vox")
+@bp.get("/<string:board>/thread/<int:thread_id>/vox")
 @rate_limit(1, timedelta(minutes=5))
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-async def vox_thread(board_shortname: str, thread_id: int, is_admin: bool, logged_in: bool):
-    validate_board(board_shortname)
+async def vox_thread(board: str, thread_id: int, is_admin: bool, logged_in: bool):
+    validate_board(board)
 
-    if not board_shortname in vox_conf['allowed_boards']:
+    if not board in vox_conf['allowed_boards']:
         abort(403)
 
     p = Perf('thread_vox', enabled=app_conf.get('testing'))
 
-    post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_id)
+    post_2_quotelinks, thread_dict = await generate_thread(board, thread_id)
     p.check('queries')
 
     thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=logged_in)
@@ -42,7 +42,7 @@ async def vox_thread(board_shortname: str, thread_id: int, is_admin: bool, logge
     if vox_conf['engine'] == 'flite':
         ext = 'wav'
 
-    vox_filepath = get_vox_filepath(vox_conf['vox_root_path'], board_shortname, thread_id, ext)
+    vox_filepath = get_vox_filepath(vox_conf['vox_root_path'], board, thread_id, ext)
     if not os.path.isfile(vox_filepath):
 
         g = get_graph_from_thread(post_2_quotelinks, thread_dict['posts'])

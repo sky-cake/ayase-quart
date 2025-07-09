@@ -82,8 +82,8 @@ def get_post_num_order(g: Graph, mode: TranscriptMode) -> list[int]:
             return g.get_op_and_replies_to_op()
 
 
-def get_vox_filepath(vox_root_path: str, board_shortname: str, num: int, ext: str) -> str:
-    return safe_join(vox_root_path, board_shortname, f'{num}.{ext}')
+def get_vox_filepath(vox_root_path: str, board: str, num: int, ext: str) -> str:
+    return safe_join(vox_root_path, board, f'{num}.{ext}')
 
 
 def make_transcript(g: Graph, mode: TranscriptMode) -> str:
