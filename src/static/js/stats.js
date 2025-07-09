@@ -93,6 +93,40 @@ async function fetchBoardData(board) {
     return data;
 }
 
+function populateDatasets(board, data, allMonths, datasets) {
+    const monthMap = Object.fromEntries(data.map(item => [item.year_month, parseInt(item.post_count)]));
+    const fractionMap = Object.fromEntries(data.map(item => [item.year_month, parseFloat(item.fraction)]));
+
+    const postCounts = allMonths.map(month => monthMap[month] || 0);
+    const fractions = allMonths.map(month => fractionMap[month] !== undefined ? fractionMap[month] : null);
+
+    const board_color = getColor(board);
+
+    datasets.push({
+        label: `${board}`,
+        data: postCounts,
+        backgroundColor: board_color,
+        borderColor: board_color,
+        fill: false,
+        stepped: "middle",
+    });
+
+    datasets.push({
+        label: `% of ${board}`,
+        data: fractions,
+        type: 'scatter',
+        backgroundColor: board_color,
+        borderColor: board_color,
+        pointStyle: 'star',
+        radius: 5,
+        hoverRadius: 7,
+        yAxisID: 'y1',
+        spanGaps: true,
+        order: 2,
+        showLine: false,
+    });
+}
+
 async function updateChart() {
     const allMonthsSet = new Set();
     const boardDataArray = [];
@@ -104,40 +138,12 @@ async function updateChart() {
     }
 
     const allMonths = Array.from(allMonthsSet).sort();
-
     const datasets = [];
 
-    boardDataArray.forEach(({ board, data }) => {
-        const monthMap = Object.fromEntries(data.map(item => [item.year_month, parseInt(item.post_count)]));
-        const fractionMap = Object.fromEntries(data.map(item => [item.year_month, parseFloat(item.fraction)]));
-
-        const postCounts = allMonths.map(month => monthMap[month] || 0);
-        const fractions = allMonths.map(month => fractionMap[month] !== undefined ? fractionMap[month] : null);
-
-        datasets.push({
-            label: `${board}`,
-            data: postCounts,
-            backgroundColor: getColor(board),
-            borderColor: getColor(board),
-            fill: false,
-            stepped: "middle",
-        });
-
-        datasets.push({
-            label: `% of ${board}`,
-            data: fractions,
-            type: 'scatter',
-            backgroundColor: getColor(board),
-            borderColor: getColor(board),
-            pointStyle: 'star',
-            radius: 5,
-            hoverRadius: 7,
-            yAxisID: 'y1',
-            spanGaps: true,
-            order: 2,
-            showLine: false,
-        });
-    });
+    for (let i = 0; i < boardDataArray.length; i++) {
+        const { board, data } = boardDataArray[i];
+        populateDatasets(board, data, allMonths, datasets);
+    }
 
     chart.data.labels = allMonths;
     chart.data.datasets = datasets;
@@ -148,51 +154,64 @@ function showLoading(state) {
     document.getElementById('loading').style.display = state ? 'block' : 'none';
 }
 
-function initButtons() {
-    document.querySelectorAll('.board-toggle').forEach(button => {
-        button.addEventListener('click', async () => {
-            const board = button.dataset.board;
+function handleBoardToggleClick(event) {
+    const button = event.currentTarget;
+    const board = button.dataset.board;
 
-            if (activeBoards.has(board)) {
-                activeBoards.delete(board);
-                button.classList.add('form_btn');
-            } else {
-                if (activeBoards.size >= maxBoards) {
-                    alert(`You can only compare up to ${maxBoards} boards at a time.`);
-                    return;
-                }
-                activeBoards.add(board);
-                button.classList.remove('form_btn');
-            }
-
-            await updateChart();
-        });
-    });
-
-    function clear_all_buttons() {
-        activeBoards.clear();
-        document.querySelectorAll('.board-toggle').forEach(button => {
-            button.classList.add('form_btn');
-        });
+    if (activeBoards.has(board)) {
+        activeBoards.delete(board);
+        button.classList.add('form_btn');
+    } else {
+        if (activeBoards.size >= maxBoards) {
+            alert(`You can only compare up to ${maxBoards} boards at a time.`);
+            return;
+        }
+        activeBoards.add(board);
+        button.classList.remove('form_btn');
     }
 
-    document.getElementById('select-random').addEventListener('click', async () => {
-        clear_all_buttons();
-        const buttons = Array.from(document.querySelectorAll('.board-toggle'));
-        const shuffled = buttons.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 5);
-        for (const button of selected) {
-            const board = button.dataset.board;
-            activeBoards.add(board);
-            button.classList.remove('form_btn');
-        }
-        await updateChart();
-    });
+    updateChart();
+}
 
-    document.getElementById('clear-all').addEventListener('click', () => {
-        clear_all_buttons();
-        updateChart();
-    });
+function clearAllButtons() {
+    activeBoards.clear();
+    assignedBoards = [];
+    boardColorAssignments = {};
+    const buttons = doc_query_all('.board-toggle');
+    for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.add('form_btn');
+    }
+}
+
+async function handleSelectRandomClick() {
+    clearAllButtons();
+    const buttons = Array.from(doc_query_all('.board-toggle'));
+    const shuffled = buttons.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 5);
+
+    for (let i = 0; i < selected.length; i++) {
+        const button = selected[i];
+        const board = button.dataset.board;
+        activeBoards.add(board);
+        button.classList.remove('form_btn');
+    }
+
+    await updateChart();
+}
+
+function handleClearAllClick() {
+    clearAllButtons();
+    updateChart();
+}
+
+function initButtons() {
+    const buttons = doc_query_all('.board-toggle');
+    for (let i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener('click', handleBoardToggleClick);
+    }
+
+    document.getElementById('select-random').addEventListener('click', handleSelectRandomClick);
+    document.getElementById('clear-all').addEventListener('click', handleClearAllClick);
 }
 
 initChart();
