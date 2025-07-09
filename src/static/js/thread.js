@@ -42,7 +42,7 @@ function quotelink_mouseover(event) {
 
     quotelink_preview_hide();
 
-    if (target_post == null) {
+    if (target_post === null) {
         fetch(`/${board_shortname}/post/${num}`).then(response => {
             return response.ok ? response.json() : Promise.reject();
         }).then(data => {
