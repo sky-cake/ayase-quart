@@ -21,7 +21,7 @@
       if (op_thread_num) {
         op_thread_num = op_thread_num.getAttribute('data-num');
         document.querySelectorAll('blockquote').forEach((bq) => {
-          bq.innerHTML = bq.innerHTML.replace(/&gt;&gt;(\d+)/g, `<a href="/{{archiveposting_conf['board_name']}}/thread/${op_thread_num}#p$1" class="quotelink" data-board_shortname="{{archiveposting_conf['board_name']}}">&gt;&gt;$1</a>`);
+          bq.innerHTML = bq.innerHTML.replace(/&gt;&gt;(\d+)/g, `<a href="/{{archiveposting_conf['board_name']}}/thread/${op_thread_num}#p$1" class="quotelink" data-board="{{archiveposting_conf['board_name']}}">&gt;&gt;$1</a>`);
         });
 
         document.querySelectorAll('.quotelink').forEach((link) => {

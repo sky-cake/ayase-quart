@@ -71,7 +71,7 @@
 {% if title %}<h3>{{title}}</h3>{% endif %}
 {% if board and archiveposting_conf['enabled'] and board != archiveposting_conf['board_name'] %}
 [
-    <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
+    <a href="{{canonical_host}}/{{board}}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on {{canonical_name}}</a> /
     <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
     <a href="/{{ board }}/catalog">Catalog</a>
 ]

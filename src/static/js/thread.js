@@ -1,7 +1,7 @@
 // image hover display
 function media_mouseout(event) {
     if (event.target.tagName.toLowerCase() === 'img') {
-        removeClonedImages();
+        remove_cloned_image();
     }
 }
 
@@ -29,12 +29,12 @@ function setup_media_events() {
 	}
 }
 
-function quoteline_mouseover(event) {
+function quotelink_mouseover(event) {
     const quotelink = event.target;
     const backlink = quotelink.parentElement.parentElement.id;
 
     const num = quotelink.getAttribute("href").split("#p")[1];
-    const board_shortname = get_data_string(quotelink, 'board_shortname');
+    const board = get_data_string(quotelink, 'board');
     let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
 
     const id_post_num = "#p" + num;
@@ -42,8 +42,8 @@ function quoteline_mouseover(event) {
 
     quotelink_preview_hide();
 
-    if (target_post == null) {
-        fetch(`/${board_shortname}/post/${num}`).then(response => {
+    if (target_post === null) {
+        fetch(`/${board}/post/${num}`).then(response => {
             return response.ok ? response.json() : Promise.reject();
         }).then(data => {
             let previewContent = data && data.html_content ? data.html_content : get_quotelink_preview_default_string();
@@ -63,7 +63,7 @@ function quoteline_mouseover(event) {
 function setup_quotelink_events() {
 	const quotelinks = doc_query_all("a.quotelink");
 	for (const quotelink of quotelinks) {
-		quotelink.addEventListener("mouseover", quoteline_mouseover);
+		quotelink.addEventListener("mouseover", quotelink_mouseover);
 		quotelink.addEventListener("mouseleave", quotelink_preview_hide);
 	}
 }
@@ -76,7 +76,8 @@ function get_quotelink_preview_default_string() {
 }
 
 function quotelink_preview_hide() {
-    for (const qp of doc_query_all("#quote-preview")) {
+    const qp = document.getElementById('quote-preview');
+    if (qp) {
         qp.remove();
     }
 }
@@ -86,11 +87,11 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.id = "quote-preview";
 
     // highlight the recipient of the reply to help when there are multiple quotelinks
-    const board = get_data_string(quotelink, 'board_shortname');
+    const board = get_data_string(quotelink, 'board');
     const recipients = preview.querySelectorAll(`a.quotelink`);
     for (const recipient of recipients) {
         const recipient_post_num = recipient.getAttribute("href").split("#p")[1];
-        const recipient_board = get_data_string(recipient, 'board_shortname');
+        const recipient_board = get_data_string(recipient, 'board');
 
         if (recipient_post_num === backlink_num && recipient_board === board) {
             recipient.classList.add("hl_dark");
@@ -144,7 +145,7 @@ function setup_vox_events() {
 	const vox_button = document.createElement('button');
     vox_button.textContent = 'Load Thread Reader';
     const tools = document.getElementById('tools');
-    const board = get_data_string(tools, 'board_shortname')
+    const board = get_data_string(tools, 'board')
     const thread_num = get_data_string(tools, 'thread_num')
     tools.appendChild(vox_button);
 
