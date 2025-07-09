@@ -29,7 +29,7 @@ function setup_media_events() {
 	}
 }
 
-function quoteline_mouseover(event) {
+function quotelink_mouseover(event) {
     const quotelink = event.target;
     const backlink = quotelink.parentElement.parentElement.id;
 
@@ -63,7 +63,7 @@ function quoteline_mouseover(event) {
 function setup_quotelink_events() {
 	const quotelinks = doc_query_all("a.quotelink");
 	for (const quotelink of quotelinks) {
-		quotelink.addEventListener("mouseover", quoteline_mouseover);
+		quotelink.addEventListener("mouseover", quotelink_mouseover);
 		quotelink.addEventListener("mouseleave", quotelink_preview_hide);
 	}
 }
