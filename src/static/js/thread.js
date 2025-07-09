@@ -34,7 +34,7 @@ function quotelink_mouseover(event) {
     const backlink = quotelink.parentElement.parentElement.id;
 
     const num = quotelink.getAttribute("href").split("#p")[1];
-    const board_shortname = get_data_string(quotelink, 'board_shortname');
+    const board = get_data_string(quotelink, 'board');
     let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
 
     const id_post_num = "#p" + num;
@@ -43,7 +43,7 @@ function quotelink_mouseover(event) {
     quotelink_preview_hide();
 
     if (target_post === null) {
-        fetch(`/${board_shortname}/post/${num}`).then(response => {
+        fetch(`/${board}/post/${num}`).then(response => {
             return response.ok ? response.json() : Promise.reject();
         }).then(data => {
             let previewContent = data && data.html_content ? data.html_content : get_quotelink_preview_default_string();
@@ -87,11 +87,11 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.id = "quote-preview";
 
     // highlight the recipient of the reply to help when there are multiple quotelinks
-    const board = get_data_string(quotelink, 'board_shortname');
+    const board = get_data_string(quotelink, 'board');
     const recipients = preview.querySelectorAll(`a.quotelink`);
     for (const recipient of recipients) {
         const recipient_post_num = recipient.getAttribute("href").split("#p")[1];
-        const recipient_board = get_data_string(recipient, 'board_shortname');
+        const recipient_board = get_data_string(recipient, 'board');
 
         if (recipient_post_num === backlink_num && recipient_board === board) {
             recipient.classList.add("hl_dark");
@@ -145,7 +145,7 @@ function setup_vox_events() {
 	const vox_button = document.createElement('button');
     vox_button.textContent = 'Load Thread Reader';
     const tools = document.getElementById('tools');
-    const board = get_data_string(tools, 'board_shortname')
+    const board = get_data_string(tools, 'board')
     const thread_num = get_data_string(tools, 'thread_num')
     tools.appendChild(vox_button);
 

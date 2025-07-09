@@ -223,28 +223,28 @@ async def get_report_by_id(report_parent_id: int) -> Optional[dict]:
         return reports[0]
 
 
-async def get_report_by_board(board_shortname: str) -> Optional[list[dict]]:
-    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()};', params=(board_shortname,), p_id=DbPool.mod)):
+async def get_report_by_board(board: str) -> Optional[list[dict]]:
+    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()};', params=(board,), p_id=DbPool.mod)):
         return reports
 
 
-async def get_report_by_post_num(board_shortname: str, num: int) -> Optional[list[dict]]:
-    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()} and num={db_m.phg()};', params=(board_shortname, num,), p_id=DbPool.mod)):
+async def get_report_by_post_num(board: str, num: int) -> Optional[list[dict]]:
+    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()} and num={db_m.phg()};', params=(board, num,), p_id=DbPool.mod)):
         return reports
 
 
-async def get_report_parent_id(board_shortname: str, num: int) -> Optional[int]:
+async def get_report_parent_id(board: str, num: int) -> Optional[int]:
     report_parent_id = None
     ph = db_m.phg()
     sql = f'select report_parent_id from report_parent where board_shortname = {ph} and num = {ph};'
-    rows = await db_m.query_dict(sql, params=[board_shortname, num], p_id=DbPool.mod)
+    rows = await db_m.query_dict(sql, params=[board, num], p_id=DbPool.mod)
     if rows:
         report_parent_id = rows[0]['report_parent_id']
     return report_parent_id
 
 
 async def create_report(
-    board_shortname: str,
+    board: str,
     thread_num: int,
     num: int,
     op: int,
@@ -257,10 +257,10 @@ async def create_report(
     now = datetime.now()
     public_access = PublicAccess.hidden if mod_conf['hide_post_if_reported'] else PublicAccess.visible
 
-    report_parent_id = await get_report_parent_id(board_shortname, num)
+    report_parent_id = await get_report_parent_id(board, num)
 
     if not report_parent_id:
-        params_parent = [board_shortname, num, thread_num, op, mod_status, public_access, mod_notes, now]
+        params_parent = [board, num, thread_num, op, mod_status, public_access, mod_notes, now]
         sql = f"""
             insert into
             report_parent (board_shortname, num, thread_num, op, mod_status, public_access, mod_notes, last_updated_at)

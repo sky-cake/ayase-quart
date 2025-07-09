@@ -93,8 +93,8 @@ selector_columns_map = {
 }
 
 
-def get_full_media_path(root_path, board_shortname, qualifier, media_orig):
-    return safe_join(root_path, board_shortname, qualifier, media_orig[0:4], media_orig[4:6], media_orig)
+def get_full_media_path(root_path, board, qualifier, media_orig):
+    return safe_join(root_path, board, qualifier, media_orig[0:4], media_orig[4:6], media_orig)
 
 
 def post_has_file(post: dict) -> bool:
@@ -313,7 +313,7 @@ def get_sha256_params(form_data) -> list[str]:
     return []
 
 
-def get_tag_id_board_2_sql(tag_ids: list[int], safe_search: SafeSearch, board_shortnames: list[str], where_query: str, page: int=None, per_page: int=None) -> dict:
+def get_tag_id_board_2_sql(tag_ids: list[int], safe_search: SafeSearch, boards: list[str], where_query: str, page: int=None, per_page: int=None) -> dict:
     sql_offset = ''
     if page is not None and per_page is not None:
         offset = int(max(page - 1, 0) * per_page)
@@ -337,7 +337,7 @@ def get_tag_id_board_2_sql(tag_ids: list[int], safe_search: SafeSearch, board_sh
 
     pre = ' and' if where_query else ' where '
     board_2_sql = {}
-    for board_shortname in board_shortnames:
+    for board in boards:
         sql = f"""{pre} media_orig in (
         SELECT
             filename
@@ -346,7 +346,7 @@ def get_tag_id_board_2_sql(tag_ids: list[int], safe_search: SafeSearch, board_sh
             SELECT image_id
             FROM image JOIN image_tag USING(image_id)
             WHERE
-                board = '{board_shortname}'
+                board = '{board}'
                 {sql_tag_ids}
                 {sql_safe_search}
             GROUP BY image_tag.image_id
@@ -354,7 +354,7 @@ def get_tag_id_board_2_sql(tag_ids: list[int], safe_search: SafeSearch, board_sh
             ORDER BY image_tag.prob DESC {sql_limit} {sql_offset}
         ))
         """
-        board_2_sql[board_shortname] = sql
+        board_2_sql[board] = sql
     return board_2_sql
 
 
@@ -933,9 +933,9 @@ async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[
     return [(row[0], row[1]) for row in rows]
 
 
-async def is_post_op(board_shortname: str, num: int) -> bool:
-    local_db_q = get_local_db_q(board_shortname)
-    sql = f"""select num, op from `{board_shortname}` where num = {local_db_q.phg()}"""
+async def is_post_op(board: str, num: int) -> bool:
+    local_db_q = get_local_db_q(board)
+    sql = f"""select num, op from `{board}` where num = {local_db_q.phg()}"""
     rows = await local_db_q.query_tuple(sql, params=[num])
     if not rows:
         return False
@@ -943,18 +943,18 @@ async def is_post_op(board_shortname: str, num: int) -> bool:
 
 
 @alru_cache(ttl=60*60*24)
-async def _get_post_counts_per_month_by_board(board_shortname: str):
-    validate_board(board_shortname)
+async def _get_post_counts_per_month_by_board(board: str):
+    validate_board(board)
     rows = await db_q.query_dict(
         f"""
         select
-            '{board_shortname}' as board,
+            '{board}' as board,
             strftime('%Y-%m', datetime(timestamp, 'unixepoch')) AS year_month,
             min(num) as min_post_num,
             max(num) as max_post_num,
             count(*) as post_count,
             round(count(*) * 100.0 / (max(num) - min(num)), 1) as fraction
-        from `{board_shortname}`
+        from `{board}`
         group by 1, 2
         order by 1, 2
         ;"""
@@ -964,37 +964,37 @@ async def _get_post_counts_per_month_by_board(board_shortname: str):
     return rows
 
 
-async def get_post_counts_per_month_by_board(board_shortname: str) -> str:
+async def get_post_counts_per_month_by_board(board: str) -> str:
     """Returns json formatted string.
     """
     if stats_conf['redis']:
         r = get_redis(stats_conf['redis_db'])
 
-        key = f'post_counts_{board_shortname}'
+        key = f'post_counts_{board}'
         post_counts = await r.get(key)
         if post_counts:
             return post_counts # do not loads(), cache dumps()
 
-        post_counts = await _get_post_counts_per_month_by_board(board_shortname)
+        post_counts = await _get_post_counts_per_month_by_board(board)
         post_counts = json.dumps(post_counts)
         if post_counts:
             await r.set(key, post_counts)
         return post_counts
 
-    post_counts = await _get_post_counts_per_month_by_board(board_shortname)
+    post_counts = await _get_post_counts_per_month_by_board(board)
     return json.dumps(post_counts)
 
 
-async def get_latest_ops_as_catalog(board_shortnames):
+async def get_latest_ops_as_catalog(boards: list[str]):
     latest_ops = await asyncio.gather(*(
         db_q.query_dict(f"""
-            {get_selector(board_shortname)}
-            FROM `{board_shortname}`
+            {get_selector(board)}
+            FROM `{board}`
             WHERE op = 1
             ORDER BY num DESC
             LIMIT 5;
         """)
-        for board_shortname in board_shortnames
+        for board in boards
     ))
     return [{
         "page": 1,

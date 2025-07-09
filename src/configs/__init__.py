@@ -1,19 +1,23 @@
 import os
 
-from enums import DbType, PublicAccess
-from utils import make_src_path
+from enums import DbType
+from utils import (
+    make_src_path,
+    strip_slashes as sslash,
+)
 from .conf_loader import load_config_file
 from .conf_common import fuvii
 
+sslash_both = lambda x: sslash(x, both=True)
 
 conf = load_config_file()
 app_conf = conf.get('app', {})
-fuvii(app_conf, 'login_endpoint', lambda x: f"/{x.strip('/')}")
+fuvii(app_conf, 'login_endpoint', lambda x: f"/{sslash_both(x)}")
 
 site_conf = conf.get('site', {})
 
 archive_conf = conf.get('archive', {})
-fuvii(archive_conf, 'canonical_host', lambda x: x.strip('/'))
+fuvii(archive_conf, 'canonical_host', sslash)
 
 db_conf = conf.get('db', {})
 fuvii(db_conf, 'db_type', lambda x: DbType[x])
@@ -24,9 +28,6 @@ vanilla_search_conf = conf.get('vanilla_search', {})
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
 
-if not media_conf.get('media_root_path') and media_conf['serve_outside_static']:
-    raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_conf.get('media_root_path'))
-
 def split_csv(csv_vals: str=None):
     if not csv_vals:
         return []
@@ -34,16 +35,25 @@ def split_csv(csv_vals: str=None):
 
 fuvii(media_conf, 'boards_with_image', split_csv)
 fuvii(media_conf, 'boards_with_thumb', split_csv)
+fuvii(media_conf, 'image_uri', lambda x: sslash(x) if x else '')
+fuvii(media_conf, 'thumb_uri', lambda x: sslash(x) if x else '')
 
 if media_conf['serve_outside_static']:
-    if not os.path.isdir(media_conf.get('media_root_path')):
-        raise ValueError(media_conf.get('media_root_path'))
+    media_root = media_conf.get('media_root_path')
+    if not media_root:
+        raise ValueError(
+            '`media_root_path` must be set so we know where to serve media from.',
+            media_root,
+        )
+    if not os.path.isdir(media_root):
+        raise ValueError(media_root)
 
-    if not all(e for e in media_conf.get('valid_extensions')):
-        raise ValueError(media_conf.get('valid_extensions'))
-    media_conf['valid_extensions'] = tuple(media_conf.get('valid_extensions'))
+    valid_exts = media_conf.get('valid_extensions')
+    if not all(e for e in valid_exts):
+        raise ValueError(valid_exts)
+    fuvii(media_conf, 'valid_extensions', tuple)
 
-    media_conf['endpoint'] = media_conf['endpoint'].strip().strip('/')
+    fuvii(media_conf, 'endpoint', sslash_both)
     if not media_conf['endpoint']:
         raise ValueError('The set media endpoint is falsey or root (/). Set it to something else.')
 
@@ -65,27 +75,30 @@ if mod_conf['enabled'] and db_mod_conf['database']:
         )
 
 
+def set_archiveposting_board(board: str|None):
+    if not board or ' ' in board or not board.replace('_', '').isalnum():
+        raise ValueError(f'Invalid archiveposting board: {board}')
+    return board
+
 archiveposting_conf = conf.get('archiveposting', {})
 db_archiveposting_conf = archiveposting_conf
-if archiveposting_conf['enabled'] and (' ' in archiveposting_conf['board_name'] or not archiveposting_conf['board_name'].replace('_', '').isalnum()):
-    raise ValueError()
+if archiveposting_conf['enabled']:
+    fuvii(archiveposting_conf, 'board_name', set_archiveposting_board)
 
 
 stats_conf = conf.get('stats', {'enabled': False})
 
+def set_vox_transcription_mode(mode: str):
+    from vox import TranscriptMode
+    for tm in TranscriptMode:
+        if tm.name == mode:
+            return tm
+    return TranscriptMode.op_and_replies_to_op
 
 vox_conf = conf.get('vox', {'enabled': False})
 if vox_conf['enabled']:
-    from vox import VoiceFlite, TranscriptMode
-
-    if vox_conf['reader_mode'] == 'dfs':
-        vox_conf['reader_mode'] = TranscriptMode.dfs
-    elif vox_conf['reader_mode'] == 'bfs':
-        vox_conf['reader_mode'] = TranscriptMode.bfs
-    elif vox_conf['reader_mode'] == 'op':
-        vox_conf['reader_mode'] = TranscriptMode.op
-    else:
-        vox_conf['reader_mode'] = TranscriptMode.op_and_replies_to_op
+    from vox import VoiceFlite
+    fuvii(vox_conf, 'reader_mode', set_vox_transcription_mode)
 
     if vox_conf['engine'] == 'flite':
         assert os.path.isfile(vox_conf['path_to_flite_binary'])
@@ -103,12 +116,16 @@ db_tag_conf = tag_conf # only supports sqlite atm
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)
-if moderation_db := db_mod_conf.get('database'):
-    db_mod_conf['database'] = moderation_db
-if ssl_key := app_conf.get('ssl_key'):
-    app_conf['ssl_key'] = make_src_path(ssl_key)
-if ssl_cert := app_conf.get('ssl_cert'):
-    app_conf['ssl_cert'] = make_src_path(ssl_cert)
+# if moderation_db := db_mod_conf.get('database'):
+#     db_mod_conf['database'] = moderation_db
+fuvii(db_mod_conf, 'database') # ^ not sure what the logic of this one is
+
+def make_src_path_if_exists(x):
+    if not x:
+        return x
+    return make_src_path(x)
+fuvii(app_conf, 'ssl_key', make_src_path_if_exists)
+fuvii(app_conf, 'ssl_cert', make_src_path_if_exists)
 
 class QuartConfig():
     TESTING = app_conf.get('testing', False)
@@ -121,3 +138,4 @@ class QuartConfig():
     SECRET_KEY = secret_key
 
 SITE_NAME = site_conf.get('name', 'Ayase Quart')
+TESTING = app_conf.get('testing', False)

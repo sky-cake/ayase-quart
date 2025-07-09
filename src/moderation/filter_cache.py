@@ -31,7 +31,7 @@ class BaseFilterCache(ABC):
     async def get_deleted_numops_per_board_iter(self):
         """Returns a tuple[str, tuple[int, int]]
 
-        `(board_shortname, [(num, op), ...])`
+        `(board, [(num, op), ...])`
         """
         if not (self.hide_4chan_deleted_posts and board_shortnames):
             return
@@ -42,7 +42,7 @@ class BaseFilterCache(ABC):
     async def get_numops_by_board_and_regex_iter(self):
         """Returns a tuple[str, tuple[int, int]]
 
-        `(board_shortname, [(num, op), ...])`
+        `(board, [(num, op), ...])`
         """
         if not (self.regex_filter and board_shortnames):
             return
@@ -70,20 +70,20 @@ class BaseFilterCache(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def is_post_removed(self, board_shortname: str, num: int) -> bool:
+    async def is_post_removed(self, board: str, num: int) -> bool:
         """Is the post removed?"""
         raise NotImplementedError()
 
     @abstractmethod
-    async def get_op_thread_removed_count(self, board_shortname: str) -> int:
+    async def get_op_thread_removed_count(self, board: str) -> int:
         raise NotImplementedError()
 
     @abstractmethod
-    async def insert_post(self, board_shortname: str, num: int, op: int) -> None:
+    async def insert_post(self, board: str, num: int, op: int) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    async def delete_post(self, board_shortname: str, num: int, op: int) -> None:
+    async def delete_post(self, board: str, num: int, op: int) -> None:
         raise NotImplementedError()
 
     async def get_board_num_pairs(self, posts: list) -> set[tuple[str, int]]:
@@ -183,11 +183,11 @@ class FilterCacheSqlite(BaseFilterCache):
         await pool.commit()
 
 
-    async def get_op_thread_removed_count(self, board_shortname: str) -> int:
+    async def get_op_thread_removed_count(self, board: str) -> int:
         if not self.enabled:
             return 0
 
-        rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.phg()} and op = 1', params=[board_shortname])
+        rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.phg()} and op = 1', params=[board])
         return rows[0][0]
 
 
@@ -208,29 +208,29 @@ class FilterCacheSqlite(BaseFilterCache):
         return {(row[0], row[1]) for row in rows}
 
 
-    async def is_post_removed(self, board_shortname: str, num: int) -> bool:
+    async def is_post_removed(self, board: str, num: int) -> bool:
         ph = db_m.phg()
         sql = f"""select num from board_nums_cache where board_shortname = {ph} and num = {ph}"""
-        row = await db_m.query_tuple(sql, params=[board_shortname, num])
+        row = await db_m.query_tuple(sql, params=[board, num])
         if not row:
             return False
         return True
 
 
-    async def insert_post(self, board_shortname: str, num: int, op: int):
+    async def insert_post(self, board: str, num: int, op: int):
         ph = db_m.phg()
         await db_m.query_dict(
             f"insert or ignore into board_nums_cache (board_shortname, num, op) values ({ph},{ph},{ph})",
-            params=[board_shortname, num, op],
+            params=[board, num, op],
             commit=True,
         )
 
 
-    async def delete_post(self, board_shortname: str, num: int, op: int):
+    async def delete_post(self, board: str, num: int, op: int):
         ph = db_m.phg()
         await db_m.query_dict(
             f"delete from board_nums_cache where board_shortname = {ph} and num = {ph} and op = {ph}",
-            params=[board_shortname, num, op],
+            params=[board, num, op],
             commit=True,
         )
 
