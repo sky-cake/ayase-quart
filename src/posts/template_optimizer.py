@@ -151,7 +151,7 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
     if not quotelinks:
         return ''
     quotelink_gen = (
-        f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board_shortname="{board}">&gt;&gt;{quotelink}</a></span>'
+        f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>'
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
@@ -173,11 +173,11 @@ def board_has_thumb(board: str) -> bool:
 
 @cache
 def get_image_baseuri(board: str) -> str:
-    return IMAGE_URI.format(board_shortname=board)
+    return IMAGE_URI.format(board=board)
 
 @cache
 def get_thumb_baseuri(board: str) -> str:
-    return THUMB_URI.format(board_shortname=board)
+    return THUMB_URI.format(board=board)
 
 
 @cache
@@ -471,7 +471,7 @@ def get_quotelink_t(post: dict):
     if not (quotelinks := post['quotelinks']):
         return ''
     board = post['board_shortname']
-    quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{ quotelink }" class="quotelink" data-board_shortname="{board}">&gt;&gt;{ quotelink }</a></span>' for quotelink in quotelinks)
+    quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>' for quotelink in quotelinks)
     return f'<div id="bl_{post["num"]}" class="backlink">Replies: {quotelinks}</div>'
 
 

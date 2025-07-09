@@ -55,11 +55,11 @@ def _html_comment_vichan(comment: str):
     has_angle_r = '<a' in comment
     if has_angle_r:
         # before: <a onclick="highlightReply('14202', event);" href="/sec/res/14192.html#14202">&gt;&gt;14202</a>
-        # after: <a class="quotelink" data-board_shortname="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
+        # after: <a class="quotelink" data-board="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
 
         comment = vichan_comment_re.sub('', comment)
         
-        replacement = r'\1 class="quotelink" data-board_shortname="\3"\2\3/thread/\5\7p\8\9'
+        replacement = r'\1 class="quotelink" data-board="\3"\2\3/thread/\5\7p\8\9'
         comment = vichan_ql_pat_re.sub(replacement, comment)
 
 
