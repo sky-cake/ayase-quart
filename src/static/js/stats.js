@@ -1,7 +1,7 @@
 const maxBoards = 5;
-let activeBoards = new Set();
-let boardDataCache = {};
-let boardColors = {};
+const activeBoards = new Set();
+const boardDataCache = new Map();
+const boardColorAssignments = new Map();
 let chart;
 
 const palette = [
@@ -17,17 +17,12 @@ const palette = [
     "#e377c2"  // strong pink
 ];
 
-
-let boardColorAssignments = {};
-let assignedBoards = [];
-
 function getColor(board) {
-    if (!boardColorAssignments[board]) {
-        const nextColorIndex = assignedBoards.length % palette.length;
-        boardColorAssignments[board] = palette[nextColorIndex];
-        assignedBoards.push(board);
+    if (!boardColorAssignments.has(board)) {
+        const nextColorIndex = boardColorAssignments.size % palette.length;
+        boardColorAssignments.set(board, palette[nextColorIndex]);
     }
-    return boardColorAssignments[board];
+    return boardColorAssignments.get(board);
 }
 
 function initChart() {
@@ -47,10 +42,7 @@ function initChart() {
                     labels: {
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        filter: function (item, chart) {
-                            const label = item.text || '';
-                            return !label.startsWith('%');
-                        }
+                        filter: item => !item.text.startsWith('%')
                     }
                 },
                 tooltip: {
@@ -59,8 +51,8 @@ function initChart() {
                 },
                 title: {
                     display: true,
-                    text: (ctx) => 'Archive Posts per Month',
-                },
+                    text: () => 'Archive Posts per Month'
+                }
             },
             responsive: true,
             scales: {
@@ -82,48 +74,59 @@ function initChart() {
 }
 
 async function fetchBoardData(board) {
-    if (boardDataCache[board]) {
-        return boardDataCache[board];
+    if (boardDataCache.has(board)) {
+        return boardDataCache.get(board);
     }
     showLoading(true);
     const response = await fetch(`/stats/${board}`);
     const data = await response.json();
-    boardDataCache[board] = data;
+    boardDataCache.set(board, data);
     showLoading(false);
     return data;
 }
 
 function populateDatasets(board, data, allMonths, datasets) {
-    const monthMap = Object.fromEntries(data.map(item => [item.year_month, parseInt(item.post_count)]));
-    const fractionMap = Object.fromEntries(data.map(item => [item.year_month, parseFloat(item.fraction)]));
+    const monthMap = new Map();
+    for (const item of data) {
+        monthMap.set(item.year_month, {
+            postCount: parseInt(item.post_count),
+            fraction: parseFloat(item.fraction)
+        });
+    }
 
-    const postCounts = allMonths.map(month => monthMap[month] || 0);
-    const fractions = allMonths.map(month => fractionMap[month] !== undefined ? fractionMap[month] : null);
+    const postCounts = [];
+    const fractions = [];
 
-    const board_color = getColor(board);
+    for (const month of allMonths) {
+        const entry = monthMap.get(month);
+        postCounts.push(entry ? entry.postCount : 0);
+        fractions.push(entry ? entry.fraction : null);
+    }
+
+    const color = getColor(board);
 
     datasets.push({
         label: `${board}`,
         data: postCounts,
-        backgroundColor: board_color,
-        borderColor: board_color,
+        backgroundColor: color,
+        borderColor: color,
         fill: false,
-        stepped: "middle",
+        stepped: "middle"
     });
 
     datasets.push({
         label: `% of ${board}`,
         data: fractions,
         type: 'scatter',
-        backgroundColor: board_color,
-        borderColor: board_color,
+        backgroundColor: color,
+        borderColor: color,
         pointStyle: 'star',
         radius: 5,
         hoverRadius: 7,
         yAxisID: 'y1',
         spanGaps: true,
         order: 2,
-        showLine: false,
+        showLine: false
     });
 }
 
@@ -133,15 +136,16 @@ async function updateChart() {
 
     for (const board of activeBoards) {
         const data = await fetchBoardData(board);
-        data.forEach(item => allMonthsSet.add(item.year_month));
+        for (const item of data) {
+            allMonthsSet.add(item.year_month);
+        }
         boardDataArray.push({ board, data });
     }
 
     const allMonths = Array.from(allMonthsSet).sort();
     const datasets = [];
 
-    for (let i = 0; i < boardDataArray.length; i++) {
-        const { board, data } = boardDataArray[i];
+    for (const { board, data } of boardDataArray) {
         populateDatasets(board, data, allMonths, datasets);
     }
 
@@ -175,22 +179,20 @@ function handleBoardToggleClick(event) {
 
 function clearAllButtons() {
     activeBoards.clear();
-    assignedBoards = [];
-    boardColorAssignments = {};
-    const buttons = doc_query_all('.board-toggle');
-    for (let i = 0; i < buttons.length; i++) {
-        buttons[i].classList.add('form_btn');
+    boardColorAssignments.clear();
+
+    for (const button of doc_query_all('.board-toggle')) {
+        button.classList.add('form_btn');
     }
 }
 
 async function handleSelectRandomClick() {
     clearAllButtons();
     const buttons = Array.from(doc_query_all('.board-toggle'));
-    const shuffled = buttons.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 5);
+    const shuffled = [...buttons].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, maxBoards);
 
-    for (let i = 0; i < selected.length; i++) {
-        const button = selected[i];
+    for (const button of selected) {
         const board = button.dataset.board;
         activeBoards.add(board);
         button.classList.remove('form_btn');
@@ -206,8 +208,8 @@ function handleClearAllClick() {
 
 function initButtons() {
     const buttons = doc_query_all('.board-toggle');
-    for (let i = 0; i < buttons.length; i++) {
-        buttons[i].addEventListener('click', handleBoardToggleClick);
+    for (const button of buttons) {
+        button.addEventListener('click', handleBoardToggleClick);
     }
 
     document.getElementById('select-random').addEventListener('click', handleSelectRandomClick);
