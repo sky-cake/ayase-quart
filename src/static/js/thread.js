@@ -76,7 +76,8 @@ function get_quotelink_preview_default_string() {
 }
 
 function quotelink_preview_hide() {
-    for (const qp of doc_query_all("#quote-preview")) {
+    const qp = document.getElementById('quote-preview');
+    if (qp) {
         qp.remove();
     }
 }
