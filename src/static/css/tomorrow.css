@@ -215,25 +215,6 @@ hr#op,
     font-size: 12px
 }
 
-.pu-img {
-    vertical-align: middle;
-    margin-top: -3px;
-    margin-right: 3px;
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background: url(//s.4cdn.org/image/minileaf.gif)
-}
-
-.n-pu {
-    vertical-align: middle;
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    margin-top: -2px;
-    background: url(//s.4cdn.org/image/minileaf.gif)
-}
-
 .jla-it {
     height: 420px;
     width: 680px

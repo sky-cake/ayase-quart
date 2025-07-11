@@ -827,8 +827,8 @@ img.result {
 }
 
 #welcome {
-    opacity: 75%;
-    max-height: 300px;
+    opacity: 80%;
+    height: 300px;
     border-radius: 4px;
 }
 
