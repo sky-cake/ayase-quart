@@ -1,9 +1,10 @@
 import os
 import re
-from quart import Blueprint, abort, send_file
+from quart import Blueprint, abort
 from werkzeug.security import safe_join
 
 from configs import media_conf
+from utils.web_helpers import send_file_no_headers
 
 bp = Blueprint("bp_app_media", __name__)
 
@@ -39,4 +40,4 @@ if media_conf.get('endpoint') and media_conf['serve_outside_static']:
         if not os.path.isfile(file_path):
             abort(404)
 
-        return await send_file(file_path, cache_timeout=None)
+        return await send_file_no_headers(file_path)

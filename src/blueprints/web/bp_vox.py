@@ -1,4 +1,4 @@
-from quart import Blueprint, abort, send_file
+from quart import Blueprint, abort
 import os
 from quart_rate_limiter import rate_limit
 from datetime import timedelta
@@ -11,7 +11,7 @@ from threads import get_graph_from_thread
 from utils import Perf
 from utils.validation import validate_board, validate_threads
 from vox import VoxFlite, make_transcript, get_vox_filepath, VoxKokoro
-
+from utils.web_helpers import send_file_no_headers
 
 bp = Blueprint("bp_web_vox", __name__)
 
@@ -71,4 +71,4 @@ async def vox_thread(board: str, thread_id: int, is_admin: bool, logged_in: bool
             abort(404)
 
     print(p)
-    return await send_file(vox_filepath, cache_timeout=None)
+    return await send_file_no_headers(vox_filepath, cache_timeout=None)
