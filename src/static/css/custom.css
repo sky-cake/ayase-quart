@@ -140,6 +140,8 @@ span.subject {
 
 .btnlink {
     text-decoration: underline;
+    font-size: small;
+    margin:0 2px;
 }
 
 .btnlink:hover,.click:hover {
@@ -447,7 +449,7 @@ div.form-check {
     background-color: #397070;
 }
 
-.hl_magenta {
+.hl_magenta,.hl_magenta:hover {
     background-color: #70396c;
 }
 
