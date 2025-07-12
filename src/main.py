@@ -1,7 +1,7 @@
 import os
 import traceback
 
-from quart import Quart, jsonify, current_app
+from quart import jsonify, current_app
 from werkzeug.exceptions import HTTPException
 from quart_schema import RequestSchemaValidationError
 from hypercorn.middleware import ProxyFixMiddleware
@@ -17,6 +17,7 @@ from moderation import fc
 from render import render_controller
 from templates import render_constants, template_error_message
 from archiveposting import init_archiveposting
+from utils.web_helpers import Quart2
 
 
 async def print_exception(e: Exception):
@@ -55,7 +56,7 @@ def create_app():
     file_dir = os.path.dirname(__file__)
     os.chdir(file_dir)
 
-    app = Quart(__name__)
+    app = Quart2(__name__)
 
     app.config.from_object(QuartConfig)
     app.config['MATH_CAPTCHA_FONT'] = os.path.join(file_dir, 'fonts/tly.ttf')
