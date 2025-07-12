@@ -12,8 +12,8 @@
 {% endif %}
 	<link href="/static/css/custom.css" rel="stylesheet" type="text/css">
 {% block scripts %}
-	<script type="text/javascript" src="/static/js/utils.js" defer></script>
-	<script type="text/javascript" src="/static/js/index.js" defer></script>
+	<script type="text/javascript" src="/static/js/utils.js" defer crossorigin="anonymous" integrity="sha384-q6EPvnPOXUzqeDJyxLD+6z4HJQQlXJY+jpIfSB9axDMfG1Kb6+DsT0JU3GYj/UyC"></script>
+	<script type="text/javascript" src="/static/js/index.js" defer crossorigin="anonymous" integrity="sha384-0UIqFhwUz3FfvZ5E0fvMu1QXW66XpFHp6xETe7PERJiO7NFPKdi4CFDFx7RrjI1M"></script>
 {%- endblock scripts %}
 </head>
 <body>
@@ -26,7 +26,7 @@
 
         {% if report_modal_t %}
             {{ report_modal_t|safe }}
-            <script type="text/javascript" src="/static/js/reports.js" defer></script>
+            <script type="text/javascript" src="/static/js/reports.js" defer crossorigin="anonymous" integrity="sha384-fN8NwFrvL7x+5OZnnwasNbfp53N2WUAp77bJofxoIdBgVGMV+V0zno8yAtoAg8PF"></script>
         {% endif %}
     </div>
     <span id="bottom_hidden"></span>

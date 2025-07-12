@@ -3,8 +3,8 @@
 
 {% block scripts -%}
 	{{ super() }}
-	<script type="text/javascript" src="/static/js/thread.js" defer></script>
-	<script type="text/javascript" src="/static/js/search.js" defer></script>
+	<script type="text/javascript" src="/static/js/thread.js" defer crossorigin="anonymous" integrity="sha384-502THMPLn9HZtxpPCTp5TA4ZOZz6tfX5FUEHHYgmssq+UyH3ynsFFIo/k8aohy/f"></script>
+	<script type="text/javascript" src="/static/js/search.js" defer crossorigin="anonymous" integrity="sha384-lr9l7FW61N769vaFTqH9iI1UeCHtoBjWQUf3WdBLKQalLRmgzLfwtSI4B6jEvmfo"></script>
 {% endblock %}
 
 {% block body %}
@@ -137,7 +137,7 @@
           <div id="selected_character_tags"></div>
 
         </div>
-        <script type="text/javascript" src="/static/js/tagging.js" defer></script>
+        <script type="text/javascript" src="/static/js/tagging.js" defer crossorigin="anonymous" integrity="sha384-yq2CNgBcWm1cRFWvTW0G3t4p+mGJdOQCH63Jn1sUgRBQ9Er3n9SH7gyjB0wW2Gik"></script>
         {% endif %}
 
         {% if tagging_file_search_enabled %}

@@ -226,6 +226,8 @@ Options:
 
 ## Contributing
 
+### Formatting
+
 Do **not** sort imports automatically. Tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
 
 Lint checking can be performed with,
@@ -233,6 +235,10 @@ Lint checking can be performed with,
 `python -m pip install ruff`
 
 `ruff check src/ --ignore F401`
+
+### Other
+
+JS `<script>` integrity checksums are created with `openssl dgst -sha384 -binary src/static/js/tagging.js | openssl base64`.
 
 
 ## Production
