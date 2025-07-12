@@ -255,7 +255,7 @@ create index if not exists `%%BOARD%%_threads_time_last_modified_index` on `%%BO
 create index if not exists `%%BOARD%%_threads_sticky_index` on `%%BOARD%%_threads` (`sticky`);
 create index if not exists `%%BOARD%%_threads_locked_index` on `%%BOARD%%_threads` (`locked`);
 
-create unique index if not exists %%BOARD%%_images_media_hash_index on `%%BOARD%%_images` (media_id);
+create unique index if not exists %%BOARD%%_images_media_hash_index on `%%BOARD%%_images` (media_hash);
 create index if not exists %%BOARD%%_images_total_index on `%%BOARD%%_images` (`total`);
 create index if not exists %%BOARD%%_images_banned_index on `%%BOARD%%_images` (`banned`);
 
