@@ -3,9 +3,9 @@ import os
 from functools import cache
 from tomllib import load
 
-from configs import app_conf, db_conf, media_conf, archiveposting_conf
-from utils import make_src_path
+from configs import app_conf, archiveposting_conf, db_conf, media_conf
 from db import get_db_tables
+from utils import make_src_path
 
 BOARDS_FILE = make_src_path('boards.toml')
 DEFAULT_BOARDS_FILE = make_src_path('boards.tpl.toml')

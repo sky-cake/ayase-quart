@@ -1,8 +1,8 @@
-import re
 import html
-from posts.quotelinks import html_quotelinks
-from configs import archive_conf
+import re
 
+from configs import archive_conf
+from posts.quotelinks import html_quotelinks
 
 IS_VICHAN_ARCHIVE = archive_conf['type'] == 'vichan'
 # COMMENTS_PREESCAPED = archive_conf['comments_preescaped'] # not used atm

@@ -1,25 +1,31 @@
-from paginate import Pagination
-from quart import Blueprint, jsonify, abort, current_app, Response
+from random import randint
+
+from quart import Blueprint, Response, abort, current_app, jsonify
 
 from asagi_converter import (
     generate_catalog,
     generate_index,
     generate_post,
     generate_thread,
-    get_op_thread_count,
-    get_counts_from_posts
+    get_counts_from_posts,
+    get_op_thread_count
 )
 from boards import get_title
 from configs import app_conf, vox_conf
 from moderation import fc
+from moderation.auth import (
+    load_web_usr_data,
+    web_usr_is_admin,
+    web_usr_logged_in
+)
+from paginate import Pagination
 from posts.template_optimizer import (
-    render_catalog_card,
-    render_wrapped_post_t,
-    wrap_post_t,
     get_posts_t,
     get_posts_t_thread,
+    render_catalog_card,
+    render_wrapped_post_t,
+    wrap_post_t
 )
-from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
 from render import render_controller
 from templates import (
     template_board_index,
@@ -30,7 +36,6 @@ from templates import (
 from threads import render_thread_stats
 from utils import Perf
 from utils.validation import validate_board, validate_threads
-from random import randint
 
 bp = Blueprint("bp_web_app", __name__)
 

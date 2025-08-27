@@ -1,12 +1,12 @@
-from typing import Iterable
-from werkzeug.local import LocalProxy
 from functools import wraps
+from typing import Iterable
 
 from quart import current_app, request
 from quart_auth import QuartAuth, Unauthorized
-from moderation.user import User, Permissions
+from werkzeug.local import LocalProxy
 
 from configs import mod_conf
+from moderation.user import Permissions, User
 
 # quart_auth notes
 

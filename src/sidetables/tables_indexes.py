@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
-from enums import DbType
 from configs import db_conf
 from db import db_q
+from enums import DbType
+
 from . import SideTableCmd as Cmd
 
 db_type: DbType = db_conf['db_type']

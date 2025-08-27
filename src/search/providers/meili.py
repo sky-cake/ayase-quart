@@ -1,10 +1,12 @@
 from orjson import dumps, loads
 
-# from search.highlighting import mark_post, mark_pre
+from configs import index_search_conf
 
 from . import POST_PK, IndexSearchQuery, search_index_fields
 from .baseprovider import INDEXES, BaseSearch
-from configs import index_search_conf
+
+# from search.highlighting import mark_post, mark_pre
+
 
 pk = POST_PK
 

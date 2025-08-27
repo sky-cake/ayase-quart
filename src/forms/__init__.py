@@ -1,4 +1,8 @@
+import re
+from collections import Counter
+from datetime import datetime
 from enum import Enum
+
 from quart import flash, session
 from quart_wtf import QuartForm
 from werkzeug.exceptions import BadRequest
@@ -15,25 +19,22 @@ from wtforms.fields import (
     SelectMultipleField,
     StringField,
     SubmitField,
-    TextAreaField,
+    TextAreaField
 )
 from wtforms.validators import (
     DataRequired,
     Length,
     NumberRange,
     Optional,
-    ValidationError,
+    ValidationError
 )
-from datetime import datetime
+
 from boards import board_shortnames
+from configs import archiveposting_conf, index_search_conf, vanilla_search_conf
 from enums import SubmitterCategory
 from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
-from configs import index_search_conf, vanilla_search_conf, archiveposting_conf
 from utils.integers import clamp_positive_int
-import re
-from collections import Counter
-
 
 LENGTH_MD5_HASH = 32
 

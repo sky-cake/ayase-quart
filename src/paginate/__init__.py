@@ -41,8 +41,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from quart import request, url_for
 from markupsafe import Markup
+from quart import request, url_for
 
 PREV_PAGES = """<li class="page-item">
 <a class="page-link" href="{0}" aria-label="Previous"{2}>

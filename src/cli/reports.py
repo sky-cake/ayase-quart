@@ -1,25 +1,27 @@
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import click
-from typing import Optional
-from functools import wraps
-from datetime import datetime
 import asyncio
+from datetime import datetime
+from functools import wraps
+from typing import Optional
+
+import click
 
 from boards import board_shortnames
-from enums import ModStatus, PublicAccess, ReportAction, SubmitterCategory
-from moderation.report import (
-    reports_action_routine,
-    edit_report_if_exists,
-    delete_report_if_exists,
-    get_reports,
-    get_report_count
-)
-from cli.utils import print_list_of_dict, print_result, MockAdmin
+from cli.utils import MockAdmin, print_list_of_dict, print_result
 from configs import app_conf
 from db import close_all_databases
+from enums import ModStatus, PublicAccess, ReportAction, SubmitterCategory
+from moderation.report import (
+    delete_report_if_exists,
+    edit_report_if_exists,
+    get_report_count,
+    get_reports,
+    reports_action_routine
+)
 
 
 @click.group(name='report')

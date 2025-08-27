@@ -2,10 +2,10 @@ from typing import Any
 
 from orjson import dumps, loads
 
-from . import POST_PK, SearchIndexField, IndexSearchQuery, search_index_fields
-from .baseprovider import BaseSearch
-
 from configs import index_search_conf
+
+from . import POST_PK, IndexSearchQuery, SearchIndexField, search_index_fields
+from .baseprovider import BaseSearch
 
 pk = POST_PK
 

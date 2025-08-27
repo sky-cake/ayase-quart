@@ -1,9 +1,9 @@
 from configs import mod_conf
 from db import db_m
 from enums import DbPool
+from moderation.filter_cache import BaseFilterCache, get_filter_cache
 from moderation.user import Permissions, create_user_if_not_exists
 from utils import make_src_path, read_file
-from moderation.filter_cache import get_filter_cache, BaseFilterCache
 
 
 async def init_moderation():

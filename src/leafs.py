@@ -4,8 +4,7 @@ from werkzeug.security import safe_join
 
 from asagi_converter import generate_post
 from configs import media_conf, mod_conf
-from posts.template_optimizer import wrap_post_t
-from posts.template_optimizer import render_wrapped_post_t
+from posts.template_optimizer import render_wrapped_post_t, wrap_post_t
 
 
 async def generate_post_html(board: str, num: int, db_X=None) -> str:

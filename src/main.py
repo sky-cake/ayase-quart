@@ -1,27 +1,21 @@
 import os
 import traceback
 
-from quart import jsonify, current_app
-from werkzeug.exceptions import HTTPException
-from quart_schema import RequestSchemaValidationError
 from hypercorn.middleware import ProxyFixMiddleware
+from quart import current_app, jsonify
 from quart_rate_limiter import RateLimiter
+from quart_schema import RequestSchemaValidationError
+from werkzeug.exceptions import HTTPException
 
-from blueprints import blueprints # importing timm and torch down the import hole makes this slow
-from configs import QuartConfig, app_conf, mod_conf, archiveposting_conf
+from archiveposting import init_archiveposting
+from blueprints import \
+    blueprints  # importing timm and torch down the import hole makes this slow
+from configs import QuartConfig, app_conf, archiveposting_conf, mod_conf
 from db import db_q
 from db.redis import close_redis
-from moderation import init_moderation
-from moderation import fc
-from blueprints import blueprints
-from configs import QuartConfig, app_conf, mod_conf, archiveposting_conf
-from db import db_q
-from db.redis import close_redis
-from moderation import init_moderation
-from moderation.filter_cache import fc
+from moderation import fc, init_moderation
 from render import render_controller
 from templates import render_constants, template_error_message
-from archiveposting import init_archiveposting
 from utils.web_helpers import Quart2
 
 
@@ -86,8 +80,9 @@ def create_app():
     app.after_serving(close_dbs)
 
     if mod_conf['enabled']:
-        from moderation.auth import auth_api, auth_web
         from quart_schema import QuartSchema
+
+        from moderation.auth import auth_api, auth_web
         auth_api.init_app(app)
         auth_web.init_app(app)
         QuartSchema(app)

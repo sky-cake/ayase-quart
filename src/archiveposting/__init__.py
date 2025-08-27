@@ -1,6 +1,5 @@
 from configs import archiveposting_conf
 from db import db_a
-
 from sidetables.tables_indexes import create_table_sqlite
 
 

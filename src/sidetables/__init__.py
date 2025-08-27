@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 class SideTableCmd(StrEnum):
     table_create = 'createtable'
     table_drop = 'droptable'

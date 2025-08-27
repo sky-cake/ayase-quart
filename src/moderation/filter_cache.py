@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 
 from aiosqlite import Connection
@@ -10,7 +11,6 @@ from boards import board_shortnames
 from db import db_m
 from enums import DbPool
 from utils import make_src_path, read_file
-import re
 
 
 class BaseFilterCache(ABC):
@@ -98,7 +98,7 @@ class BaseFilterCache(ABC):
             or
             (self.hide_4chan_deleted_posts and post['deleted'])
             or
-            (self.regex_filter and re.search(self.regex_filter, post['comment'], re.IGNORECASE))
+            (self.regex_filter and post['comment'] and re.search(self.regex_filter, post['comment'], re.IGNORECASE))
         )
 
     async def filter_reported_posts(self, posts: list[dict], is_authority: bool=False) -> list:

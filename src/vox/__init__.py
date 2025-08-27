@@ -1,17 +1,17 @@
-import subprocess
 import os
-from bs4 import BeautifulSoup
 import re
-from urllib.parse import urlparse
-from enum import Enum
-from werkzeug.security import safe_join
-import requests
-
+import subprocess
 import sys
+from enum import Enum
+from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
+from werkzeug.security import safe_join
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from utils.graphs import Graph
-
 
 file_exts = ['jpg', 'png', 'webm', 'mp4',]
 pattern_tld = r'\.(' + '|'.join(file_exts) + r')\b'

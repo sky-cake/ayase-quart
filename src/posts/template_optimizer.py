@@ -1,13 +1,10 @@
 from html import escape
 
-from configs import media_conf, archive_conf, site_conf
+from configs import archive_conf, media_conf, site_conf
+from media import ext_is_image, ext_is_video, get_image_path, get_thumb_path
 from posts.capcodes import Capcode
-from utils.timestamps import ts_2_formatted
 from threads import get_thread_path
-from media import (
-    get_image_path, get_thumb_path,
-    ext_is_video, ext_is_image,
-)
+from utils.timestamps import ts_2_formatted
 
 TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
 CANONICAL_HOST: str = archive_conf['canonical_host']

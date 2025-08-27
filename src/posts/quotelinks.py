@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 from html import escape
 from typing import Generator
+
 from utils.integers import get_prefix_uint_no0
 
 

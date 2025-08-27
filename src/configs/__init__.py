@@ -1,12 +1,11 @@
 import os
 
 from enums import DbType
-from utils import (
-    make_src_path,
-    strip_slashes as sslash,
-)
-from .conf_loader import load_config_file
+from utils import make_src_path
+from utils import strip_slashes as sslash
+
 from .conf_common import fuvii
+from .conf_loader import load_config_file
 
 sslash_both = lambda x: sslash(x, both=True)
 

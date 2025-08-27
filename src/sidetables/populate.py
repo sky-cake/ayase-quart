@@ -1,9 +1,9 @@
 import asyncio
-from collections import defaultdict, Counter
-from itertools import batched
-from typing import AsyncGenerator, Generator, Iterable
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from enum import StrEnum
+from itertools import batched
+from typing import AsyncGenerator, Generator, Iterable
 
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a

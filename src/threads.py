@@ -2,6 +2,7 @@ from functools import lru_cache
 
 from utils.graphs import Graph
 
+
 @lru_cache(maxsize=4096)
 def get_thread_path(board: str, thread_num: int) -> str:
     return f'{board}/thread/{thread_num}'

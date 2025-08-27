@@ -1,20 +1,17 @@
+from pydantic import BaseModel, Field
 from quart import Blueprint, jsonify
+from quart_schema import validate_querystring, validate_request
+
 from boards import board_shortnames
+from configs import archiveposting_conf
 from enums import ModStatus, PublicAccess, ReportAction
-from moderation.report import (
-    get_reports,
-    reports_action_routine
-)
-from moderation.user import Permissions, get_user_by_id
 from moderation.auth import (
     login_api_usr_required,
     require_api_usr_is_active,
     require_api_usr_permissions
 )
-from pydantic import BaseModel, Field
-from quart_schema import validate_querystring, validate_request
-from configs import archiveposting_conf
-
+from moderation.report import get_reports, reports_action_routine
+from moderation.user import Permissions, get_user_by_id
 
 bp = Blueprint('bp_api_moderation', __name__, url_prefix='/api/v1')
 

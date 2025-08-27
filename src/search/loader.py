@@ -1,20 +1,20 @@
+import traceback
 from asyncio import CancelledError
 from asyncio import Queue as Queue_a
 from asyncio import Task, create_task, gather, wrap_future
 from concurrent.futures import ProcessPoolExecutor as Executor
+from contextlib import asynccontextmanager
 from itertools import batched
 from typing import AsyncGenerator, Callable, List
-from contextlib import asynccontextmanager
-import traceback
 
 from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
 from asagi_converter import get_selector, selector_columns
+from configs import index_search_conf
 from db import db_q
 from posts.capcodes import capcode_2_id
 from posts.quotelinks import get_quotelink_lookup
-from configs import index_search_conf
 
 from .post_metadata import board_2_int, board_int_doc_id_2_pk, pack_metadata
 from .providers import search_index_fields

@@ -8,9 +8,13 @@ from datetime import date, datetime
 from functools import cache
 from itertools import batched
 from textwrap import dedent
+
 from async_lru import alru_cache
-from configs import archiveposting_conf, vanilla_search_conf, stats_conf
-from db import db_q, db_a
+from werkzeug.security import safe_join
+
+from configs import archiveposting_conf, stats_conf, vanilla_search_conf
+from db import db_a, db_q
+from db.redis import get_redis
 from posts.capcodes import Capcode
 from posts.comments import html_comment
 from posts.quotelinks import (
@@ -18,11 +22,7 @@ from posts.quotelinks import (
     get_quotelink_lookup,
     get_quotelink_lookup_raw
 )
-from werkzeug.security import safe_join
 from utils.validation import validate_board
-
-from db.redis import get_redis
-
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info

@@ -21,6 +21,8 @@ def make_src_path(*file_path):
 
 # to normalize paths from configs
 def strip_slashes(path: str, both=False):
+    if not path:
+        return path
     path = path.strip()
     return path.strip('/') if both else path.rstrip('/')
 
