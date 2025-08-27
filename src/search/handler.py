@@ -5,7 +5,6 @@ from configs import (
     SITE_NAME,
     app_conf,
     index_search_conf,
-    tag_conf,
     vanilla_search_conf
 )
 from enums import SearchType
@@ -18,13 +17,11 @@ from posts.template_optimizer import (
     wrap_post_t
 )
 from search.pagination import template_pagination_links, total_pages
-from tagging.enums import SafeSearch
 from templates import template_search
 from utils import Perf
-from search import get_posts_and_total_hits, search_w_file
+from search import get_posts_and_total_hits
 from werkzeug.datastructures import FileStorage
 from time import perf_counter
-from tagging.db import get_image_count
 
 
 toggle_fts_info_html = """
@@ -108,47 +105,21 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         total_hits = 0
         t1 = perf_counter()
 
-        is_tag_search = False
-        if tag_conf['enabled'] and bool(form_data['file_tags_general'] or form_data['file_tags_character']):
-            if SafeSearch(int(form_data['safe_search'])) == SafeSearch.unsafe:
-                return redirect(url_for('bp_web_about.soy'))
-
-            is_tag_search = True
-            form_data['has_file'] = True
-
-            # converted from '1,2,3,4,5' -> [1,2,3,4,5] by src/forms/__init__.py handling
-            tag_ids = form_data.get('file_tags_general', []) + form_data.get('file_tags_character', [])
-            form_data['tag_ids'] = tag_ids
+        try:
             posts, total_hits = await get_posts_and_total_hits(search_type, form_data)
+        except Exception as e:
+            msg = (
+                'There seems to be a problem with the submitted query.<br>'
+                '- Characters like \" and \' should come in pairs.<br>'
+                '- Brackets should be paired too.<br>'
+                '- You can escape special characters with \\ if needed.<br>'
+                '- Also note that you cannot begin or end queries with a dash.'
+            )
+            if app_conf.get('testing'):
+                msg += '<br><br>' + str(e)
 
-            p.check('tag search done')
-
-        is_file_search = False
-        if tag_conf['enabled'] and tag_conf['allow_file_search'] and file_image:
-            d = await search_w_file(form_data, file_image, search_type)
-            posts, total_hits = d['posts'], d['total_hits']
-
-            is_file_search = True
-            form_data['has_file'] = True
-
-            p.check('file search done')
-
-        if not posts and not is_tag_search and not is_file_search:
-            try:
-                posts, total_hits = await get_posts_and_total_hits(search_type, form_data)
-            except Exception as e:
-                msg = (
-                    'There seems to be a problem with the submitted query.<br>'
-                    '- Characters like \" and \' should come in pairs.<br>'
-                    '- Brackets should be paired too.<br>'
-                    '- You can escape special characters with \\ if needed.<br>'
-                    '- Also note that you cannot begin or end queries with a dash.'
-                )
-                if app_conf.get('testing'):
-                    msg += '<br><br>' + str(e)
-
-                await flash(msg)
-                posts, total_hits = [], 0
+            await flash(msg)
+            posts, total_hits = [], 0
 
         t2 = perf_counter()
         p.check('search done')
@@ -181,14 +152,6 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
 
         p.check('templated posts')
 
-        # revert these back to csv before pagination links
-        # tag_ids is not used by the UI
-        form.file_tags_general.data = ','.join([str(s) for s in form_data['file_tags_general']])
-        form.file_tags_character.data = ','.join([str(s) for s in form_data['file_tags_character']])
-        form_data['file_tags_general'] = form.file_tags_general.data
-        form_data['file_tags_character'] = form.file_tags_character.data
-        form_data.pop('tag_ids', None)
-
         endpoint_path = url_for('bp_web_index_search.v_index_search_get') if search_type == SearchType.idx else url_for('bp_web_vanilla_search.v_vanilla_search_get')
         page_count = total_pages(total_hits, form_data['hits_per_page'])
         page_links = template_pagination_links(endpoint_path, form_data, page_count, section='resulttop')
@@ -201,13 +164,7 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
 
     yield_message = ''
     if searched:
-        if is_tag_search:
-            image_count = await get_image_count()
-            yield_message = f'{image_count:,} images searched in {t2-t1:,.3f}s. Tag search hits: {total_hits}'
-        elif is_file_search:
-            yield_message = f'Searched archive in {t2-t1:,.3f}s. ' + d['message'] + '<br>' + d['api_response']
-        else:
-            yield_message = f'Searched archive in {t2-t1:,.3f}s. Post search hits: {total_hits:,}'
+        yield_message = f'Searched archive in {t2-t1:,.3f}s. Post search hits: {total_hits:,}'
 
     rendered_page = template_search.render(
         search_type_message=search_type_message,

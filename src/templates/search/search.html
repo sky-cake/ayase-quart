@@ -58,11 +58,6 @@
         <div class="column">{{ render_field(form.min_title_length, placeholder='Min length', class='w5em') }}</div>
         <div class="column">{{ render_field(form.min_comment_length, placeholder='Min length', class='w5em') }}</div>
       </div>
-      {% if 'file_archived' in form %}
-      <div class="row">
-        <div class="column">{{ render_field(form.file_archived, title='Is the full media available on AQ?') }}</div>
-      </div>
-      {% endif %}
       <div class="row">
         <div class="column">
           {{ render_field(form.has_file) }}
@@ -107,50 +102,6 @@
           </div>
         </div>
         {{ render_field(form.order_by) }}
-        
-        {% if tagging_enabled %}
-        <div class="imgsearchborder">
-          <div class="column">
-          <span class="form_btn pbtn" data-toggle="tag_info">Tag Search ⓘ</span>
-          <div id="tag_info" class="mt-1" style="display: none;">Post filters apply to tag search, but not the opposite. To perform a tag search, you must enter at least one tag.</div>
-        </div>
-          {{ form.file_tags_general }}
-          {{ form.file_tags_character }}
-
-          <div class="row mt-1">
-          {{ render_field(form.safe_search) }}
-          </div>
-          <div class="row">
-            <div class="column m1">
-              <input id="general_tag_input" type="text" placeholder="Search tags"><button class="form_btn pbtn" type="button" onclick="clear_general_tag_input()">x</button>
-              <div id="general_tag_suggestions" class="general tag_suggestions"></div>
-            </div>
-            
-            <div class="column m1">
-              <input id="character_tag_input" type="text" placeholder="Search characters"><button class="form_btn pbtn" type="button" onclick="clear_character_tag_input()">x</button>
-              <div id="character_tag_suggestions" class="character tag_suggestions"></div>
-            </div>
-          </div>
-
-          <button id="clear_button" class="form_btn mt-1 pbtn" type="button">Clear</button>
-          <div id="selected_general_tags"></div>
-          <div id="selected_character_tags"></div>
-
-        </div>
-        <script type="text/javascript" src="/static/js/tagging.js" defer></script>
-        {% endif %}
-
-        {% if tagging_file_search_enabled %}
-        <div class="filesearchborder">
-          <span class="form_btn pbtn" data-toggle="file_info">File Search ⓘ</span>
-          <div id="file_info" class="mt-1" style="display: none;">Post filters apply to image search, but not the opposite. To perform an image search, you must submit a file. Files are deleted immediately after processing.</div>
-          <div class="column mt-1">
-            <div class="search">
-              <input type="file" id="file_upload" name="file_upload" accept="image/png, image/jpeg, image/gif"/>
-            </div>
-          </div>
-        </div>
-        {% endif %}
         <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search Posts"></div>
       </div>
   </form>

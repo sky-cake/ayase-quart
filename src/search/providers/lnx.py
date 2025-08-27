@@ -194,13 +194,6 @@ class LnxSearch(BaseSearch):
                     'ctx': f'comment_length:>={q.min_comment_length}',
                 },
             })
-        if index_search_conf.get('use_file_archived') and q.file_archived is not None:
-            query.append({
-                'occur': 'must',
-                'normal': {
-                    'ctx': f'file_archived:{int(q.file_archived)}',
-                },
-            })
         if q.before is not None:
             query.append(
                 {
@@ -301,15 +294,6 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if index_search_conf.get('use_file_archived') and q.media_origs is not None:
-            query.append(
-                {
-                    'occur': 'must',
-                    'normal': {
-                        'ctx': f'{" OR ".join(f"media_orig:{media_orig}" for media_orig in q.media_origs)}',
-                    },
-                }
-            )
         if q.trip is not None:
             query.append(
                 {
@@ -382,11 +366,11 @@ def pack_post(post: dict) -> dict:
     return {k: [str(v)] for k, v in post.items()}
 
 
-# bool_fields = ('op', 'deleted', 'sticky', 'file_archived')
+# bool_fields = ('op', 'deleted', 'sticky',)
 bool_fields = tuple(f.field for f in search_index_fields if f.field_type is bool)
 # str_fields = ('comment', 'title', 'media_filename', 'media_hash')
 str_fields = tuple(f.field for f in search_index_fields if f.field_type is str)
-do_not_downcast_str_fields = ('media_filename', 'media_orig',) if index_search_conf.get('use_file_archived') else ('media_filename',)
+do_not_downcast_str_fields = ('media_filename',)
 def downcast_fields(post: dict):
     for field in bool_fields:
         post[field] = int(bool(post[field]))

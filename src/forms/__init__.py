@@ -1,6 +1,6 @@
 from enum import Enum
 from quart import flash, session
-from quart_wtf import QuartForm, FileSize, FileAllowed
+from quart_wtf import QuartForm
 from werkzeug.exceptions import BadRequest
 from wtforms import widgets
 from wtforms.fields import (
@@ -16,7 +16,6 @@ from wtforms.fields import (
     StringField,
     SubmitField,
     TextAreaField,
-    FileField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -30,10 +29,9 @@ from boards import board_shortnames
 from enums import SubmitterCategory
 from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
-from configs import index_search_conf, vanilla_search_conf, tag_conf, archiveposting_conf
+from configs import index_search_conf, vanilla_search_conf, archiveposting_conf
 from utils.integers import clamp_positive_int
 import re
-from tagging.enums import SafeSearch
 from collections import Counter
 
 
@@ -54,8 +52,6 @@ class StripForm(QuartForm):
                 field.data = field.data.strip()
 
 render_kw_hide = {'style': 'display: none;'}
-hide_tag_field = None if tag_conf['enabled'] else render_kw_hide
-
 
 def is_spam(s) -> bool:
     if not s:
@@ -162,16 +158,6 @@ class SearchForm(StripForm):
     has_file = BooleanField('Has file', default=False, validators=[Optional()])
     has_no_file = BooleanField('No file', default=False, validators=[Optional()])
 
-    safe_search = RadioField('Safe Search', choices=[(ss.value, ss.name) for ss in SafeSearch], default=SafeSearch.safe.value, validate_choice=True, render_kw=hide_tag_field)
-
-    ## Values will come in as strings like '1,2,3,4,5' or ''. A fieldlist of integerfields was too complex, and added bandwidth; ints_from_csv_string() will be used to convert the strings
-    ## These fields' `choices` will be generated with js
-    file_tags_general   = StringField('File tags, general',   default='', validators=[Length(min=0, max=100)], render_kw=render_kw_hide)
-    file_tags_character = StringField('File tags, character', default='', validators=[Length(min=0, max=100)], render_kw=render_kw_hide)
-
-    if tag_conf['enabled'] and tag_conf['allow_file_search']:
-        file_upload = FileField('File Search', validators=[FileAllowed(tag_conf['exts']), FileSize(min_size=1024, max_size=4.05 * 1024 * 1024)])
-
     is_op = BooleanField('OP', default=False, validators=[Optional()])
     is_not_op = BooleanField('Not OP', default=False, validators=[Optional()])
     is_deleted = BooleanField('Deleted', default=False, validators=[Optional()])
@@ -202,17 +188,11 @@ class SearchForm(StripForm):
 class VanillaSearchForm(SearchForm):
     boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if vanilla_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
     hits_per_page = IntegerField('Per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
-    
-    if vanilla_search_conf.get('use_file_archived'):
-        file_archived = BooleanField('File Archived', default=False, validators=[Optional()])
 
 
 class IndexSearchForm(VanillaSearchForm):
     boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if index_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
     hits_per_page = IntegerField('Per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
-    
-    if index_search_conf.get('use_file_archived'):
-        file_archived = BooleanField('File Archived', default=False, validators=[Optional()])
 
 
 def strip_2_none(s: str) -> str | None:
@@ -274,10 +254,6 @@ def validate_search_form(form: SearchForm):
     form.op_title.data = strip_2_none(form.op_title.data)
 
     form.page.data = clamp_positive_int(form.page.data, 1)
-
-    if tag_conf['enabled']:
-        form.file_tags_general.data   = ints_from_csv_string(form.file_tags_general.data)
-        form.file_tags_character.data = ints_from_csv_string(form.file_tags_character.data)
 
     if form.gallery_mode.data:
         form.has_file.data = True

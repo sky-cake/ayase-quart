@@ -39,12 +39,6 @@ search_index_fields = [
     SearchIndexField('data', str),
 ]
 
-if index_search_conf.get('use_file_archived'):
-    search_index_fields += [
-        SearchIndexField('file_archived', bool, filterable=True, optional=True),
-        SearchIndexField('media_orig', str, filterable=True, optional=True),
-    ]
-
 
 def get_index_search_provider():
     if hasattr(get_index_search_provider, 'search_p'):

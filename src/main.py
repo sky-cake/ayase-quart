@@ -8,12 +8,11 @@ from quart_schema import RequestSchemaValidationError
 from hypercorn.middleware import ProxyFixMiddleware
 from quart_rate_limiter import RateLimiter
 
-from blueprints import blueprints # importing timm and torch down the import hole makes this slow
-from configs import QuartConfig, app_conf, mod_conf, tag_conf, archiveposting_conf, traffic_log_conf
+from blueprints import blueprints
+from configs import QuartConfig, app_conf, mod_conf, archiveposting_conf, traffic_log_conf
 from db import db_q
 from db.redis import close_redis
 from moderation import init_moderation
-from tagging.db import init_tagging
 from moderation.filter_cache import fc
 from render import render_controller
 from templates import render_constants, template_error_message
@@ -73,9 +72,6 @@ def create_app():
     if mod_conf['enabled']:
         app.before_serving(init_moderation)
         app.before_serving(fc.init)
-
-    if tag_conf['enabled']:
-        app.before_serving(init_tagging)
 
     if archiveposting_conf['enabled']:
         app.before_serving(init_archiveposting)
