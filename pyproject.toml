@@ -65,6 +65,7 @@ dev = [
 tests = [
     'pytest',
     'pytest-asyncio',
+    'requests',
 ]
 mysql = [
     'aiomysql',
@@ -72,10 +73,6 @@ mysql = [
 ]
 postgresql = [
     'asyncpg',
-]
-vox = [
-    'beautifulsoup4',
-    'requests',
 ]
 
 [tool.uv]

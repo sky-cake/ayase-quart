@@ -2,14 +2,13 @@
 
 {% block scripts -%}
 	{{ super() }}
-	<script type="text/javascript" src="/static/js/thread.js" defer crossorigin="anonymous" integrity="sha384-jS9NrFvUqPi/nuMW8EkaoZWeLNBJQV49CIzYUdlqw1Byqe1uwTmTkvzms3E242oW"></script>
+	<script type="text/javascript" src="/static/js/thread.js" defer crossorigin="anonymous" integrity="sha384-5aKdJ6X2ka3CsYzTEiiXB4BT/VjRI6uobajpsxCh3o82t6tMZ1nRRzhlcmTlHYXS"></script>
 {% endblock %}
 
 {% block body %}
     {% include 'archiveposting_form.html' %}
     <div id="main">
         <div id="tools" data-board="{{board}}" data-thread_num="{{thread_num}}"></div>
-        {% if vox_enabled %}<div id="vox"></div>{% endif %}
         <div class="board">
             Replies: {{nreplies}} Files: {{nimages}}
             {{posts_t}}

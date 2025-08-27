@@ -11,7 +11,7 @@ from asagi_converter import (
     get_op_thread_count
 )
 from boards import get_title
-from configs import app_conf, vox_conf
+from configs import app_conf
 from moderation import fc
 from moderation.auth import (
     load_web_usr_data,
@@ -39,8 +39,6 @@ from utils.validation import validate_board, validate_threads
 
 bp = Blueprint("bp_web_app", __name__)
 
-VOX_ENABLED = vox_conf['enabled'] 
-VOX_ALLOWED_BOARDS = vox_conf.get('allowed_boards', []) if VOX_ENABLED else []
 
 async def make_pagination_board_index(board: str, index: dict, page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board)
@@ -311,7 +309,6 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
         board=board,
         thread_num=thread_num,
         tab_title=title,
-        vox_enabled=VOX_ENABLED and board in VOX_ALLOWED_BOARDS,
         logged_in=logged_in,
         is_admin=is_admin,
     )

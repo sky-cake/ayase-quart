@@ -16,8 +16,6 @@ Ayase Quart (AQ) is an interface for 4chan/Lainchan archives using the Asagi dat
   - Auto-hide reported content.
   - Filter all content based on a regex pattern.
   - Web, API, and CLI support.
-- Text to speech using [flite](https://github.com/festvox/flite) or [kokoro](https://github.com/sky-cake/Kokoro-FastAPI-Debloated) (recommended).
-  - `DFS`, `BFS`, `OP only`, and `OP and replies to OP` modes are available.
 
 AQ supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper), [Hayden (MySQL)](https://github.com/bbepis/Hayden), and [Ritual (SQLite)](https://github.com/sky-cake/Ritual) archive downloaders.
 

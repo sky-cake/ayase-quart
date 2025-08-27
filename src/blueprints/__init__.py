@@ -8,7 +8,6 @@ from configs import (
     mod_conf,
     stats_conf,
     vanilla_search_conf,
-    vox_conf
 )
 
 blueprints = [
@@ -26,11 +25,6 @@ if index_search_conf['enabled']:
 if vanilla_search_conf['enabled']:
     from blueprints.web.bp_vanilla_search import bp as bp_web_vanilla_search
     blueprints += [bp_web_vanilla_search]
-
-
-if vox_conf['enabled']:
-    from blueprints.web.bp_vox import bp as bp_web_vox
-    blueprints += [bp_web_vox]
 
 
 if archiveposting_conf['enabled']:

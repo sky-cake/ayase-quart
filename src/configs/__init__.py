@@ -87,24 +87,6 @@ if archiveposting_conf['enabled']:
 
 stats_conf = conf.get('stats', {'enabled': False})
 
-def set_vox_transcription_mode(mode: str):
-    from vox import TranscriptMode
-    for tm in TranscriptMode:
-        if tm.name == mode:
-            return tm
-    return TranscriptMode.op_and_replies_to_op
-
-vox_conf = conf.get('vox', {'enabled': False})
-if vox_conf['enabled']:
-    from vox import VoiceFlite
-    fuvii(vox_conf, 'reader_mode', set_vox_transcription_mode)
-
-    if vox_conf['engine'] == 'flite':
-        assert os.path.isfile(vox_conf['path_to_flite_binary'])
-        assert os.path.isdir(vox_conf['path_to_flite_voices'])
-        assert os.path.isdir(vox_conf['vox_root_path'])
-        assert vox_conf['voice_narrator'] in VoiceFlite._member_names_
-
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)

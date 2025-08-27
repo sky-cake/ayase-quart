@@ -141,43 +141,6 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     preview.style.backgroundColor = "#282a2e";
 }
 
-function setup_vox_events() {
-    const vox_button = document.createElement('button');
-    vox_button.textContent = 'Load Thread Reader';
-    const tools = document.getElementById('tools');
-    const board = get_data_string(tools, 'board')
-    const thread_num = get_data_string(tools, 'thread_num')
-    tools.appendChild(vox_button);
-
-    vox_button.addEventListener('click', () => {
-        vox_button.remove();
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120_000);
-
-        const url = `/${board}/thread/${thread_num}/vox`;
-        fetch(url, { signal: controller.signal }).then(response => {
-            clearTimeout(timeoutId);
-            if (!response.ok) {
-                throw new Error('Response not ok.');
-            }
-            return response.blob();
-        }).then(blob => {
-            const audioUrl = URL.createObjectURL(blob);
-            const audio = document.createElement('audio');
-            audio.src = audioUrl;
-            audio.controls = true;
-            audio.autoplay = true;
-            tools.appendChild(audio);
-        }).catch(error => {
-            console.error('Fetch error or timeout:', error);
-            const errorMsg = document.createElement('p');
-            errorMsg.textContent = 'Failed to load audio.';
-            tools.appendChild(errorMsg);
-        });
-    });
-}
-
 function gallery_view() {
     const btn_class = 'form_btn pbtn';
 
@@ -344,10 +307,6 @@ function gallery_view() {
 function init_thread() {
     setup_media_events();
     setup_quotelink_events();
-
-    if (document.getElementById('vox')) {
-        setup_vox_events();
-    }
 
     if (document.getElementById('tools') && document.getElementById('board_nav')){
         gallery_view();
