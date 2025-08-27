@@ -1,11 +1,15 @@
-from quart import Blueprint
-
-from enums import SearchType
-from search.handler import search_handler
-from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
-from quart_rate_limiter import rate_limit
 from datetime import timedelta
 
+from quart import Blueprint
+from quart_rate_limiter import rate_limit
+
+from enums import SearchType
+from moderation.auth import (
+    load_web_usr_data,
+    web_usr_is_admin,
+    web_usr_logged_in
+)
+from search.handler import search_handler
 
 bp = Blueprint("bp_web_index_search", __name__)
 

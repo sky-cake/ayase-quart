@@ -3,7 +3,7 @@ from typing import Any
 import aiomysql
 from orjson import loads
 
-from . import POST_PK, SearchIndexField, IndexSearchQuery, search_index_fields
+from . import POST_PK, IndexSearchQuery, SearchIndexField, search_index_fields
 from .baseprovider import BaseSearch
 
 pk = POST_PK

@@ -8,9 +8,13 @@ from datetime import date, datetime
 from functools import cache
 from itertools import batched
 from textwrap import dedent
+
 from async_lru import alru_cache
-from configs import archiveposting_conf, app_conf, vanilla_search_conf, stats_conf
-from db import db_q, db_a
+from werkzeug.security import safe_join
+
+from configs import archiveposting_conf, stats_conf, vanilla_search_conf
+from db import db_a, db_q
+from db.redis import get_redis
 from posts.capcodes import Capcode
 from posts.comments import html_comment
 from posts.quotelinks import (
@@ -18,16 +22,13 @@ from posts.quotelinks import (
     get_quotelink_lookup,
     get_quotelink_lookup_raw
 )
-from werkzeug.security import safe_join
 from utils.validation import validate_board
-
-from db.redis import get_redis
-
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
 # https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
 selector_columns = (
+    'doc_id',
     'num', # `no` - The numeric post ID
     'thread_num', # an archiver construct. The OP post ID.
     'op', # whether or not the post is the thread op (1 == yes, 0 == no)
@@ -60,6 +61,7 @@ selector_columns = (
 
 # map aliases of cols in board table, back to real board table names
 selector_columns_map = {
+    'doc_id':           'doc_id',
     'num':              'num',
     'thread_num':       'thread_num',
     'op':               'op',
@@ -89,8 +91,8 @@ selector_columns_map = {
 }
 
 
-def get_full_media_path(root_path, board_shortname, qualifier, media_orig):
-    return safe_join(root_path, board_shortname, qualifier, media_orig[0:4], media_orig[4:6], media_orig)
+def get_full_media_path(root_path, board, qualifier, media_orig):
+    return safe_join(root_path, board, qualifier, media_orig[0:4], media_orig[4:6], media_orig)
 
 
 def post_has_file(post: dict) -> bool:
@@ -150,6 +152,7 @@ def get_selector(board: str) -> str:
     """
     selector = f"""
     select
+    doc_id,
     num,
     `{board}`.thread_num,
     op as op,
@@ -490,10 +493,7 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
 
 
 async def get_op_thread_count(board: str) -> int:
-    if app_conf.get('use_asagi_side_tables', True):
-        rows = await db_q.query_tuple(f'select count(*) from `{board}_threads`;')
-    else:
-        rows = await db_q.query_tuple(f'select count(*) from `{board}` where op = 1;')
+    rows = await db_q.query_tuple(f'select count(*) from `{board}_threads`;')
     return rows[0][0]
 
 
@@ -534,29 +534,16 @@ async def generate_index(board: str, page_num: int=1):
     """
     index_post_count = 10
 
-    if app_conf.get('use_asagi_side_tables', True):
-        sql = f'''
-            select
-                thread_num,
-                nreplies,
-                nimages
-            from `{board}_threads`
-            order by time_op desc
-            limit {index_post_count}
-            {get_offset(page_num - 1, index_post_count)}
-        '''
-    else:
-        sql = f'''
-            select
-                thread_num,
-                count(*) - 1 as nreplies,
-                sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
-            from `{board}`
-            group by thread_num
-            order by thread_num desc
-            limit {index_post_count}
-            {get_offset(page_num - 1, index_post_count)}
-        '''
+    sql = f'''
+        select
+            thread_num,
+            nreplies,
+            nimages
+        from `{board}_threads`
+        order by time_op desc
+        limit {index_post_count}
+        {get_offset(page_num - 1, index_post_count)}
+    '''
 
     if not (threads := await db_q.query_dict(sql)):
         return {'threads': []}, {}
@@ -636,29 +623,16 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
 
     local_db_q = db_X if db_X else db_q
 
-    if app_conf.get('use_asagi_side_tables', True):
-        threads_query = f'''
-            select
-                thread_num,
-                nreplies,
-                nimages
-            from `{board}_threads`
-            order by time_op desc
-            limit {catalog_post_count}
-            {get_offset(page_num - 1, catalog_post_count)}
-        '''
-    else:
-        threads_query = f'''
-            select
-                thread_num,
-                count(*) - 1 as nreplies,
-                sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
-            from `{board}`
-            group by thread_num
-            order by thread_num desc
-            limit {catalog_post_count}
-            {get_offset(page_num - 1, catalog_post_count)}
-        '''
+    threads_query = f'''
+        select
+            thread_num,
+            nreplies,
+            nimages
+        from `{board}_threads`
+        order by time_op desc
+        limit {catalog_post_count}
+        {get_offset(page_num - 1, catalog_post_count)}
+    '''
 
     if not (rows := await local_db_q.query_tuple(threads_query)):
         return []
@@ -714,22 +688,13 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
 
     phg = db_q.phg()
 
-    if app_conf.get('use_asagi_side_tables', True):
-        thread_query = f'''
-            select
-                nreplies,
-                nimages
-            from `{board}_threads`
-            where thread_num = {phg}
-        ;'''
-    else:
-        thread_query = f'''
-            select
-                count(*) - 1 as nreplies,
-                sum(case when media_orig is not null then 1 else 0 end) - 1 as nimages
-            from `{board}`
-            where thread_num = {phg}
-        ;'''
+    thread_query = f'''
+        select
+            nreplies,
+            nimages
+        from `{board}_threads`
+        where thread_num = {phg}
+    ;'''
 
     posts_query = f'''
         {get_selector(board)}
@@ -807,7 +772,6 @@ async def get_post_with_doc_id(board: str, post_id: int, db_X=None) -> dict:
     local_db_q = get_local_db_q(board) if not db_X else db_X
 
     sql = f"""
-        doc_id,
         {get_selector(board)}
         from `{board}`
         where num = {local_db_q.phg()}
@@ -829,6 +793,7 @@ async def move_post_to_delete_table(post: dict) -> str:
 
     post_for_insert = {selector_columns_map[k]: v for k, v in post.items() if k in selector_columns_map}
     post_for_insert = post_for_insert | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
+    del post_for_insert['doc_id']
 
     local_db_q = get_local_db_q(board)
     phg = local_db_q.phg()
@@ -892,9 +857,9 @@ async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[
     return [(row[0], row[1]) for row in rows]
 
 
-async def is_post_op(board_shortname: str, num: int) -> bool:
-    local_db_q = get_local_db_q(board_shortname)
-    sql = f"""select num, op from `{board_shortname}` where num = {local_db_q.phg()}"""
+async def is_post_op(board: str, num: int) -> bool:
+    local_db_q = get_local_db_q(board)
+    sql = f"""select num, op from `{board}` where num = {local_db_q.phg()}"""
     rows = await local_db_q.query_tuple(sql, params=[num])
     if not rows:
         return False
@@ -902,18 +867,18 @@ async def is_post_op(board_shortname: str, num: int) -> bool:
 
 
 @alru_cache(ttl=60*60*24)
-async def _get_post_counts_per_month_by_board(board_shortname: str):
-    validate_board(board_shortname)
+async def _get_post_counts_per_month_by_board(board: str):
+    validate_board(board)
     rows = await db_q.query_dict(
         f"""
         select
-            '{board_shortname}' as board,
+            '{board}' as board,
             strftime('%Y-%m', datetime(timestamp, 'unixepoch')) AS year_month,
             min(num) as min_post_num,
             max(num) as max_post_num,
             count(*) as post_count,
             round(count(*) * 100.0 / (max(num) - min(num)), 1) as fraction
-        from `{board_shortname}`
+        from `{board}`
         group by 1, 2
         order by 1, 2
         ;"""
@@ -923,37 +888,37 @@ async def _get_post_counts_per_month_by_board(board_shortname: str):
     return rows
 
 
-async def get_post_counts_per_month_by_board(board_shortname: str) -> str:
+async def get_post_counts_per_month_by_board(board: str) -> str:
     """Returns json formatted string.
     """
     if stats_conf['redis']:
         r = get_redis(stats_conf['redis_db'])
 
-        key = f'post_counts_{board_shortname}'
+        key = f'post_counts_{board}'
         post_counts = await r.get(key)
         if post_counts:
             return post_counts # do not loads(), cache dumps()
 
-        post_counts = await _get_post_counts_per_month_by_board(board_shortname)
+        post_counts = await _get_post_counts_per_month_by_board(board)
         post_counts = json.dumps(post_counts)
         if post_counts:
             await r.set(key, post_counts)
         return post_counts
 
-    post_counts = await _get_post_counts_per_month_by_board(board_shortname)
+    post_counts = await _get_post_counts_per_month_by_board(board)
     return json.dumps(post_counts)
 
 
-async def get_latest_ops_as_catalog(board_shortnames):
+async def get_latest_ops_as_catalog(boards: list[str]):
     latest_ops = await asyncio.gather(*(
         db_q.query_dict(f"""
-            {get_selector(board_shortname)}
-            FROM `{board_shortname}`
+            {get_selector(board)}
+            FROM `{board}`
             WHERE op = 1
             ORDER BY num DESC
             LIMIT 5;
         """)
-        for board_shortname in board_shortnames
+        for board in boards
     ))
     return [{
         "page": 1,

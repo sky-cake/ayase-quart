@@ -2,21 +2,29 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 
 from boards import board_objects
+from configs import (
+    SITE_NAME,
+    app_conf,
+    archive_conf,
+    archiveposting_conf,
+    index_search_conf,
+    mod_conf,
+    site_conf,
+    stats_conf,
+    vanilla_search_conf
+)
 from moderation.report import report_modal_t
-from configs import app_conf, media_conf, site_conf, vanilla_search_conf, index_search_conf, archiveposting_conf, mod_conf, stats_conf
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
 
 render_constants = dict(
-    site_name=site_conf.get('name'),
+    site_name=SITE_NAME,
     theme=site_conf.get('theme', 'tomorrow'),
     vanilla_search_enabled=vanilla_search_conf.get('enabled', False),
     index_search_enabled=index_search_conf.get('enabled', False),
     moderation_enabled=mod_conf['enabled'],
     stats_enabled=stats_conf['enabled'],
     archiveposting_conf=archiveposting_conf if archiveposting_conf['enabled'] else {},
-    image_uri=media_conf.get('image_uri'),
-    thumb_uri=media_conf.get('thumb_uri'),
     endpoint=lambda: request.endpoint,
     url_for=url_for,
     get_flashed_messages=get_flashed_messages,
@@ -24,6 +32,8 @@ render_constants = dict(
     board_objects=board_objects,
     report_modal_t=report_modal_t,
     testing=app_conf['testing'],
+    canonical_host=archive_conf['canonical_host'],
+    canonical_name=archive_conf['canonical_name'],
 )
 
 env = Environment(

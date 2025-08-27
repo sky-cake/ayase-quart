@@ -6,7 +6,7 @@
 
 {% if archiveposting_conf['enabled'] %}
 <div class="mw1000 mauto">
-<h3>Ayase Quart</h3>
+<h3>{{site_name}}</h3>
 <ul class="ul3col">
     <li><a href="/{{ archiveposting_conf['board_name'] }}/catalog">/{{archiveposting_conf['board_name']}}/</a></li>
 </ul>
@@ -15,7 +15,7 @@
 
 {% if board_objects %}
 <div class="mw1000 mauto">
-    <h3>4chan</h3>
+    <h3>{{canonical_name}}</h3>
     <ul class="ul3col">
         {% for board_object in board_objects %}
             <li>

@@ -4,8 +4,8 @@
     {{site_name}}: [
         <a href="/">Home</a>
         / <a href="{{url_for('bp_web_about.about')}}">About</a>
-        {% if moderation_enabled %}/ <a href="{{url_for('bp_web_admin.message')}}">Message</a>{% endif %}
-        {% if stats_enabled %}/ <a href="{{ url_for('bp_web_stats.v_stats') }}">Stats</a>{% endif %}
+        {% if moderation_enabled %} / <a href="{{url_for('bp_web_admin.message')}}">Message</a>{% endif %}
+        {% if stats_enabled %} / <a href="{{ url_for('bp_web_stats.v_stats') }}">Stats</a>{% endif %}
     ]
     {% if archiveposting_conf['enabled'] %}Text board: [ <a href="{{url_for('bp_web_archiveposting.get_archiveposting_catalog')}}">/{{archiveposting_conf['board_name']}}/</a> ]{% endif %}
     {% if vanilla_search_enabled or index_search_enabled %}
@@ -35,13 +35,9 @@
             <a href="{{ url_for('bp_web_admin.users_index') }}">Users</a>
             /
         {% endif %}
-        <a href="{{ url_for('bp_web_moderation.reports_open') }}">Reports</a>
-        /
         <a href="{{ url_for('bp_web_admin.messages') }}">Messages</a>
         /
         <a href="{{ url_for('bp_web_admin.latest') }}">Latest OPs</a>
-        /
-        <a href="{{ url_for('bp_web_admin.configs') }}">Configs</a>
         ]
     {% endif %}
 
@@ -67,17 +63,14 @@
 <br>
 {% endif %}
 
-<div class="mw1000 center">
+<div id="board_nav" class="mw1000 center">
 {% if title %}<h3>{{title}}</h3>{% endif %}
-{% if board and archiveposting_conf['enabled'] and board != archiveposting_conf['board_name'] %}
+{% if board %}
 [
-    <a href="https://boards.4chan.org/{{ board }}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank"> /{{board}}/ on 4chan</a> /
+    {% if board != archiveposting_conf['board_name'] %}
+    <a href="{{canonical_host}}/{{board}}/catalog" style="padding-right:4px;" rel="noreferrer" target="_blank">/{{board}}/ on {{canonical_name}}</a> /
     <a href="/{{ board }}" style="padding-right:4px;">Index</a> /
-    <a href="/{{ board }}/catalog">Catalog</a>
-]
-{% endif %}
-{% if board and archiveposting_conf['enabled'] and board == archiveposting_conf['board_name'] %}
-[
+    {% endif %}
     <a href="/{{ board }}/catalog">Catalog</a>
 ]
 {% endif %}

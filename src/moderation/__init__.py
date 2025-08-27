@@ -1,6 +1,7 @@
 from configs import mod_conf
 from db import db_m
 from enums import DbPool
+from moderation.filter_cache import BaseFilterCache, get_filter_cache
 from moderation.user import Permissions, create_user_if_not_exists
 from utils import make_src_path, read_file
 
@@ -16,3 +17,6 @@ async def init_moderation():
         admin_password = mod_conf['admin_password']
 
         await create_user_if_not_exists(admin_username, admin_password, True, True, set([p for p in Permissions]), notes=None)
+
+
+fc: BaseFilterCache = get_filter_cache(mod_conf)

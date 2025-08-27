@@ -32,7 +32,6 @@ dependencies = [
     'aiosqlite',
     'async-lru',
     'coredis',
-    'flask-paginate',
     'Flask-WTF',
     'msgpack',
     'orjson',

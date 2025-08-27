@@ -1,5 +1,6 @@
 from collections import defaultdict, deque
 
+
 class Graph:
     def __init__(self, node_count: int=0):
         self.graph: dict[int, set[int]] = defaultdict(set)

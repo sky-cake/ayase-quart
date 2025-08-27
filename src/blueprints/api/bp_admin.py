@@ -1,11 +1,18 @@
-import quart_flask_patch
+from datetime import timedelta
 
+from pydantic import BaseModel, Field
 from quart import Blueprint, jsonify
+from quart_rate_limiter import rate_limit
 from quart_schema import validate_request
 
 from asagi_converter import get_latest_ops_as_catalog
 from boards import board_shortnames
 from configs import mod_conf
+from moderation.auth import (
+    login_api_usr_required,
+    require_api_usr_is_active,
+    require_api_usr_permissions
+)
 from moderation.user import (
     Permissions,
     create_user_if_not_exists,
@@ -15,16 +22,6 @@ from moderation.user import (
     get_user_by_id,
     is_valid_creds
 )
-from moderation.auth import (
-    login_api_usr_required,
-    require_api_usr_is_active,
-    require_api_usr_permissions
-)
-from pydantic import BaseModel, Field
-
-from quart_rate_limiter import rate_limit
-from datetime import timedelta
-
 
 bp = Blueprint('bp_api_admin', __name__, url_prefix='/api/v1')
 
@@ -46,7 +43,7 @@ async def latest(current_api_usr_id: int):
 @require_api_usr_permissions([Permissions.archive_configs_view])
 async def configs(current_api_usr_id: int):
     cs = [
-        'default_reported_post_public_access',
+        'hide_post_if_reported',
         'hide_4chan_deleted_posts',
         'remove_replies_to_hidden_op',
         'regex_filter',

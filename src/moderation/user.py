@@ -1,12 +1,11 @@
-import quart_flask_patch  # no qa
-
 import json
 from datetime import datetime
 from enum import Enum
-from typing import Iterable, Optional, Any
+from typing import Any, Iterable, Optional
 
-from quart_auth import AuthUser, Action
+from quart_auth import Action, AuthUser
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from configs import mod_conf
 from db import db_m
 from db.redis import get_redis

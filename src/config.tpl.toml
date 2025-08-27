@@ -25,21 +25,18 @@ allow_robots = false # robots.txt
 login_endpoint = '/login'
 
 
-# whether or not the side tables `<board>_thread` and `<board>_images` should be utilized.
-# side tables offer considerable performance boosts
-# without side tables /catalog and /thread endpoints will probably not be viable at pages > 5 on larger archives
-# `<board>_deleted` tables are still required if you're doing moderation
-use_asagi_side_tables = true
-
-
 [site]
 name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 site_email = ''
+anonymous_username = 'Anonymous'
 
 
 [archive]
-name = '4chan' # '4chan' 'lainchan'
+type = 'yotsuba' # 'yotsuba' (4chan), 'vichan' (lainchan, holotower)
+canonical_name = '4chan' # '4chan', 'Lainchan', 'Holotower'
+canonical_host = 'https://boards.4chan.org'
+comments_preescaped = false # false (4chan scrapers), true (vichan APIs)
 
 
 [stats]
@@ -98,8 +95,8 @@ max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
 
 [media]
 # set image_uri or thumb_uri to '' if you don't want any boards to serve image, or thumb media, respectively
-image_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/image" # must contain {board_shortname}
-thumb_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/thumb" # must contain {board_shortname}
+image_uri = "https://192.168.1.16:9003/static/ritual/{board}/image" # must contain {board}
+thumb_uri = "https://192.168.1.16:9003/static/ritual/{board}/thumb" # must contain {board}
 
 # Below are optional settings for serving media outside the quart app's static path
 #       i.e. outside of '/path/to/ayase_quart/src/static'
@@ -107,19 +104,19 @@ thumb_uri = "https://192.168.1.16:9003/static/ritual/{board_shortname}/thumb" # 
 serve_outside_static = false # true, false
 
 # `media_root_path` is the full path to the root media directory on your server
-#       i.e. if you have images like '/mnt/dl/<board_shortname>/image' set this to '/mnt/dl'
+#       i.e. if you have images like '/mnt/dl/<board>/image' set this to '/mnt/dl'
 media_root_path = ''
 
 # only serve files with these extension from outside the static path
 valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
 
-# `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board_shortname>/image
-#       i.e. if you want to serve content from '/srv/media/<board_shortname>/image' set this to '/srv/media'
+# `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board>/image
+#       i.e. if you want to serve content from '/srv/media/<board>/image' set this to '/srv/media'
 endpoint = '/srv/media'
 
 # If you use this, declare the two URIs like below, and comment out the above URI declarations.
-# image_uri = "/<endpoint>/{board_shortname}/image" # e.g. "/srv/media/{board_shortname}/image"
-# thumb_uri = "/<endpoint>/{board_shortname}/thumb" # e.g. "/srv/media/{board_shortname}/thumb"
+# image_uri = "/<endpoint>/{board}/image" # e.g. "/srv/media/{board}/image"
+# thumb_uri = "/<endpoint>/{board}/thumb" # e.g. "/srv/media/{board}/thumb"
 
 # The default is to serve media from all boards [Aside: set image_uri or thumb_url to '' to not serve the images, or thumbs, respectively]
 # You can specify a subset of boards with a whitelist
@@ -156,7 +153,14 @@ enabled = true # true, false
 admin_user = 'admin'
 admin_password = 'admin'
 
-default_reported_post_public_access = 'hidden' # 'visible', 'hidden'
+
+hide_post_if_reported = true # true, false
+
+# if a post is reported N times from different IPs, then hide it
+# 'hide_post_if_reported' takes precedence
+n_reports_then_hide = 1
+
+
 hide_4chan_deleted_posts = true # hide 4chan staff deleted posts in archive
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 
@@ -201,9 +205,9 @@ ascii_only = true
 
 [vox]
 # text to speech module that allows the client to fetch the endpoint
-# /<string:board_shortname>/thread/<int:thread_id>/vox
+# /<string:board>/thread/<int:thread_id>/vox
 # for .wav files to read threads
-enabled = true
+enabled = false
 
 engine = 'kokoro' # 'kokoro', 'flite'
 
@@ -213,8 +217,8 @@ allowed_boards = ['g', 'ck']
 serve_outside_static = true # true, false
 
 # `vox_root_path` is the full path to the root vox directory on your server
-#       i.e. if you have images like '/mnt/dl/<board_shortname>/vox' set this to '/mnt/dl'
-# .wav/.mp3 files will be generated in the fs structure '/mnt/dl/<board_shortname>/vox/<post_num>.wav/.mp3'
+#       i.e. if you have images like '/mnt/dl/<board>/vox' set this to '/mnt/dl'
+# .wav/.mp3 files will be generated in the fs structure '/mnt/dl/<board>/vox/<post_num>.wav/.mp3'
 vox_root_path = '/home/xx/Documents/code/vox'
 
 

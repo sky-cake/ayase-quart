@@ -1,56 +1,50 @@
-import quart_flask_patch
-
 from collections import defaultdict
+from datetime import timedelta
 from html import escape
 
-from flask_paginate import Pagination
 from quart import Blueprint, flash, jsonify, redirect, request, url_for
-from moderation.auth import login_web_usr_required
+from quart_rate_limiter import rate_limit
 
 from asagi_converter import get_post
 from boards import board_shortnames
-from configs import mod_conf, archiveposting_conf
+from configs import archiveposting_conf, mod_conf
+from db import db_a, db_q
 from enums import ModStatus, PublicAccess
 from forms import ReportUserForm
-from leafs import (
-    generate_post_html,
-    post_files_hide,
+from leafs import generate_post_html, post_files_hide
+from moderation import fc
+from moderation.auth import (
+    current_web_usr,
+    load_web_usr_data,
+    login_web_usr_required,
+    require_web_usr_is_active,
+    require_web_usr_permissions,
+    web_usr_is_admin
 )
-from moderation.filter_cache import fc
 from moderation.report import (
     create_report,
     get_report_count,
-    reports_action_routine,
-    get_reports
+    get_reports,
+    reports_action_routine
 )
 from moderation.user import Permissions
-from moderation.auth import (
-    require_web_usr_is_active,
-    require_web_usr_permissions,
-    load_web_usr_data,
-    web_usr_is_admin,
-)
-from moderation.auth import current_web_usr
+from paginate import Pagination
 from render import render_controller
 from templates import template_reports_index
 from utils.validation import validate_board
-from quart_rate_limiter import rate_limit
-from datetime import timedelta
-from db import db_q, db_a
-
 
 bp = Blueprint('bp_web_moderation', __name__)
 
 
-@bp.post('/report/<string:board_shortname>/<int:thread_num>/<int:num>')
+@bp.post('/report/<string:board>/<int:thread_num>/<int:num>')
 @rate_limit(4, timedelta(hours=1))
-async def route_create_report(board_shortname: str, thread_num: int, num: int):
+async def route_create_report(board: str, thread_num: int, num: int):
     form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
 
-    if board_shortname != archiveposting_conf['board_name']:
-        validate_board(board_shortname)
+    if board != archiveposting_conf['board_name']:
+        validate_board(board)
         db_X = db_q
-    elif board_shortname == archiveposting_conf['board_name']:
+    elif board == archiveposting_conf['board_name']:
         db_X = db_a
     else:
         raise ValueError()
@@ -59,13 +53,13 @@ async def route_create_report(board_shortname: str, thread_num: int, num: int):
         submitter_category = form.submitter_category.data
         submitter_notes = form.submitter_notes.data
         
-        post = await get_post(board_shortname, num, db_X=db_X)
+        post = await get_post(board, num, db_X=db_X)
         if not post:
             return jsonify({'message': 'we dont have this post archived'})
 
         op = thread_num == num
         await create_report(
-            board_shortname,
+            board,
             thread_num,
             num,
             op,
@@ -76,9 +70,15 @@ async def route_create_report(board_shortname: str, thread_num: int, num: int):
             None,
         )
 
-        if mod_conf['default_reported_post_public_access'] == PublicAccess.hidden:
+        if mod_conf['hide_post_if_reported']:
             post_files_hide(post)
-            await fc.insert_post(board_shortname, num, op)
+            await fc.insert_post(board, num, op)
+
+        elif mod_conf['n_reports_then_hide'] > 0:
+            report_strikes = await get_report_count(board_shortnames=[board], num=num, number_of_reported_posts_only=False)
+            if report_strikes > mod_conf['n_reports_then_hide']:
+                post_files_hide(post)
+                await fc.insert_post(board, num, op)    
 
         return jsonify({'message': 'thank you'})
     return jsonify({'message': f'error: {form.data}: {form.errors}'})
@@ -147,9 +147,9 @@ def get_report_mod_status_link(mod_status: ModStatus) -> str:
 
 
 # should use **kwargs in the future
-async def make_report_pagination(mod_status: ModStatus, board_shortnames: list[str], report_len: int, page_num: int, page_size: int=20):
+async def make_report_pagination(mod_status: ModStatus, boards: list[str], report_len: int, page_num: int, page_size: int=20):
 
-    bs = board_shortnames + [archiveposting_conf['board_name']] if archiveposting_conf['enabled'] else board_shortnames
+    bs = boards + [archiveposting_conf['board_name']] if archiveposting_conf['enabled'] else boards
 
     report_count = await get_report_count(mod_status=mod_status, board_shortnames=bs)
     report_count_all = await get_report_count()

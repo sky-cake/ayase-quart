@@ -1,18 +1,22 @@
 from datetime import datetime
 from typing import Optional
 
-from moderation.user import Permissions
-
-from asagi_converter import get_post, move_post_to_delete_table, get_local_db_q
-from configs import mod_conf, archiveposting_conf, index_search_conf
-from db import db_m, db_a, db_q
-from enums import DbPool, ModStatus, PublicAccess, SubmitterCategory, ReportAction
+from asagi_converter import get_local_db_q, get_post, move_post_to_delete_table
+from configs import archiveposting_conf, index_search_conf, mod_conf
+from db import db_a, db_m, db_q
+from enums import (
+    DbPool,
+    ModStatus,
+    PublicAccess,
+    ReportAction,
+    SubmitterCategory
+)
 from leafs import post_files_delete, post_files_hide, post_files_show
-from moderation.filter_cache import fc
-from moderation.user import User
-from utils.validation import validate_board
-from search.providers import get_index_search_provider
+from moderation import fc
+from moderation.user import Permissions, User
 from search.post_metadata import board_2_int, board_int_doc_id_2_pk
+from search.providers import get_index_search_provider
+from utils.validation import validate_board
 
 
 # this can actually just be a jinja form that is compiled once...
@@ -64,9 +68,14 @@ async def get_report_count(
     submitter_category: Optional[SubmitterCategory] = None,
     created_at_gte: Optional[str] = None,
     created_at_lte: Optional[str] = None,
-    **kwarg,
+    number_of_reported_posts_only: bool=True,
+    **kwargs,
 ) -> int:
-    """kwarg is just a convenience here, it gobbles up any extra, unused params for us."""
+    """
+    - `number_of_reported_posts_only` True -> the number of reported posts.
+    - `number_of_reported_posts_only` False -> the number of reports.
+    - `kwargs` is just a convenience here, it gobbles up any extra, unused params for us.
+    """
     ph = db_m.phg()
     where = []
     params = []
@@ -107,10 +116,16 @@ async def get_report_count(
         where_child.append(f'created_at =< {ph}')
         params.append(created_at_lte)
 
-    sql = """
+    sql_join = ''
+    if not number_of_reported_posts_only:
+        # get number of reports, not just reported post count
+        sql_join = 'join report_child using (report_parent_id)'
+
+    sql = f"""
         select
             count(*) as report_count
         from report_parent
+            {sql_join}
     """
     if where:
         sql += ' where ' + ' and '.join(where)
@@ -212,28 +227,28 @@ async def get_report_by_id(report_parent_id: int) -> Optional[dict]:
         return reports[0]
 
 
-async def get_report_by_board(board_shortname: str) -> Optional[list[dict]]:
-    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()};', params=(board_shortname,), p_id=DbPool.mod)):
+async def get_report_by_board(board: str) -> Optional[list[dict]]:
+    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()};', params=(board,), p_id=DbPool.mod)):
         return reports
 
 
-async def get_report_by_post_num(board_shortname: str, num: int) -> Optional[list[dict]]:
-    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()} and num={db_m.phg()};', params=(board_shortname, num,), p_id=DbPool.mod)):
+async def get_report_by_post_num(board: str, num: int) -> Optional[list[dict]]:
+    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.phg()} and num={db_m.phg()};', params=(board, num,), p_id=DbPool.mod)):
         return reports
 
 
-async def get_report_parent_id(board_shortname: str, num: int) -> Optional[int]:
+async def get_report_parent_id(board: str, num: int) -> Optional[int]:
     report_parent_id = None
     ph = db_m.phg()
     sql = f'select report_parent_id from report_parent where board_shortname = {ph} and num = {ph};'
-    rows = await db_m.query_dict(sql, params=[board_shortname, num], p_id=DbPool.mod)
+    rows = await db_m.query_dict(sql, params=[board, num], p_id=DbPool.mod)
     if rows:
         report_parent_id = rows[0]['report_parent_id']
     return report_parent_id
 
 
 async def create_report(
-    board_shortname: str,
+    board: str,
     thread_num: int,
     num: int,
     op: int,
@@ -244,12 +259,12 @@ async def create_report(
     mod_notes: str = None
 ):
     now = datetime.now()
-    public_access = mod_conf['default_reported_post_public_access']
+    public_access = PublicAccess.hidden if mod_conf['hide_post_if_reported'] else PublicAccess.visible
 
-    report_parent_id = await get_report_parent_id(board_shortname, num)
+    report_parent_id = await get_report_parent_id(board, num)
 
     if not report_parent_id:
-        params_parent = [board_shortname, num, thread_num, op, mod_status, public_access, mod_notes, now]
+        params_parent = [board, num, thread_num, op, mod_status, public_access, mod_notes, now]
         sql = f"""
             insert into
             report_parent (board_shortname, num, thread_num, op, mod_status, public_access, mod_notes, last_updated_at)
@@ -327,7 +342,7 @@ async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entir
     if not pk_ids:
         return False
 
-    index_searcher.remove_posts(pk_ids)
+    await index_searcher.remove_posts(pk_ids)
     return True
 
 

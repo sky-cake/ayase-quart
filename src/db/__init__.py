@@ -1,9 +1,10 @@
 import asyncio
-from functools import wraps, cache
+from functools import cache, wraps
 
-from configs import db_conf, db_mod_conf, db_archiveposting_conf
+from configs import db_archiveposting_conf, db_conf, db_mod_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from enums import DbPool, DbType
+
 
 @cache
 def _get_db_module(db_type: DbType):

@@ -2,6 +2,7 @@ from coredis import Redis
 
 from configs import redis_conf
 
+
 def get_redis(db: int) -> Redis:
     if not hasattr(get_redis, 'clients'):
         get_redis.clients = {}

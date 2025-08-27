@@ -1,5 +1,6 @@
 from typing import Any, Callable
 
+
 def fuvii(d: dict[str, Any], key: str, default_val_fn: Callable[[Any], Any]|Any=None):
     '''
     Function Update, or Value Insert or Ignore

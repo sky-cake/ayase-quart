@@ -1,17 +1,17 @@
-import subprocess
 import os
-from bs4 import BeautifulSoup
 import re
-from urllib.parse import urlparse
-from enum import Enum
-from werkzeug.security import safe_join
-import requests
-
+import subprocess
 import sys
+from enum import Enum
+from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
+from werkzeug.security import safe_join
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from utils.graphs import Graph
-
 
 file_exts = ['jpg', 'png', 'webm', 'mp4',]
 pattern_tld = r'\.(' + '|'.join(file_exts) + r')\b'
@@ -82,8 +82,8 @@ def get_post_num_order(g: Graph, mode: TranscriptMode) -> list[int]:
             return g.get_op_and_replies_to_op()
 
 
-def get_vox_filepath(vox_root_path: str, board_shortname: str, num: int, ext: str) -> str:
-    return safe_join(vox_root_path, board_shortname, f'{num}.{ext}')
+def get_vox_filepath(vox_root_path: str, board: str, num: int, ext: str) -> str:
+    return safe_join(vox_root_path, board, f'{num}.{ext}')
 
 
 def make_transcript(g: Graph, mode: TranscriptMode) -> str:

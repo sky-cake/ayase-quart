@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from quart import Quart
 
-from moderation.filter_cache import fc
+from moderation import fc
 
 
 class TestFilterReportedPosts(unittest.IsolatedAsyncioTestCase):

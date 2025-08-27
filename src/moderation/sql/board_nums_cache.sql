@@ -8,3 +8,4 @@ CREATE INDEX IF NOT EXISTS idx_board_shortname ON board_nums_cache (board_shortn
 CREATE INDEX IF NOT EXISTS idx_num ON board_nums_cache (num);
 CREATE INDEX IF NOT EXISTS idx_op ON board_nums_cache (op);
 CREATE INDEX IF NOT EXISTS idx_board_shortname_num ON board_nums_cache (board_shortname, num);
+CREATE INDEX IF NOT EXISTS idx_board_shortname_op ON board_nums_cache (board_shortname, op);

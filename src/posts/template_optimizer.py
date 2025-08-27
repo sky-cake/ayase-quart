@@ -1,19 +1,16 @@
 from html import escape
-from functools import cache, lru_cache
 
-from configs import media_conf
+from configs import archive_conf, media_conf, site_conf
+from media import ext_is_image, ext_is_video, get_image_path, get_thumb_path
 from posts.capcodes import Capcode
+from threads import get_thread_path
 from utils.timestamps import ts_2_formatted
 
-THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
-IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
-BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
-BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
 TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
+CANONICAL_HOST: str = archive_conf['canonical_host']
+CANONICAL_NAME: str = archive_conf['canonical_name']
+ANONYMOUS_NAME: str = site_conf['anonymous_username']
 
-# TODO: move these 2 to config
-ANONYMOUS_NAME = 'Anonymous'
-CANONICAL_HOST = 'https://boards.4chan.org'.rstrip('/')
 
 type QuotelinkD = dict[int, list[int]]
 
@@ -148,42 +145,13 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
     if not quotelinks:
         return ''
     quotelink_gen = (
-        f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board_shortname="{board}">&gt;&gt;{quotelink}</a></span>'
+        f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>'
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
 
-@lru_cache(maxsize=2048)
-def get_thread_path(board: str, thread_num: int) -> str:
-    return f'{board}/thread/{thread_num}'
-
 def get_post_path(board: str, thread_num: int, num: int) -> str:
     return f'{get_thread_path(board, thread_num)}#p{num}'
-
-@cache
-def board_has_image(board: str) -> bool:
-    return board in BOARDS_WITH_IMAGE and IMAGE_URI
-
-@cache
-def board_has_thumb(board: str) -> bool:
-    return board in BOARDS_WITH_THUMB and THUMB_URI
-
-@cache
-def get_image_baseuri(board: str) -> str:
-    return IMAGE_URI.format(board_shortname=board)
-
-@cache
-def get_thumb_baseuri(board: str) -> str:
-    return THUMB_URI.format(board_shortname=board)
-
-
-@cache
-def ext_is_image(ext: str) -> bool:
-    return ext in ('jpg', 'jpeg', 'png', 'bmp', 'webp') # gifs not included
-
-@cache
-def ext_is_video(ext: str) -> bool:
-    return ext in ('webm', 'mp4')
 
 def get_media_t_thread(post: dict, num: int, board: str):
     if not (media_filename := post['media_filename']):
@@ -213,20 +181,6 @@ def get_media_t_thread(post: dict, num: int, board: str):
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src, classes=classes)}
     </div>
 	"""
-
-def get_image_path(board: str, filename: str) -> str:
-    if not(filename and board_has_image(board)):
-        return ''
-    return f'{get_image_baseuri(board)}/{media_fs_partition(filename)}'
-
-def get_thumb_path(board: str, filename: str) -> str:
-    if not(filename and board_has_thumb(board)):
-        return ''
-    return f'{get_thumb_baseuri(board)}/{media_fs_partition(filename)}'
-
-# should move to configs or somewhere else for customizability
-def media_fs_partition(filename: str) -> str:
-    return f'{filename[0:4]}/{filename[4:6]}/{filename}'
 
 ### END post_t crisis
 
@@ -262,11 +216,11 @@ def get_cc_class_t(post: dict):
     return cc_class.get(post['capcode'], '')
 
 
-cc_t_admin = '<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a 4chan Administrator." class="identityIcon retina">'
-cc_t_founder = '<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the 4chan Founder." class="identityIcon retina">'
-cc_t_moderator = '<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a 4chan Moderator." class="identityIcon retina">'
-cc_t_dev = '<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a 4chan Developer." class="identityIcon retina">'
-cc_t_manager = '<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a 4chan Manager." class="identityIcon retina">'
+cc_t_admin = f'<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a {CANONICAL_NAME} Administrator." class="identityIcon retina">'
+cc_t_founder = f'<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the {CANONICAL_NAME} Founder." class="identityIcon retina">'
+cc_t_moderator = f'<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a {CANONICAL_NAME} Moderator." class="identityIcon retina">'
+cc_t_dev = f'<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a {CANONICAL_NAME} Developer." class="identityIcon retina">'
+cc_t_manager = f'<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a {CANONICAL_NAME} Manager." class="identityIcon retina">'
 cc_t_verified = '<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>'
 def cc_t_unknown(cc):
     return f'<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {cc}</strong>'
@@ -311,8 +265,8 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
         return ''
 
     ext = media_filename.rsplit('.', 1)[-1]
-    is_img = ext in ('jpg', 'jpeg', 'png') # gifs not included
-    is_video = ext in ('webm', 'mp4')
+    is_img = ext_is_image(ext)
+    is_video = ext_is_video(ext)
 
     board = post['board_shortname']
 
@@ -390,15 +344,11 @@ def set_links(post: dict):
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
-
-
 def get_sticky_t(post: dict):
     return sticky_t if post.get('sticky') else ''
 
 
 closed_t = '<img src="/static/images/closed.gif" alt="Closed" title="Closed" class="closedIcon retina">'
-
-
 def get_closed_t(post: dict):
     return closed_t if post.get('locked') else ''
 
@@ -423,13 +373,12 @@ def get_trip_t(post: dict):
 
 def get_mobile_t(post: dict):
     timestamp = post['ts_unix']
+    num = post['num']
+    name = post['name'] or ANONYMOUS_NAME
     return f"""
-	<span class="nameBlock">
-        <span class="name">{post['name']}</span>
-        <br>
-    </span>
+	<span class="nameBlock"><span class="name">{name}</span><br></span>
     <span class="dateTime inblk" data-utc="{timestamp}"></span>
-    <a href="#{post['num']}">No. {post['num']}</a>
+    <a href="#{num}">No. {num}</a>
 	"""
 
 
@@ -468,7 +417,7 @@ def get_quotelink_t(post: dict):
     if not (quotelinks := post['quotelinks']):
         return ''
     board = post['board_shortname']
-    quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{ quotelink }" class="quotelink" data-board_shortname="{board}">&gt;&gt;{ quotelink }</a></span>' for quotelink in quotelinks)
+    quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>' for quotelink in quotelinks)
     return f'<div id="bl_{post["num"]}" class="backlink">Replies: {quotelinks}</div>'
 
 
@@ -514,13 +463,13 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_troll_country'] }
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
-            <a href="{wpt['t_post_link_rel']}">No.{num}</a>
+            <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         </span>
-        <button class="btnlink" onclick="copy_link(this, '{wpt['t_post_link_rel']}')">⎘</button>
+        <button class="btnlink" onclick="copy_link(this, '/{wpt['t_post_link_rel']}')">⎘</button>
         <span class="inblk">
         { wpt['t_report'] }
-        [<a href="{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]
+        [<a href="/{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]
         [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
         </span>
     </div>
@@ -625,10 +574,10 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
         </span>
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
         <span class="postNum">
-            <a href="{wpt['t_post_link_rel']}">No.{num}</a>
+            <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         </span>
-        <button class="btnlink" onclick="copy_link(this, '{wpt['t_post_link_rel']}')">⎘</button>
+        <button class="btnlink" onclick="copy_link(this, '/{wpt['t_post_link_rel']}')">⎘</button>
         <span class="inblk">
         { wpt['t_report'] }
         </span>
@@ -644,9 +593,9 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     """
 
 def get_title_t(thread: dict):
-    if not (title := thread.get('title', '')):
+    if not (title := thread['title']):
         return ''
-    return f"""<span class="post_title">{ title }</span>"""
+    return f"""<span class="post_title">{title}</span>"""
 
 # almost same as threads.render_thread_stats...
 def get_thread_stats_t(thread: dict) -> str:

@@ -137,7 +137,7 @@ media_hash_file_input.addEventListener('change', () => {
 function generateMediaHash(file) {
     var reader = new FileReader();
     reader.onloadend = function(e){
-        if (e.target.readyState == FileReader.DONE) {
+        if (e.target.readyState === FileReader.DONE) {
             var fileContents = e.target.result;
             var digestBytes = Crypto.MD5(Crypto.charenc.Binary.stringToBytes(fileContents), {
                 asBytes: true

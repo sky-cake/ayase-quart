@@ -1,11 +1,21 @@
-import quart_flask_patch
+from datetime import timedelta
 
-from quart import Blueprint, flash, redirect, request, url_for, current_app
+from quart import Blueprint, current_app, flash, redirect, request, url_for
+from quart_rate_limiter import rate_limit
 
 from asagi_converter import get_latest_ops_as_catalog
 from boards import board_shortnames
 from configs import mod_conf, site_conf
-from forms import UserCreateForm, UserEditForm, MessageForm
+from forms import MessageForm, UserCreateForm, UserEditForm
+from moderation.auth import (
+    load_web_usr_data,
+    login_web_usr_required,
+    require_web_usr_is_active,
+    require_web_usr_permissions,
+    web_usr_is_admin,
+    web_usr_logged_in
+)
+from moderation.message import create_message, get_messages_from_last_30_days
 from moderation.user import (
     Permissions,
     create_user_if_not_exists,
@@ -13,34 +23,22 @@ from moderation.user import (
     edit_user,
     get_all_users,
     get_user_by_id,
-    is_valid_creds,
+    is_valid_creds
 )
-from moderation.auth import (
-    load_web_usr_data,
-    require_web_usr_is_active,
-    require_web_usr_permissions,
-    login_web_usr_required,
-    web_usr_logged_in,
-    web_usr_is_admin,
-)
-from moderation.message import create_message, get_messages_from_last_30_days
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
+from security.captcha import MathCaptcha
 from templates import (
     template_catalog,
     template_configs,
+    template_message,
+    template_messages,
     template_users_create,
     template_users_delete,
     template_users_edit,
     template_users_index,
-    template_users_view,
-    template_message,
-    template_messages,
+    template_users_view
 )
-from quart_rate_limiter import rate_limit
-from datetime import timedelta
-from security.captcha import MathCaptcha
-
 
 bp = Blueprint('bp_web_admin', __name__)
 
@@ -113,29 +111,6 @@ async def latest(is_admin: bool):
         threads=threads,
         title='Latest Threads',
         tab_title='Latest Threads',
-        is_admin=is_admin,
-    )
-
-
-@bp.route("/configs")
-@login_web_usr_required
-@load_web_usr_data
-@require_web_usr_is_active
-@require_web_usr_permissions([Permissions.archive_configs_view])
-@web_usr_is_admin
-async def configs(is_admin: bool):
-    cs = [
-        'default_reported_post_public_access',
-        'hide_4chan_deleted_posts',
-        'remove_replies_to_hidden_op',
-        'regex_filter',
-        'path_to_regex_so',
-    ]
-    return await render_controller(
-        template_configs,
-        configs=[{'key': c, 'value': mod_conf[c]} for c in cs],
-        title='Archive Configs',
-        tab_title='Archive Configs',
         is_admin=is_admin,
     )
 

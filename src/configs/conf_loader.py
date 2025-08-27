@@ -1,5 +1,5 @@
-from functools import cache
 import tomllib
+from functools import cache
 
 from utils import make_src_path
 

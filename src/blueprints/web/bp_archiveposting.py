@@ -1,32 +1,34 @@
-from forms import PostForm
-from quart import Blueprint, flash, redirect, request, url_for, current_app
-from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
-from quart_rate_limiter import rate_limit
-from security.captcha import MathCaptcha
-from datetime import timedelta
 import hashlib
+import html
 import time
-from posts.capcodes import Capcode
-from configs import archiveposting_conf
-from db import db_a
+from datetime import timedelta
+
+from quart import Blueprint, current_app, flash, redirect, request, url_for
+from quart_rate_limiter import rate_limit
+
 from asagi_converter import (
     generate_catalog,
     generate_thread,
-    get_counts_from_posts,
+    get_counts_from_posts
 )
-from moderation.filter_cache import fc
+from configs import archiveposting_conf
+from db import db_a
+from forms import PostForm
+from moderation import fc
+from moderation.auth import (
+    load_web_usr_data,
+    web_usr_is_admin,
+    web_usr_logged_in
+)
+from posts.capcodes import Capcode
 from posts.template_optimizer import (
-    render_catalog_card_archiveposting,
-    wrap_post_t,
     get_posts_t_archiveposting,
+    render_catalog_card_archiveposting,
+    wrap_post_t
 )
-from templates import (
-    template_catalog,
-    template_thread
-)
-import html
+from security.captcha import MathCaptcha
+from templates import template_catalog, template_thread
 from utils.validation import validate_threads
-
 
 bp = Blueprint("bp_web_archiveposting", __name__)
 
@@ -165,7 +167,7 @@ async def get_archiveposting_catalog(is_admin: bool, logged_in: bool):
 
 
 async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
-    board_shortname = archiveposting_conf['board_name']
+    board = archiveposting_conf['board_name']
     form: PostForm = await PostForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
@@ -179,8 +181,8 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
 
             p = get_post_d(form_data)
 
-            # thread_num = await create_thread(board_shortname, p)
-            await create_thread(board_shortname, p)
+            # thread_num = await create_thread(board, p)
+            await create_thread(board, p)
             await flash("Post created!", "success")
 
             # return redirect(url_for('bp_web_archiveposting.get_archiveposting_thread', thread_num=thread_num))
@@ -188,10 +190,10 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
         else:
             await flash("Wrong math captcha answer", "danger")
 
-    catalog = await generate_catalog(board_shortname, db_X=db_a)
+    catalog = await generate_catalog(board, db_X=db_a)
 
     # `nreplies` won't always be correct, but it does not effect paging
-    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=is_admin))} for page in catalog]
+    catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
 
     threads = ''.join(
         render_catalog_card_archiveposting(wrap_post_t(op))
@@ -203,8 +205,8 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
         archiveposting_form=form,
         form_message='New Thread',
         threads=threads,
-        board=board_shortname,
-        tab_title=f"/{board_shortname}/ Catalog",
+        board=board,
+        tab_title=f"/{board}/ Catalog",
         logged_in=logged_in,
         is_admin=is_admin,
     )
@@ -229,7 +231,7 @@ async def post_archiveposting_thread(is_admin: bool, logged_in: bool, thread_num
 
 
 async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: int):
-    board_shortname = archiveposting_conf['board_name']
+    board = archiveposting_conf['board_name']
     form: PostForm = await PostForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
@@ -243,7 +245,7 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
                 form_data['capcode'] = Capcode.admin
 
             p = get_post_d(form_data)
-            await create_post(board_shortname, p)
+            await create_post(board, p)
 
             form.data.clear()
             await flash("Post created!", "success")
@@ -252,9 +254,9 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
             await flash("Wrong math captcha answer", "danger")
 
     # use the existing json app function to grab the data
-    post_2_quotelinks, thread_dict = await generate_thread(board_shortname, thread_num, db_X=db_a)
+    post_2_quotelinks, thread_dict = await generate_thread(board, thread_num, db_X=db_a)
 
-    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=is_admin)
+    thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=logged_in)
 
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 
@@ -262,7 +264,7 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
 
     posts_t = get_posts_t_archiveposting(thread_dict['posts'], post_2_quotelinks)
 
-    title = f"/{board_shortname}/ #{thread_num}"
+    title = f"/{board}/ #{thread_num}"
     form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
     render = template_thread.render(
         archiveposting_form=form,
@@ -270,7 +272,7 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
         posts_t=posts_t,
         nreplies=nreplies,
         nimages=nimages,
-        board=board_shortname,
+        board=board,
         title=title,
         tab_title=title,
         logged_in=logged_in,

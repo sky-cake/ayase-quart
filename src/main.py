@@ -1,23 +1,23 @@
 import quart_flask_patch  # noqa
+
 import os
 import traceback
 
-from quart import Quart, jsonify, current_app
-from werkzeug.exceptions import HTTPException
-from quart_schema import RequestSchemaValidationError
 from hypercorn.middleware import ProxyFixMiddleware
+from quart import current_app, jsonify
 from quart_rate_limiter import RateLimiter
+from quart_schema import RequestSchemaValidationError
+from werkzeug.exceptions import HTTPException
 
+from archiveposting import init_archiveposting
 from blueprints import blueprints
-from configs import QuartConfig, app_conf, mod_conf, archiveposting_conf, traffic_log_conf
+from configs import QuartConfig, app_conf, archiveposting_conf, mod_conf
 from db import db_q
 from db.redis import close_redis
-from moderation import init_moderation
-from moderation.filter_cache import fc
+from moderation import fc, init_moderation
 from render import render_controller
 from templates import render_constants, template_error_message
-from archiveposting import init_archiveposting
-from traffic_log import traffic_log_init, traffic_log_request_before, traffic_log_request_after
+from utils.web_helpers import Quart2
 
 
 async def print_exception(e: Exception):
@@ -56,7 +56,7 @@ def create_app():
     file_dir = os.path.dirname(__file__)
     os.chdir(file_dir)
 
-    app = Quart(__name__)
+    app = Quart2(__name__)
 
     app.config.from_object(QuartConfig)
     app.config['MATH_CAPTCHA_FONT'] = os.path.join(file_dir, 'fonts/tly.ttf')
@@ -76,18 +76,14 @@ def create_app():
     if archiveposting_conf['enabled']:
         app.before_serving(init_archiveposting)
 
-    if traffic_log_conf.get('enabled'):
-        app.before_serving(traffic_log_init)
-        app.before_request(traffic_log_request_before)
-        app.after_request(traffic_log_request_after)
-
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
     app.after_serving(close_dbs)
 
     if mod_conf['enabled']:
-        from moderation.auth import auth_api, auth_web
         from quart_schema import QuartSchema
+
+        from moderation.auth import auth_api, auth_web
         auth_api.init_app(app)
         auth_web.init_app(app)
         QuartSchema(app)
@@ -110,8 +106,8 @@ if not app_conf.get('testing', False):
     print('Quart app initialized in production mode.')
     print('If you want to run this in production, you should stop this process with CTRL-C')
     print('and point hypercorn to this asgi app with one of the following:')
-    print('    1. /aq/venv/bin/hypercorn --config file:/aq/src/hypercorn_conf.py /aq/src/main:app')
-    print('    2. hypercorn --config hypercorn.toml /aq/src/main:app')
+    print('    1. /aq/venv/bin/hypercorn --config file:/aq/src/hypercorn.tpl.py /aq/src/main:app')
+    print('    2. hypercorn --config hypercorn.tpl.toml /aq/src/main:app')
     print('    3. hypercorn --bind 0.0.0.0:9003 --workers 3 /aq/src/main:app')
     print('Note: these are examples only. You ought to study the configs you use.')
     print('Hypercorn configs are documented at https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html')

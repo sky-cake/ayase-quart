@@ -1,8 +1,13 @@
 from quart import Blueprint
+
+from configs import site_conf
+from moderation.auth import (
+    load_web_usr_data,
+    web_usr_is_admin,
+    web_usr_logged_in
+)
 from render import render_controller
 from templates import template_about, template_soy
-from moderation.auth import web_usr_logged_in, web_usr_is_admin, load_web_usr_data
-from configs import site_conf
 
 bp = Blueprint("bp_web_about", __name__)
 

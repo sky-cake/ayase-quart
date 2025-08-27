@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 from html import escape
 from typing import Generator
+
 from utils.integers import get_prefix_uint_no0
 
 
@@ -80,7 +81,7 @@ def html_quotelinks(comment: str, board: str, thread_num: int):
     def replacer(match):
         post_num = match.group(1)
         op_tag = ' (OP)' if int(post_num) == thread_num else ''
-        return f'<a href="/{board}/thread/{thread_num}#p{post_num}" class="quotelink" data-board_shortname="{board}">&gt;&gt;{post_num}{op_tag}</a>'
+        return f'<a href="/{board}/thread/{thread_num}#p{post_num}" class="quotelink" data-board="{board}">&gt;&gt;{post_num}{op_tag}</a>'
 
     esc_ql_re = re.compile(r'&gt;&gt;(\d+)')
     return esc_ql_re.sub(replacer, comment)

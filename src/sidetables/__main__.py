@@ -1,9 +1,9 @@
 import asyncio
 import sys
 
-from .tables_indexes import run_table_command
-from .populate import run_populate
 from . import SideTableCmd as Cmd
+from .populate import run_populate
+from .tables_indexes import run_table_command
 
 help_text = f'''
 Usage: python -m sidetables COMMAND [args]

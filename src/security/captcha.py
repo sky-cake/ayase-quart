@@ -1,7 +1,7 @@
 import base64
+from functools import lru_cache
 from io import BytesIO
 from random import random
-from functools import lru_cache
 
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 
