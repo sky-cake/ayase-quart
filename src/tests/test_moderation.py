@@ -15,16 +15,11 @@ class TestFilterReportedPosts(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.app = Quart(__name__)
 
-        self.mock_mod_conf = {
-            'enabled': True,
-            'remove_replies_to_hidden_op': True,
-            'regex_filter': False,
-            'hide_4chan_deleted_posts': False,
-        }
+        self.mock_mod_conf = {'moderation': True, 'remove_replies_to_hidden_op': True}
         self.mock_get_board_num_pairs = AsyncMock()
 
         self.patcher_mod_conf = patch("moderation.mod_conf", self.mock_mod_conf)
-        self.patcher_get_board_num_pairs = patch("moderation.fc.get_board_num_pairs", self.mock_get_board_num_pairs)
+        self.patcher_get_board_num_pairs = patch("moderation.filter_cache.fc.get_board_num_pairs", self.mock_get_board_num_pairs)
 
         self.patcher_mod_conf.start()
         self.patcher_get_board_num_pairs.start()

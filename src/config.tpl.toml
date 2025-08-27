@@ -134,13 +134,6 @@ hits_per_page = 50
 max_hits = 1_000
 multi_board_search = false # allow searching multiple boards at once?
 
-# In order to utilize the AQ search form field `file_archived`,
-# the tagging module script `src/tagging/tagger.py` needs to be ran at least once.
-# It creates a database table called `image` and populates it will all the images you have on your server
-# If this config is false, it does not rely on the `image` table, and searching will still work - you just won't
-# have the `file_archived` field in your **vanilla** search form.
-use_file_archived = true
-
 
 [index_search]
 enabled = true
@@ -152,14 +145,6 @@ host = 'http://localhost:8000' # index search host. It should really be a LAN IP
 headers = { content-type = 'application/json', Authorization = 'password' }
 version = '1' # only matters for quickwit
 multi_board_search = true # allow searching multiple boards at once?
-
-
-# In order to utilize the AQ search form field `file_archived`,
-# the tagging module script `src/tagging/tagger.py` needs to be ran at least once.
-# It creates a database table called `image` and populates it will all the images you have on your server
-# If this config is false, it does not rely on the `image` table, and indexing will still work - you just won't
-# have the `file_archived` field in your **index** search form.
-use_file_archived = false
 
 
 [moderation]
@@ -216,22 +201,6 @@ database = '/home/archiveposting.db'
 board_name = 'ayase_quart'
 board_desc = '''This is Ayase Quart's text board. Only ascii is permitted.'''
 ascii_only = true
-
-
-[tagging]
-enabled = true # true, false
-
-database = '/absolute/path/to/tagging.db' # the tagger has its own database
-
-tag_model_repo_id = 'SmilingWolf/wd-swinv2-tagger-v3' # 'SmilingWolf/wd-convnext-tagger-v3' 'SmilingWolf/wd-vit-tagger-v3'
-
-allow_file_search = true # allow upload of files to search?
-exts = ['jpg', 'png', 'jpeg', 'gif'] # no . prefix, file the ext
-use_cpu = false # cpu or gpu
-
-max_page_retries = 2 # query the tag database up to <max_page_retries> times, or until <hits_per_page> is reached
-
-load_sqlite_into_memory = true # this must be false to persist data
 
 
 [vox]

@@ -18,8 +18,6 @@ from posts.quotelinks import (
     get_quotelink_lookup,
     get_quotelink_lookup_raw
 )
-from tagging.enums import SafeSearch
-from tagging.db import get_phg
 from werkzeug.security import safe_join
 from utils.validation import validate_board
 
@@ -313,71 +311,11 @@ def get_sha256_params(form_data) -> list[str]:
     return []
 
 
-def get_tag_id_board_2_sql(tag_ids: list[int], safe_search: SafeSearch, boards: list[str], where_query: str, page: int=None, per_page: int=None) -> dict:
-    sql_offset = ''
-    if page is not None and per_page is not None:
-        offset = int(max(page - 1, 0) * per_page)
-        sql_offset = f'OFFSET {offset}'
-
-    sql_limit = ''
-    if per_page is not None:
-        sql_limit = f'LIMIT {int(per_page)}'
-
-    sql_tag_ids = ''
-    if tag_ids:
-        sql_tag_ids = f'AND image_tag.tag_id IN ({get_phg(tag_ids)})'
-
-    sql_safe_search = ''
-    f_nsfw_tags = 'image_tag.tag_id NOT IN (94, 113, 48)' # 'image_tag.tag_name NOT IN ('nude', 'penis', 'nipples')'
-    if safe_search == SafeSearch.safe:
-        sql_safe_search = f'AND (general >= 0.3) AND (explicit < 0.02) AND (questionable < 0.5) AND {f_nsfw_tags}'
-
-    elif safe_search == SafeSearch.moderate:
-        sql_safe_search = f'AND (general >= 0.1) AND (explicit < 0.1) AND (questionable < 0.92) AND {f_nsfw_tags}'
-
-    pre = ' and' if where_query else ' where '
-    board_2_sql = {}
-    for board in boards:
-        sql = f"""{pre} media_orig in (
-        SELECT
-            filename
-        FROM image
-        WHERE image_id in (
-            SELECT image_id
-            FROM image JOIN image_tag USING(image_id)
-            WHERE
-                board = '{board}'
-                {sql_tag_ids}
-                {sql_safe_search}
-            GROUP BY image_tag.image_id
-            HAVING COUNT(image_tag.tag_id) >= {len(tag_ids)}
-            ORDER BY image_tag.prob DESC {sql_limit} {sql_offset}
-        ))
-        """
-        board_2_sql[board] = sql
-    return board_2_sql
-
-
-def get_sql_join_file_archived(form_data: dict, board: str):
-    if bool(form_data.get('file_archived')):
-        return f'''inner join image on `{board}`.media_orig = image.filename'''
-    return ''
-
-
-def get_file_archived_where(board: str, where_query: str, form_data: dict):
-    if bool(form_data.get('file_archived')):
-        pre = ' and' if where_query else ' where '
-        return f'''{pre} image.board = '{board}' and `{board}`.media_orig is not null and image.filename is not null'''
-    return ''
-
-
-def get_where_clause(board: str, where_query: str, form_data: dict, tag_id_board_2_sql_where: dict) -> str:
+def get_where_clause(board: str, where_query: str, form_data: dict) -> str:
     where_query += get_min_title_length_where(where_query, form_data)
     where_query += get_min_comment_length_where(where_query, form_data)
     where_query += get_facet_where(board, where_query, form_data)
     where_query += get_sha256_where(board, where_query, form_data)
-    where_query += get_file_archived_where(board, where_query, form_data) if vanilla_search_conf.get('use_file_archived') else ''
-    where_query += tag_id_board_2_sql_where.get(board, '')
     return where_query
 
 
@@ -385,14 +323,8 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int):
     where_filters, params = validate_and_generate_params(form_data)
     where_query = f'where {where_filters}' if where_filters else ''
 
-    tag_id_board_2_sql_where = {}
-    tag_ids = form_data.get('tag_ids', [])
-    if tag_ids:
-        tag_id_board_2_sql_where = get_tag_id_board_2_sql(form_data['tag_ids'], form_data['safe_search'], boards, where_query)
-
     params += get_facet_params(form_data)
     params += get_sha256_params(form_data)
-    params += tag_ids
     params = tuple(params)
 
     query_tuple_calls = []
@@ -400,8 +332,7 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int):
         sql = f"""
         select count(*)
         from `{board}`
-            {get_sql_join_file_archived(form_data, board) if vanilla_search_conf.get('use_file_archived') else ''}
-        {get_where_clause(board, where_query, form_data, tag_id_board_2_sql_where)}
+        {get_where_clause(board, where_query, form_data)}
         ;"""
         query_tuple_calls.append(db_q.query_tuple(sql, params=params))
 
@@ -449,14 +380,8 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     offset = get_offset(page_num - 1, hits_per_page)
 
-    tag_id_board_2_sql_where = {}
-    tag_ids = form_data.get('tag_ids', [])
-    if tag_ids:
-        tag_id_board_2_sql_where = get_tag_id_board_2_sql(form_data['tag_ids'], form_data['safe_search'], boards, where_query)
-
     params += get_facet_params(form_data)
     params += get_sha256_params(form_data)
-    params += tag_ids
     params = tuple(params)
 
     total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits)
@@ -496,8 +421,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
         sql = f"""
             {get_selector(board)}
             from `{board}`
-                {get_sql_join_file_archived(form_data, board) if vanilla_search_conf.get('use_file_archived') else ''}
-            {get_where_clause(board, where_query, form_data, tag_id_board_2_sql_where)}
+            {get_where_clause(board, where_query, form_data)}
             order by ts_unix {order_by}
             limit {hits_per_board_to_query[board]}
             {offset}

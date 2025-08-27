@@ -104,5 +104,4 @@ def close_all_databases(func):
 db_q = DbHandler(db_conf, db_conf['db_type']) # query
 db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
 db_a = DbHandler(db_archiveposting_conf, DbType.sqlite) # archive
-# db_t = DbHandler(db_tag_conf, DbType.sqlite)
 # db_eav = DbHandler({'database': make_src_path('eav.db')}, DbType.sqlite)

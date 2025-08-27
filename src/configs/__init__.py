@@ -107,13 +107,6 @@ if vox_conf['enabled']:
         assert vox_conf['voice_narrator'] in VoiceFlite._member_names_
 
 
-tag_conf = conf.get('tagging', {})
-db_tag_conf = tag_conf # only supports sqlite atm
-# # database might not be created yet, so we should not enforce this here
-# if db_tag_conf['database'] and not os.path.isfile(db_tag_conf['database']):
-#     raise ValueError(f'Can not find {db_tag_conf['database']}')
-
-
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)
 # if moderation_db := db_mod_conf.get('database'):

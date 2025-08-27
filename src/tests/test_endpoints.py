@@ -20,9 +20,9 @@ class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
             '/',
             f'/{test_board}',
             f'/{test_board}/catalog',
-            '/login',
+            f'/{app_conf.get('login_endpoint')}',
             '/sql',
-            'fts',
+            '/fts',
             '/stats',
         ]
 

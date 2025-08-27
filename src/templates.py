@@ -2,20 +2,18 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 
 from boards import board_objects
-from moderation.report import report_modal_t
 from configs import (
-    app_conf,
-    media_conf,
-    site_conf,
-    vanilla_search_conf,
-    index_search_conf,
-    tag_conf,
-    archiveposting_conf,
-    mod_conf,
-    stats_conf,
-    archive_conf,
     SITE_NAME,
+    app_conf,
+    archive_conf,
+    archiveposting_conf,
+    index_search_conf,
+    mod_conf,
+    site_conf,
+    stats_conf,
+    vanilla_search_conf
 )
+from moderation.report import report_modal_t
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
 
@@ -26,8 +24,6 @@ render_constants = dict(
     index_search_enabled=index_search_conf.get('enabled', False),
     moderation_enabled=mod_conf['enabled'],
     stats_enabled=stats_conf['enabled'],
-    tagging_enabled=tag_conf['enabled'],
-    tagging_file_search_enabled=tag_conf['allow_file_search'],
     archiveposting_conf=archiveposting_conf if archiveposting_conf['enabled'] else {},
     endpoint=lambda: request.endpoint,
     url_for=url_for,

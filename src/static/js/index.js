@@ -170,7 +170,7 @@ function updateDateTimes() {
     }
 }
 
-// fts & tagging
+// fts
 function setup_data_toggles() {
 	for (const el of doc_query_all("[data-toggle]")) {
 		el.addEventListener("click", () => {
