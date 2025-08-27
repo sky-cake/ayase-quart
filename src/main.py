@@ -1,3 +1,5 @@
+import quart_flask_patch  # noqa
+
 import os
 import traceback
 
@@ -8,8 +10,7 @@ from quart_schema import RequestSchemaValidationError
 from werkzeug.exceptions import HTTPException
 
 from archiveposting import init_archiveposting
-from blueprints import \
-    blueprints  # importing timm and torch down the import hole makes this slow
+from blueprints import blueprints
 from configs import QuartConfig, app_conf, archiveposting_conf, mod_conf
 from db import db_q
 from db.redis import close_redis
