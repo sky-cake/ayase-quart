@@ -82,7 +82,7 @@ async def create_thread(table: str, post: dict) -> int:
     post['thread_num'] = num
 
     sql_cols = ', '.join(post)
-    sql = f"""INSERT INTO `{table}` ({sql_cols}) VALUES ({db_a.phg.size(post)});"""
+    sql = f"""insert into `{table}` ({sql_cols}) values ({db_a.Phg().size(post)});"""
 
     params = list(post.values())
     await db_a.query_tuple(sql, params=params, commit=True)
@@ -90,7 +90,7 @@ async def create_thread(table: str, post: dict) -> int:
     threads_d = get_threads_d(post)
 
     sql_cols = ', '.join(threads_d)
-    sql = f"""INSERT INTO `{table}_threads` ({sql_cols}) VALUES ({db_a.phg.size(threads_d)});"""
+    sql = f"""insert into `{table}_threads` ({sql_cols}) values ({db_a.Phg().size(threads_d)});"""
 
     await db_a.query_tuple(sql, params=list(threads_d.values()), commit=True)
     return num
@@ -105,7 +105,7 @@ async def create_post(table: str, post: dict):
 
     sql_cols = ', '.join(post)
 
-    sql = f"""INSERT INTO `{table}` ({sql_cols}) VALUES ({db_a.phg.size(post)});"""
+    sql = f"""insert into `{table}` ({sql_cols}) values ({db_a.Phg().size(post)});"""
 
     params = list(post.values())
     await db_a.query_tuple(sql, params=params, commit=True)

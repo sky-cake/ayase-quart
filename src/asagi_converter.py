@@ -12,7 +12,7 @@ from textwrap import dedent
 from async_lru import alru_cache
 from werkzeug.security import safe_join
 
-from configs import archiveposting_conf, stats_conf, vanilla_search_conf
+from configs import archiveposting_conf, stats_conf
 from db import db_a, db_q
 from db.redis import get_redis
 from posts.capcodes import Capcode
@@ -23,6 +23,8 @@ from posts.quotelinks import (
     get_quotelink_lookup_raw
 )
 from utils.validation import validate_board
+from db.base_db import BasePlaceHolderGen
+
 
 # these comments state the API field names, and descriptions, if applicable
 # see the API docs for more info
@@ -195,14 +197,15 @@ class SqlSearchFilter:
     in_list: bool = False
     fieldname: str|None = None # added due to possible key overlap in `sql_search_filters`
 
-phg = db_q.phg()
+
+temp_phg = 'жΔж'
 sql_search_filters = dict(
-    title=SqlSearchFilter(f'title like {phg}', like=True),
-    comment=SqlSearchFilter(f'comment like {phg}', like=True),
-    media_filename=SqlSearchFilter(f'media_filename like {phg}', like=True),
-    media_hash=SqlSearchFilter(f'media_hash = {phg}'),
-    date_before=SqlSearchFilter(f'timestamp <= {phg}'),
-    date_after=SqlSearchFilter(f'timestamp >= {phg}'),
+    title=SqlSearchFilter(f'title like {temp_phg}', like=True),
+    comment=SqlSearchFilter(f'comment like {temp_phg}', like=True),
+    media_filename=SqlSearchFilter(f'media_filename like {temp_phg}', like=True),
+    media_hash=SqlSearchFilter(f'media_hash = {temp_phg}'),
+    date_before=SqlSearchFilter(f'timestamp <= {temp_phg}'),
+    date_after=SqlSearchFilter(f'timestamp >= {temp_phg}'),
     has_no_file=SqlSearchFilter("media_filename is null", placeholder=False),
     has_file=SqlSearchFilter("media_filename is not null", placeholder=False),
     is_op=SqlSearchFilter('op = 1', placeholder=False),
@@ -211,15 +214,16 @@ sql_search_filters = dict(
     is_not_deleted=SqlSearchFilter('deleted = 0', placeholder=False),
     is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
     is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
-    width=SqlSearchFilter(f'media_w >= {phg}'),
-    height=SqlSearchFilter(f'media_h >= {phg}'),
-    capcode=SqlSearchFilter(f'capcode = {phg}'),
-    num=SqlSearchFilter(f'num = {phg}'),
+    width=SqlSearchFilter(f'media_w >= {temp_phg}'),
+    height=SqlSearchFilter(f'media_h >= {temp_phg}'),
+    capcode=SqlSearchFilter(f'capcode = {temp_phg}'),
+    num=SqlSearchFilter(f'num = {temp_phg}'),
     nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='num'),
     thread_nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='thread_num'),
 )
 
-def validate_and_generate_params(form_data: dict) -> tuple[str, list]:
+
+def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
@@ -241,12 +245,12 @@ def validate_and_generate_params(form_data: dict) -> tuple[str, list]:
             field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
 
         if s_filter.in_list and isinstance(field_val, list) or isinstance(field_val, tuple) and len(field_val) > 0 and s_filter.fieldname:
-            s_filter.fragment = f'{s_filter.fieldname} in ({db_q.phg.size(field_val)})'
+            s_filter.fragment = f'{s_filter.fieldname} in ({phg.size(field_val)})'
 
         if s_filter.placeholder:
             params.extend(field_val) if isinstance(field_val, list) or isinstance(field_val, tuple) else params.append(field_val)
 
-        where_parts.append(s_filter.fragment)
+        where_parts.append(s_filter.fragment.replace(temp_phg, phg()))
 
     where_fragment = ' and '.join(where_parts)
     return where_fragment, params
@@ -256,29 +260,19 @@ def get_offset(page_num: int, hits_per_page: int) -> str:
     return f'offset {page_num * hits_per_page}' if page_num > 0 and hits_per_page > 0 else ''
 
 
-def get_facet_where(board: str, where_query: str, form_data: dict) -> str:
+def get_facet_where(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> str:
     op_title, op_comment = form_data['op_title'], form_data['op_comment']
 
     pre = ' and' if where_query else ' where '
 
     if op_title and op_comment:
-        return f'''{pre} thread_num in (select thread_num from `{board}` where op = 1 and title like {phg} and comment like {phg})'''
+        return f'''{pre} thread_num in (select thread_num from `{board}` where op = 1 and title like {phg()} and comment like {phg()})'''
 
     elif op_title and not op_comment:
-        return f'''{pre} thread_num in (select thread_num from `{board}` where op = 1 and title like {phg})'''
+        return f'''{pre} thread_num in (select thread_num from `{board}` where op = 1 and title like {phg()})'''
 
     elif not op_title and op_comment:
-        return f'''{pre} thread_num in (select thread_num from `{board}` where op = 1 and comment like {phg})'''
-
-    return ''
-
-
-def get_sha256_where(board: str, where_query: str, form_data: dict) -> str:
-    sha256 = form_data.get('sha256')
-
-    if sha256:
-        pre = ' and' if where_query else ' where '
-        return f'''{pre} media_orig in (select filename from image where board = '{board}' and sha256 = ?)'''
+        return f'''{pre} thread_num in (select thread_num from `{board}` where op = 1 and comment like {phg()})'''
 
     return ''
 
@@ -311,16 +305,19 @@ def get_sha256_params(form_data) -> list[str]:
     return []
 
 
-def get_where_clause(board: str, where_query: str, form_data: dict) -> str:
+def get_board_specific_where_clause(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> str:
+    """Additional where filters MUST come after `where_query` for Postgresql param counting."""
     where_query += get_min_title_length_where(where_query, form_data)
     where_query += get_min_comment_length_where(where_query, form_data)
-    where_query += get_facet_where(board, where_query, form_data)
-    where_query += get_sha256_where(board, where_query, form_data)
+    where_query += get_facet_where(board, where_query, form_data, phg)
     return where_query
 
 
+is_counter_db = 'counter' in db_q.Phg.__slots__
 async def get_total_hits(form_data: dict, boards: list[str], max_hits: int):
-    where_filters, params = validate_and_generate_params(form_data)
+    phg1 = db_q.Phg()
+
+    where_filters, params = validate_and_generate_params(form_data, phg1)
     where_query = f'where {where_filters}' if where_filters else ''
 
     params += get_facet_params(form_data)
@@ -329,10 +326,13 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int):
 
     query_tuple_calls = []
     for board in boards:
+
+        phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
+
         sql = f"""
         select count(*)
         from `{board}`
-        {get_where_clause(board, where_query, form_data)}
+        {get_board_specific_where_clause(board, where_query, form_data, phg2)}
         ;"""
         query_tuple_calls.append(db_q.query_tuple(sql, params=params))
 
@@ -375,7 +375,8 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     if max_hits and (page_num * hits_per_page > max_hits):
         page_num = int(max_hits / hits_per_page)
 
-    where_filters, params = validate_and_generate_params(form_data)
+    phg1 = db_q.Phg()
+    where_filters, params = validate_and_generate_params(form_data, phg1)
     where_query = f'where {where_filters}' if where_filters else ''
 
     offset = get_offset(page_num - 1, hits_per_page)
@@ -418,10 +419,12 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     calls = []
     for board in hits_per_board_to_query.keys():
+        phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
+
         sql = f"""
             {get_selector(board)}
             from `{board}`
-            {get_where_clause(board, where_query, form_data)}
+            {get_board_specific_where_clause(board, where_query, form_data, phg2)}
             order by ts_unix {order_by}
             limit {hits_per_board_to_query[board]}
             {offset}
@@ -486,7 +489,7 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
         select num, comment
         from `{board}`
         where comment is not null
-        and thread_num in ({db_q.phg.size(thread_nums)})
+        and thread_num in ({db_q.Phg().size(thread_nums)})
     '''
     rows = await db_q.query_dict(sql, params=thread_nums)
     return get_quotelink_lookup(rows)
@@ -548,14 +551,14 @@ async def generate_index(board: str, page_num: int=1):
     if not (threads := await db_q.query_dict(sql)):
         return {'threads': []}, {}
 
-    thread_phs = db_q.phg.size(threads)
+    phg_size = db_q.Phg().size(threads)
 
     op_query = f'''
     {get_selector(board)}
     from `{board}`
     where
         op = 1
-        and thread_num in ({thread_phs})
+        and thread_num in ({phg_size})
     '''
 
     replies_query = f'''
@@ -568,7 +571,7 @@ async def generate_index(board: str, page_num: int=1):
         from `{board}`
         where
             op = 0
-            and thread_num in ({thread_phs})
+            and thread_num in ({phg_size})
     )
     {get_selector(board)}
     from latest_replies
@@ -643,7 +646,7 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
         {get_selector(board)}
     from `{board}`
     where op = 1
-    and thread_num in ({local_db_q.phg.size(threads)})
+    and thread_num in ({local_db_q.Phg().size(threads)})
     order by thread_num desc
     '''
     posts = await local_db_q.query_dict(posts_query, params=tuple(threads.keys()))
@@ -686,20 +689,18 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
     """
     local_db_q = db_X if db_X else db_q
 
-    phg = db_q.phg()
-
     thread_query = f'''
         select
             nreplies,
             nimages
         from `{board}_threads`
-        where thread_num = {phg}
+        where thread_num = {db_q.Phg()()}
     ;'''
 
     posts_query = f'''
         {get_selector(board)}
         from `{board}`
-        where thread_num = {phg}
+        where thread_num = {db_q.Phg()()}
         order by num asc
     ;'''
     threads_details, posts = await asyncio.gather(
@@ -730,7 +731,7 @@ async def generate_post(board: str, post_id: int, db_X=None) -> tuple[dict]:
     sql = f"""
         {get_selector(board)}
         from `{board}`
-        where num = {local_db_q.phg()}
+        where num = {local_db_q.Phg()()}
     ;"""
     posts = await local_db_q.query_dict(sql, params=(post_id,))
 
@@ -756,7 +757,7 @@ async def get_post(board: str, post_id: int, db_X=None) -> dict:
     sql = f"""
         {get_selector(board)}
         from `{board}`
-        where num = {local_db_q.phg()}
+        where num = {local_db_q.Phg()()}
     ;"""
     posts = await local_db_q.query_dict(sql, params=(post_id,))
 
@@ -774,7 +775,7 @@ async def get_post_with_doc_id(board: str, post_id: int, db_X=None) -> dict:
     sql = f"""
         {get_selector(board)}
         from `{board}`
-        where num = {local_db_q.phg()}
+        where num = {local_db_q.Phg()()}
     ;"""
     posts = await local_db_q.query_dict(sql, params=(post_id,))
 
@@ -796,11 +797,15 @@ async def move_post_to_delete_table(post: dict) -> str:
     del post_for_insert['doc_id']
 
     local_db_q = get_local_db_q(board)
-    phg = local_db_q.phg()
-    sql_cols = ', '.join(post_for_insert)
-    sql_conflict = ', '.join([f'{col}={phg}' for col in post_for_insert])
 
-    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({local_db_q.phg.size(post_for_insert)}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
+    phg = local_db_q.Phg()
+
+    sql_cols = ','.join(post_for_insert)
+
+    sql_values = phg.size(post_for_insert)
+    sql_conflict = ','.join([f'{col}={phg()}' for col in post_for_insert])
+
+    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({sql_values}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
     values = list(post_for_insert.values())
     parameters = values + values
     num = await local_db_q.query_dict(sql, params=parameters, commit=True)
@@ -811,7 +816,7 @@ async def move_post_to_delete_table(post: dict) -> str:
     sql = f"""
         delete
         from `{board}`
-        where num = {phg}
+        where num = {local_db_q.Phg()()}
     ;"""
     await local_db_q.query_dict(sql, params=(post['num'],), commit=True)
 
@@ -849,7 +854,7 @@ async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
 
 
 async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[int]]:
-    sql = f"""select num, op from `{board}` where comment is not null and comment regexp {db_q.phg()};"""
+    sql = f"""select num, op from `{board}` where comment is not null and comment regexp {db_q.Phg()()};"""
     local_db_q = get_local_db_q(board)
     rows = await local_db_q.query_tuple(sql, params=(pattern,))
     if not rows:
@@ -859,7 +864,7 @@ async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[
 
 async def is_post_op(board: str, num: int) -> bool:
     local_db_q = get_local_db_q(board)
-    sql = f"""select num, op from `{board}` where num = {local_db_q.phg()}"""
+    sql = f"""select num, op from `{board}` where num = {local_db_q.Phg()()}"""
     rows = await local_db_q.query_tuple(sql, params=[num])
     if not rows:
         return False
@@ -932,7 +937,7 @@ async def get_latest_ops_as_catalog(boards: list[str]):
 
 async def get_board_2_nums_from_board_2_filenames(board_2_filenames: dict[str, list[str]]) -> dict[str, tuple[int]]:
     sql_calls = [
-        db_q.query_tuple(f"""select num from `{board}` where media_orig in ({db_q.phg.size(filenames)})""", params=filenames)
+        db_q.query_tuple(f"""select num from `{board}` where media_orig in ({db_q.Phg().size(filenames)})""", params=filenames)
         for board, filenames in board_2_filenames.items()
         if filenames
     ]

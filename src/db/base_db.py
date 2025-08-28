@@ -46,6 +46,10 @@ class BaseQueryRunner(ABC):
 class BasePlaceHolderGen():
     __slots__ = ()
 
+    def __init__(self, **kwargs):
+        # swallow kwargs so signatures match
+        pass
+
     def size(self, items: Iterable):
         return ','.join(self() for _ in range(len(items)))
 

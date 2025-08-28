@@ -77,8 +77,8 @@ class PostgresqlQueryRunner(BaseQueryRunner):
 class PostgresqlPlaceholderGen(BasePlaceHolderGen):
     __slots__ = ('counter',)
 
-    def __init__(self):
-        self.counter = 0
+    def __init__(self, start: int=0):
+        self.counter = start
 
     def __call__(self):
         self.counter += 1

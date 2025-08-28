@@ -64,7 +64,7 @@ async def board_rows_gen(board: str, after_doc_id: int=0) -> AsyncGenerator:
     sql = f"""
     select {','.join(post_columns)}
     from `{board}`
-    where doc_id > {db_q.phg()}
+    where doc_id > {db_q.Phg()()}
     order by doc_id asc
     limit {batch_size}
     ;"""
@@ -87,9 +87,8 @@ async def board_rows_gen(board: str, after_doc_id: int=0) -> AsyncGenerator:
 # postgresql: on conflict (thread_num) do update set val = val + excluded.val
 #   https://stackoverflow.com/a/1109198
 async def increment_threads(board: str, rows: list[tuple]):
-    ph = ','.join(db_q.phg() for _ in range(len(rows)))
     sql = f"""insert into `{board}_{SideTable.threads}`({",".join(thread_columns)})
-    values {ph}
+    values {db_q.Phg().size(rows)}
     as excluded on duplicate key update
         nreplies = nreplies + excluded.nreplies,
         nimages = nimages + excluded.nimages,
@@ -99,10 +98,13 @@ async def increment_threads(board: str, rows: list[tuple]):
     ;"""
     await db_q.query_tuple(sql, (*rows,))
 
+
 async def insert_sidetable_fresh(sidetable: SideTable, columns: Iterable[str], board: str, rows: list[tuple]):
-    ph = ','.join(db_q.phg() for _ in range(len(rows)))
-    sql = f'insert into `{board}_{sidetable}`({",".join(columns)}) values {ph};'
+    cols = ','.join(columns)
+    vals = db_q.Phg().size(rows)
+    sql = f'insert into `{board}_{sidetable}` ({cols}) values {vals};'
     await db_q.query_tuple(sql, (*rows,))
+
 
 async def aggregate_posts(board: str, after_doc_id: int=0):
     threads = defaultdict(Thread)

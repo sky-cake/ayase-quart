@@ -74,7 +74,7 @@ class DbHandler:
         self.db_module: dict = _get_db_module(db_type)
         self.pool_manager: BasePoolManager = pool_manager or self.db_module['PoolManager'](db_conf)
         self.query_runner: BaseQueryRunner = query_runner or self.db_module['QueryRunner'](self.pool_manager)
-        self.phg: BasePlaceHolderGen = self.db_module['PlaceholderGenerator']() # "Place Holder Generator"
+        self.Phg: type[BasePlaceHolderGen] = self.db_module['PlaceholderGenerator'] # "Place Holder Generator"
         self.length_method = 'CHAR_LENGTH' if db_type == DbType.mysql else 'LENGTH' # sqlite and pg
 
     async def prime_db_pool(self):

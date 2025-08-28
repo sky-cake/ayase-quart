@@ -187,14 +187,15 @@ class FilterCacheSqlite(BaseFilterCache):
         if not self.enabled:
             return 0
 
-        rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.phg()} and op = 1', params=[board])
+        rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.Phg()()} and op = 1', params=[board])
         return rows[0][0]
 
 
     async def get_board_num_pairs(self, posts: list) -> set[tuple[str, int]]:
         board_and_nums = [(p['board_shortname'], p['num']) for p in posts]
 
-        ph = ','.join([f'({db_m.phg()},{db_m.phg()})'] * len(board_and_nums))
+        phg = db_m.Phg()
+        ph = ','.join(f'({phg()},{phg()})' for _ in range(len(board_and_nums)))
 
         expanded = [item for bn in board_and_nums for item in bn]
 
@@ -209,8 +210,8 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def is_post_removed(self, board: str, num: int) -> bool:
-        ph = db_m.phg()
-        sql = f"""select num from board_nums_cache where board_shortname = {ph} and num = {ph}"""
+        phg = db_m.Phg()
+        sql = f"""select num from board_nums_cache where board_shortname = {phg()} and num = {phg()}"""
         row = await db_m.query_tuple(sql, params=[board, num])
         if not row:
             return False
@@ -218,18 +219,18 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def insert_post(self, board: str, num: int, op: int):
-        ph = db_m.phg()
+        phg = db_m.Phg()
         await db_m.query_dict(
-            f"insert or ignore into board_nums_cache (board_shortname, num, op) values ({ph},{ph},{ph})",
+            f"insert or ignore into board_nums_cache (board_shortname, num, op) values ({phg()},{phg()},{phg()})",
             params=[board, num, op],
             commit=True,
         )
 
 
     async def delete_post(self, board: str, num: int, op: int):
-        ph = db_m.phg()
+        phg = db_m.Phg()
         await db_m.query_dict(
-            f"delete from board_nums_cache where board_shortname = {ph} and num = {ph} and op = {ph}",
+            f"delete from board_nums_cache where board_shortname = {phg()} and num = {phg()} and op = {phg()}",
             params=[board, num, op],
             commit=True,
         )

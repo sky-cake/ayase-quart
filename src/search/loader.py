@@ -214,10 +214,10 @@ async def index_board(board: str, search_provider: BaseSearch):
     await board_loader.run()
 
 
-max_placeholders = db_q.phg.qty(THREAD_BATCH)
+max_placeholders = db_q.Phg().qty(THREAD_BATCH)
 async def get_post_rows(board: str, thread_nums: list[int]):
     # don't rebuild the placeholders when they will always be the same except the last one
-    placeholders = max_placeholders if len(thread_nums) == THREAD_BATCH else db_q.phg.size(thread_nums)
+    placeholders = max_placeholders if len(thread_nums) == THREAD_BATCH else db_q.Phg().size(thread_nums)
 
     # you may need to update `row_keys` (below) if you modify this query's selectors.
 
@@ -330,7 +330,7 @@ async def get_board_db_last_num(board: str) -> int|None:
 
 
 async def get_board_db_threads_after_num(board: str, num: int) -> list[int]:
-    sql = f'select distinct(thread_num) from {board} where num >= {db_q.phg()};'
+    sql = f'select distinct(thread_num) from {board} where num >= {db_q.Phg()()};'
     rows = await db_q.query_tuple(sql, (num,))
     return [row[0] for row in rows]
 
