@@ -117,6 +117,8 @@ drop index `banned_index` on `%%BOARD%%_images`;
 drop index `name_trip_index` on `%%BOARD%%_users`;
 drop index `firstseen_index` on `%%BOARD%%_users`;
 drop index `postcount_index` on `%%BOARD%%_users`;
+
+drop index `num_index` on `%%BOARD%%_deleted`;
 """
 
 add_index_mysql = """
@@ -131,9 +133,11 @@ alter table `%%BOARD%%_images` add unique index `media_hash_index` (`media_hash`
 alter table `%%BOARD%%_images` add index `total_index` (`total`);
 alter table `%%BOARD%%_images` add index `banned_index` (`banned`);
 
-alter table `%%BOARD%%_users` add unique index name_trip_index (`name`, `trip`);
-alter table `%%BOARD%%_users` add index firstseen_index (`firstseen`);
-alter table `%%BOARD%%_users` add index postcount_index (`postcount`);
+alter table `%%BOARD%%_users` add unique index `name_trip_index` (`name`, `trip`);
+alter table `%%BOARD%%_users` add index `firstseen_index` (`firstseen`);
+alter table `%%BOARD%%_users` add index `postcount_index` (`postcount`);
+
+alter table `%%BOARD%%_deleted` add unique index `num_index` (`num`);
 """
 
 create_table_sqlite = """
@@ -246,6 +250,8 @@ drop index if exists `%%BOARD%%_images_banned_index`;
 drop index if exists `%%BOARD%%_users_name_trip_index`;
 drop index if exists `%%BOARD%%_users_firstseen_index`;
 drop index if exists `%%BOARD%%_users_postcount_index`;
+
+drop index if exists `%%BOARD%%_deleted_num_index`;
 """
 
 add_index_sqlite = """
@@ -256,13 +262,15 @@ create index if not exists `%%BOARD%%_threads_time_last_modified_index` on `%%BO
 create index if not exists `%%BOARD%%_threads_sticky_index` on `%%BOARD%%_threads` (`sticky`);
 create index if not exists `%%BOARD%%_threads_locked_index` on `%%BOARD%%_threads` (`locked`);
 
-create unique index if not exists %%BOARD%%_images_media_hash_index on `%%BOARD%%_images` (media_hash);
-create index if not exists %%BOARD%%_images_total_index on `%%BOARD%%_images` (`total`);
-create index if not exists %%BOARD%%_images_banned_index on `%%BOARD%%_images` (`banned`);
+create unique index if not exists `%%BOARD%%_images_media_hash_index` on `%%BOARD%%_images` (media_hash);
+create index if not exists `%%BOARD%%_images_total_index` on `%%BOARD%%_images` (`total`);
+create index if not exists `%%BOARD%%_images_banned_index` on `%%BOARD%%_images` (`banned`);
 
-create unique index if not exists %%BOARD%%_users_name_trip_index on `%%BOARD%%_users` (`name`, `trip`);
-create index if not exists %%BOARD%%_users_firstseen_index on `%%BOARD%%_users` (`firstseen`);
-create index if not exists %%BOARD%%_users_postcount_index on `%%BOARD%%_users` (`postcount`);
+create unique index if not exists `%%BOARD%%_users_name_trip_index` on `%%BOARD%%_users` (`name`, `trip`);
+create index if not exists `%%BOARD%%_users_firstseen_index` on `%%BOARD%%_users` (`firstseen`);
+create index if not exists `%%BOARD%%_users_postcount_index` on `%%BOARD%%_users` (`postcount`);
+
+create unique index if not exists `%%BOARD%%_deleted_num_index` on `%%BOARD%%_deleted` (`num`);
 """
 
 sidetable_templates = {
