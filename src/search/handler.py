@@ -33,7 +33,7 @@ toggle_fts_info_html = """
 """
 
 async def search_handler(search_type: SearchType, logged_in=False, is_admin=False) -> str:
-    if request.method not in ['GET', 'POST']:
+    if request.method != 'GET':
         raise MethodNotAllowed
 
     if search_type == SearchType.idx:
@@ -62,17 +62,8 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
 
     p = Perf(f'{search_type.value} search', enabled=app_conf.get('testing'))
 
-    if request.method == 'GET':
-        params = {**request.args}
-        params['boards'] = request.args.get('boards')
-
-    elif request.method == 'POST':
-        formdata = await request.form
-        params = {**formdata}
-        params['boards'] = formdata.get('boards')
-
-        files = await request.files
-        file_image: FileStorage = files.get('file_upload')
+    params = {**request.args}
+    params['boards'] = request.args.get('boards')
 
     if params['boards']:
         params['boards'] = params['boards'].split(',')
