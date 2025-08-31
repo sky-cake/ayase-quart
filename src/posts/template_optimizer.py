@@ -29,7 +29,6 @@ def wrap_post_t(post: dict):
         t_country=get_country_t(post),
         t_troll_country=get_troll_country_t(post),
         t_trip=get_trip_t(post),
-        t_mobile=get_mobile_t(post),
         t_name=get_name_t(post),
         t_poster_hash=get_poster_hash_t(post),
         t_since4pass=get_since4pass_t(post),
@@ -114,11 +113,6 @@ def render_post_t_basic(post: dict):
     <div id="pc{num}">
         <div class="sideArrows">&gt;&gt;</div>
         <div id="p{num}" class="post reply">
-            <div class="postInfoM mobile" id="pim{num}">
-                <span class="nameBlock"><span class="name">{ANONYMOUS_NAME}</span><br></span>
-                <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-                <a href="#{num}">No. {num}</a>
-            </div>
             <div class="postInfo" id="pi{num}">
                 <span class="inblk"><b>/{board}/</b></span>
                 <span class="name N">{ANONYMOUS_NAME}</span>
@@ -371,17 +365,6 @@ def get_trip_t(post: dict):
     return f'<span class="postertrip">{trip}</span>'
 
 
-def get_mobile_t(post: dict):
-    timestamp = post['ts_unix']
-    num = post['num']
-    name = post['name'] or ANONYMOUS_NAME
-    return f"""
-	<span class="nameBlock"><span class="name">{name}</span><br></span>
-    <span class="dateTime inblk" data-utc="{timestamp}"></span>
-    <a href="#{num}">No. {num}</a>
-	"""
-
-
 def get_exif_title(post: dict):
     if not (exif := post.get('exif')):
         return ''
@@ -444,10 +427,6 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
     ts_unix = wpt['ts_unix']
     return f"""
     { wpt['t_header'] }
-    <div class="postInfoM mobile" id="pim{num}">
-        { wpt['t_sub'] }
-        { wpt['t_mobile'] }
-    </div>
     { wpt['t_media'] if is_op else '' }
     <div class="postInfo" id="pi{num}">
         <span class="inblk"><b>/{wpt['board_shortname']}/</b> { op_label if is_op else '' }</span>
@@ -560,10 +539,6 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
 
     return f"""{ thread_num_label }
     { wpt['t_header'] }
-    <div class="postInfoM mobile" id="pim{num}">
-        { wpt['t_sub'] }
-        { wpt['t_mobile'] }
-    </div>
     <div class="postInfo" id="pi{num}">
         { op_label if is_op else '' }
         { wpt['t_filedeleted'] }
