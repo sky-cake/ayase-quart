@@ -18,12 +18,12 @@ blueprints = [
 
 
 if index_search_conf['enabled']:
-    from blueprints.web.bp_index_search import bp as bp_web_index_search
+    from blueprints.web.bp_search_fts import bp as bp_web_index_search
     blueprints += [bp_web_index_search]
 
 
 if vanilla_search_conf['enabled']:
-    from blueprints.web.bp_vanilla_search import bp as bp_web_vanilla_search
+    from blueprints.web.bp_search_sql import bp as bp_web_vanilla_search
     blueprints += [bp_web_vanilla_search]
 
 

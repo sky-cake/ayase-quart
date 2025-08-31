@@ -9,7 +9,7 @@ from moderation.auth import (
     web_usr_is_admin,
     web_usr_logged_in
 )
-from search.handler import search_handler
+from blueprints.web.bp_search import search_handler
 
 bp = Blueprint("bp_web_vanilla_search", __name__)
 

@@ -1,10 +1,9 @@
 from time import perf_counter
 
-from quart import current_app, flash, redirect, request, url_for
-from werkzeug.datastructures import FileStorage
+from quart import flash, request, url_for
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 
-from configs import SITE_NAME, app_conf, index_search_conf, vanilla_search_conf
+from configs import app_conf, index_search_conf, vanilla_search_conf
 from enums import SearchType
 from forms import IndexSearchForm, SearchForm, VanillaSearchForm
 from moderation import fc
