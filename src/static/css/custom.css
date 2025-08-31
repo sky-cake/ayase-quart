@@ -582,8 +582,8 @@ input[type="number"] {
 
 img {
     cursor: pointer;
-    max-width: 95vw;
-    max-height: 60vh;
+    max-width: 100%;
+    max-height: 50vh;
 }
 
 .fileText {
@@ -735,9 +735,8 @@ div.message {
 }
 
 #welcome {
-    opacity: 80%;
-    height: 300px;
     border-radius: 4px;
+    filter: brightness(0.9);
 }
 
 #banner {

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
-<div class="center">
-    <img id="welcome" class="center" src="{{url_for('static', filename=logo_filename)}}"/>
+<div class="center mt-1">
+    <img id="welcome" src="{{url_for('static', filename=logo_filename)}}"/>
 </div>
 
 {% if archiveposting_conf['enabled'] %}
