@@ -90,8 +90,6 @@ async def favicon():
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_board_index(board: str, is_admin: bool, logged_in: bool):
-    """See `v_board_index_page()` for benchmarks.
-    """
     validate_board(board)
     p = Perf('index', enabled=app_conf.get('testing'))
 
@@ -142,9 +140,7 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
     index, quotelinks = await generate_index(board, page_num)
     p.check('generate index')
 
-    for i in range(0, len(index['threads'])):
-        index['threads'][i]['posts'] = await fc.filter_reported_posts(index['threads'][i]['posts'], is_authority=logged_in)
-
+    index['threads'] = [{'posts': await fc.filter_reported_posts(posts['posts'], is_authority=logged_in)} for posts in index['threads']]
     p.check('filter_reported')
 
     validate_threads(index['threads'])
