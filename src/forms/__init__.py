@@ -125,10 +125,10 @@ class PostForm(StripForm):
 
 class MessageForm(StripForm):
     do_not_strip = []
-    title = StringField("Subject", validators=[Length(0, 128)])
-    comment = TextAreaField("Comment", validators=[Length(2, 2048)])
+    title = StringField('Subject', validators=[Length(0, 128)])
+    comment = TextAreaField('Comment', validators=[Length(2, 2048)])
     captcha_id = HiddenField(validators=[DataRequired()])
-    captcha_answer = IntegerField("", validators=[DataRequired()])
+    captcha_answer = IntegerField('', validators=[DataRequired()])
     submit = SubmitField('Search')
 
 
@@ -144,16 +144,16 @@ class SearchForm(StripForm):
 
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
-    title = StringField("Subject", validators=[Optional(), Length(2, 256)])
-    comment = TextAreaField("Comment", validators=[Optional(), Length(2, 1024)])
-    op_title = StringField("OP Subject", validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
-    op_comment = TextAreaField("OP Comment", validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
+    title = StringField('Subject', validators=[Optional(), Length(2, 256)])
+    comment = TextAreaField('Comment', validators=[Optional(), Length(2, 1024)])
+    op_title = StringField('OP Subject', validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
+    op_comment = TextAreaField('OP Comment', validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
     min_title_length = IntegerField('Subject', validators=[Optional(), NumberRange(0, 100)])
     min_comment_length = IntegerField('Comment', validators=[Optional(), NumberRange(0, 2_000)])
-    num = IntegerField("Post Number", validators=[Optional(), NumberRange(min=0)])
-    media_filename = StringField("Filename", validators=[Optional(), Length(2, 256)])
-    media_hash = StringField("File Hash", validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
-    tripcode = StringField("Tripcode", validators=[Optional(), Length(8, 15)])
+    num = IntegerField('Post Number', validators=[Optional(), NumberRange(min=0)])
+    media_filename = StringField('Filename', validators=[Optional(), Length(2, 256)])
+    media_hash = StringField('File Hash', validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
+    tripcode = StringField('Tripcode', validators=[Optional(), Length(8, 15)])
     date_after = DateField('Start', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
     date_before = DateField('End', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
     has_file = BooleanField('Has file', default=False, validators=[Optional()])
