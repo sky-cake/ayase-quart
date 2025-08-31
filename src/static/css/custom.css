@@ -6,7 +6,6 @@ html {
 
 body {
     background: #1d1f21 none;
-    color: #c5c8c6;
     font-family: arial, helvetica, sans-serif;
     font-size: 10pt;
     margin-left: 0;
@@ -16,6 +15,9 @@ body {
     padding-right: 5px
 }
 
+html, body {
+    color: #dddddd!important;
+}
 
 #quote-preview {
     display: block;
@@ -196,10 +198,6 @@ div.post div.file .fileThumb img {
 span.summary {
     color: #707070;
     margin-top: 10px
-}
-
-html, body {
-    color: #dddddd!important;
 }
 
 #body {
