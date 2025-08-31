@@ -1,3 +1,203 @@
+html {
+    -moz-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%
+}
+
+body {
+    background: #1d1f21 none;
+    color: #c5c8c6;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 10pt;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 5px;
+    padding-left: 5px;
+    padding-right: 5px
+}
+
+
+#quote-preview {
+    display: block;
+    position: absolute;
+    top: 0;
+    padding: 3px 6px 6px 3px;
+    margin: 0;
+}
+
+#quote-preview .dateTime {
+    white-space: nowrap;
+}
+
+#quote-preview.reveal-spoilers s {
+    background-color: #aaa !important;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+#quote-preview.reveal-spoilers s a {
+    background: transparent !important;
+    text-decoration: underline;
+}
+
+div.opContainer {
+    display: inline
+}
+
+div.sideArrows {
+    color: #c5c8c6;
+    float: left;
+    margin-right: 2px;
+    margin-top: 0;
+    margin-left: 2px
+}
+
+div.thread {
+    margin: 0;
+    clear: both
+}
+
+div.post {
+    margin: 4px 0;
+    overflow: hidden
+}
+
+div.thread>div:nth-of-type(2)>div.reply {
+    margin-top: 2px !important
+}
+
+div.op {
+    display: inline
+}
+
+div.reply {
+    background-color: #282a2e;
+    border: 1px solid #282a2e;
+    display: table;
+    padding: 2px
+}
+
+div.reply input {
+    float: none
+}
+
+div.post div.postInfo {
+    display: block;
+    width: 100%
+}
+
+div.post div.postInfo span.postNum>a {
+    text-decoration: none;
+    color: #c5c8c6 !important
+}
+
+div.post div.postInfo span.postNum a:hover,
+.posteruid .hand:hover {
+    color: #5f89ac !important
+}
+
+div.post div.postInfo span.nameBlock {
+    display: inline-block
+}
+
+div.post div.postInfo span.nameBlock span.name {
+    color: #c5c8c6;
+    font-weight: 700
+}
+
+div.post div.postInfo span.nameBlock span.postertrip {
+    color: #c5c8c6;
+    font-weight: 400 !important
+}
+
+div.post div.postInfo span.subject {
+    color: #b294bb;
+    font-weight: 700
+}
+
+div.post blockquote.postMessage {
+    display: block
+}
+
+blockquote>span.quote {
+    color: #b5bd68
+}
+
+.quoteLink,
+.quotelink,
+.deadlink {
+    color: #5f89ac !important;
+    text-decoration: underline
+}
+
+a.quoteLink:hover,
+a.quotelink:hover {
+    color: #81a2be !important
+}
+
+a,
+a:visited {
+    color: #81a2be !important;
+    text-decoration: none
+}
+
+a.replylink:not(:hover),
+div#absbot a:not(:hover) {
+    color: #81a2be !important
+}
+
+a:hover {
+    color: #5f89ac !important
+}
+
+div.post div.file .fileThumb img {
+    border: none;
+    float: left
+}
+
+div.post div.file {
+    display: block
+}
+
+div.post div.file div.fileInfo {
+    margin-right: 10px;
+    word-break: break-all
+}
+
+div.replyContainer div.post div.file div.fileInfo {
+    margin-left: 20px
+}
+
+div.post div.file .fileThumb {
+    float: left;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 3px;
+    margin-bottom: 5px
+}
+
+span.fileThumb {
+    margin-left: 0 !important;
+    margin-right: 5px !important
+}
+
+div.reply span.fileThumb,
+div.reply span.fileThumb img {
+    float: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important
+}
+
+div.post div.file .fileThumb img {
+    border: none;
+    float: left
+}
+
+span.summary {
+    color: #707070;
+    margin-top: 10px
+}
+
 html, body {
     color: #dddddd!important;
 }

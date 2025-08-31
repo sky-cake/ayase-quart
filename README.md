@@ -154,8 +154,7 @@ Save the two certs in `./src`.
 
 ## Themes
 
-- Right now, only the `tomorrow` theme has complete support.
-- If you want to modify CSS, you can do so in `/static/css/custom.css`.
+AQ only serves a single CSS file, `static/css/custom.css`, which implements the tomorrow theme. Other themes are archived in this repository, but we don't support them.
 
 
 ## User Manual
