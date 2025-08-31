@@ -161,7 +161,6 @@ async def search_handler(search_type: SearchType, logged_in=False, is_admin=Fals
         searched=searched,
         quotelinks=quotelinks,
         search_result=True,
-        tab_title=SITE_NAME,
         title='Ayase Quart ' + ('Full Text Search' if search_type == SearchType.idx else 'SQL Search'),
         cur_page=cur_page,
         total_hits=f'{total_hits:,}' if total_hits else 0,

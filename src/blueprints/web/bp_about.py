@@ -19,7 +19,6 @@ bp = Blueprint("bp_web_about", __name__)
 async def about(is_admin: bool, logged_in: bool):
     return await render_controller(
         template_about,
-        title='',
         tab_title='About',
         logged_in=logged_in,
         is_admin=is_admin,
