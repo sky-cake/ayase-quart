@@ -1,4 +1,7 @@
 {% if archiveposting_form %}
+
+<script type="text/javascript" src="/static/js/archiveposting.js" defer crossorigin="anonymous" integrity="sha384-LfVeyxWHZizF7mqSFWUdH/MpQpNxS7ha21zrSt0UOn0rU3PdQuZ1EvMYLVnb3wVm"></script>
+
 {% from 'macros/macros.html' import render_field %}
 <div class="mw800 mauto">
   <div class="mw800 center">{{archiveposting_conf['board_desc']}}</div><br>
@@ -15,28 +18,5 @@
       <div class="mtb-1"><input id="submit" name="submit" type="submit" value="Submit"></div>
     </div>
   </form>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      let op_thread_num = document.getElementById("op_thread_num");
-      if (op_thread_num) {
-        op_thread_num = op_thread_num.getAttribute('data-num');
-        document.querySelectorAll('blockquote').forEach((bq) => {
-          bq.innerHTML = bq.innerHTML.replace(/&gt;&gt;(\d+)/g, `<a href="/{{archiveposting_conf['board_name']}}/thread/${op_thread_num}#p$1" class="quotelink" data-board="{{archiveposting_conf['board_name']}}">&gt;&gt;$1</a>`);
-        });
-
-        document.querySelectorAll('.quotelink').forEach((link) => {
-          link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const commentBox = document.getElementById('comment');
-            if (commentBox) {
-              const quoteText = `${link.textContent}\n`;
-              commentBox.value += quoteText;
-              commentBox.focus();
-            }
-          });
-        });
-      }
-    });
-  </script>
 </div>
 {% endif %}
