@@ -60,6 +60,14 @@ def test_clickable_links():
          'text <a href="http://example.com/page/,/">http://example.com/page/,/</a> text'),
 
 
+        # ports
+        ('http://beastie.sdf.org:4200/',
+         '<a href="http://beastie.sdf.org:4200/">http://beastie.sdf.org:4200/</a>'),
+
+        ('http://beastie.sdf.org:4200/q',
+         '<a href="http://beastie.sdf.org:4200/q">http://beastie.sdf.org:4200/q</a>'),
+
+
         # text
         ('text text',
          'text text'),

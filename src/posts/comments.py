@@ -115,7 +115,7 @@ def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)
 
 
-link_re = re.compile(r'(https?://(?:[a-z0-9\-]+\.)+[a-z]{2,}(?:/[^\s<>\"\']*)?)', re.IGNORECASE)
+link_re = re.compile(r'(https?://(?:[a-z0-9\-]+\.)+[a-z]{2,}(?:(?:\:|/)[^\s<>\"\']*)?)', re.IGNORECASE)
 punc_ending_re = re.compile(r'^(.*?)(?=((?:\.|,)+(?:\s|$)))', re.IGNORECASE)
 def clickable_links(comment: str):
     def replace_link(match):
