@@ -37,8 +37,6 @@ def wrap_post_t(post: dict):
         t_quotelink=get_quotelink_t(post),
         t_report=get_report_t(post),
     )
-    if post.get('comment') is None:
-        post['comment'] = ''
     return post
 
 ### BEGIN post_t crisis
@@ -103,7 +101,7 @@ def get_posts_t_thread(posts: list[dict], post_2_quotelinks: QuotelinkD):
 def render_post_t_basic(post: dict):
     num = post['num']
     thread_num = post['thread_num']
-    comment = post['comment'] or ''
+    comment = post['comment']
     board = post['board_shortname']
     ts_unix = post['ts_unix']
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
@@ -535,7 +533,7 @@ def render_wrapped_post_t_archiveposting(wpt: dict): # wrapped_post_t
     num = wpt['num']
     ts_unix = wpt['ts_unix']
     thread_num_label = f'<div id="op_thread_num" data-num="{num}" class="hidden"></div>' if is_op else ''
-    comment = wpt['comment'] or ''
+    comment = wpt['comment']
 
     return f"""{ thread_num_label }
     { wpt['t_header'] }

@@ -8,9 +8,11 @@ IS_VICHAN_ARCHIVE = archive_conf['type'] == 'vichan'
 # COMMENTS_PREESCAPED = archive_conf['comments_preescaped'] # not used atm
 
 
-def html_comment(comment: str, thread_num: int, board: str):
-    # TODO: we should probably convert the Nones into empty strings here, save having to check against None everywhere downstream
-    # comment must be renderd to html at some point if we're doing all this escaping anyways (json api another story) and not display None
+def html_title(title: str) -> str:
+    return html.escape(title) if title else title
+
+
+def html_comment(comment: str, thread_num: int, board: str) -> str:
     if not comment:
         return comment
 

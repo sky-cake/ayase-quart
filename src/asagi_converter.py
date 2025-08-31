@@ -16,7 +16,7 @@ from configs import archiveposting_conf, stats_conf
 from db import db_a, db_q
 from db.redis import get_redis
 from posts.capcodes import Capcode
-from posts.comments import html_comment
+from posts.comments import html_comment, html_title
 from posts.quotelinks import (
     extract_quotelinks,
     get_quotelink_lookup,
@@ -175,7 +175,7 @@ def get_selector(board: str) -> str:
     name,
     trip,
     coalesce(title, '') as title,
-    comment,
+    coalesce(comment, '') as comment,
     `{board}`.sticky,
     `{board}`.locked,
     poster_hash,
@@ -518,7 +518,10 @@ def substitute_square_brackets(text):
 
 
 async def generate_index(board: str, page_num: int=1):
-    """Generates the board index. The index shows the OP and its 3 latest comments, if any.
+    """
+    - Generates the board index.
+    - The index shows the OP and its 3 latest comments, if any.
+    - The returned titles and comments are html escaped.
 
     Returns the dict:
 
@@ -590,17 +593,18 @@ async def generate_index(board: str, page_num: int=1):
     )
 
     for reply in replies:
-        reply['title'] = html.escape(reply['title']) if reply['title'] else reply['title']
+        reply['title'] = html_title(reply['title'])
         reply['comment'] = html_comment(reply['comment'], reply['thread_num'], board)
 
     thread_posts = defaultdict(list)
     for op in ops:
         thread_num = op['num']
-        op['title'] = html.escape(op['title']) if op['title'] else op['title']
+        op['title'] = html_title(op['title'])
         op['comment'] = html_comment(op['comment'], thread_num, board)
 
         op.update(thread_nums_d[thread_num])
         thread_posts[thread_num].append(op)
+
     for reply in replies:
         thread_posts[reply['thread_num']].append(reply)
 
@@ -621,7 +625,11 @@ def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
 
 
 async def generate_catalog(board: str, page_num: int=1, db_X=None):
-    """Generates the catalog structure"""
+    """
+    - Generates the catalog structure.
+    - Returns html escaped titles and comments.
+    - Does not parse comments with `html_comment()`
+    """
     catalog_post_count = 150
 
     local_db_q = db_X if db_X else db_q
@@ -654,8 +662,8 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
         return []
 
     for post in posts:
-        post['title'] = html.escape(post['title']) if post['title'] else post['title']
-        post['comment'] = html.escape(post['comment']) if post['comment'] else post['comment']
+        post['title'] = html_title(post['title'])
+        post['comment'] = html_title(post['comment'])
 
     batch_size = 15
     return [
@@ -715,7 +723,8 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
     for post in posts:
         if not (comment := post['comment']):
             continue
-        post['title'] = html.escape(post['title'])
+
+        post['title'] = html_title(post['title'])
         post['comment'] = html_comment(comment, thread_num, board)
 
     posts[0].update(threads_details[0])

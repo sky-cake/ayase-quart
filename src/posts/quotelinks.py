@@ -11,7 +11,6 @@ def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
     lookup = defaultdict(list)
 
     for post in posts:
-        # asagi comments are nullable
         if not (comment := post.get('comment')):
             continue
 
