@@ -2,12 +2,12 @@ function create_quotelink(board, op_thread_num, bq) {
     bq.innerHTML = bq.innerHTML.replace(/&gt;(\d+)/g, `<a href="/${board}/thread/${op_thread_num}#p$1" class="quotelink" data-board="${board}">&gt;$1</a>`);
 }
 
-function focus_comment(link) {
+function quote_comment(link) {
     link.addEventListener('click', (e) => {
         e.preventDefault();
         const commentBox = document.getElementById('comment');
         if (commentBox) {
-            const quoteText = `${link.textContent}\n`;
+            const quoteText = `${link.textContent.replace(/No./g, `>`)}\n`;
             commentBox.value += quoteText;
             commentBox.focus();
         }
@@ -24,6 +24,6 @@ if (op_thread_num) {
     if (board) {
         op_thread_num = op_thread_num.getAttribute('data-num');
         document.querySelectorAll('blockquote').forEach((bq) => create_quotelink(board, op_thread_num, bq));
-        document.querySelectorAll('.quotelink').forEach((link) => focus_comment(link));
+        document.querySelectorAll('.postNum>a').forEach((link) => quote_comment(link));
     }
 }
