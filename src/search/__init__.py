@@ -1,8 +1,7 @@
 from quart import flash
 
 from asagi_converter import search_posts
-from configs import index_search_conf, media_conf, vanilla_search_conf
-from enums import SearchType
+from configs import index_search_conf, vanilla_search_conf
 from search.post_metadata import board_2_int
 from search.providers import get_index_search_provider
 from search.query import IndexSearchQuery, get_index_search_query
@@ -47,22 +46,3 @@ async def get_posts_and_total_hits_fts(form_data: dict):
 
 async def get_posts_and_total_hits_sql(form_data: dict):
     return await search_posts(form_data, vanilla_search_conf['max_hits'])
-
-
-async def get_posts_and_total_hits(search_type: SearchType, form_data: dict) -> tuple[list[dict], int]:
-    if not isinstance(form_data['boards'], list):
-        raise ValueError(form_data['boards'])
-
-    # do not provide gallery results for boards that have non-served media
-    if form_data.get('gallery_mode'):
-        b_i = len(form_data['boards'])
-        form_data['boards'] = [b for b in form_data['boards'] if (b in media_conf['boards_with_thumb'] or b in media_conf['boards_with_image'])]
-        b_f = len(form_data['boards'])
-        if b_i > b_f:
-            await flash('Some boards have media disabled, there may be fewer results than expected.')
-        if not form_data['boards']:
-            return [], 0
-
-    if search_type == SearchType.idx:
-        return await get_posts_and_total_hits_fts(form_data)
-    return await get_posts_and_total_hits_sql(form_data)

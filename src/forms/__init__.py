@@ -136,10 +136,33 @@ def date_filter(x):
     return datetime.strptime(x, '%Y-%m-%d') if x and re.fullmatch(r'\d\d\d\d-\d\d-\d\d', x) else None
 
 
+class MultiCheckboxCSVField(MultiCheckboxField):
+    def process_data(self, data: str):
+        if data is None:
+            self.data = None
+            return
+
+        self.data = [v.strip() for v in data.split(',') if v.strip()]
+
+
+class RadioCSVField(RadioField):
+    def process_data(self, data: str):
+        if data is None:
+            self.data = None
+            return
+
+        d = [v.strip() for v in data.split(',') if v.strip()]
+        if d:
+            self.data = d[0]
+            return
+
+        self.data = None
+
+
 class SearchForm(StripForm):
     do_not_strip = ('comment',)
 
-    boards: MultiCheckboxField | RadioField
+    boards: MultiCheckboxCSVField | RadioCSVField
     hits_per_page: IntegerField
 
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
@@ -179,20 +202,26 @@ class SearchForm(StripForm):
         item_order = self._fields.keys()
         for item in item_order:
             field = self._fields[item]
-            if not field.validate(self, tuple()):
+            if not field.validate(self):
                 return False
         return True
 
 
-# introduce fields in dervied classes when they depend on different search confs
+class SearchFormSQL(SearchForm):
+    if vanilla_search_conf['multi_board_search']:
+        boards = MultiCheckboxCSVField('Boards', choices=board_shortnames, validate_choice=True)
+    else:
+        boards = RadioCSVField('Board', choices=board_shortnames, validate_choice=True)
 
-class VanillaSearchForm(SearchForm):
-    boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if vanilla_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
     hits_per_page = IntegerField('Per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
 
 
-class IndexSearchForm(VanillaSearchForm):
-    boards = MultiCheckboxField('Boards', choices=board_shortnames, validate_choice=True) if index_search_conf['multi_board_search'] else RadioField('Board', choices=board_shortnames, default=board_shortnames[0], validate_choice=False)
+class SearchFormFTS(SearchFormSQL):
+    if index_search_conf['multi_board_search']:
+        boards = MultiCheckboxCSVField('Boards', choices=board_shortnames, validate_choice=True)
+    else:
+        boards = RadioCSVField('Board', choices=board_shortnames, validate_choice=True)
+
     hits_per_page = IntegerField('Per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
 
 
@@ -202,19 +231,7 @@ def strip_2_none(s: str) -> str | None:
     return s
 
 
-def ints_from_csv_string(csv_string: str) -> list[int]:
-    if not csv_string or not isinstance(csv_string, str):
-        return []
-
-    csv_string = csv_string.strip()
-    if not re.fullmatch(r'^\d+(?:,\d+)*$', csv_string):
-        return []
-
-    return [int(i) for i in csv_string.split(',')]
-
-
 def validate_search_form(form: SearchForm):
-    # board validations should work with str and list[str]
     if not form.boards.data:
         raise BadRequest('select a board')
 
@@ -259,9 +276,6 @@ def validate_search_form(form: SearchForm):
     if form.gallery_mode.data:
         form.has_file.data = True
         form.has_no_file.data = False
-
-    # if (form.op_comment.data or form.op_title.data) and (len(form.boards.data) > 1):
-    #     raise BadRequest('faceted search is only available for a single board per search query at the moment')
 
 
 class IndexSearchConfigForm(QuartForm):

@@ -361,9 +361,14 @@ def get_min_comment_length_where(where_query: str, form_data: dict) -> str:
 
 
 async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]:
-    if not isinstance(form_data['boards'], list):
-        raise ValueError(form_data['boards'])
-    boards: list[str] = form_data['boards']
+    boards: list[str] | str = form_data['boards']
+
+    if boards and isinstance(boards, str):
+        boards = [boards]
+
+    if not isinstance(boards, list):
+        raise ValueError(boards)
+
     if not boards:
         return [], 0
 

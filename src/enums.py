@@ -7,11 +7,6 @@ class DbType(Enum):
     postgres = 3
 
 
-class SearchType(StrEnum):
-    sql = 'sql'
-    idx = 'idx'
-
-
 class IndexSearchType(StrEnum):
     meili = 'meili'
     manticore = 'manticore'

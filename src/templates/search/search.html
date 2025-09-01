@@ -10,7 +10,7 @@
 {% block body %}
 <div class="search_container">
   <div class="sticky_top mvh">
-  <div>{{search_type_message|safe}}</div>
+  <div>{{html_search_memo|safe}}</div>
   <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data">
     <div class="form">
       <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search Posts"></div>
@@ -42,7 +42,7 @@
       </div>
       <div class="row">
         <div class="column">
-          {% if form.boards.type == 'MultiCheckboxField' %}
+          {% if form.boards.type == 'MultiCheckboxCSVField' %}
           <div class="mb05 d-flex">
             <div class="field_label">Boards</div>
             <button type="button" class="form_btn pbtn" onclick="checkAllBoards()">All</button>
