@@ -22,7 +22,7 @@ from posts.quotelinks import (
     get_quotelink_lookup,
     get_quotelink_lookup_raw
 )
-from utils.validation import validate_board
+from utils.validation import validate_board, validate_boards
 from db.base_db import BasePlaceHolderGen
 
 
@@ -415,6 +415,8 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     boards, form_data = intersect_form_data(boards, form_data)
     if (not boards) or (form_data is None):
         return [], 0
+
+    validate_boards(boards)
 
     # some extra validation
     order_by: str = dict(asc='asc', desc='desc')[form_data['order_by']]
