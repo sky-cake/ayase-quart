@@ -218,12 +218,11 @@ sql_search_filters = dict(
     height=SqlSearchFilter(f'media_h >= {temp_phg}'),
     capcode=SqlSearchFilter(f'capcode = {temp_phg}'),
     num=SqlSearchFilter(f'num = {temp_phg}'),
-    nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='num'),
     thread_nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='thread_num'),
 )
 
 
-def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
+def validate_and_generate_params(form_data: dict, phg1: BasePlaceHolderGen) -> tuple[str, list]:
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
@@ -244,13 +243,13 @@ def validate_and_generate_params(form_data: dict, phg: BasePlaceHolderGen) -> tu
         if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
             field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
 
-        if s_filter.in_list and isinstance(field_val, list) or isinstance(field_val, tuple) and len(field_val) > 0 and s_filter.fieldname:
-            s_filter.fragment = f'{s_filter.fieldname} in ({phg.size(field_val)})'
+        if s_filter.in_list and isinstance(field_val, (list, tuple)) and len(field_val) > 0 and s_filter.fieldname:
+            s_filter.fragment = f'{s_filter.fieldname} in ({phg1.size(field_val)})'
 
         if s_filter.placeholder:
-            params.extend(field_val) if isinstance(field_val, list) or isinstance(field_val, tuple) else params.append(field_val)
+            params.extend(field_val) if isinstance(field_val, (list, tuple)) else params.append(field_val)
 
-        where_parts.append(s_filter.fragment.replace(temp_phg, phg()))
+        where_parts.append(s_filter.fragment.replace(temp_phg, phg1()))
 
     where_fragment = ' and '.join(where_parts)
     return where_fragment, params
@@ -296,44 +295,52 @@ def get_facet_params(form_data) -> list[str]:
     return []
 
 
-def get_sha256_params(form_data) -> list[str]:
-    sha256 = form_data.get('sha256')
+def get_boards_2_nums_where(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
+    boards_2_nums = form_data.get('boards_2_nums')
 
-    if sha256:
-        return [sha256]
+    pre = ' and' if where_query else ' where '
 
-    return []
+    if boards_2_nums and (nums := form_data[board]):
+        if not isinstance(nums, set):
+            raise TypeError(type(nums), nums)
+
+        return f'''{pre} num in ({phg.size(nums)})''', list(nums)
+
+    return '', []
 
 
-def get_board_specific_where_clause(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> str:
+def get_board_specific_where_clause(board: str, where_query: str, params: list[str], form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
     """Additional where filters MUST come after `where_query` for Postgresql param counting."""
     where_query += get_min_title_length_where(where_query, form_data)
     where_query += get_min_comment_length_where(where_query, form_data)
     where_query += get_facet_where(board, where_query, form_data, phg)
-    return where_query
+
+    boards_2_nums_where, boards_2_nums_params = get_boards_2_nums_where(board, where_query, form_data, phg)
+    where_query += boards_2_nums_where
+    params += boards_2_nums_params
+
+    return where_query, params
 
 
 is_counter_db = 'counter' in db_q.Phg.__slots__
-async def get_total_hits(form_data: dict, boards: list[str], max_hits: int):
-    phg1 = db_q.Phg()
-
-    where_filters, params = validate_and_generate_params(form_data, phg1)
+async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, where_filters: str, phg1: BasePlaceHolderGen, params: list):
     where_query = f'where {where_filters}' if where_filters else ''
-
     params += get_facet_params(form_data)
-    params += get_sha256_params(form_data)
-    params = tuple(params)
 
     query_tuple_calls = []
     for board in boards:
 
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
+        
+        where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
+        params = tuple(params) if params else None
 
         sql = f"""
         select count(*)
         from `{board}`
-        {get_board_specific_where_clause(board, where_query, form_data, phg2)}
+        {where_query}
         ;"""
+
         query_tuple_calls.append(db_q.query_tuple(sql, params=params))
 
     total_hits_per_board = await asyncio.gather(*query_tuple_calls)
@@ -360,16 +367,53 @@ def get_min_comment_length_where(where_query: str, form_data: dict) -> str:
     return ''
 
 
+def intersect_form_data(boards: list[str], form_data: dict) -> tuple[list[str], dict]:
+    """
+    We may avoid queries if form data contradicts itself.
+    We perform such checks here.
+    """
+    boards_2_nums: dict[str, set[int]] = form_data.get('boards_2_nums', dict())
+
+    # boards intersection
+    if boards_2_nums:
+        boards = [b for b in boards if b in boards_2_nums]
+
+        for board in list(boards_2_nums):
+            if board not in boards:
+                boards_2_nums.pop(board)
+
+        # just assign this and don't worry about possible states
+        form_data['boards_2_nums'] = boards_2_nums
+
+        if not boards or not boards_2_nums:
+            return None, None
+
+    # consolidate nums - no more 'num' field in form_data
+    if form_data.get('num') and boards_2_nums:
+        num = form_data.pop('num')
+        for board in boards:
+            nums = boards_2_nums[board]
+            if not isinstance(nums, set):
+                raise TypeError(type(nums), nums)
+            nums.add(num)
+
+    return boards, form_data
+
+
 async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]:
-    boards: list[str] | str = form_data['boards']
+    boards: list[str] | str = form_data.pop('boards')
+
+    if not boards:
+        return [], 0
 
     if boards and isinstance(boards, str):
         boards = [boards]
 
     if not isinstance(boards, list):
-        raise ValueError(boards)
+        raise TypeError(boards)
 
-    if not boards:
+    boards, form_data = intersect_form_data(boards, form_data)
+    if (not boards) or (form_data is None):
         return [], 0
 
     # some extra validation
@@ -387,10 +431,8 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     offset = get_offset(page_num - 1, hits_per_page)
 
     params += get_facet_params(form_data)
-    params += get_sha256_params(form_data)
-    params = tuple(params)
 
-    total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits)
+    total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits, where_filters, phg1, params)
 
     if not total_hits:
         return [], 0
@@ -426,14 +468,18 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     for board in hits_per_board_to_query.keys():
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
 
+        where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
+        params = tuple(params) if params else None
+
         sql = f"""
             {get_selector(board)}
             from `{board}`
-            {get_board_specific_where_clause(board, where_query, form_data, phg2)}
+            {where_query}
             order by ts_unix {order_by}
             limit {hits_per_board_to_query[board]}
             {offset}
-            """
+        """
+    
         calls.append(db_q.query_dict(sql, params=params))
 
     board_posts = await asyncio.gather(*calls)

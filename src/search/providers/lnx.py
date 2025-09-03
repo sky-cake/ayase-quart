@@ -180,6 +180,20 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
+        if q.boards_2_nums:
+            pair_strs = []
+            for board, nums in q.boards_2_nums.items():
+                nums_str = ' OR '.join(f'num:{int(num)}' for num in nums)
+                pair_str = f'(board:{board}) AND ({nums_str})'
+                pair_strs.append(pair_str)
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': ' OR '.join(pair_strs),
+                    },
+                }
+            )
         if q.min_title_length:
             query.append({
                 'occur': 'must',

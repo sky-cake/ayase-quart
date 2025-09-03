@@ -38,6 +38,7 @@ class IndexSearchQuery:
     sort_by: Optional[str] = 'timestamp'
     spoiler: Optional[bool] = None
     highlight: bool = False
+    boards_2_nums: Optional[dict[str, set[int]]] = None
 
 
 common_words = set('the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us'.split())
@@ -49,6 +50,9 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
         title=params['title'],
         boards=[board_2_int(board) for board in params['boards']] if not board_ints else board_ints,
     )
+
+    if params.get('boards_2_nums'):
+        q.boards_2_nums = {board_2_int(board): nums for board, nums in params['boards_2_nums'].items() if board and nums}
 
     if params.get('thread_nums'):
         q.thread_nums = params['thread_nums']

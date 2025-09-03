@@ -23,6 +23,8 @@ async def _get_posts_and_total_hits_fts(form_data: dict) -> tuple[list[dict], in
             hits_per_page=index_search_conf['max_hits'], # max_hits due to facet search
         )
         boards_2_threadnums, total_threads_hits = await index_searcher.search_posts_get_thread_nums(q)
+        # TODO: introduce form_data['boards_2_threadnums'] = boards_2_threadnums
+        # this results in 1 query rather than len(boards) queries
         posts = []
         total_hits = 0
         for board, thread_nums in boards_2_threadnums.items():

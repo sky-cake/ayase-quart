@@ -160,7 +160,7 @@ class RadioCSVField(RadioField):
 
 
 class SearchForm(StripForm):
-    do_not_strip = ('comment',)
+    do_not_strip: tuple[str] = ('comment',)
 
     boards: MultiCheckboxCSVField | RadioCSVField
     hits_per_page: IntegerField

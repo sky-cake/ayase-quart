@@ -15,6 +15,7 @@ from search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
 from search.pagination import template_pagination_links, total_pages
 from templates import template_search
 from utils import Perf
+from plugins.search import search_plugins, intersect_search_plugin_results
 
 
 class SearchHandler:
@@ -25,6 +26,7 @@ class SearchHandler:
     enabled: bool
     multi_board_search: bool
     highlight: bool
+    boards_2_nums: dict[str, set[int]] = dict()
 
     @property
     def is_gallery_mode(self) -> bool:
@@ -33,6 +35,13 @@ class SearchHandler:
     @property
     def is_search_request(self) -> bool:
         return bool(self.form.boards.data)
+
+    @property
+    def form_data(self) -> dict:
+        form_data = self.form.data
+        if self.boards_2_nums:
+            form_data['boards_2_nums'] = self.boards_2_nums
+        return form_data
 
     async def get_posts_and_total_hits(self):
         raise NotImplementedError
@@ -77,7 +86,7 @@ class SearchHandlerSQL(SearchHandler):
     html_message_error: str = 'There seems to be a problem with the submitted query.'
 
     async def get_posts_and_total_hits(self):
-        return await get_posts_and_total_hits_sql(self.form.data)
+        return await get_posts_and_total_hits_sql(self.form_data)
 
 
 class SearchHandlerFTS(SearchHandler):
@@ -107,7 +116,7 @@ class SearchHandlerFTS(SearchHandler):
     )
 
     async def get_posts_and_total_hits(self):
-        return await get_posts_and_total_hits_fts(self.form.data)
+        return await get_posts_and_total_hits_fts(self.form_data)
 
 
 async def search_handler(handler: SearchHandler, request_args: dict, endpoint_path: str, logged_in=False, is_admin=False) -> str:
@@ -127,6 +136,12 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         searched = True
 
         t1 = perf_counter()
+
+        if search_plugins:
+            boards_2_nums = await intersect_search_plugin_results(search_plugins, handler.form)
+            if boards_2_nums:
+                handler.boards_2_nums = boards_2_nums
+            p.check('plugins completed')
 
         try:
             posts, total_hits = await handler.get_posts_and_total_hits()
