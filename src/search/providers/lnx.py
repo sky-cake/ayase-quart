@@ -164,7 +164,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'{" OR ".join(f"thread_num:{thread_num}" for thread_num in q.thread_nums)}',
+                        'ctx': " OR ".join(f"thread_num:{thread_num}" for thread_num in q.thread_nums),
                     },
                 }
             )
@@ -173,7 +173,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'{" OR ".join(f"board:{b}" for b in q.boards)}',
+                        'ctx': " OR ".join(f"board:{b}" for b in q.boards),
                         # 'ctx': f'({" ".join(f"{b}" for b in q.boards)})',
                         # 'ctx': f" OR ".join(q.boards),
                         # 'ctx': f'board: IN [{" ".join(q.boards)}]',
@@ -217,7 +217,7 @@ class LnxSearch(BaseSearch):
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'{" OR ".join(f"num:{num}" for num in q.nums)}',
+                        'ctx': " OR ".join(f"num:{num}" for num in q.nums),
                     },
                 }
             )
