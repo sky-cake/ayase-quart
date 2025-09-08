@@ -32,3 +32,6 @@ data/
 *.toml
 !*.tpl.toml
 !pyproject.toml
+
+# plugins
+src/plugins/search/plugin_*.py

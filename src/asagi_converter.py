@@ -300,7 +300,7 @@ def get_boards_2_nums_where(board: str, where_query: str, form_data: dict, phg: 
 
     pre = ' and' if where_query else ' where '
 
-    if boards_2_nums and (nums := form_data[board]):
+    if boards_2_nums and (nums := boards_2_nums[board]):
         if not isinstance(nums, set):
             raise TypeError(type(nums), nums)
 
@@ -323,10 +323,7 @@ def get_board_specific_where_clause(board: str, where_query: str, params: list[s
 
 
 is_counter_db = 'counter' in db_q.Phg.__slots__
-async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, where_filters: str, phg1: BasePlaceHolderGen, params: list):
-    where_query = f'where {where_filters}' if where_filters else ''
-    params += get_facet_params(form_data)
-
+async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, where_query: str, phg1: BasePlaceHolderGen, params: list):
     query_tuple_calls = []
     for board in boards:
 
@@ -434,7 +431,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     params += get_facet_params(form_data)
 
-    total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits, where_filters, phg1, params)
+    total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits, where_query, phg1, params.copy())
 
     if not total_hits:
         return [], 0

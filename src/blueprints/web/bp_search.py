@@ -143,14 +143,14 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
                 handler.boards_2_nums = boards_2_nums
             p.check('plugins completed')
 
-        try:
+        if app_conf.get('testing'):
             posts, total_hits = await handler.get_posts_and_total_hits()
-        except Exception as e:
-            msg = handler.html_message_error
-            if app_conf.get('testing'):
-                msg += '<br><br>' + str(e)
-
-            await flash(msg)
+        else:
+            try:
+                posts, total_hits = await handler.get_posts_and_total_hits()
+            except Exception:
+                msg = handler.html_message_error
+                await flash(msg)
 
         t2 = perf_counter()
         p.check('search done')
