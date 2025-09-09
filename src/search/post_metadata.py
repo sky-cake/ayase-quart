@@ -82,7 +82,7 @@ def unpack_metadata(data: str, comment: str) -> dict:
     post = {k:v for k,v in zip(fields, data)}
     post['board_shortname'] = int_2_board(post['board_shortname'])
     post['capcode'] = id_2_capcode(post['capcode'])
-    post['comment'] = comment
+    post['comment'] = comment or ''
     return post
 
 
