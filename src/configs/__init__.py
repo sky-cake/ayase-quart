@@ -1,7 +1,7 @@
 import os
 
 from enums import DbType
-from utils import make_src_path
+from utils import make_src_path, split_csv
 from utils import strip_slashes as sslash
 
 from .conf_common import fuvii
@@ -26,11 +26,6 @@ vanilla_search_conf = conf.get('vanilla_search', {})
 
 redis_conf = conf.get('redis', {})
 media_conf = conf.get('media', {})
-
-def split_csv(csv_vals: str=None):
-    if not csv_vals:
-        return []
-    return [x.strip() for x in csv_vals.strip(',').split(',')]
 
 fuvii(media_conf, 'boards_with_image', split_csv)
 fuvii(media_conf, 'boards_with_thumb', split_csv)

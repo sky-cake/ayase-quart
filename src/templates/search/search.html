@@ -102,6 +102,7 @@
           </div>
         </div>
         {{ render_field(form.order_by) }}
+        {{ search_plugin_html|safe }}
         <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search Posts"></div>
       </div>
   </form>

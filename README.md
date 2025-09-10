@@ -106,6 +106,23 @@ Assuming you have a data source set up, you can:
 1. [Optional] Submit pull requests with fixes and new features!
 
 
+# Plugins
+
+Ayase Quart supports,
+  
+  - Search plugins for sql and fts. See `src/plugins/search/plugin_example.py` for an example.
+  - Endpoint plugins for custom endpoints. See `src/blueprints/plugins/plugin_bp_example.py` for an example.
+
+Plugins you want loaded must begin with `plugin_` and end with `.py`.
+
+When starting AQ, you'll know if the plugins were detected from notes in stdout like,
+
+```bash
+Loading search plugin: plugins.search.plugin_image_search
+Loading bp plugin: blueprints.plugins.plugin_bp_tagger
+```
+
+
 ## Set Up with Docker
 
 Not currently available. Feel free to help out with this!

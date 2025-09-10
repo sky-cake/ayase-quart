@@ -16,6 +16,9 @@ from search.pagination import template_pagination_links, total_pages
 from templates import template_search
 from utils import Perf
 from plugins.search import search_plugins, intersect_search_plugin_results
+from plugins.search.base import SearchPlugin
+from jinja2 import Template
+from quart_wtf import QuartForm
 
 
 class SearchHandler:
@@ -119,8 +122,20 @@ class SearchHandlerFTS(SearchHandler):
         return await get_posts_and_total_hits_fts(self.form_data)
 
 
+def bind_plugin_fields_to_form(form: QuartForm, search_plugins: dict[str, SearchPlugin], plugin_templates: list[Template]):
+    """Call before form instantiation."""
+    for plugin_name, plugin in search_plugins.items():
+        plugin_templates.append(plugin.template)
+        for field in plugin.fields:
+            setattr(form, field.name, field)
+
+
 async def search_handler(handler: SearchHandler, request_args: dict, endpoint_path: str, logged_in=False, is_admin=False) -> str:
     p = Perf(f'{handler.form_title} search', enabled=app_conf.get('testing'))
+
+    plugin_templates: list[Template] = []
+    if search_plugins:
+        bind_plugin_fields_to_form(handler.form, search_plugins, plugin_templates)
 
     handler.form = await handler.form.create_form(meta={'csrf': False}, data=request_args)
 
@@ -171,11 +186,17 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     if searched:
         yield_message = f'Searched archive in {t2-t1:,.3f}s. Post search hits: {total_hits:,}'
 
+
+    search_plugin_html = ''
+    for plugin_template in plugin_templates:
+        search_plugin_html += plugin_template.render(form=handler.form)
+
     rendered_page = template_search.render(
         html_search_memo=handler.html_search_memo,
         yield_message=yield_message,
         gallery_mode=handler.is_gallery_mode,
         form=handler.form,
+        search_plugin_html=search_plugin_html,
         posts_t=posts_t,
         page_links=page_links,
         page_post_count=len(posts),

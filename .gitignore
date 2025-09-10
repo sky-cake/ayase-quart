@@ -35,3 +35,6 @@ data/
 
 # plugins
 src/plugins/search/plugin_*.py
+src/static/plugins
+src/blueprints/plugins/plugin_*.py
+src/templates/plugins

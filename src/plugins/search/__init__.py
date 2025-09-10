@@ -1,4 +1,5 @@
 import importlib
+import pkgutil
 import os
 
 from plugins.search.base import SearchPlugin
@@ -16,19 +17,20 @@ assert os.path.isdir(search_plugin_directory)
 
 def load_search_plugins() -> dict[str, SearchPlugin]:
     """Returns {<plugin module name>: <SearchPlugin>}"""
-    plugins = dict()
-    for file in os.listdir(search_plugin_directory):
-        if not (os.path.isfile(make_path(file)) and file.startswith('plugin_') and file.endswith('.py')):
+    plugins: dict[str, SearchPlugin] = {}
+    package_name = __name__   # "plugins.search"
+    package_path = __path__   # filesystem path list for this package
+
+    for _, module_name, is_pkg in pkgutil.iter_modules(package_path, package_name + '.'):
+        if not module_name.split('.')[-1].startswith('plugin_'):
             continue
 
-        module_name = file[:-3]
-        module = importlib.import_module(f'plugins.search.{module_name}')
+        module = importlib.import_module(module_name)
         for attr_name in dir(module):
             attr = getattr(module, attr_name)
             if isinstance(attr, type) and issubclass(attr, SearchPlugin) and attr is not SearchPlugin:
-                print(f'Loading plugin: {module_name}')
+                print(f'Loading search plugin: {module_name}')
                 plugins[module_name] = attr()
-
     return plugins
 
 

@@ -19,6 +19,13 @@ def make_src_path(*file_path):
 
     return os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
+
+def split_csv(csv_vals: str=None):
+    if not csv_vals:
+        return []
+    return [x.strip() for x in csv_vals.strip(',').split(',')]
+
+
 # to normalize paths from configs
 def strip_slashes(path: str, both=False):
     if not path:
