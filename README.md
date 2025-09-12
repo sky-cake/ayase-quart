@@ -110,16 +110,14 @@ Assuming you have a data source set up, you can:
 
 Ayase Quart supports,
   
-  - Search plugins for sql and fts. See `src/plugins/search/plugin_example.py` for an example.
-  - Endpoint plugins for custom endpoints. See `src/blueprints/plugins/plugin_bp_example.py` for an example.
+  - Search plugins for sql and fts. See `src/plugins/search/search_example.py` for an example.
+  - Endpoint plugins for custom endpoints. See `src/plugins/blueprints/bp_example.py` for an example.
 
-Plugins you want loaded must begin with `plugin_` and end with `.py`.
-
-When starting AQ, you'll know if the plugins were detected from notes in stdout like,
+When starting AQ, detected and loaded plugins are logged to stdout likeso,
 
 ```bash
-Loading search plugin: plugins.search.plugin_image_search
-Loading bp plugin: blueprints.plugins.plugin_bp_tagger
+Loading search plugin: plugins.search.search_tagger
+Loading bp plugin: plugins.blueprints.bp_tagger
 ```
 
 

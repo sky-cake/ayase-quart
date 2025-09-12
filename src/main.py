@@ -18,7 +18,7 @@ from moderation import fc, init_moderation
 from render import render_controller
 from templates import render_constants, template_error_message
 from utils.web_helpers import Quart2
-from blueprints.plugins.base import register_blueprint_plugins
+from plugins.i_blueprints import register_blueprint_plugins
 
 
 async def print_exception(e: Exception):

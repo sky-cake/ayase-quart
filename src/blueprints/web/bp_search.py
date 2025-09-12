@@ -15,8 +15,7 @@ from search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
 from search.pagination import template_pagination_links, total_pages
 from templates import template_search
 from utils import Perf
-from plugins.search import search_plugins, intersect_search_plugin_results
-from plugins.search.base import SearchPlugin
+from plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
 from jinja2 import Template
 from quart_wtf import QuartForm
 

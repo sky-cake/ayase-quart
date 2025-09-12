@@ -1,11 +1,13 @@
 # maintain syntax highlighting without loading this example
 if 0:
-    from plugins.search.base import SearchPlugin
     from forms import SearchForm
-    from wtforms import StringField, Field
-    from wtforms.validators import DataRequired
     from jinja2 import Template
     from templates import env
+    from wtforms import Field, StringField
+    from wtforms.validators import DataRequired
+
+    from plugins.i_search import SearchPlugin
+
 
     # there must exist a class that implements SearchPlugin
     class SearchPluginExample(SearchPlugin):
@@ -16,10 +18,11 @@ if 0:
 
         # careful!
         # any html in this string WILL be rendered
-        template: Template = env.from_string('''
+        template: Template = env.from_string("""
             {% from 'macros/macros.html' import render_field %}
+            <link rel="stylesheet" href="/static/plugins/example.css">
             {{render_field(form.sha256)}}
-        ''')
+        """)
 
         async def get_boards_2_nums(self, form: SearchForm) -> dict[str, set[int]]:
             # perform your search based on the sha256 input...

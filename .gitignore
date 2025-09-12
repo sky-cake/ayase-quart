@@ -34,7 +34,13 @@ data/
 !pyproject.toml
 
 # plugins
-src/plugins/search/plugin_*.py
-src/static/plugins
-src/blueprints/plugins/plugin_*.py
-src/templates/plugins
+src/plugins/blueprints/*
+!src/plugins/blueprints/__init__.py
+!src/plugins/blueprints/bp_example.py
+
+src/plugins/search/*
+!src/plugins/search/__init__.py
+!src/plugins/search/search_example.py
+
+src/plugins/static/*.css
+src/plugins/static/*.js
