@@ -138,7 +138,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
 
     handler.form = await handler.form.create_form(meta={'csrf': False}, data=request_args)
 
-    searched = False
+    did_any_search = False
     posts_t = []
     posts = []
     total_hits = 0
@@ -147,46 +147,65 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     quotelinks = []
 
     if handler.is_search_request and (await handler.form.validate()):
-        searched = True
+        do_native_search = True
+        did_plugin_search = False
 
-        t1 = perf_counter()
+        time_search_start = perf_counter()
 
         if search_plugins:
             result = await intersect_search_plugin_results(search_plugins, handler.form)
-            if result.board_2_nums:
-                handler.board_2_nums = result.board_2_nums
-            if result.flash_msg:
-                await flash(result.flash_msg)
-            p.check('plugins completed')
+            p.check('plugin routine complete')
 
-        if app_conf.get('testing'):
-            posts, total_hits = await handler.get_posts_and_total_hits()
-        else:
-            try:
+            if result.performed_search:
+                did_plugin_search = True
+                did_any_search = True
+
+                if result.flash_msg:
+                    await flash(result.flash_msg)
+
+                if result.board_2_nums:
+                    handler.board_2_nums = result.board_2_nums
+                else:
+                    # no results found from plugin search -> no native search results
+                    do_native_search = False
+                    time_search_end = perf_counter()
+
+        if do_native_search:
+            did_any_search = True
+            if app_conf.get('testing'):
+                # show the real errors
                 posts, total_hits = await handler.get_posts_and_total_hits()
-            except Exception:
-                msg = handler.html_message_error
-                await flash(msg)
+            else:
+                try:
+                    posts, total_hits = await handler.get_posts_and_total_hits()
+                except Exception:
+                    msg = handler.html_message_error
+                    await flash(msg)
 
-        t2 = perf_counter()
-        p.check('search done')
+            time_search_end = perf_counter()
+            p.check('search done')
 
-        posts, total_hits = await handler.filter_posts_and_total_hits(posts, total_hits, logged_in=logged_in)
-        p.check('filter_reported')
+            posts, total_hits = await handler.filter_posts_and_total_hits(posts, total_hits, logged_in=logged_in)
+            p.check('filter_reported')
 
-        posts_t = handler.get_posts_t(posts)
-        p.check('templated posts')
+            posts_t = handler.get_posts_t(posts)
+            p.check('templated posts')
 
-        page_count = total_pages(total_hits, handler.form.hits_per_page.data)
-        page_links = template_pagination_links(endpoint_path, handler.form.data, page_count, section='resulttop')
-        p.check('templated links')
+            if did_plugin_search:
+                # Plugin search gets no paging due to the nature of "post-filtering". See AQ plugin docs.
+                total_hits = min(total_hits, handler.form.hits_per_page.data)
+                # if total_hits == handler.form.hits_per_page.data:
+                #     await flash('- Max page size reached. Note that AQ does not perform pagination with search plugins. To find other results, specify other query arguments.')
+            else:
+                page_count = total_pages(total_hits, handler.form.hits_per_page.data)
+                page_links = template_pagination_links(endpoint_path, handler.form.data, page_count, section='resulttop')
+                p.check('templated links')
 
         cur_page = handler.form.page.data or cur_page
 
     yield_message = ''
-    if searched:
-        yield_message = f'Searched archive in {t2-t1:,.3f}s. Post search hits: {total_hits:,}'
-
+    if did_any_search:
+        yield_message = f'Searched archive in {time_search_end-time_search_start:,.3f}s. Post search hits: {total_hits:,}'
 
     search_plugin_html = ''
     for plugin_template in plugin_templates:
@@ -201,7 +220,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         posts_t=posts_t,
         page_links=page_links,
         page_post_count=len(posts),
-        searched=searched,
+        searched=did_any_search,
         quotelinks=quotelinks,
         title=handler.form_title,
         cur_page=cur_page,

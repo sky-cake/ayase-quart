@@ -10,13 +10,18 @@ from wtforms import Field
 class SearchPluginResult:
     def __init__(self):
         self.board_2_nums: dict[str, set[int]] = dict()
+        
+        # html to show the user after plugin searches
         self.flash_msg: str = ''
+        
+        # helps determine if we should do a native search
+        self.performed_search = False
 
     def add_flash_msg(self, msg: str):
         if msg:
             if self.flash_msg:
                 self.flash_msg += '<br>'
-            self.flash_msg += f'- {msg}'
+            self.flash_msg += msg
 
 
 class SearchPlugin(ABC):
@@ -44,10 +49,15 @@ async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin
     for plugin_name, plugin in search_plugins.items():
         _result: SearchPluginResult = await plugin.get_search_plugin_result(form)
 
+        # once True, stay True
+        result.performed_search = _result.performed_search or result.performed_search
+
         if not _result.board_2_nums:
             # the intersection of any other results will be nothing
             # keep the latest result's flash msg
             return _result
+
+        result.add_flash_msg(_result.flash_msg)
 
         if first_loop:
             result.board_2_nums = {b: s.copy() for b, s in _result.board_2_nums.items()}

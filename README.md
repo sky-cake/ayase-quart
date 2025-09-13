@@ -120,6 +120,15 @@ Loading search plugin: plugins.search.search_tagger
 Loading bp plugin: plugins.blueprints.bp_tagger
 ```
 
+**Note:**
+
+There is a computer science problem (?) we've run into with our search plugins called "[post-filtering](https://docs.opensearch.org/latest/vector-search/ai-search/hybrid-search/post-filtering/#single-query-scenario)".
+
+Because plugin search is uncoupled from our native search (AQ's sql or fts search), there is no way to do common pagination. Once we get our board_2_nums from the plugin search results, there is another round of filtering to do via native search. This second round makes final page sizes unpredictable - they can be less than or equal to the plugin search result's page size. For example, final page sizes will often be much less for bigger databases, or more complex search terms. To address this, plugin search developers should do the following,
+  - If ONLY plugin form fields have been submitted, do regular paging with your plugin.
+  - If additional plugin form fields have been submitted, return more than `per_page` results from your plugins. This makes it more likely for the native search to reach the `per_page` figure.
+
+I'm aware of some other methods to address this (ATTACH DATABASE, multiple-query per-page fill-up), but they seem impractical.
 
 ## Set Up with Docker
 
