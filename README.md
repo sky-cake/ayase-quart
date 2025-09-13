@@ -106,7 +106,7 @@ Assuming you have a data source set up, you can:
 1. [Optional] Submit pull requests with fixes and new features!
 
 
-# Plugins
+## Plugins
 
 Ayase Quart supports,
   
