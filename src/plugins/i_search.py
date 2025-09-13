@@ -7,6 +7,18 @@ from jinja2 import Template
 from wtforms import Field
 
 
+class SearchPluginResult:
+    def __init__(self):
+        self.board_2_nums: dict[str, set[int]] = dict()
+        self.flash_msg: str = ''
+
+    def add_flash_msg(self, msg: str):
+        if msg:
+            if self.flash_msg:
+                self.flash_msg += '<br>'
+            self.flash_msg += f'- {msg}'
+
+
 class SearchPlugin(ABC):
     fields: list[Field] = []
 
@@ -14,47 +26,47 @@ class SearchPlugin(ABC):
     template: Template
 
     @abstractmethod
-    async def get_boards_2_nums(self, form: SearchForm) -> dict[str, set[int]]:
-        """
-        Return a dict of {board1: set(num1, num2), ...}
-        """
+    async def get_search_plugin_result(self, form: SearchForm) -> SearchPluginResult:
         pass
 
 
-async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin], form: SearchForm) -> dict[str, set[int]]:
+async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin], form: SearchForm) -> SearchPluginResult:
     """
     Returns the intersection of each plugins' boards and nums.
     I.e. if plugin #1 returns 0 results, and plugin #2 returns 100 results, we return 0 results.
     """
-    boards_2_nums: dict[str, set[int]] = dict()
+    result = SearchPluginResult()
 
     if not search_plugins:
-        return boards_2_nums
+        return result
 
     first_loop = True
     for plugin_name, plugin in search_plugins.items():
-        _boards_2_nums: dict[str, set[int]] = await plugin.get_boards_2_nums(form)
+        _result: SearchPluginResult = await plugin.get_search_plugin_result(form)
+
+        if not _result.board_2_nums:
+            # the intersection of any other results will be nothing
+            # keep the latest result's flash msg
+            return _result
 
         if first_loop:
-            if _boards_2_nums:
-                boards_2_nums = _boards_2_nums.copy()
-            else:
-                # no results on first loop -> the intersection of any other results will be nothing
-                return dict()
-
+            result.board_2_nums = {b: s.copy() for b, s in _result.board_2_nums.items()}
             first_loop = False
             continue
 
-        if _boards_2_nums:
-            for board, nums in _boards_2_nums.items():
-                assert isinstance(nums, set)
-                if board not in boards_2_nums:
-                    continue
-                boards_2_nums[board].intersection_update(nums)
-                if not boards_2_nums[board]:
-                    boards_2_nums.pop(board)
+        for board, nums in _result.board_2_nums.items():
+            if not isinstance(nums, set):
+                raise TypeError(type(nums))
 
-    return boards_2_nums
+            if board not in result.board_2_nums:
+                # no matching boards, no intersection
+                continue
+
+            result.board_2_nums[board].intersection_update(nums)
+            if not result.board_2_nums[board]:
+                result.board_2_nums.pop(board)
+
+    return result
 
 
 def load_search_plugins() -> dict[str, SearchPlugin]:

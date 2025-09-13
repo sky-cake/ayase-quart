@@ -6,7 +6,7 @@ if 0:
     from wtforms import Field, StringField
     from wtforms.validators import DataRequired
 
-    from plugins.i_search import SearchPlugin
+    from plugins.i_search import SearchPlugin, SearchPluginResult
 
 
     # there must exist a class that implements SearchPlugin
@@ -24,6 +24,6 @@ if 0:
             {{render_field(form.sha256)}}
         """)
 
-        async def get_boards_2_nums(self, form: SearchForm) -> dict[str, set[int]]:
+        async def get_search_plugin_result(self, form: SearchForm) -> SearchPluginResult:
             # perform your search based on the sha256 input...
-            return dict() # {'g': set([1, 2, 3]), 'b': set([1, 3, 5])}
+            return SearchPluginResult() # .board_2_nums = {'g': set([1, 2, 3]), 'b': set([1, 3, 5])}

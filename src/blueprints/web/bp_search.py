@@ -28,7 +28,7 @@ class SearchHandler:
     enabled: bool
     multi_board_search: bool
     highlight: bool
-    boards_2_nums: dict[str, set[int]] = dict()
+    board_2_nums: dict[str, set[int]] = dict()
 
     @property
     def is_gallery_mode(self) -> bool:
@@ -41,8 +41,8 @@ class SearchHandler:
     @property
     def form_data(self) -> dict:
         form_data = self.form.data
-        if self.boards_2_nums:
-            form_data['boards_2_nums'] = self.boards_2_nums
+        if self.board_2_nums:
+            form_data['board_2_nums'] = self.board_2_nums
         return form_data
 
     async def get_posts_and_total_hits(self):
@@ -152,9 +152,11 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         t1 = perf_counter()
 
         if search_plugins:
-            boards_2_nums = await intersect_search_plugin_results(search_plugins, handler.form)
-            if boards_2_nums:
-                handler.boards_2_nums = boards_2_nums
+            result = await intersect_search_plugin_results(search_plugins, handler.form)
+            if result.board_2_nums:
+                handler.board_2_nums = result.board_2_nums
+            if result.flash_msg:
+                await flash(result.flash_msg)
             p.check('plugins completed')
 
         if app_conf.get('testing'):

@@ -295,12 +295,12 @@ def get_facet_params(form_data) -> list[str]:
     return []
 
 
-def get_boards_2_nums_where(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
-    boards_2_nums = form_data.get('boards_2_nums')
+def get_board_2_nums_where(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
+    board_2_nums = form_data.get('board_2_nums')
 
     pre = ' and' if where_query else ' where '
 
-    if boards_2_nums and (nums := boards_2_nums[board]):
+    if board_2_nums and (nums := board_2_nums[board]):
         if not isinstance(nums, set):
             raise TypeError(type(nums), nums)
 
@@ -315,9 +315,9 @@ def get_board_specific_where_clause(board: str, where_query: str, params: list[s
     where_query += get_min_comment_length_where(where_query, form_data)
     where_query += get_facet_where(board, where_query, form_data, phg)
 
-    boards_2_nums_where, boards_2_nums_params = get_boards_2_nums_where(board, where_query, form_data, phg)
-    where_query += boards_2_nums_where
-    params += boards_2_nums_params
+    board_2_nums_where, board_2_nums_params = get_board_2_nums_where(board, where_query, form_data, phg)
+    where_query += board_2_nums_where
+    params += board_2_nums_params
 
     return where_query, params
 
@@ -369,27 +369,27 @@ def intersect_form_data(boards: list[str], form_data: dict) -> tuple[list[str], 
     We may avoid queries if form data contradicts itself.
     We perform such checks here.
     """
-    boards_2_nums: dict[str, set[int]] = form_data.get('boards_2_nums', dict())
+    board_2_nums: dict[str, set[int]] = form_data.get('board_2_nums', dict())
 
     # boards intersection
-    if boards_2_nums:
-        boards = [b for b in boards if b in boards_2_nums]
+    if board_2_nums:
+        boards = [b for b in boards if b in board_2_nums]
 
-        for board in list(boards_2_nums):
+        for board in list(board_2_nums):
             if board not in boards:
-                boards_2_nums.pop(board)
+                board_2_nums.pop(board)
 
         # just assign this and don't worry about possible states
-        form_data['boards_2_nums'] = boards_2_nums
+        form_data['board_2_nums'] = board_2_nums
 
-        if not boards or not boards_2_nums:
+        if not boards or not board_2_nums:
             return None, None
 
     # consolidate nums - no more 'num' field in form_data
-    if form_data.get('num') and boards_2_nums:
+    if form_data.get('num') and board_2_nums:
         num = form_data.pop('num')
         for board in boards:
-            nums = boards_2_nums[board]
+            nums = board_2_nums[board]
             if not isinstance(nums, set):
                 raise TypeError(type(nums), nums)
             nums.add(num)

@@ -180,9 +180,9 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.boards_2_nums:
+        if q.board_2_nums:
             pair_strs = []
-            for board, nums in q.boards_2_nums.items():
+            for board, nums in q.board_2_nums.items():
                 nums_str = ' OR '.join(f'num:{int(num)}' for num in nums)
                 pair_str = f'(board:{board}) AND ({nums_str})'
                 pair_strs.append(pair_str)
