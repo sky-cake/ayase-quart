@@ -106,6 +106,11 @@ Assuming you have a data source set up, you can:
 1. [Optional] Submit pull requests with fixes and new features!
 
 
+## Database Operations
+
+A package called (asagi-tables)[https://github.com/fireballz22/asagi-tables] will allow you to do many Asagi operations. Use it to create your archiveposting tables.
+
+
 ## Plugins
 
 Ayase Quart supports,

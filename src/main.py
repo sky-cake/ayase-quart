@@ -9,9 +9,8 @@ from quart_rate_limiter import RateLimiter
 from quart_schema import RequestSchemaValidationError
 from werkzeug.exceptions import HTTPException
 
-from archiveposting import init_archiveposting
 from blueprints import blueprints
-from configs import QuartConfig, app_conf, archiveposting_conf, mod_conf
+from configs import QuartConfig, app_conf, mod_conf
 from db import db_q
 from db.redis import close_redis
 from moderation import fc, init_moderation
@@ -75,9 +74,6 @@ def create_app():
     if mod_conf['enabled']:
         app.before_serving(init_moderation)
         app.before_serving(fc.init)
-
-    if archiveposting_conf['enabled']:
-        app.before_serving(init_archiveposting)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)
