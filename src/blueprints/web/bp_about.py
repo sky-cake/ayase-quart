@@ -7,7 +7,7 @@ from moderation.auth import (
     web_usr_logged_in
 )
 from render import render_controller
-from templates import template_about, template_soy
+from templates import template_about
 
 bp = Blueprint("bp_web_about", __name__)
 
@@ -23,17 +23,4 @@ async def about(is_admin: bool, logged_in: bool):
         logged_in=logged_in,
         is_admin=is_admin,
         site_email=site_conf['site_email'],
-    )
-
-
-@bp.get("/soy")
-@load_web_usr_data
-@web_usr_logged_in
-@web_usr_is_admin
-async def soy(is_admin: bool, logged_in: bool):
-    return await render_controller(
-        template_soy,
-        title='... unsafe search... the boy is curious...',
-        logged_in=logged_in,
-        is_admin=is_admin,
     )

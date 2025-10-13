@@ -49,7 +49,6 @@ template_board_index = env.get_template("board_index.html")
 template_catalog = env.get_template("catalog.html")
 
 template_about = env.get_template("about.html")
-template_soy = env.get_template("soy.html")
 
 template_message = env.get_template("message.html")
 template_messages = env.get_template("messages.html")
