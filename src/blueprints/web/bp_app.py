@@ -1,5 +1,3 @@
-from random import randint
-
 from quart import Blueprint, Response, abort, current_app, jsonify
 
 from asagi_converter import (
@@ -66,7 +64,7 @@ async def make_pagination_board_index(board: str, index: dict, page_num: int) ->
 async def v_index(is_admin: bool, logged_in: bool):
     return await render_controller(
         template_index,
-        logo_filename=f'logo{randint(1, 3)}.png',
+        logo_filename='logo.png',
         logged_in=logged_in,
         is_admin=is_admin,
     )
