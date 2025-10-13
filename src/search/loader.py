@@ -323,14 +323,14 @@ async def get_board_threads(board: str, after_thread_num: int=0) -> AsyncGenerat
 # BEGIN incremental load
 
 async def get_board_db_last_num(board: str) -> int|None:
-    sql = f'select num from {board} order by num desc limit 1;'
+    sql = f'select num from `{board}` order by num desc limit 1;'
     if not(rows := await db_q.query_tuple(sql)):
         return None
     return rows[0][0]
 
 
 async def get_board_db_threads_after_num(board: str, num: int) -> list[int]:
-    sql = f'select distinct(thread_num) from {board} where num >= {db_q.Phg()()};'
+    sql = f'select distinct(thread_num) from `{board}` where num >= {db_q.Phg()()};'
     rows = await db_q.query_tuple(sql, (num,))
     return [row[0] for row in rows]
 
