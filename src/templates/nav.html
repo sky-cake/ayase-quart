@@ -4,7 +4,6 @@
     {{site_name}}: [
         <a href="/">Home</a>
         / <a href="{{url_for('bp_web_about.about')}}">About</a>
-        {% if moderation_enabled %} / <a href="{{url_for('bp_web_admin.message')}}">Message</a>{% endif %}
         {% if stats_enabled %} / <a href="{{ url_for('bp_web_stats.v_stats') }}">Stats</a>{% endif %}
     ]
     {% if archiveposting_conf['enabled'] %}Text board: [ <a href="{{url_for('bp_web_archiveposting.get_archiveposting_catalog')}}">/{{archiveposting_conf['board_name']}}/</a> ]{% endif %}
@@ -35,8 +34,6 @@
             <a href="{{ url_for('bp_web_admin.users_index') }}">Users</a>
             /
         {% endif %}
-        <a href="{{ url_for('bp_web_admin.messages') }}">Messages</a>
-        /
         <a href="{{ url_for('bp_web_admin.latest') }}">Latest OPs</a>
         ]
     {% endif %}

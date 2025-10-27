@@ -1,21 +1,15 @@
-from datetime import timedelta
-
-from quart import Blueprint, current_app, flash, redirect, request, url_for
-from quart_rate_limiter import rate_limit
+from quart import Blueprint, flash, redirect, request, url_for
 
 from asagi_converter import get_latest_ops_as_catalog
 from boards import board_shortnames
-from configs import mod_conf, site_conf
-from forms import MessageForm, UserCreateForm, UserEditForm
+from forms import UserCreateForm, UserEditForm
 from moderation.auth import (
     load_web_usr_data,
     login_web_usr_required,
     require_web_usr_is_active,
     require_web_usr_permissions,
-    web_usr_is_admin,
-    web_usr_logged_in
+    web_usr_is_admin
 )
-from moderation.message import create_message, get_messages_from_last_30_days
 from moderation.user import (
     Permissions,
     create_user_if_not_exists,
@@ -27,12 +21,8 @@ from moderation.user import (
 )
 from posts.template_optimizer import render_catalog_card, wrap_post_t
 from render import render_controller
-from security.captcha import MathCaptcha
 from templates import (
     template_catalog,
-    template_configs,
-    template_message,
-    template_messages,
     template_users_create,
     template_users_delete,
     template_users_edit,
@@ -41,56 +31,6 @@ from templates import (
 )
 
 bp = Blueprint('bp_web_admin', __name__)
-
-
-@bp.route("/message", methods=['GET', 'POST'])
-@rate_limit(2, timedelta(days=1))
-@load_web_usr_data
-@web_usr_logged_in
-@web_usr_is_admin
-async def message(is_admin: bool, logged_in: bool):
-    form: MessageForm = await MessageForm.create_form()
-    captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
-
-    username = request.headers.get('X-Forwarded-For', request.remote_addr)
-    if (await form.validate_on_submit()):
-        if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
-            await create_message(username, form.title.data, form.comment.data)
-            msg = 'Thank you for your anonymous submission. We will review it shortly.'
-            if site_conf['site_email']:
-                msg += f'If this is urgent, you can also message us at {site_conf['site_email']}.'
-            await flash(msg)
-            return redirect(url_for('bp_web_admin.message'))
-        else:
-            await flash("Wrong math captcha answer", "danger")
-
-    form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
-
-    return await render_controller(
-        template_message,
-        form=form,
-        title='Contact',
-        tab_title='Message',
-        logged_in=logged_in,
-        is_admin=is_admin,
-    )
-
-
-@bp.route("/messages")
-@login_web_usr_required
-@load_web_usr_data
-@require_web_usr_is_active
-@require_web_usr_permissions([Permissions.messages_view])
-@web_usr_is_admin
-async def messages(is_admin: bool):
-    messages = await get_messages_from_last_30_days()
-    return await render_controller(
-        template_messages,
-        messages=messages,
-        title='Messages',
-        tab_title='Messages',
-        is_admin=is_admin,
-    )
 
 
 @bp.route("/latest")

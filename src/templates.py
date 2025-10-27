@@ -50,8 +50,6 @@ template_catalog = env.get_template("catalog.html")
 
 template_about = env.get_template("about.html")
 
-template_message = env.get_template("message.html")
-template_messages = env.get_template("messages.html")
 template_stats = env.get_template("stats.html")
 template_login = env.get_template('login.html')
 template_configs = env.get_template('configs.html')

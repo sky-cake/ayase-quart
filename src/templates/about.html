@@ -2,52 +2,66 @@
 {% block body %}
 
 <div class="mw800 mauto">
-<div class="pre">
-<div class="center"><img id="logo" src="{{url_for('static', filename='logo.png')}}"/></div><h2>About</h2>Ayase Quart (AQ) is an interface for 4chan/Lainchan archives using the Asagi database schema. What sets it apart from other archives is its advanced search options such as,
+    
+<div class="center"><img id="logo" src="{{url_for('static', filename='logo.png')}}"/></div>
 
-        - Searching replies with certain OPs - good for searching generals.
-        - Full-text-search (FTS) using lnx-search. Meilisearch, and others engines are partially supported.
-        - Gallery mode for search results.
-        - Written using Python3.13 and Quart.
+<h2>About</h2>
+
+Ayase Quart (AQ) is an interface for 4chan/Lainchan archives using the Asagi database schema. What sets it apart from other archives is its advanced search options such as,
+
+<ul>
+    <li>- Searching replies with certain OPs - good for searching generals.</li>
+    <li>- Full-text-search (FTS) using lnx-search. Meilisearch, and others engines are partially supported.</li>
+    <li>- Gallery mode for search results.</li>
+    <li>- Written using Python3.13 and Quart.</li>
+</ul>
 
 AQ supports MySQL and SQLite, so it's compatible with <a href="https://github.com/bibanon/neofuuka-scraper" target="_blank">Neofuuka (MySQL)</a>, <a href="https://github.com/bbepis/Hayden" target="_blank">Hayden (MySQL)</a>, and <a href="https://github.com/sky-cake/Ritual" target="_blank">Ritual (SQLite)</a> archive downloaders.
 
-<h2 id="news">News</h2>    - [2025-08-30] [enhance] Removed over 7kB compressed CSS (over 27kB uncompressed).
-    - [2025-08-27] [refactor] Dropped the image tagger search. It will return once a plugin system is devised.
-    - [2025-06-30] [enhance] Added archived-post counts per-month per-board plotting.
-    - [2025-06-23] [enhance] Search form drag 'n drop MD5.
-    - [2025-06-23] [enhance] Cleansed search params urls.
-    - [2025-06-15] [fix] /ayase_quart/ html escaping.
-    - [2025-06-15] [enhance] Incremental FTS updating.
-    - [2025-05-16] [enhance] Updated to Python3.13.
-    - [2025-05-16] [enhance] Index search highlighting.
-    - [2025-05-16] [enhance] Media height/width now minimum value search fields, not exact values.
-    - [2025-05-08] [fix] Page > 1 image search results.
-    - [2025-05-08] [fix] Image hover glitch.
-    - [2025-05-08] [enhance] Image search results ext highlighting.
-    - [2025-05-06] [fix] FTS board search bug resulting in 0 results for some boards.
-    - [2025-05-05] [enhance] Combined all info pages into the about page.
-    - [2025-05-05] [fix] All media can now expand and contract.
-    - [2025-05-04] [feature] Added 3 new filters to sql and fts searching - subject/comment length, and "is file archived?"
-    - [2025-04-23] [enhance] Set width and centered content on all pages; Search form styles now finalized.
-    - [2025-04-18] [fix] Post titles.
-    - [2025-04-15] [feature] File upload search now supported.
-    - [2025-04-09] [fix] Fixed full text search result matching.
-    - [2025-04-09] [fix] Removed search result single page limitations caused by previous algorithm.
-    - [2025-03-27] [enhance] Updated timestamp formats and added relative times.
-    - [2025-03-26] [feature] Added stats that lists AQ data, as requested by the community.
-    - [2025-03-23] [feature] Added search term highlighting.
-    - [2025-03-23] [feature] Added code block styling.
-    - [2025-03-22] [feature] The downloader, <a href="https://github.com/sky-cake/Ritual" target="_blank">Ritual</a>, can now generate thumbnails locally from full media.
-    - [2025-03-17] [feature] Added <a href="{{url_for('bp_web_admin.message')}}" target="_blank">contact form</a>.
-    - [2025-03-16] [style] Added fun images to <a href="{{url_for('bp_web_app.v_index')}}" target="_blank">home page</a>; new favicon.
+<h2 id="news">News</h2>
+
+<ul>
+    <li>- [2025-08-30] [enhance] Removed over 7kB compressed CSS (over 27kB uncompressed).v
+    <li>- [2025-08-27] [refactor] Dropped the image tagger search. It will return once a plugin system is devised.</li>
+    <li>- [2025-06-30] [enhance] Added archived-post counts per-month per-board plotting.</li>
+    <li>- [2025-06-23] [enhance] Search form drag 'n drop MD5.</li>
+    <li>- [2025-06-23] [enhance] Cleansed search params urls.</li>
+    <li>- [2025-06-15] [fix] /ayase_quart/ html escaping.</li>
+    <li>- [2025-06-15] [enhance] Incremental FTS updating.</li>
+    <li>- [2025-05-16] [enhance] Updated to Python3.13.</li>
+    <li>- [2025-05-16] [enhance] Index search highlighting.</li>
+    <li>- [2025-05-16] [enhance] Media height/width now minimum value search fields, not exact values.</li>
+    <li>- [2025-05-08] [fix] Page > 1 image search results.</li>
+    <li>- [2025-05-08] [fix] Image hover glitch.</li>
+    <li>- [2025-05-08] [enhance] Image search results ext highlighting.</li>
+    <li>- [2025-05-06] [fix] FTS board search bug resulting in 0 results for some boards.</li>
+    <li>- [2025-05-05] [enhance] Combined all info pages into the about page.</li>
+    <li>- [2025-05-05] [fix] All media can now expand and contract.</li>
+    <li>- [2025-05-04] [feature] Added 3 new filters to sql and fts searching - subject/comment length, and "is file archived?"</li>
+    <li>- [2025-04-23] [enhance] Set width and centered content on all pages; Search form styles now finalized.</li>
+    <li>- [2025-04-18] [fix] Post titles.</li>
+    <li>- [2025-04-15] [feature] File upload search now supported.</li>
+    <li>- [2025-04-09] [fix] Fixed full text search result matching.</li>
+    <li>- [2025-04-09] [fix] Removed search result single page limitations caused by previous algorithm.</li>
+    <li>- [2025-03-27] [enhance] Updated timestamp formats and added relative times.</li>
+    <li>- [2025-03-26] [feature] Added stats that lists AQ data, as requested by the community.</li>
+    <li>- [2025-03-23] [feature] Added search term highlighting.</li>
+    <li>- [2025-03-23] [feature] Added code block styling.</li>
+    <li>- [2025-03-22] [feature] The downloader, <a href="https://github.com/sky-cake/Ritual" target="_blank">Ritual</a>, can now generate thumbnails locally from full media.</li>
+    <li>- [2025-03-16] [style] Added fun images to <a href="{{url_for('bp_web_app.v_index')}}" target="_blank">home page</a>; new favicon.</li>
+</ul>
 
 <h2 id="donate">Donate</h2>If you like <a href="https://ayasequart.org">ayasequart.org</a>, please consider donating. Information is available at <a href="https://github.com/sky-cake/ayase-quart#donate--support" target="_blank">https://github.com/sky-cake/ayase-quart</a>.
 
-<h2 id="contact">Contact</h2>If you'd like to discuss something please <a href="{{url_for('bp_web_admin.message')}}" target="_blank">submit a message</a>{% if site_email %}, or email {{site_email}}{% endif %}.
+{% if site_email %}
+<h2 id="contact">Contact</h2>
+If you'd like to discuss something please send an email to {{site_email}}.
+{% endif %}
 
-<h2>Thank you for your support!</h2><a href="https://github.com/sky-cake" target="_blank">sky-cake</a>
+<h2>Thank you</h2>
+
+<a href="https://github.com/sky-cake" target="_blank">sky-cake</a>
 {{site_email}}
-</div>
+
 </div>
 {% endblock %}
