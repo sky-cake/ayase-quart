@@ -1,8 +1,9 @@
 from quart import Blueprint, flash, redirect, request, url_for
+from html import escape
 
 from asagi_converter import get_latest_ops_as_catalog
 from boards import board_shortnames
-from forms import UserCreateForm, UserEditForm
+from forms import UserCreateForm, UserEditForm, CSRFForm
 from moderation.auth import (
     load_web_usr_data,
     login_web_usr_required,
@@ -30,10 +31,11 @@ from templates import (
     template_users_view
 )
 
+
 bp = Blueprint('bp_web_admin', __name__)
 
 
-@bp.route("/latest")
+@bp.get('/latest')
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
@@ -56,12 +58,14 @@ async def latest(is_admin: bool):
 
 
 def list_to_html_ul(items: list[str], klass=None) -> str:
+    if not items:
+        return ''
     klass = f'class={klass}' if klass else ''
-    lis = ''.join(f'<li>{item}</li>' for item in items)
-    return f"<ul {klass}>{lis}</ul>" if items else ''
+    lis = ''.join(f'<li>{escape(item)}</li>' for item in items)
+    return f"<ul {klass}>{lis}</ul>"
 
 
-@bp.route('/users')
+@bp.get('/users')
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
@@ -83,6 +87,7 @@ async def users_index(is_admin: bool):
         d['Notes'] = u['notes'] if u['notes'] else ''
         ds.append(d)
 
+    # fields rendered in table() macro which escapes all columns by default
     return await render_controller(
         template_users_index,
         users=ds,
@@ -92,7 +97,7 @@ async def users_index(is_admin: bool):
     )
 
 
-@bp.route('/users/<int:user_id>')
+@bp.get('/users/<int:user_id>')
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
@@ -109,7 +114,8 @@ async def users_view(is_admin: bool, user_id: str):
     )
 
 
-@bp.route('/users/create', methods=['GET', 'POST'])
+@bp.get('/users/create')
+@bp.post('/users/create')
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
@@ -118,14 +124,15 @@ async def users_view(is_admin: bool, user_id: str):
 async def users_create(is_admin: bool):
     form: UserCreateForm = await UserCreateForm.create_form()
 
-    if await form.validate_on_submit():
+    if request.method == 'POST' and (await form.validate_on_submit()):
         username = form.username.data
         password = form.password.data
         permissions = form.permissions.data
         is_admin = form.is_admin.data
         is_active = form.is_active.data
         notes = form.notes.data
-        await create_user_if_not_exists(username, password, is_active, is_admin, permissions, notes)
+        message = await create_user_if_not_exists(username, password, is_active, is_admin, permissions, notes)
+        await flash(message)
         return redirect(url_for('bp_web_admin.users_index'))
 
     return await render_controller(
@@ -137,7 +144,8 @@ async def users_create(is_admin: bool):
     )
 
 
-@bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@bp.get('/users/<int:user_id>/edit')
+@bp.post('/users/<int:user_id>/edit')
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
@@ -151,11 +159,11 @@ async def users_edit(is_admin: bool, user_id: str):
         await flash('That user does not exist.')
         redirect(url_for('bp_web_admin.users_index'))
 
-    if (await form.validate_on_submit()):
+    if request.method == 'POST' and (await form.validate_on_submit()):
         password_cur = form.password_cur.data
 
         if not (await is_valid_creds(user['username'], password_cur)):
-            await flash('Bad credentials')
+            await flash('Bad credentials.')
             return redirect(url_for('bp_web_admin.users_edit', user_id=user_id))
 
         password_new = form.password_new.data
@@ -184,14 +192,17 @@ async def users_edit(is_admin: bool, user_id: str):
     )
 
 
-@bp.route('/users/<int:user_id>/delete', methods=['GET', 'POST'])
+@bp.get('/users/<int:user_id>/delete')
+@bp.post('/users/<int:user_id>/delete')
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.user_delete])
 @web_usr_is_admin
 async def users_delete(is_admin: bool, user_id: str):
-    if request.method == 'POST':
+    form: CSRFForm = await CSRFForm.create_form()
+
+    if request.method == 'POST' and (await form.validate_on_submit()):
         flash_msg, code = await delete_user(user_id)
         await flash(flash_msg)
         return redirect(url_for('bp_web_admin.users_index'))
@@ -207,4 +218,5 @@ async def users_delete(is_admin: bool, user_id: str):
         title='Delete User',
         tab_title='Delete User',
         is_admin=is_admin,
+        form=form,
     )

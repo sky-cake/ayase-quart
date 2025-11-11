@@ -34,6 +34,9 @@ from templates import (
 from threads import render_thread_stats
 from utils import Perf
 from utils.validation import validate_board, validate_threads
+from moderation.report import generate_report_form
+from security import inject_csrf_token_to_session
+
 
 bp = Blueprint("bp_web_app", __name__)
 
@@ -84,6 +87,7 @@ async def favicon():
 
 
 @bp.get("/<string:board>")
+@inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
@@ -119,6 +123,7 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
         title=get_title(board),
         logged_in=logged_in,
         is_admin=is_admin,
+        report_form_t=generate_report_form(),
     )
     p.check('render')
     print(p)
@@ -127,6 +132,7 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
 
 
 @bp.get("/<string:board>/page/<int:page_num>")
+@inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
@@ -163,6 +169,7 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
         tab_title=title,
         logged_in=logged_in,
         is_admin=is_admin,
+        report_form_t=generate_report_form(),
     )
     p.check('rendered')
     print(p)
@@ -270,6 +277,7 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
 
 
 @bp.get("/<string:board>/thread/<int:thread_num>")
+@inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
@@ -305,6 +313,7 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
         tab_title=title,
         logged_in=logged_in,
         is_admin=is_admin,
+        report_form_t=generate_report_form(),
     )
     p.check('rendered')
     print(p)

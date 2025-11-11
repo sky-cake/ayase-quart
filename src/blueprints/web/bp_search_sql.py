@@ -10,6 +10,7 @@ from moderation.auth import (
 )
 from blueprints.web.bp_search import search_handler, SearchHandlerSQL
 
+
 bp = Blueprint("bp_web_vanilla_search", __name__)
 
 

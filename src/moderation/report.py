@@ -17,19 +17,24 @@ from moderation.user import Permissions, User
 from search.post_metadata import board_2_int, board_int_doc_id_2_pk
 from search.providers import get_index_search_provider
 from utils.validation import validate_board
+from security import get_csrf_input
 
 
-# this can actually just be a jinja form that is compiled once...
-def generate_report_modal():
-    category_options = "\n".join(
-        f"""
-        <div>
-          <input type="radio" id="{category.name}" name="submitter_category" value="{category.value}" required>
-          <label for="{category.name}">{category.value}</label>
-        </div>
-        """ for category in SubmitterCategory
-    )
-    modal_html = f"""
+category_options_html = '\n'.join(
+    f"""
+    <div>
+        <input type="radio" id="{category.name}" name="submitter_category" value="{category.value}" required>
+        <label for="{category.name}">{category.value}</label>
+    </div>
+    """
+    for category in SubmitterCategory
+)
+
+def generate_report_form() -> str:
+    """
+    The csrf token needs validation. One function that offers this is `apply_csrf_validation_on_endpoint()`.
+    """
+    report_form_html = f"""
     <div id="modal_overlay" hidden>
         <div id="report_modal" class="form" hidden>
             <div class="modal_header">
@@ -37,9 +42,10 @@ def generate_report_modal():
                 <div id="report_close" class="btn">Close</div>
             </div>
             <form class="form" id="report_form" action="" method="POST">
+                {get_csrf_input()}
                 <div>
                     <label for="submitter_category">Category:</label>
-                    {category_options}
+                    {category_options_html}
                 </div>
                 <br>
                 <div>
@@ -53,9 +59,8 @@ def generate_report_modal():
         </div>
     </div>
     """
-    return modal_html
+    return report_form_html
 
-report_modal_t = generate_report_modal()
 
 async def get_report_count(
     report_parent_id: Optional[int] = None,

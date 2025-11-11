@@ -13,7 +13,6 @@ from configs import (
     stats_conf,
     vanilla_search_conf
 )
-from moderation.report import report_modal_t
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
 
@@ -30,7 +29,6 @@ render_constants = dict(
     get_flashed_messages=get_flashed_messages,
     format_ts=ts_2_formatted,
     board_objects=board_objects,
-    report_modal_t=report_modal_t,
     testing=app_conf['testing'],
     canonical_host=archive_conf['canonical_host'],
     canonical_name=archive_conf['canonical_name'],

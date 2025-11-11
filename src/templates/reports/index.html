@@ -27,62 +27,9 @@
     <option value="report_close">Report Close</option>
     <option value="report_delete">Report Delete</option>
 </select><button id="apply_action" class="btn">Apply</button>
-
-
+{{ csrf_input | safe }}
 {{table(reports, safe_cols=['Check', 'About', 'Post'])}}
-
-<script type="text/javascript">
-    window.addEventListener('load', function () {
-        var checkboxes = document.querySelectorAll('.select_report');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        var checkboxes = document.querySelectorAll('#select_all');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        const bulk_action_dropdown = document.getElementById('bulk_action');
-        if (bulk_action_dropdown) {
-            bulk_action_dropdown.value = 'post_hide';
-        }
-    });
-
-    document.getElementById('select_all').addEventListener('change', function () {
-        const checkboxes = document.querySelectorAll('.select_report');
-        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-    });
-
-    document.getElementById('apply_action').addEventListener('click', async function () {
-        const report_parent_ids = Array.from(document.querySelectorAll('.select_report:checked'))
-            .map(checkbox => checkbox.getAttribute('data-report-id'));
-
-        const action = document.getElementById('bulk_action').value;
-
-        if (!report_parent_ids.length) {
-            alert('No reports selected!');
-            return;
-        }
-
-        if (!action) {
-            alert('No action selected!');
-            return;
-        }
-
-        const response = await fetch(`/reports/bulk/${action}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ report_parent_ids: report_parent_ids })
-        })
-
-        if (!response.ok) {
-            alert(response.status);
-        }
-
-        location.reload(); // reload after receiving response
-    });
-</script>
+<script type="text/javascript" src="/static/js/admin_reports.js" defer integrity="sha384-M49Gl7Nk5ZK7IXGTtpgdKEP3MGdJCAJRcFivlVjyzq/tPOjoNK4XvY/BXce5fT0k"></script>
 {% else %}
 No reports here.
 {% endif %}

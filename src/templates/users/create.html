@@ -8,10 +8,19 @@
         <p><label for="{{ form.username.id }}">{{ form.username.label }}</label>{{ form.username() }}</p>
         <p><label for="{{ form.password.id }}">{{ form.password.label }}</label>{{ form.password() }}</p>
         <p><label for="{{ form.is_admin.id }}">{{ form.is_admin.label }}</label>{{ form.is_admin() }}</p>
-        <p><label for="{{ form.permissions.id }}">{{ form.permissions.label }}</label>{{ form.permissions() }}</p>
+
+        <p>{{ form.permissions.label }}
+            <label for="{{ form.permissions.id }}">
+            <button class="btn inline p4" id="select_all">Check All</button>
+            <br>
+            </label>{{ form.permissions() }}
+        </p>
+
         <p><label for="{{ form.is_active.id }}">{{ form.is_active.label }}</label>{{ form.is_active() }}</p>
         <p><label for="{{ form.notes.id }}">{{ form.notes.label }}</label>{{ form.notes() }}</p>
-        <button type="submit">Create</button>
+        <button class="btn mb-2" type="submit">Create</button>
     </form>
+
+    <script type="text/javascript" src="/static/js/admin_users.js" defer integrity="sha384-bhVs400cgCHNKNyDp6Q+fYumFlKvfhDXk6GOOFHA5OUqEH7axIaaXcRXKJFxNx94"></script>
 
 {% endblock %}

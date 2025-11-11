@@ -171,7 +171,7 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
     form: PostForm = await PostForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
-    if await form.validate_on_submit():
+    if request.method == 'POST' and (await form.validate_on_submit()):
         if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
             form_data = form.data
             form_data['op'] = True
@@ -188,7 +188,7 @@ async def _archiveposting_catalog(is_admin: bool, logged_in: bool):
             # return redirect(url_for('bp_web_archiveposting.get_archiveposting_thread', thread_num=thread_num))
             return redirect(url_for('bp_web_archiveposting.get_archiveposting_catalog'))
         else:
-            await flash("Wrong math captcha answer", "danger")
+            await flash("Wrong math captcha answer.", "danger")
 
     catalog = await generate_catalog(board, db_X=db_a)
 
@@ -235,7 +235,7 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
     form: PostForm = await PostForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
-    if await form.validate_on_submit():
+    if request.method == 'POST' and (await form.validate_on_submit()):
         if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
             form_data = form.data
             form_data['op'] = False
@@ -251,7 +251,7 @@ async def _archiveposting_thread(is_admin: bool, logged_in: bool, thread_num: in
             await flash("Post created!", "success")
             return redirect(url_for('bp_web_archiveposting.get_archiveposting_thread', thread_num=thread_num))
         else:
-            await flash("Wrong math captcha answer", "danger")
+            await flash("Wrong math captcha answer.", "danger")
 
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board, thread_num, db_X=db_a)

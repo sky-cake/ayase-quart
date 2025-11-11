@@ -19,6 +19,7 @@ from render import render_controller
 from security.captcha import MathCaptcha
 from templates import template_login
 
+
 bp = Blueprint("bp_web_auth", __name__, template_folder="templates")
 
 
@@ -58,8 +59,10 @@ async def login_get(is_admin: bool, logged_in: bool):
 
 
 async def handle_login(method: str, is_admin: bool=False, logged_in: bool=False):
-    """If a user is not active, they can technically still log in/out,
-    but they won't see any content."""
+    """
+    - If a user is not active, they can technically still log in/out, but they won't see any content.
+    - Uses wtform csrf token
+    """
     form: LoginForm = await LoginForm.create_form()
     captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
@@ -75,7 +78,7 @@ async def handle_login(method: str, is_admin: bool=False, logged_in: bool=False)
 
             await flash("Incorrect username or password.", "danger")
         else:
-            await flash("Wrong math captcha answer", "danger")
+            await flash("Wrong math captcha answer.", "danger")
 
     form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
 

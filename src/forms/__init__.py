@@ -313,6 +313,10 @@ def enum_validator(enum_cls: Enum):
     return validator
 
 
+class CSRFForm(QuartForm):
+    pass
+
+
 class UserBaseForm(QuartForm):
     is_admin = BooleanField('Is Admin', validators=[Optional()])
     permissions = MultiCheckboxField('Permissions', choices=enum_choices(Permissions), validators=[Optional()])

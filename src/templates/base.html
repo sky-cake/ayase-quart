@@ -10,8 +10,8 @@
 {% endif %}
 	<link href="/static/css/custom.css" rel="stylesheet" type="text/css">
 {% block scripts %}
-	<script type="text/javascript" src="/static/js/utils.js" defer crossorigin="anonymous" integrity="sha384-q6EPvnPOXUzqeDJyxLD+6z4HJQQlXJY+jpIfSB9axDMfG1Kb6+DsT0JU3GYj/UyC"></script>
-	<script type="text/javascript" src="/static/js/index.js" defer crossorigin="anonymous" integrity="sha384-dDUfZQrlJe+0ughnvGrd4DZCKbXnhEt1TGH4WrW/tAbMV6OcHe5RE09y1q3qSms8"></script>
+	<script type="text/javascript" src="/static/js/utils.js" defer integrity="sha384-q6EPvnPOXUzqeDJyxLD+6z4HJQQlXJY+jpIfSB9axDMfG1Kb6+DsT0JU3GYj/UyC"></script>
+	<script type="text/javascript" src="/static/js/index.js" defer integrity="sha384-dDUfZQrlJe+0ughnvGrd4DZCKbXnhEt1TGH4WrW/tAbMV6OcHe5RE09y1q3qSms8"></script>
 {%- endblock scripts %}
 </head>
 <body>
@@ -22,9 +22,9 @@
 
         {% block body %}{% endblock %}
 
-        {% if report_modal_t %}
-            {{ report_modal_t|safe }}
-            <script type="text/javascript" src="/static/js/reports.js" defer crossorigin="anonymous" integrity="sha384-fN8NwFrvL7x+5OZnnwasNbfp53N2WUAp77bJofxoIdBgVGMV+V0zno8yAtoAg8PF"></script>
+        {% if report_form_t %}
+            {{ report_form_t|safe }}
+            <script type="text/javascript" src="/static/js/reports.js" defer integrity="sha384-+Hw7M7UjZRnnH9CkXi7VFjybL7XOj2f4NPyfKPt5RxTZrcsHGvLU7o9VWXvN7TJd"></script>
         {% endif %}
     </div>
     <span id="bottom_hidden"></span>

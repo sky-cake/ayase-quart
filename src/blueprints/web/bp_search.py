@@ -18,6 +18,7 @@ from utils import Perf
 from plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
 from jinja2 import Template
 from quart_wtf import QuartForm
+from moderation.report import generate_report_form
 
 
 class SearchHandler:
@@ -136,6 +137,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     if search_plugins:
         bind_plugin_fields_to_form(handler.form, search_plugins, plugin_templates)
 
+    # turn off csrf so search result links can be shared
     handler.form = await handler.form.create_form(meta={'csrf': False}, data=request_args)
 
     did_any_search = False
@@ -226,6 +228,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         total_hits=f'{total_hits:,}' if total_hits else 0,
         logged_in=logged_in,
         is_admin=is_admin,
+        report_form_t=generate_report_form(),
     )
 
     p.check('rendered page')

@@ -91,7 +91,7 @@ class UserPOST(BaseModel):
 async def users_create(data: UserPOST, current_api_usr_id: int):
     is_valid = (data.username.strip() and data.password.strip())
     if is_valid:
-        await create_user_if_not_exists(
+        message = await create_user_if_not_exists(
             data.username,
             data.password,
             data.is_active,
@@ -99,7 +99,7 @@ async def users_create(data: UserPOST, current_api_usr_id: int):
             data.permissions,
             data.notes,
         )
-        return {'msg': 'User created'}, 200
+        return {'msg': message}, 200
     return {'error': 'Bad credentials'}, 400
 
 

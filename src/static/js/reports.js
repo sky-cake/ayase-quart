@@ -5,16 +5,16 @@ const feedbackReport = document.getElementById('feedback_report');
 const modalOverlay = document.getElementById('modal_overlay');
 
 function show_modal(report_button) {
-    const replyModal = document.getElementById('reply_modal');
-    if (replyModal) {
-        replyModal.style.display = 'none';
-    }
+	const replyModal = document.getElementById('reply_modal');
+	if (replyModal) {
+		replyModal.style.display = 'none';
+	}
 
-    const reportUrl = report_button.getAttribute('report_url');
-    reportForm.setAttribute('action', reportUrl);
-    feedbackReport.textContent = '';
-    modalOverlay.style.display = 'block';
-    reportModal.style.display = 'block';
+	const reportUrl = report_button.getAttribute('report_url');
+	reportForm.setAttribute('action', reportUrl);
+	feedbackReport.textContent = '';
+	modalOverlay.style.display = 'block';
+	reportModal.style.display = 'block';
 }
 
 function setup_report_buttons() {
@@ -29,14 +29,14 @@ function setup_report_modal() {
 		modalOverlay.style.display = 'none';
 		reportModal.style.display = 'none';
 	});
-	
+
 	modalOverlay.addEventListener('click', (event) => {
 		if (event.target === modalOverlay) {
 			modalOverlay.style.display = 'none';
 			reportModal.style.display = 'none';
 		}
 	});
-	
+
 	reportForm.addEventListener('submit', async (event) => {
 		event.preventDefault();
 		const formData = new FormData(reportForm);
@@ -46,10 +46,11 @@ function setup_report_modal() {
 				body: formData,
 			});
 			if (response.ok) {
+				alert('Report submitted successfully.')
+				document.querySelectorAll('input[name="submitter_category"]').forEach(b => b.checked = false);
+				document.getElementById('submitter_notes').value = '';
 				modalOverlay.style.display = 'none';
 				reportModal.style.display = 'none';
-				feedbackReport.textContent = 'Report submitted successfully!';
-				feedbackReport.style.color = 'green';
 			} else {
 				const errorData = await response.json();
 				feedbackReport.textContent = errorData.message || 'An error occurred.';

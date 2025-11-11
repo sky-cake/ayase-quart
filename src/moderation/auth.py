@@ -60,8 +60,7 @@ def login_web_usr_required(func):
     async def wrapper(*args, **kwargs):
         if not await current_web_usr.is_authenticated:
             raise Unauthorized()
-        else:
-            return await current_app.ensure_async(func)(*args, **kwargs)
+        return await current_app.ensure_async(func)(*args, **kwargs)
     return wrapper
 
 

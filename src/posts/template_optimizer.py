@@ -14,6 +14,7 @@ ANONYMOUS_NAME: str = site_conf['anonymous_username']
 
 type QuotelinkD = dict[int, list[int]]
 
+
 def wrap_post_t(post: dict):
     if not (post and post.get('num')): # Are there cases when post doesn't have a num?
         return post
@@ -39,7 +40,8 @@ def wrap_post_t(post: dict):
     )
     return post
 
-### BEGIN post_t crisis
+
+### BEGIN post_t
 '''
 For threads with large amounts of posts (1.5k+), things are slow (the crisis in question)
 Threads are the only pages where we can't limit the amount of data on the page via pagination
@@ -94,9 +96,11 @@ def render_wrapped_post_t_thread(post: dict):
     # anything remotely special uses official wrap_post_t
     return render_wrapped_post_t(wrap_post_t(post))
 
+
 def get_posts_t_thread(posts: list[dict], post_2_quotelinks: QuotelinkD):
     set_posts_quotelinks(posts, post_2_quotelinks)
     return ''.join(render_wrapped_post_t_thread(p) for p in posts)
+
 
 def render_post_t_basic(post: dict):
     num = post['num']
@@ -133,6 +137,7 @@ def render_post_t_basic(post: dict):
     </div>
     '''
 
+
 def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
     if not quotelinks:
         return ''
@@ -142,8 +147,10 @@ def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
 
+
 def get_post_path(board: str, thread_num: int, num: int) -> str:
     return f'{get_thread_path(board, thread_num)}#p{num}'
+
 
 def get_media_t_thread(post: dict, num: int, board: str):
     if not (media_filename := post['media_filename']):
@@ -174,7 +181,7 @@ def get_media_t_thread(post: dict, num: int, board: str):
     </div>
 	"""
 
-### END post_t crisis
+### END post_t
 
 def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
     set_posts_quotelinks(posts, post_2_quotelinks)

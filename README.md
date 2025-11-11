@@ -264,6 +264,11 @@ Lint checking can be performed with,
 
 JS `<script>` integrity checksums are created with `openssl dgst -sha384 -binary src/static/js/tagging.js | openssl base64`.
 
+```bash
+cd src/static/js
+
+for file in *.js; do [ -f "$file" ] && echo $file && openssl dgst -sha384 -binary "$file" | openssl base64 && echo ''; done
+```
 
 ## Production
 

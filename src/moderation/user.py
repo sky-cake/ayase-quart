@@ -141,10 +141,10 @@ async def get_user_by_username(username: str, include_pwd: bool=False) -> Option
     return user
 
 
-async def create_user_if_not_exists(username: str, password: str, is_active: bool, is_admin: bool, permissions: Iterable[Permissions],  notes: str=None):
+async def create_user_if_not_exists(username: str, password: str, is_active: bool, is_admin: bool, permissions: Iterable[Permissions],  notes: str=None) -> str:
     # username can't already exist
     if await get_user_by_username(username):
-        raise ValueError(f'Username {username} already exists')
+        return f'''User not created. Username '{username}' already exists.'''
 
     now = datetime.now()
     params = (username, gen_pwd(password), is_active, is_admin, now, now, notes,)
@@ -159,6 +159,7 @@ async def create_user_if_not_exists(username: str, password: str, is_active: boo
     user_id = rows[0]['user_id']
 
     await set_user_permissions(user_id, permissions)
+    return f'''User '{username}' created.'''
 
 
 async def edit_user_password_by_username(username: str, password: str) -> str:
@@ -190,17 +191,17 @@ def gen_pwd(password: str) -> str:
     return generate_password_hash(password, method='scrypt', salt_length=16)
 
 
-async def meets_active_admin_requirements() -> bool:
+async def meets_active_admin_requirements(user_id: int) -> bool:
     """Must always have at least 1 active admin."""
-    sql = """
-        select count(*) as active_admin_count
+    sql = f"""
+        select count(distinct user_id) as active_admin_count
         from users
-        where is_admin=1 and is_active=1
+        where is_admin=1 and is_active=1 and user_id != {db_m.Phg()()}
     ;"""
-    rows = await db_m.query_dict(sql, p_id=DbPool.mod)
+    rows = await db_m.query_dict(sql, p_id=DbPool.mod, params=[user_id])
     if not rows:
         raise ValueError(rows)
-    if rows[0]['active_admin_count'] < 2:
+    if rows[0]['active_admin_count'] == 0:
         return False
     return True
 
@@ -214,7 +215,7 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
 
     if not is_admin or not is_active:
         if not (await meets_active_admin_requirements()):
-            return 'User not update. There must always be at least one active admin.', 403
+            return 'User not updated. There must always be at least one active admin.', 403
 
     pwd = f'password={phg()},' if password else ''
     sql = f"""
@@ -267,14 +268,14 @@ async def set_user_password(user_id: int, new_password: str):
 
 async def delete_user(user_id: int) -> tuple[str, int]:
     # does not exist
-    if not (await get_user_by_id(user_id)):
-        return 'User not found', 404
+    if not (user := await get_user_by_id(user_id)):
+        return 'User not found.', 404
 
-    if not (await meets_active_admin_requirements()):
+    if not (await meets_active_admin_requirements(user_id)):
         return 'User not deleted. There must always be at least one active admin.', 403
 
     await db_m.query_dict(f"delete from users where user_id={db_m.Phg()()};", params=(user_id,), commit=True, p_id=DbPool.mod)
-    return 'User deleted', 200
+    return f'''User '{user.username}' deleted.''', 200
 
 
 async def is_valid_creds(username: str, password_candidate: str) -> Optional[dict]:
@@ -313,7 +314,7 @@ class User(AuthUser):
                 await redis_set_user_data(key, val, expire_seconds)
 
         if not u:
-            return None
+            return
 
         self.username = u['username']
         self.is_admin = u['is_admin']
