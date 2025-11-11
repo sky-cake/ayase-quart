@@ -195,11 +195,21 @@ function set_up_clickable_images() {
     }
 }
 
+function set_up_copy_buttons() {
+    const els = doc_query_all('.copy_link');
+    for (const el of els) {
+        el.addEventListener('click', () => {
+            copy_link(el, el.dataset.link);
+        });
+    }
+}
+
 function init_index() {
 	updateDateTimes();
 	setup_data_toggles();
 	setup_video_intersection_events();
     set_up_clickable_images();
+    set_up_copy_buttons();
 }
 
 init_index();
