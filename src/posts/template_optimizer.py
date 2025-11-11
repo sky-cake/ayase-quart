@@ -1,12 +1,11 @@
 from html import escape
 
-from configs import archive_conf, media_conf, site_conf
+from configs import archive_conf, site_conf
 from media import ext_is_image, ext_is_video, get_image_path, get_thumb_path
 from posts.capcodes import Capcode
 from threads import get_thread_path
 from utils.timestamps import ts_2_formatted
 
-TRY_FULL_ON_404_THUMB: bool = media_conf['try_full_src_type_on_404']
 CANONICAL_HOST: str = archive_conf['canonical_host']
 CANONICAL_NAME: str = archive_conf['canonical_name']
 ANONYMOUS_NAME: str = site_conf['anonymous_username']
@@ -276,15 +275,12 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
     if thumb_src is None:
         thumb_src = get_thumb_path(board, post['preview_orig'])
 
-    onerror = 'onerror="p2other(this)"' if TRY_FULL_ON_404_THUMB and is_img else ''
-
     _id = f'{post['board_shortname']}{post['num']}media'
 
     media_link = f"""<span class="c{ext}">{ext}</span> [<a href="/{board}/thread/{post['thread_num']}#p{post['num']}" rel="noreferrer" target="_blank" class="click">Post</a>]""" if is_search and not is_catalog else ''
-    media_togg = f"""[<span class="media_togg click" onclick="expandMedia(document.getElementById('{_id}'))">Play</span>]""" if is_video and not is_catalog else ''
+    media_togg = f"""[<span class="media_togg click">Play</span>]""" if is_video and not is_catalog else ''
     br = '<br>' if media_link or media_togg else ''
-    onclick = '' if is_catalog else 'onclick="expandMedia(this)"'
-    # data-media_hash="{ post['media_hash'] }" # not used by anything, so omitting
+    # data-media_hash="{ post['media_hash'] }" # not used by anything, omitting
     return f"""<div class="media_cont fileThumb">{media_link}{media_togg}{br}
 <img
   id="{_id}"
@@ -292,8 +288,7 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
   data-full_media_src="{full_src}" data-thumb_src="{thumb_src}" data-ext="{ext}"
   class="{classes}"
   width="{ post['preview_w'] }" height="{ post['preview_h'] }"
-  data-expanded="false"
-  {onclick} {onerror}
+  data-expanded="false" 
   loading="lazy"
 />
 </div>

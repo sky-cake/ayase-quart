@@ -81,24 +81,6 @@ function expandMedia(e) {
     container.replaceChild(img, e);
 }
 
-// try full source for thumbnail if thumnail doesn't exist
-// see template_optimizer.py
-function p2other(el) {
-    var ext = get_data_string(el, 'ext');
-    if (ext_is_video(ext)) {
- 	   return;
-    }
-    const current_src = el.getAttribute('src');
-    const thumb_src = get_data_string(el, 'thumb_src');
-    const full_media_src = get_data_string(el, 'full_media_src');
-    if (current_src === thumb_src && full_media_src) {
-	    el.src = full_media_src;
-    } else {
-	    el.src = thumb_src;
-    }
-    el.onerror = null;
-}
-
 function checkAllBoards() {
     const checkboxes = doc_query_all('#boards input[type="checkbox"]');
     for (const checkbox of checkboxes) {
@@ -204,10 +186,20 @@ function setup_video_intersection_events() {
 	}
 }
 
+function set_up_clickable_images() {
+    const els = doc_query_all("img");
+    for (const el of els) {
+        el.addEventListener("click", () => {
+            expandMedia(el)
+        });
+    }
+}
+
 function init_index() {
 	updateDateTimes();
 	setup_data_toggles();
 	setup_video_intersection_events();
+    set_up_clickable_images();
 }
 
 init_index();

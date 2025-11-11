@@ -123,9 +123,6 @@ endpoint = '/srv/media'
 boards_with_image = '' # comma separated list of board shortnames like '' or 'a,o'
 boards_with_thumb = '' # comma separated list of board shortnames like '' or 'g,ck,o'
 
-try_full_src_type_on_404 = false # let clients request full src (images only, not videos) if thumbs not found?
-
-
 
 [vanilla_search]
 enabled = true
