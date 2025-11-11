@@ -9,10 +9,14 @@ from moderation.auth import (
     web_usr_logged_in
 )
 from blueprints.web.bp_search import search_handler, SearchHandlerFTS
+from security import inject_csrf_token_to_session
+
 
 bp = Blueprint("bp_web_index_search", __name__)
 
+
 @bp.get('/fts')
+@inject_csrf_token_to_session # needed for report form
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
