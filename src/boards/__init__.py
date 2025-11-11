@@ -3,7 +3,7 @@ import os
 from functools import cache
 from tomllib import load
 
-from configs import app_conf, archiveposting_conf, db_conf, media_conf
+from configs import app_conf, db_conf, media_conf
 from db import get_db_tables
 from utils import make_src_path
 
@@ -50,8 +50,6 @@ def _get_board_views():
 
 
 boards, board_shortnames, board_objects = _get_board_views()
-if archiveposting_conf['enabled'] and archiveposting_conf['board_name'] in board_shortnames:
-    raise ValueError()
 
 for b in media_conf['boards_with_thumb']:
     if b not in board_shortnames:

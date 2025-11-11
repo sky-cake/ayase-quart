@@ -7,9 +7,9 @@ from configs import media_conf, mod_conf
 from posts.template_optimizer import render_wrapped_post_t, wrap_post_t
 
 
-async def generate_post_html(board: str, num: int, db_X=None) -> str:
+async def generate_post_html(board: str, num: int) -> str:
     """Removes [Report]"""
-    post_2_quotelinks, post = await generate_post(board, num, db_X=db_X)
+    post_2_quotelinks, post = await generate_post(board, num)
     if not post:
         return 'Error fetching post.'
     post_t = wrap_post_t(post | dict(quotelinks={})) | dict(t_report='')

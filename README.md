@@ -108,7 +108,7 @@ Assuming you have a data source set up, you can:
 
 ## Database Operations
 
-A package called (asagi-tables)[https://github.com/fireballz22/asagi-tables] will allow you to do many Asagi operations. Use it to create your archiveposting tables.
+A package called (asagi-tables)[https://github.com/fireballz22/asagi-tables] will allow you to do many Asagi operations.
 
 
 ## Plugins

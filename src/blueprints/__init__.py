@@ -2,7 +2,6 @@ from blueprints.api.bp_app import bp as bp_api_app
 from blueprints.web.bp_about import bp as bp_about
 from blueprints.web.bp_app import bp as bp_web_app
 from configs import (
-    archiveposting_conf,
     index_search_conf,
     media_conf,
     mod_conf,
@@ -25,11 +24,6 @@ if index_search_conf['enabled']:
 if vanilla_search_conf['enabled']:
     from blueprints.web.bp_search_sql import bp as bp_web_vanilla_search
     blueprints += [bp_web_vanilla_search]
-
-
-if archiveposting_conf['enabled']:
-    from blueprints.web.bp_archiveposting import bp as bp_web_archiveposting
-    blueprints += [bp_web_archiveposting]
 
 
 if mod_conf['enabled']:

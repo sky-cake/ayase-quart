@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from asagi_converter import get_local_db_q, get_post, move_post_to_delete_table
-from configs import archiveposting_conf, index_search_conf, mod_conf
-from db import db_a, db_m, db_q
+from asagi_converter import get_post, move_post_to_delete_table
+from configs import index_search_conf, mod_conf
+from db import db_m, db_q
 from enums import (
     DbPool,
     ModStatus,
@@ -362,15 +362,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
 
     flash_msg = ''
 
-    bs = report.board_shortname
-
-    if bs != archiveposting_conf['board_name']:
-        validate_board(bs)
-        db_X = db_q
-    elif archiveposting_conf['enabled'] and bs == archiveposting_conf['board_name']:
-        db_X = db_a
-    else:
-        return f'Unknown board {bs}', 404
+    validate_board(report.board_shortname)
 
     match action:
         case ReportAction.report_delete:
@@ -389,8 +381,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
 
             flash_msg = ''
 
-            local_db_q = get_local_db_q(report.board_shortname)
-            post = await get_post(report.board_shortname, report.num, db_X=local_db_q)
+            post = await get_post(report.board_shortname, report.num)
             if not post:
                 # This block shouldn't be executed much, if at all.
                 # We delete the post from the index, THEN delete the post from the database.
@@ -403,7 +394,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
                 return flash_msg, 200
 
             # must come before deleting post from <board> table
-            if (await delete_post_from_index_if_applicable(bs, post)):
+            if (await delete_post_from_index_if_applicable(report.board_shortname, post)):
                 flash_msg += ' Deleted post from index.'
 
             # Old Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
@@ -425,7 +416,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             if not current_usr.has_permissions([Permissions.media_delete]):
                 return f'Need permissions for {Permissions.media_delete.name}', 401
 
-            post = await get_post(report.board_shortname, report.num, db_X=db_X)
+            post = await get_post(report.board_shortname, report.num)
             if not post:
                 return 'Could not find post.', 404
             full_del, prev_del = post_files_delete(post)
@@ -436,7 +427,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             if not current_usr.has_permissions([Permissions.media_hide]):
                 return f'Need permissions for {Permissions.media_hide.name}', 401
 
-            post = await get_post(report.board_shortname, report.num, db_X=db_X)
+            post = await get_post(report.board_shortname, report.num)
             if not post:
                 return 'Could not find post.', 404
             full_hid, prev_hid = post_files_hide(post)
@@ -447,7 +438,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             if not current_usr.has_permissions([Permissions.media_show]):
                 return f'Need permissions for {Permissions.media_show.name}', 401
 
-            post = await get_post(report.board_shortname, report.num, db_X=db_X)
+            post = await get_post(report.board_shortname, report.num)
             if not post:
                 return 'Could not find post.', 404
             full_sho, prev_sho = post_files_show(post)
@@ -464,7 +455,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             flash_msg = 'Post now publicly visible.'
 
             if mod_conf.get('hidden_images_path'):
-                post = await get_post(report.board_shortname, report.num, db_X=db_X)
+                post = await get_post(report.board_shortname, report.num)
                 if not post:
                     return 'Could not find post.', 404
                 full_sho, prev_sho = post_files_show(post)
@@ -481,7 +472,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             flash_msg = 'Post now publicly hidden.'
 
             if mod_conf.get('hidden_images_path'):
-                post = await get_post(report.board_shortname, report.num, db_X=db_X)
+                post = await get_post(report.board_shortname, report.num)
                 if not post:
                     return 'Could not find post.', 404
                 full_hid, prev_hid = post_files_hide(post)

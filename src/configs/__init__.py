@@ -69,17 +69,6 @@ if mod_conf['enabled'] and db_mod_conf['database']:
         )
 
 
-def set_archiveposting_board(board: str|None):
-    if not board or ' ' in board or not board.replace('_', '').isalnum():
-        raise ValueError(f'Invalid archiveposting board: {board}')
-    return board
-
-archiveposting_conf = conf.get('archiveposting', {})
-db_archiveposting_conf = archiveposting_conf
-if archiveposting_conf['enabled']:
-    fuvii(archiveposting_conf, 'board_name', set_archiveposting_board)
-
-
 stats_conf = conf.get('stats', {'enabled': False})
 
 

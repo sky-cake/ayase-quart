@@ -30,7 +30,7 @@ from wtforms.validators import (
 )
 
 from boards import board_shortnames
-from configs import archiveposting_conf, index_search_conf, vanilla_search_conf
+from configs import index_search_conf, vanilla_search_conf
 from enums import SubmitterCategory
 from moderation.user import Permissions, is_valid_creds
 from posts.capcodes import Capcode
@@ -82,54 +82,6 @@ def collapse_newlines(s):
 
 def is_too_long(s: str):
     return s.count('\n') > 20 if s else False
-
-
-class PostForm(StripForm):
-    do_not_strip = []
-
-    new_thread = BooleanField('New Thread')
-    thread_num = IntegerField('Thread Num', validators=[Optional(), NumberRange(1, 1_000_000_000)])
-    title = StringField('Subject', validators=[Length(0, 32)])
-    comment = TextAreaField('Comment', validators=[Length(2, 2048)])
-
-    captcha_id = HiddenField(validators=[DataRequired()])
-    captcha_answer = IntegerField(validators=[DataRequired()])
-    submit = SubmitField('Post')
-
-    async def validate(self, extra_validators=None) -> bool:
-        """Overriding this definition allows us to validate fields in a specific order, and halt on a validation error."""
-
-        item_order = self._fields.keys()
-        for item in item_order:
-            field = self._fields[item]
-            if not field.validate(self, tuple()):
-                return False
-
-        if archiveposting_conf['ascii_only'] and not self.title.data.isascii():
-            raise BadRequest('ascii only')
-
-        if archiveposting_conf['ascii_only'] and not self.comment.data.isascii():
-            raise BadRequest('ascii only')
-
-        self.title.data = collapse_newlines(strip_2_none(self.title.data))
-        self.comment.data = collapse_newlines(strip_2_none(self.comment.data))
-
-        if is_too_long(self.title.data) or is_too_long(self.comment.data):
-            raise BadRequest('20 lines exceeded')
-
-        if is_spam(self.title.data) or is_spam(self.comment.data):
-            raise BadRequest('Our system thinks your post is spam')
-
-        return True
-
-
-class MessageForm(StripForm):
-    do_not_strip = []
-    title = StringField('Subject', validators=[Length(0, 128)])
-    comment = TextAreaField('Comment', validators=[Length(2, 2048)])
-    captcha_id = HiddenField(validators=[DataRequired()])
-    captcha_answer = IntegerField('', validators=[DataRequired()])
-    submit = SubmitField('Search')
 
 
 def date_filter(x):

@@ -12,8 +12,8 @@ from textwrap import dedent
 from async_lru import alru_cache
 from werkzeug.security import safe_join
 
-from configs import archiveposting_conf, stats_conf
-from db import db_a, db_q
+from configs import stats_conf
+from db import db_q
 from db.redis import get_redis
 from posts.capcodes import Capcode
 from posts.comments import html_comment, html_title
@@ -674,15 +674,13 @@ def get_counts_from_posts(posts: list[dict]) -> tuple[int]:
     return nreplies, nimages
 
 
-async def generate_catalog(board: str, page_num: int=1, db_X=None):
+async def generate_catalog(board: str, page_num: int=1):
     """
     - Generates the catalog structure.
     - Returns html escaped titles and comments.
     - Does not parse comments with `html_comment()`
     """
     catalog_post_count = 150
-
-    local_db_q = db_X if db_X else db_q
 
     threads_query = f'''
         select
@@ -695,7 +693,7 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
         {get_offset(page_num - 1, catalog_post_count)}
     '''
 
-    if not (rows := await local_db_q.query_tuple(threads_query)):
+    if not (rows := await db_q.query_tuple(threads_query)):
         return []
 
     threads = {row[0]: row[1:] for row in rows}
@@ -704,10 +702,10 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
         {get_selector(board)}
     from `{board}`
     where op = 1
-    and thread_num in ({local_db_q.Phg().size(threads)})
+    and thread_num in ({db_q.Phg().size(threads)})
     order by thread_num desc
     '''
-    posts = await local_db_q.query_dict(posts_query, params=tuple(threads.keys()))
+    posts = await db_q.query_dict(posts_query, params=tuple(threads.keys()))
     if not posts:
         return []
 
@@ -733,7 +731,7 @@ async def generate_catalog(board: str, page_num: int=1, db_X=None):
     ]
 
 
-async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]:
+async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
     """Generates a thread.
 
     The post tuple is tuple[1]:
@@ -745,7 +743,6 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
         - nreplies: int
         - nimages: int
     """
-    local_db_q = db_X if db_X else db_q
 
     thread_query = f'''
         select
@@ -762,8 +759,8 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
         order by num asc
     ;'''
     threads_details, posts = await asyncio.gather(
-        local_db_q.query_dict(thread_query, params=(thread_num,)),
-        local_db_q.query_dict(posts_query, params=(thread_num,)),
+        db_q.query_dict(thread_query, params=(thread_num,)),
+        db_q.query_dict(posts_query, params=(thread_num,)),
     )
     if not threads_details or not posts:
         return {}, {'posts': []}
@@ -783,16 +780,15 @@ async def generate_thread(board: str, thread_num: int, db_X=None) -> tuple[dict]
     return post_2_quotelinks, results
 
 
-async def generate_post(board: str, post_id: int, db_X=None) -> tuple[dict]:
+async def generate_post(board: str, post_id: int) -> tuple[dict]:
     """Returns {thread_num: 123, comment: 'hello', ...} with quotelinks"""
-    local_db_q = db_X if db_X else db_q
 
     sql = f"""
         {get_selector(board)}
         from `{board}`
-        where num = {local_db_q.Phg()()}
+        where num = {db_q.Phg()()}
     ;"""
-    posts = await local_db_q.query_dict(sql, params=(post_id,))
+    posts = await db_q.query_dict(sql, params=(post_id,))
 
     if not posts:
         return None, None
@@ -802,23 +798,15 @@ async def generate_post(board: str, post_id: int, db_X=None) -> tuple[dict]:
     return post_2_quotelinks, posts[0]
 
 
-def get_local_db_q(board: str):
-    if archiveposting_conf['enabled'] and archiveposting_conf['board_name'] == board:
-        return db_a
-    return db_q
-
-
-async def get_post(board: str, post_id: int, db_X=None) -> dict:
+async def get_post(board: str, post_id: int) -> dict:
     """Returns {thread_num: 123, comment: 'hello', ...} without quotelinks"""
-
-    local_db_q = get_local_db_q(board) if not db_X else db_X
 
     sql = f"""
         {get_selector(board)}
         from `{board}`
-        where num = {local_db_q.Phg()()}
+        where num = {db_q.Phg()()}
     ;"""
-    posts = await local_db_q.query_dict(sql, params=(post_id,))
+    posts = await db_q.query_dict(sql, params=(post_id,))
 
     if not posts:
         return dict()
@@ -826,17 +814,15 @@ async def get_post(board: str, post_id: int, db_X=None) -> dict:
     return posts[0]
 
 
-async def get_post_with_doc_id(board: str, post_id: int, db_X=None) -> dict:
+async def get_post_with_doc_id(board: str, post_id: int) -> dict:
     """Returns {thread_num: 123, comment: 'hello', ...} without quotelinks"""
-
-    local_db_q = get_local_db_q(board) if not db_X else db_X
 
     sql = f"""
         {get_selector(board)}
         from `{board}`
-        where num = {local_db_q.Phg()()}
+        where num = {db_q.Phg()()}
     ;"""
-    posts = await local_db_q.query_dict(sql, params=(post_id,))
+    posts = await db_q.query_dict(sql, params=(post_id,))
 
     if not posts:
         return dict()
@@ -855,9 +841,7 @@ async def move_post_to_delete_table(post: dict) -> str:
     post_for_insert = post_for_insert | {'media_id': 0, 'poster_ip': '0', 'subnum': 0}
     del post_for_insert['doc_id']
 
-    local_db_q = get_local_db_q(board)
-
-    phg = local_db_q.Phg()
+    phg = db_q.Phg()
 
     sql_cols = ','.join(post_for_insert)
 
@@ -867,7 +851,7 @@ async def move_post_to_delete_table(post: dict) -> str:
     sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({sql_values}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
     values = list(post_for_insert.values())
     parameters = values + values
-    num = await local_db_q.query_dict(sql, params=parameters, commit=True)
+    num = await db_q.query_dict(sql, params=parameters, commit=True)
 
     if not num:
         return ' Did not transfer post to asagi\'s delete table. It is still in the board table.'
@@ -875,18 +859,18 @@ async def move_post_to_delete_table(post: dict) -> str:
     sql = f"""
         delete
         from `{board}`
-        where num = {local_db_q.Phg()()}
+        where num = {db_q.Phg()()}
     ;"""
-    await local_db_q.query_dict(sql, params=(post['num'],), commit=True)
+    await db_q.query_dict(sql, params=(post['num'],), commit=True)
 
     return ' Post transfered to asagi\'s delete table. It is no longer in the board table.'
 
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:
     """Returns op post nums marked as deleted by 4chan staff."""
-    local_db_q = get_local_db_q(board)
+    
     sql = f"""select num from `{board}` where deleted = 1 and op = 1"""
-    rows = await local_db_q.query_tuple(sql)
+    rows = await db_q.query_tuple(sql)
     if not rows:
         return []
     return [(row[0], row[1]) for row in rows]
@@ -894,9 +878,9 @@ async def get_deleted_ops_by_board(board: str) -> list[int]:
 
 async def get_deleted_non_ops_by_board(board: str) -> list[int]:
     """Returns non-op post nums marked as deleted by 4chan staff."""
-    local_db_q = get_local_db_q(board)
+    
     sql = f"""select num from `{board}` where deleted = 1 and op = 0;"""
-    rows = await local_db_q.query_tuple(sql)
+    rows = await db_q.query_tuple(sql)
     if not rows:
         return []
     return [(row[0], row[1]) for row in rows]
@@ -904,9 +888,9 @@ async def get_deleted_non_ops_by_board(board: str) -> list[int]:
 
 async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
     """Returns all nums marked as deleted by 4chan staff in the format [(num, op), ...]"""
-    local_db_q = get_local_db_q(board)
+
     sql = f"""select num, op from `{board}` where deleted = 1;"""
-    rows = await local_db_q.query_tuple(sql)
+    rows = await db_q.query_tuple(sql)
     if not rows:
         return []
     return [(row[0], row[1]) for row in rows]
@@ -914,17 +898,17 @@ async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
 
 async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[int]]:
     sql = f"""select num, op from `{board}` where comment is not null and comment regexp {db_q.Phg()()};"""
-    local_db_q = get_local_db_q(board)
-    rows = await local_db_q.query_tuple(sql, params=(pattern,))
+    
+    rows = await db_q.query_tuple(sql, params=(pattern,))
     if not rows:
         return []
     return [(row[0], row[1]) for row in rows]
 
 
 async def is_post_op(board: str, num: int) -> bool:
-    local_db_q = get_local_db_q(board)
-    sql = f"""select num, op from `{board}` where num = {local_db_q.Phg()()}"""
-    rows = await local_db_q.query_tuple(sql, params=[num])
+    
+    sql = f"""select num, op from `{board}` where num = {db_q.Phg()()}"""
+    rows = await db_q.query_tuple(sql, params=[num])
     if not rows:
         return False
     return rows[0][1]

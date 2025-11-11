@@ -3,7 +3,6 @@ from quart import Blueprint, jsonify
 from quart_schema import validate_querystring, validate_request
 
 from boards import board_shortnames
-from configs import archiveposting_conf
 from enums import ModStatus, PublicAccess, ReportAction
 from moderation.auth import (
     login_api_usr_required,
@@ -30,12 +29,10 @@ class ReportGET(BaseModel):
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.report_read])
 async def reports_get(query_args: ReportGET, current_api_usr_id: int):
-    # query_args.board_shortnames if isinstance(query_args.board_shortnames, list) else [query_args.board_shortnames]
-    bs = board_shortnames + [archiveposting_conf['board_name']] if archiveposting_conf['enabled'] else board_shortnames
     reports = await get_reports(
         public_access=query_args.public_access,
         mod_status=query_args.mod_status,
-        board_shortnames=bs,
+        board_shortnames=board_shortnames,
         page_num=query_args.page_num,
         page_size=query_args.page_size,
     )

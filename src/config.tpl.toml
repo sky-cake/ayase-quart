@@ -193,11 +193,3 @@ bearer_salt='api salt'
 
 cookie_duration=604_800 # one week
 bearer_duration=604_800 # one week
-
-
-[archiveposting]
-enabled = true
-database = '/home/archiveposting.db'
-board_name = 'ayase_quart'
-board_desc = '''This is Ayase Quart's text board. Only ascii is permitted.'''
-ascii_only = true
