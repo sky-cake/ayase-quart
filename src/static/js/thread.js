@@ -268,6 +268,15 @@ function gallery_view() {
         next_btn.disabled = state.current_page >= max_page;
     }
 
+    function set_up_gallery_buttons() {
+        const buttons = doc_query_all('.gallery_page_btn');
+        for (const btn of buttons) {
+            btn.addEventListener('click', () => {
+                window._gotoGalleryPage(parseInt(btn.dataset.page));
+            });
+        }
+    }
+
     function update_page_info() {
         const total_pages = Math.ceil(state.media_nodes.length / state.page_size);
         let html = '<div>';
@@ -276,10 +285,11 @@ function gallery_view() {
             if (i === state.current_page) {
                 html += `<button class="${btn_class} hl_magenta">${i + 1}</button>`;
             } else {
-                html += `<button class="${btn_class}" onclick="window._gotoGalleryPage(${i})">${i + 1}</button>`;
+                html += `<button class="${btn_class} gallery_page_btn" data-page="${i}">${i + 1}</button>`;
             }
         }
         page_list_div.innerHTML = html + '</div>';
+        set_up_gallery_buttons();
     }
 
     window._gotoGalleryPage = (page) => {

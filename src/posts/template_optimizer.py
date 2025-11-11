@@ -119,7 +119,7 @@ def render_post_t_basic(post: dict):
                 <span class="name N">{ANONYMOUS_NAME}</span>
                 <span class="dateTime inblk" data-utc="{ts_unix}"></span>
                 <span class="postNum"><a href="/{post_path_t}">No.{num}</a></span>
-                <button class="btnlink" onclick="copy_link(this, '/{post_path_t}')">⎘</button>
+                <button class="btnlink copy_link" data-link="/{post_path_t}">copy link</button>
                 <span class="inblk">
                     [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
                     [<a href="/{post_path_t}" target="_blank">View</a>]
@@ -445,7 +445,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
             <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
             { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         </span>
-        <button class="btnlink" onclick="copy_link(this, '/{wpt['t_post_link_rel']}')">⎘</button>
+        <button class="btnlink copy_link" data-link="/{wpt['t_post_link_rel']}">copy link</button>
         <span class="inblk">
         { wpt['t_report'] }
         [<a href="/{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]

@@ -81,17 +81,26 @@ function expandMedia(e) {
     container.replaceChild(img, e);
 }
 
-function checkAllBoards() {
-    const checkboxes = doc_query_all('#boards input[type="checkbox"]');
-    for (const checkbox of checkboxes) {
-        checkbox.checked = true;
-    }
-}
+function set_up_board_buttons() {
+    const allBtn = doc_query_all('.check_all_boards');
+    const noneBtn = doc_query_all('.uncheck_all_boards');
 
-function uncheckAllBoards() {
-    const checkboxes = doc_query_all('#boards input[type="checkbox"]');
-    for (const checkbox of checkboxes) {
-        checkbox.checked = false;
+    if (allBtn.length) {
+        allBtn[0].addEventListener('click', () => {
+            const checkboxes = doc_query_all('#boards input[type="checkbox"]');
+            for (const checkbox of checkboxes) {
+                checkbox.checked = true;
+            }
+        });
+    }
+
+    if (noneBtn.length) {
+        noneBtn[0].addEventListener('click', () => {
+            const checkboxes = doc_query_all('#boards input[type="checkbox"]');
+            for (const checkbox of checkboxes) {
+                checkbox.checked = false;
+            }
+        });
     }
 }
 
@@ -103,16 +112,16 @@ function copy_link(button_element, path) {
     const link = `${domain}/${path}`;
 
     navigator.clipboard.writeText(link).then(() => {
-		button_element.innerHTML = `&checkmark;`;
+		button_element.innerHTML = `copied!`;
 		setTimeout(() => {
-			button_element.textContent = `⎘`;
+			button_element.textContent = `copy link`;
 		}, 1000);
 	}).catch(err => {
 		button_element.textContent = `x`;
 	});
 }
 
-function copy_code(button_element, code, copy_text='⎘', success_text='&checkmark;', fail_text='x') {
+function copy_code(button_element, code, copy_text='copy link', success_text='copied!', fail_text='x') {
     if (!code) return;
 
     navigator.clipboard.writeText(code).then(() => {
@@ -210,6 +219,7 @@ function init_index() {
 	setup_video_intersection_events();
     set_up_clickable_images();
     set_up_copy_buttons();
+    set_up_board_buttons();
 }
 
 init_index();

@@ -29,7 +29,7 @@
 </select><button id="apply_action" class="btn">Apply</button>
 {{ csrf_input | safe }}
 {{table(reports, safe_cols=['Check', 'About', 'Post'])}}
-<script type="text/javascript" src="/static/js/admin_reports.js" defer integrity="sha384-M49Gl7Nk5ZK7IXGTtpgdKEP3MGdJCAJRcFivlVjyzq/tPOjoNK4XvY/BXce5fT0k"></script>
+<script type="text/javascript" defer src="/static/js/admin_reports.js" integrity="sha384-M49Gl7Nk5ZK7IXGTtpgdKEP3MGdJCAJRcFivlVjyzq/tPOjoNK4XvY/BXce5fT0k"></script>
 {% else %}
 No reports here.
 {% endif %}

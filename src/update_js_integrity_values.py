@@ -1,0 +1,44 @@
+import pathlib
+import hashlib
+import base64
+
+def calculate_integrity(file_path: str) -> str:
+    with open(file_path, 'rb') as f:
+        digest = hashlib.sha384(f.read()).digest()
+    return 'sha384-' + base64.b64encode(digest).decode()
+
+def collect_js_integrities(js_root: str) -> dict:
+    js_root_path = pathlib.Path(js_root)
+    integrities = {}
+    for folder in set(p.parent for p in js_root_path.rglob('*.js') if p.is_file()):
+        print('Scanning JS directory:', folder.resolve())
+    for js_file in js_root_path.rglob('*.js'):
+        if js_file.is_file():
+            integrities[js_file.name] = calculate_integrity(js_file)
+    return integrities
+
+def update_html_integrities(html_root: str, js_integrities: dict):
+    html_root_path = pathlib.Path(html_root)
+    for folder in set(p.parent for p in html_root_path.rglob('*.html') if p.is_file()):
+        print('Scanning HTML directory:', folder.resolve())
+    for html_file in html_root_path.rglob('*.html'):
+        lines = html_file.read_text().splitlines()
+        updated_lines = []
+        changed = False
+        for line in lines:
+            if '<script' in line and 'src=' in line:
+                for js_name, integrity in js_integrities.items():
+                    if js_name in line:
+                        changed = True
+                        if 'integrity="' in line:
+                            line = line[:line.find('integrity="')] + f'integrity="{integrity}"></script>'
+                        else:
+                            line = line.rstrip('>') + f' integrity="{integrity}">'
+            updated_lines.append(line)
+        if changed:
+            html_file.write_text('\n'.join(updated_lines))
+
+js_dir = './src/static/js'
+html_dir = './src/templates'
+integrities = collect_js_integrities(js_dir)
+update_html_integrities(html_dir, integrities)
