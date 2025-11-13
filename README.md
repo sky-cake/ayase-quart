@@ -59,7 +59,7 @@ Assuming you have a data source set up, you can:
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
 		- Run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
-    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
+    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
       - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
