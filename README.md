@@ -250,11 +250,12 @@ Options:
 
 Do **not** sort imports automatically. Tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
 
-Lint checking can be performed with,
+Lint checking can be performed using ruff:
 
-`python -m pip install ruff`
-
-`ruff check src/ --ignore F401`
+```sh
+python -m pip install ruff
+ruff check
+```
 
 ### Other
 
