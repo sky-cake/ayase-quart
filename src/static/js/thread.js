@@ -63,6 +63,8 @@ function quotelink_mouseover(event) {
 function setup_quotelink_events() {
     const quotelinks = doc_query_all("a.quotelink");
     for (const quotelink of quotelinks) {
+        quotelink.removeEventListener("mouseover", quotelink_mouseover);
+        quotelink.removeEventListener("mouseleave", quotelink_preview_hide);
         quotelink.addEventListener("mouseover", quotelink_mouseover);
         quotelink.addEventListener("mouseleave", quotelink_preview_hide);
     }
@@ -83,6 +85,9 @@ function quotelink_preview_hide() {
 }
 
 function quotelink_preview_show(target_post, quotelink, backlink_num) {
+    const existing = document.getElementById('quote-preview');
+    if (existing) existing.remove();
+
     let preview = target_post.cloneNode(true);
     preview.id = "quote-preview";
 
@@ -137,7 +142,7 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
     }
     preview.style.top = `${top}px`;
     preview.style.left = `${left}px`;
-    preview.style.border = "1px solid white";
+    preview.style.border = "1px solid #686868ff";
     preview.style.backgroundColor = "#282a2e";
 }
 
