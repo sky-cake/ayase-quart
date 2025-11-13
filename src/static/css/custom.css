@@ -339,7 +339,6 @@ span.subject {
 .btnlink {
     text-decoration: underline;
     font-size: small;
-    margin:0 2px;
 }
 
 .btnlink:hover,.click:hover {

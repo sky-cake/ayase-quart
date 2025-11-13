@@ -1,5 +1,6 @@
 import pathlib
 import hashlib
+import os
 import base64
 
 def calculate_integrity(file_path: str) -> str:
@@ -38,7 +39,18 @@ def update_html_integrities(html_root: str, js_integrities: dict):
         if changed:
             html_file.write_text('\n'.join(updated_lines))
 
-js_dir = './src/static/js'
-html_dir = './src/templates'
-integrities = collect_js_integrities(js_dir)
-update_html_integrities(html_dir, integrities)
+def make_path(*path):
+    return os.path.join(os.path.dirname(__file__), *path)
+
+def main():
+    js_dir = make_path('static', 'js')
+    html_dir = make_path('templates')
+
+    assert os.path.isdir(js_dir)
+    assert os.path.isdir(html_dir)
+
+    integrities = collect_js_integrities(js_dir)
+    update_html_integrities(html_dir, integrities)
+
+if __name__ == '__main__':
+    main()
