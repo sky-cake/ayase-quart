@@ -278,9 +278,9 @@ Check `systemd.conf` for an example systemd config file.
 
 `MySQL: Access denied for user 'myuser'@'localhost' (using password: YES)`
 
-This **ALWAYS** happens when I'm trying to run privileged transactions. Here is a solution I found for it.
+This is a common issue in mysql distro or image deployments which create incomplete or conflicting user profiles. Here is a solution I found for it, see this [stackoverflow answer](https://stackoverflow.com/a/43037227):
 
-```
+```sql
 DROP User 'myuser'@'localhost';
 DROP User 'myuser'@'%';
 CREATE USER 'myuser'@'%' IDENTIFIED BY 'mypassword';
