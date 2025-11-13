@@ -304,7 +304,7 @@ Setting up the [Hayden Scraper](https://github.com/bbepis/Hayden) on a Linux Ser
 
 1. Build Hayden on Windows by double clicking `Hayden-master/build.cmd`. This will create a `build-output` folder with zipped builds.
 2. Place the linux build on your server.
-3. Run `sudo ./Hayden` to check if it's working. You may need to install the .NET 6.0 runtime with `sudo apt install -y dotnet-runtime-6.0`
+3. Run `sudo ./Hayden` to check if it's working. You may need to install the .NET 8.0 runtime with `sudo apt install -y dotnet-runtime-8.0` (ubuntu 24.04)
 4. Start Hayden with `sudo ./Hayden scrape /path/to/config.json`
 
 Example config.json:
