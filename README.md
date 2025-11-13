@@ -64,7 +64,7 @@ Assuming you have a data source set up, you can:
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
       - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) Create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
+1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
 1. Create a virtualenv and install dependencies,
    
     ```bash
