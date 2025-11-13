@@ -269,7 +269,7 @@ for file in *.js; do [ -f "$file" ] && echo $file && openssl dgst -sha384 -binar
 
 ## Production
 
-Check `systemd.conf` for an example systemd config file.
+Check [`systemd.conf`](/systemd.conf) for an example systemd config file.
 
 
 ## Troubleshooting
