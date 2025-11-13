@@ -59,12 +59,12 @@ Assuming you have a data source set up, you can:
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
 		- Run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
-    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes below to help set them up.
+    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
       - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
       - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) Create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
+1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
 1. Create a virtualenv and install dependencies,
    
     ```bash
@@ -74,7 +74,7 @@ Assuming you have a data source set up, you can:
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
-1. Set up redis.
+1. [Optional] Set up redis for moderation bloom filtering.
 
     ```bash
     # Set line `supervised no` to `supervised systemd`.
@@ -101,14 +101,13 @@ Assuming you have a data source set up, you can:
 
     - Remember to check that your config port matches the docker container port.
     - Run `python -m search load --reset board1 [board2 [board3 ...]`.
-      - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
 1. [Optional] Submit pull requests with fixes and new features!
 
 
 ## Database Operations
 
-A package called (asagi-tables)[https://github.com/fireballz22/asagi-tables] will allow you to do many Asagi operations.
+A package called [asagi-tables](https://github.com/fireballz22/asagi-tables) will allow you to do many Asagi schema operations.
 
 
 ## Plugins
@@ -164,10 +163,6 @@ Now go ahead and try searching the index on you AQ instance in your browser.
 Terminal A
 
 1. Once the index loader in Terminal B completes, you can `ctrl-c` to stop the LNX docker container, and spin it back up with `sudo docker-compose up -d` to make it run in the background
-
-Right now, there is no way to incrementally update the LNX index, and you need to run through these same steps.
-
-If page cache memory on your server, you can run `free && sync && echo 1 > /proc/sys/vm/drop_caches && free`. This does not affect actual application memory, only the filesystem cache. I don't know if the ram usage swell is from LNX or not, but it seems like it. Running this frees up enough RAM to run LNX again.
 
 
 ## Certificates
@@ -254,11 +249,12 @@ Options:
 
 Do **not** sort imports automatically. Tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
 
-Lint checking can be performed with,
+Lint checking can be performed using ruff:
 
-`python -m pip install ruff`
-
-`ruff check src/ --ignore F401`
+```sh
+python -m pip install ruff
+ruff check
+```
 
 ### Other
 
@@ -272,7 +268,7 @@ for file in *.js; do [ -f "$file" ] && echo $file && openssl dgst -sha384 -binar
 
 ## Production
 
-Check `systemd.conf` for and example systemd config file.
+Check [`systemd.conf`](/systemd.conf) for an example systemd config file.
 
 
 ## Troubleshooting
@@ -281,9 +277,9 @@ Check `systemd.conf` for and example systemd config file.
 
 `MySQL: Access denied for user 'myuser'@'localhost' (using password: YES)`
 
-This **ALWAYS** happens when I'm trying to run privileged transactions. Here is a solution I found for it.
+This is a common issue in mysql distro or image deployments which create incomplete or conflicting user profiles. Here is a solution I found for it, see this [stackoverflow answer](https://stackoverflow.com/a/43037227):
 
-```
+```sql
 DROP User 'myuser'@'localhost';
 DROP User 'myuser'@'%';
 CREATE USER 'myuser'@'%' IDENTIFIED BY 'mypassword';
@@ -299,7 +295,7 @@ Restart MySQL Server, `sudo systemctl restart mysql`. Check the status `sudo sys
 
 [Neofuuka](https://github.com/bibanon/neofuuka-scraper) is a good choice if you can't compile Hayden, or don't need Hayden's ultra low memory consumption, but note that you need to use this [Neofuuka fork](https://github.com/sky-cake/neofuuka-scraper) if you want to filter threads since it's not supported in the original version. On the other hand, Hayden supports filtering threads out-of-the-box.
 
-To expedite schema creation, I have created `./utils/init_database.py` which will create the database specified in `configs.py` with all the necessary tables, triggers, and indexes. Again, Hayden does this out-of-the-box.
+To expedite schema creation, [/db_scripts/init_database.py](/db_scripts/init_database.py)` will create the database specified in `configs.py` with all the necessary tables, triggers, and indexes. Again, Hayden does this out-of-the-box.
 
 ### Hayden
 
@@ -307,7 +303,7 @@ Setting up the [Hayden Scraper](https://github.com/bbepis/Hayden) on a Linux Ser
 
 1. Build Hayden on Windows by double clicking `Hayden-master/build.cmd`. This will create a `build-output` folder with zipped builds.
 2. Place the linux build on your server.
-3. Run `sudo ./Hayden` to check if it's working. You may need to install the .NET 6.0 runtime with `sudo apt install -y dotnet-runtime-6.0`
+3. Run `sudo ./Hayden` to check if it's working. You may need to install the .NET 8.0 runtime with `sudo apt install -y dotnet-runtime-8.0` (ubuntu 24.04)
 4. Start Hayden with `sudo ./Hayden scrape /path/to/config.json`
 
 Example config.json:

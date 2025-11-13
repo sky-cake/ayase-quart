@@ -80,7 +80,7 @@ default-groups = ['dev', 'tests']
 
 [tool.pytest.ini_options]
 testpaths = [
-	'tests',
+    'tests',
 ]
 pythonpath = 'src'
 addopts = '-p no:anyio'
@@ -90,17 +90,28 @@ addopts = '-p no:anyio'
 #     'error',
 # ]
 
-# [tool.ruff]
-# src = ['src']
-# fix = false
-# show-fixes = false
-# output-format = 'full'
+[tool.ruff]
+target-version = 'py313'
+src = [
+    'src',
+]
+fix = false
+show-fixes = false
+output-format = 'full'
+line-length = 150
 
-# [tool.ruff.lint]
-# select = [
-# ]
-# ignore = [
-# ]
+[tool.ruff.lint]
+preview = true
+select = [
+]
+ignore = [
+    'F401', # unused imports
+    'E501', # line too long
+]
+extend-select = [
+    # 'W291', # trailing whitespace
+    # 'W293', # blank lines with whitespace
+]
 
 # [tool.pyright]
 # pythonVersion = '3.12'
