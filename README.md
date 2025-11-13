@@ -74,7 +74,7 @@ Assuming you have a data source set up, you can:
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
-1. Set up redis.
+1. [Optional] Set up redis for moderation bloom filtering.
 
     ```bash
     # Set line `supervised no` to `supervised systemd`.
