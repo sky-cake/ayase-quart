@@ -101,7 +101,6 @@ Assuming you have a data source set up, you can:
 
     - Remember to check that your config port matches the docker container port.
     - Run `python -m search load --reset board1 [board2 [board3 ...]`.
-      - Go to [Index Search -> Config](http://127.0.0.1:9001/index_search_config) for auto-generated instructions.
 
 1. [Optional] Submit pull requests with fixes and new features!
 
