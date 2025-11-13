@@ -165,8 +165,6 @@ Terminal A
 
 1. Once the index loader in Terminal B completes, you can `ctrl-c` to stop the LNX docker container, and spin it back up with `sudo docker-compose up -d` to make it run in the background
 
-If page cache memory on your server, you can run `free && sync && echo 1 > /proc/sys/vm/drop_caches && free`. This does not affect actual application memory, only the filesystem cache. I don't know if the ram usage swell is from LNX or not, but it seems like it. Running this frees up enough RAM to run LNX again.
-
 
 ## Certificates
 
