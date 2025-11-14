@@ -155,7 +155,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         time_search_start = perf_counter()
 
         if search_plugins:
-            result = await intersect_search_plugin_results(search_plugins, handler.form, p)
+            result = await intersect_search_plugin_results(search_plugins, handler.form)
 
             if result.performed_search:
                 did_plugin_search = True
