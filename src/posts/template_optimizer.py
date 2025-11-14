@@ -130,7 +130,7 @@ def render_post_t_basic(post: dict):
                 {media_t}
                 <blockquote class="postMessage" id="m{num}">{comment}</blockquote>
             </div>
-            <div style="clear:both;"></div>
+            <div class="clear_both"></div>
             {quotelinks_t}
         </div>
     </div>
@@ -456,7 +456,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_media'] if not is_op else '' }
         <blockquote class="postMessage" id="m{num}">{wpt['comment']}</blockquote>
     </div>
-    <div style="clear:both;"></div>
+    <div class="clear_both"></div>
     { wpt['t_quotelink'] }
     </div>
     </div>

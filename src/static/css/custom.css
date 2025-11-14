@@ -15,8 +15,9 @@ body {
     padding-right: 5px
 }
 
-html, body {
-    color: #dddddd!important;
+html,
+body {
+    color: #dddddd !important;
 }
 
 #quote-preview {
@@ -54,9 +55,10 @@ div.sideArrows {
     margin-left: 2px
 }
 
-div.thread {
+div.thread,
+.clear_both {
     margin: 0;
-    clear: both
+    clear: both;
 }
 
 div.post {
@@ -69,7 +71,7 @@ div.thread>div:nth-of-type(2)>div.reply {
 }
 
 div.op {
-    display: inline
+    display: inline;
 }
 
 div.reply {
@@ -206,7 +208,7 @@ span.summary {
 
 footer {
     max-height: 5vh;
-    bottom: 0; 
+    bottom: 0;
     margin: 10px;
     text-align: center;
 }
@@ -285,8 +287,14 @@ table {
     margin: 2px;
 }
 
-td, th {
+td,
+th {
     padding: 1em;
+    border: 0.5px solid #585858;
+    padding: 8px;
+    text-align: left;
+    max-width: 80ch;
+    word-wrap: break-word;
 }
 
 td {
@@ -294,8 +302,8 @@ td {
 }
 
 span.subject {
-	color: #b294bb;
-	font-weight: 700;
+    color: #b294bb;
+    font-weight: 700;
 }
 
 .mt {
@@ -327,7 +335,8 @@ span.subject {
 
 }
 
-.click,.btnlink {
+.click,
+.btnlink {
     border: none;
     background: none;
     color: #81a2be;
@@ -341,7 +350,8 @@ span.subject {
     font-size: small;
 }
 
-.btnlink:hover,.click:hover {
+.btnlink:hover,
+.click:hover {
     color: #5f89ac !important
 }
 
@@ -357,6 +367,12 @@ ul {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+}
+
+.stat_buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .column {
@@ -429,8 +445,8 @@ code {
 }
 
 .codetext {
-	color: #55d67c;
-	background-color: #1e1e1e;
+    color: #55d67c;
+    background-color: #1e1e1e;
 }
 
 div.post blockquote.postMessage {
@@ -484,22 +500,21 @@ input[type=password] {
     width: unset;
 }
 
-input
-input[type=submit],
+input input[type=submit],
 input[type=password],
 input[type=number],
 input[type=text],
 input[type=date],
 select,
 option,
-textarea
-{
+textarea {
     filter: none;
     margin: 0;
     padding: 2px;
 }
 
-select, option {
+select,
+option {
     width: 5em;
     padding: 3px;
     text-align: center;
@@ -558,7 +573,8 @@ input[type=date] {
     color: #dddddd;
 }
 
-input[type=submit], .form_btn {
+input[type=submit],
+.form_btn {
     background-color: #322680;
     padding: 4px 0px;
 }
@@ -601,7 +617,7 @@ textarea {
     background-color: #282a2e;
     border: 1px solid #666666;
     color: #dddddd;
-    font: inherit!important;
+    font: inherit !important;
 }
 
 ul#boards {
@@ -616,7 +632,8 @@ ul#order_by {
     width: 5.5em;
 }
 
-input[type=checkbox], input[type=radio] {
+input[type=checkbox],
+input[type=radio] {
     margin: 0;
     filter: brightness(80%);
 }
@@ -634,7 +651,8 @@ div.form-check {
     background-color: #397070;
 }
 
-.hl_magenta,.hl_magenta:hover {
+.hl_magenta,
+.hl_magenta:hover {
     background-color: #70396c;
 }
 
@@ -693,6 +711,18 @@ input:focus {
 
 .warning {
     color: #c40000;
+}
+
+.green_bg {
+    background-color: #217253;
+}
+
+.beige_bg {
+    background-color: #a89b81;
+}
+
+.red_fg {
+    color: red;
 }
 
 .poster {
@@ -788,7 +818,8 @@ img {
 }
 
 .fileText {
-    word-break: break-all;;
+    word-break: break-all;
+    ;
 }
 
 #top {
@@ -1043,9 +1074,9 @@ h3 {
     }
 
     .form-control {
-      list-style: none;
-      margin-bottom: 3px;
-      display: table;
+        list-style: none;
+        margin-bottom: 3px;
+        display: table;
     }
 
     .ul3col {

@@ -101,7 +101,7 @@ class SearchHandlerFTS(SearchHandler):
     html_search_memo = """
     <div class="mtb-1">Full text search is much faster than SQL search, but it may not have recent data.</div>
     <button class="form_btn pbtn" data-toggle="fts_info">Syntax ⓘ</button>
-    <div id="fts_info" class="mtb-1" style="display: none;">
+    <div id="fts_info" class="mtb-1 hidden">
         These are the main search operations, more can be found at <a href="https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html" target="_blank">docs.rs/tantivy</a>.
         <ul class="m-0 liststyle">
             <li><span class="codetext">"exact term"</span></li>
