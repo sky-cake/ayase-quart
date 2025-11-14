@@ -52,7 +52,6 @@ class StripForm(QuartForm):
             if isinstance(field, Field) and hasattr(field.data, 'strip') and (field.name not in self.do_not_strip):
                 field.data = field.data.strip()
 
-render_kw_hide = {'style': 'display: none;'}
 
 def is_spam(s) -> bool:
     if not s:

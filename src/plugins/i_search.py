@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from forms import SearchForm
 from jinja2 import Template
 from wtforms import Field
-from utils import Perf
 
 
 class SearchPluginResult:
@@ -32,11 +31,11 @@ class SearchPlugin(ABC):
     template: Template
 
     @abstractmethod
-    async def get_search_plugin_result(self, form: SearchForm, p: Perf) -> SearchPluginResult:
+    async def get_search_plugin_result(self, form: SearchForm) -> SearchPluginResult:
         pass
 
 
-async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin], form: SearchForm, p: Perf) -> SearchPluginResult:
+async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin], form: SearchForm) -> SearchPluginResult:
     """
     Returns the intersection of each plugins' boards and nums.
     I.e. if plugin #1 returns 0 results, and plugin #2 returns 100 results, we return 0 results.
@@ -48,9 +47,7 @@ async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin
 
     first_loop = True
     for plugin_name, plugin in search_plugins.items():
-        p.check(f'starting "{plugin_name}"')
-        _result: SearchPluginResult = await plugin.get_search_plugin_result(form, p)
-        p.check(f'done "{plugin_name}"')
+        _result: SearchPluginResult = await plugin.get_search_plugin_result(form)
 
         # once True, stay True
         result.performed_search = _result.performed_search or result.performed_search
