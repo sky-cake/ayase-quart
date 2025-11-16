@@ -30,6 +30,7 @@ from templates import (
     template_users_index,
     template_users_view
 )
+from security import get_csrf_input
 
 
 bp = Blueprint('bp_web_admin', __name__)
@@ -43,8 +44,9 @@ bp = Blueprint('bp_web_admin', __name__)
 @web_usr_is_admin
 async def latest(is_admin: bool):
     catalog = await get_latest_ops_as_catalog(board_shortnames)
+    csrf_input = get_csrf_input()
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin)
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin, csrf_input=csrf_input)
         for batch in catalog
         for op in batch['threads']
     )

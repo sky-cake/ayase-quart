@@ -461,7 +461,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
     """
 
 
-def render_catalog_card(wpt: dict, show_nuke_btn: bool=False) -> str: # a thread card is just the op post
+def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=None) -> str: # a thread card is just the op post
     num = wpt['num']
     board = wpt['board_shortname']
     title_t = get_title_t(wpt)
@@ -472,8 +472,9 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False) -> str: # a thread
     post_path = get_post_path(board, num, num)
 
     nuke_btn = ''
-    if show_nuke_btn:
-        nuke_btn = f'[<button class="rbtn" report_url="/nuke/{board}/{num}/{num}">Nuke</button>]'
+    if show_nuke_btn and csrf_input:
+        # no js required
+        nuke_btn = f"""[<form class="actionform form" action="/nuke/{board}/{num}" method="post">{csrf_input}<button class="rbtn" type="submit">Nuke</button></form>]"""
 
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">

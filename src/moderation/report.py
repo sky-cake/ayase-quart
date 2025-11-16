@@ -334,19 +334,20 @@ async def delete_report_if_exists(report_parent_id: int) -> dict:
     return report
 
 
-async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entire_thread_if_post_is_op: bool=False) -> bool:
+async def delete_post_from_index_if_applicable(board: str, post: dict, remove_entire_thread_if_post_is_op: bool=False) -> bool:
+    """
+    Assumes board was already validated.
+    """
     if not index_search_conf['enabled']:
         return False
 
-    validate_board(bs)
-
     index_searcher = get_index_search_provider()
-    board_int = board_2_int(bs)
+    board_int = board_2_int(board)
 
     if remove_entire_thread_if_post_is_op and post['op']:
-        rows = await db_q.query_dict(f"""select doc_id from `{bs}` where thread_num = {db_q.Phg()()}""", params=(post['num'],))
+        rows = await db_q.query_dict(f"""select doc_id from `{board}` where thread_num = {db_q.Phg()()}""", params=(post['num'],))
     else:
-        rows = await db_q.query_dict(f"""select doc_id from `{bs}` where num = {db_q.Phg()()}""", params=(post['num'],))
+        rows = await db_q.query_dict(f"""select doc_id from `{board}` where num = {db_q.Phg()()}""", params=(post['num'],))
 
     pk_ids = [board_int_doc_id_2_pk(board_int, row['doc_id']) for row in rows]
     if not pk_ids:
@@ -354,6 +355,55 @@ async def delete_post_from_index_if_applicable(bs: str, post: dict, remove_entir
 
     await index_searcher.remove_posts(pk_ids)
     return True
+
+
+async def delete_post(current_usr: User, board_shortname: str, num: int, report_parent_id: int=None) -> str:
+    """
+    - The main post deletion function.
+    - Assumes board was already validated.
+    """
+
+    if not current_usr.has_permissions([Permissions.post_delete]):
+        return f'Need permissions for {Permissions.post_delete.name}', 401
+
+    flash_msg = ''
+
+    post = await get_post(board_shortname, num)
+    if not post:
+        # This block shouldn't be executed much, if at all.
+        # We delete the post from the index, THEN delete the post from the database.
+        # If we get here, there are other forces at play which are deleting post from the asagi database.
+        flash_msg += ' Did not find post in asagi database.'
+
+        # could implement this here to double check the post is not in the index
+        # https://docs.lnx.rs/#tag/Managing-documents/operation/Delete_Documents_By_Query_indexes__index__documents_query_delete
+
+        return flash_msg, 200
+
+    try:
+        # must come before deleting post from <board> table
+        if (await delete_post_from_index_if_applicable(board_shortname, post)):
+            flash_msg += ' Deleted post from index.'
+    except:
+        flash_msg += ' An error arose when deleting post from index. Is LNX up?'
+
+    # Old Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
+    flash_msg += (await move_post_to_delete_table(post))
+
+    full_del, prev_del = post_files_delete(post)
+    flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
+    flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
+
+    if report_parent_id:
+        # delete report cus the post no longer exists, otherwise a bunch of empty reports will accumulate
+        report = await delete_report_if_exists(report_parent_id)
+        if report:
+            await fc.delete_post(report['board_shortname'], report['num'], report['op'])
+            flash_msg += ' Report deleted.'
+        else:
+            flash_msg += ' Report seems to already be deleted.'
+    
+    return flash_msg
 
 
 async def reports_action_routine(current_usr: User, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:
@@ -378,41 +428,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
                 flash_msg = 'Report deleted.'
 
         case ReportAction.post_delete:
-            if not current_usr.has_permissions([Permissions.post_delete]):
-                return f'Need permissions for {Permissions.post_delete.name}', 401
-
-            flash_msg = ''
-
-            post = await get_post(report.board_shortname, report.num)
-            if not post:
-                # This block shouldn't be executed much, if at all.
-                # We delete the post from the index, THEN delete the post from the database.
-                # If we get here, there are other forces at play which are deleting post from the asagi database.
-                flash_msg += ' Did not find post in asagi database.'
-
-                # could implement this here to double check the post is not in the index
-                # https://docs.lnx.rs/#tag/Managing-documents/operation/Delete_Documents_By_Query_indexes__index__documents_query_delete
-
-                return flash_msg, 200
-
-            # must come before deleting post from <board> table
-            if (await delete_post_from_index_if_applicable(report.board_shortname, post)):
-                flash_msg += ' Deleted post from index.'
-
-            # Old Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
-            flash_msg += (await move_post_to_delete_table(post))
-
-            full_del, prev_del = post_files_delete(post)
-            flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
-            flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
-
-            # delete report cus the post no longer exists, otherwise a bunch of empty reports will accumulate
-            report = await delete_report_if_exists(report_parent_id)
-            if report:
-                await fc.delete_post(report['board_shortname'], report['num'], report['op'])
-                flash_msg += ' Report deleted.'
-            else:
-                flash_msg += ' Report seems to already be deleted.'
+            flash_msg = await delete_post(current_usr, report['board_shortname'], report['num'], report_parent_id=report_parent_id)
 
         case ReportAction.media_delete:
             if not current_usr.has_permissions([Permissions.media_delete]):

@@ -8,7 +8,7 @@ from quart_rate_limiter import rate_limit
 from asagi_converter import get_post
 from boards import board_shortnames
 from configs import mod_conf
-from enums import ModStatus, PublicAccess, ReportAction
+from enums import ModStatus, PublicAccess
 from forms import ReportUserForm
 from leafs import generate_post_html, post_files_hide
 from moderation import fc
@@ -25,7 +25,8 @@ from moderation.report import (
     create_report,
     get_report_count,
     get_reports,
-    reports_action_routine
+    reports_action_routine, 
+    delete_post,
 )
 from moderation.user import Permissions
 from paginate import Pagination
@@ -38,46 +39,18 @@ from security import apply_csrf_validation_on_endpoint, session_csrf_token_name,
 bp = Blueprint('bp_web_moderation', __name__)
 
 
-@bp.post('/nuke/<string:board>/<int:thread_num>/<int:num>')
+@bp.post('/nuke/<string:board>/<int:num>')
 @apply_csrf_validation_on_endpoint
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_is_admin
-async def route_nuke_post(board: str, thread_num: int, num: int):
+async def route_nuke_post(board: str, num: int):
     validate_board(board)
 
-    # turn csrf on the form, and use route decorator to validate csrf on api requests
-    form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
+    msg = await delete_post(current_web_usr, board, num)
 
-    if request.method == 'POST' and (await form.validate_on_submit()):
-        submitter_category = form.submitter_category.data
-        submitter_notes = form.submitter_notes.data
-
-        post = await get_post(board, num)
-        if not post:
-            return jsonify({'message': 'we dont have this post archived'})
-
-        op = thread_num == num
-        report_parent_id = await create_report(
-            board,
-            thread_num,
-            num,
-            op,
-            request.remote_addr,
-            submitter_notes,
-            submitter_category,
-            ModStatus.open,
-            None,
-        )
-        msg, code = await reports_action_routine(
-            current_web_usr,
-            report_parent_id,
-            ReportAction.post_delete,
-        )
-
-        return jsonify({'message': msg})
-    return jsonify({'message': f'error: {form.data}: {form.errors}'})
+    return jsonify({'message': msg})
 
 
 

@@ -35,7 +35,7 @@ from threads import render_thread_stats
 from utils import Perf
 from utils.validation import validate_board, validate_threads
 from moderation.report import generate_report_form
-from security import inject_csrf_token_to_session
+from security import inject_csrf_token_to_session, get_csrf_input
 
 
 bp = Blueprint("bp_web_app", __name__)
@@ -201,6 +201,7 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
 
 
 @bp.get("/<string:board>/catalog")
+@inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
@@ -218,8 +219,9 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     pagination = await make_pagination_catalog(board, catalog, 0)
     p.check('paginate')
 
+    csrf_input = get_csrf_input()
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin)
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin, csrf_input=csrf_input)
         for batch in catalog
         for op in batch['threads']
     )
@@ -239,6 +241,7 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
 
 
 @bp.get("/<string:board>/catalog/<int:page_num>")
+@inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
@@ -256,8 +259,9 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     pagination = await make_pagination_catalog(board, catalog, page_num)
     p.check('paginate')
 
+    csrf_input = get_csrf_input()
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin)
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin, csrf_input=csrf_input)
         for batch in catalog
         for op in batch['threads']
     )
