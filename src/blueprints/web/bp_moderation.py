@@ -113,7 +113,7 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
 
         endpoint_html = f"""<input type="hidden" name="endpoint" value="{request.endpoint}">"""
         d['About'] = f"""
-        [<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">View</a>] {source_link}
+        [<a href="/{r.board_shortname}/thread/{r.thread_num}#p{r.num}">View</a>] {source_link}
         <br>
         <br>
         [

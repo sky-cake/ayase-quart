@@ -748,11 +748,6 @@ div.post div.postInfo {
     width: 100%
 }
 
-div.post div.postInfo span.postNum a {
-    text-decoration: none;
-    color: #000
-}
-
 div.post div.postInfo span.postNum a:hover,
 .posteruid .hand:hover {
     color: #d00 !important

@@ -88,12 +88,14 @@ def render_wrapped_post_t_thread(post: dict):
     if rare_vals[-1] == 'N': # in asagi, N is normal people capcode, which evals to true
         rare_vals[-1] = None
 
+    # include_view_link should only be False on the /thread endpoint
+
     if not any(rare_vals): # basic text/image reply post
         esc_user_data(post) # not sure this is the correct logic...
-        return render_post_t_basic(post)
+        return render_post_t_basic(post, include_view_link=False)
 
     # anything remotely special uses official wrap_post_t
-    return render_wrapped_post_t(wrap_post_t(post))
+    return render_wrapped_post_t(wrap_post_t(post), include_view_link=False)
 
 
 def get_posts_t_thread(posts: list[dict], post_2_quotelinks: QuotelinkD):
@@ -101,7 +103,7 @@ def get_posts_t_thread(posts: list[dict], post_2_quotelinks: QuotelinkD):
     return ''.join(render_wrapped_post_t_thread(p) for p in posts)
 
 
-def render_post_t_basic(post: dict):
+def render_post_t_basic(post: dict, include_view_link: bool=True):
     num = post['num']
     thread_num = post['thread_num']
     comment = post['comment']
@@ -110,6 +112,11 @@ def render_post_t_basic(post: dict):
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
+
+    view_link = ''
+    if include_view_link:
+        view_link = f"""[<a href="/{post_path_t}">View</a>]"""
+
     return f'''
     <div id="pc{num}">
         <div class="sideArrows">&gt;&gt;</div>
@@ -119,10 +126,9 @@ def render_post_t_basic(post: dict):
                 <span class="name N">{ANONYMOUS_NAME}</span>
                 <span class="dateTime inblk" data-utc="{ts_unix}"></span>
                 <span class="postNum"><a href="/{post_path_t}">No.{num}</a></span>
-                <button class="btnlink copy_link" data-link="/{post_path_t}">©</button>
                 <span class="inblk">
                     [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
-                    [<a href="/{post_path_t}" target="_blank">View</a>]
+                    {view_link}
                     [<a href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank">Source</a>]
                 </span>
             </div>
@@ -311,8 +317,7 @@ def get_media_t(post: dict):
     return f"""
 	<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
-            File:
-            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            File: <a href="{full_src}" title="{media_orig}">{media_filename}</a>
             (<span title="{md5h}">
                 {spoiler}
                 {media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}
@@ -372,7 +377,7 @@ def get_exif_title(post: dict):
 def get_poster_hash_t(post: dict):
     if not (poster_hash := post.get('poster_hash')):
         return ''
-    return f'<span class="posteruid id_{poster_hash}">(ID: <a title="." href="#">{poster_hash}</a>)</span>'
+    return f'(ID: {poster_hash})'
 
 
 def get_since4pass_t(post: dict):
@@ -419,10 +424,15 @@ def email_wrap(post: dict, val: str):
     return f'<a href="mailto:{ email }">{val}</a>'
 
 op_label = '<strong class="op_label">OP</strong>'
-def render_wrapped_post_t(wpt: dict): # wrapped_post_t
+def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_post_t
     is_op = wpt['op']
     num = wpt['num']
     ts_unix = wpt['ts_unix']
+
+    view_link = ''
+    if include_view_link:
+        view_link = f""" [<a href="/{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }">View</a>] """
+
     return f"""
     { wpt['t_header'] }
     { wpt['t_media'] if is_op else '' }
@@ -433,21 +443,15 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
         { wpt['t_name'] }
         <span class="nameBlock { wpt['t_cc_class'] }">
             { wpt['t_cc'] }
-        </span>
-        { wpt['t_poster_hash'] }
+        </span>{ wpt['t_poster_hash'] }
         { wpt['t_since4pass'] }
         { wpt['t_country'] }
         { wpt['t_troll_country'] }
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-        <span class="postNum">
-            <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
-            { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
-        </span>
-        <button class="btnlink copy_link" data-link="/{wpt['t_post_link_rel']}">©</button>
+        <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
+        { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         <span class="inblk">
-        { wpt['t_report'] }
-        [<a href="/{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }" target="_blank">View</a>]
-        [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
+        { wpt['t_report'] } {view_link} [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
         </span>
     </div>
     <div>

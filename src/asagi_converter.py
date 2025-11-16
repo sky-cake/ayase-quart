@@ -849,16 +849,20 @@ async def move_post_to_delete_table(post: dict) -> str:
 
     values = list(post_for_insert.values())
 
-    await db_q.query_dict(sql, params=values, commit=True)
+    msg = ''
 
-    sql = f"""
-        delete
-        from `{board}`
-        where num = {db_q.Phg()()}
-    ;"""
+    try:
+        await db_q.query_dict(sql, params=values, commit=True)
+        msg += f' Post transfered to `{board}_deleted`.'
+    except:
+        msg += f' An error arose when inserting the post into the deleted table. Are you sure `{board}_deleted` exists?'
+
+    sql = f"""delete from `{board}` where num = {db_q.Phg()()};"""
     await db_q.query_dict(sql, params=(post['num'],), commit=True)
 
-    return ' Post transfered to asagi\'s delete table. It is no longer in the board table.'
+    msg += f' Post deleted from `{board}` table.'
+
+    return msg
 
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:

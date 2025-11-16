@@ -378,7 +378,7 @@ async def delete_post(current_usr: User, board_shortname: str, num: int, report_
         # could implement this here to double check the post is not in the index
         # https://docs.lnx.rs/#tag/Managing-documents/operation/Delete_Documents_By_Query_indexes__index__documents_query_delete
 
-        return flash_msg, 200
+        return flash_msg.strip(), 200
 
     try:
         # must come before deleting post from <board> table
@@ -403,7 +403,7 @@ async def delete_post(current_usr: User, board_shortname: str, num: int, report_
         else:
             flash_msg += ' Report seems to already be deleted.'
     
-    return flash_msg
+    return flash_msg.strip()
 
 
 async def reports_action_routine(current_usr: User, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:
@@ -522,4 +522,4 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
         case _:
             return 'Unsupported action', 400
 
-    return flash_msg, 200
+    return flash_msg.strip(), 200

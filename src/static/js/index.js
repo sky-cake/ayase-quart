@@ -144,36 +144,6 @@ function set_up_board_buttons() {
     }
 }
 
-function copy_link(button_element, path) {
-    if (!path) return;
-
-    const domain = window.location.origin.replace(/\/+$/, '');
-    path = path.replace(/^\/+/, '');
-    const link = `${domain}/${path}`;
-
-    navigator.clipboard.writeText(link).then(() => {
-		button_element.innerHTML = `✓`;
-		setTimeout(() => {
-			button_element.textContent = `©`;
-		}, 1000);
-	}).catch(err => {
-		button_element.textContent = `x`;
-	});
-}
-
-function copy_code(button_element, code, copy_text='©', success_text='✓', fail_text='x') {
-    if (!code) return;
-
-    navigator.clipboard.writeText(code).then(() => {
-        button_element.innerHTML = success_text;
-        setTimeout(() => {
-            button_element.textContent = copy_text;
-        }, 1000);
-    }).catch(err => {
-        button_element.textContent = fail_text;
-    });
-}
-
 function setup_code_clipboard() {
 	for (const codeElement of doc_query_all('code')) {
 		const copyButton = document.createElement('button');
@@ -235,21 +205,11 @@ function setup_video_intersection_events() {
 	}
 }
 
-function set_up_copy_buttons() {
-    const els = doc_query_all('.copy_link');
-    for (const el of els) {
-        el.addEventListener('click', () => {
-            copy_link(el, el.dataset.link);
-        });
-    }
-}
-
 function init_index() {
 	updateDateTimes();
 	setup_data_toggles();
 	setup_video_intersection_events();
     set_up_clickable_media();
-    set_up_copy_buttons();
     set_up_board_buttons();
 }
 
