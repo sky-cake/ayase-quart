@@ -848,7 +848,7 @@ async def move_post_to_delete_table(post: dict) -> str:
     sql_values = phg.size(post_for_insert)
     sql_conflict = ','.join([f'{col}={phg()}' for col in post_for_insert])
 
-    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({sql_values}) on conflict(`num`) do update set {sql_conflict} returning `num`;"""
+    sql = f"""insert into `{board}_deleted` ({sql_cols}) values ({sql_values}) on conflict(`num`, `subnum`) do update set {sql_conflict} returning `num`;"""
     values = list(post_for_insert.values())
     parameters = values + values
     num = await db_q.query_dict(sql, params=parameters, commit=True)
