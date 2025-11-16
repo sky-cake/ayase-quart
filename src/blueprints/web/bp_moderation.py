@@ -44,7 +44,7 @@ bp = Blueprint('bp_web_moderation', __name__)
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_is_admin
-async def route_create_report(board: str, thread_num: int, num: int):
+async def route_nuke_post(board: str, thread_num: int, num: int):
     validate_board(board)
 
     # turn csrf on the form, and use route decorator to validate csrf on api requests
