@@ -113,10 +113,6 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
 
-    view_link = ''
-    if include_view_link:
-        view_link = f"""[<a href="/{post_path_t}">View</a>]"""
-
     return f'''
     <div id="pc{num}">
         <div class="sideArrows">&gt;&gt;</div>
@@ -125,10 +121,9 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
                 <span class="inblk"><b>/{board}/</b></span>
                 <span class="name N">{ANONYMOUS_NAME}</span>
                 <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-                <span class="postNum"><a href="/{post_path_t}">No.{num}</a></span>
+                <a href="/{post_path_t}">No.{num}</a>
                 <span class="inblk">
                     [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
-                    {view_link}
                     [<a href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank">Source</a>]
                 </span>
             </div>
@@ -429,10 +424,6 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     num = wpt['num']
     ts_unix = wpt['ts_unix']
 
-    view_link = ''
-    if include_view_link:
-        view_link = f""" [<a href="/{ wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel'] }">View</a>] """
-
     return f"""
     { wpt['t_header'] }
     { wpt['t_media'] if is_op else '' }
@@ -451,7 +442,7 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
         <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
         { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         <span class="inblk">
-        { wpt['t_report'] } {view_link} [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
+        { wpt['t_report'] } [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
         </span>
     </div>
     <div>
@@ -485,14 +476,11 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
         <div class="post_data">
         /{board}/<br>
         <span class="post_controls">{nuke_btn}
-            [<a href="/{thread_path}" class="btnr parent">View</a>]
             [<a href="{CANONICAL_HOST}/{thread_path}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         { wpt['t_cc'] }{nl}
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-        <span class="postNum">
-            <a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>
-        </span>
+        <a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
     {get_thread_stats_t(wpt)}

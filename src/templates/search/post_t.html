@@ -14,16 +14,13 @@
     {{ t_country }}
     {{ t_troll_country }}
     <span class="dateTime" data-utc="{{ts_unix}}">{{format_ts(ts_unix)}}</span>
-    <span class="postNum desktop">
-        <a href="{{t_post_link_rel}}">No.{{num}}</a>
-        {% if num == thread_num %}
-            {{ t_sticky }}
-            {{ t_closed }}
-        {% endif %}
-    </span>
+    <a href="{{t_post_link_rel}}">No.{{num}}</a>
+    {% if num == thread_num %}
+        {{ t_sticky }}
+        {{ t_closed }}
+    {% endif %}
     <span class="inblk">
     {{ t_report }}
-    [<a href="{{t_post_link_rel if num == thread_num else t_thread_link_rel}}">View</a>]
     [<a href="{{t_post_link_src if num == thread_num else t_thread_link_src}}" rel="noreferrer" target="_blank">Source</a>]
     </span>
     {{ t_quotelink }}
