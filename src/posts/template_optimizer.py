@@ -189,9 +189,7 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 
 
 def get_report_t(post: dict) -> str:
-    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">
-        Report
-    </button>]"""
+    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">Report</button>]"""
 
 
 def get_sub_t(post: dict):
@@ -463,7 +461,7 @@ def render_wrapped_post_t(wpt: dict): # wrapped_post_t
     """
 
 
-def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
+def render_catalog_card(wpt: dict, show_nuke_btn: bool=False) -> str: # a thread card is just the op post
     num = wpt['num']
     board = wpt['board_shortname']
     title_t = get_title_t(wpt)
@@ -473,12 +471,16 @@ def render_catalog_card(wpt: dict) -> str: # a thread card is just the op post
     thread_path = get_thread_path(board, num)
     post_path = get_post_path(board, num, num)
 
+    nuke_btn = ''
+    if show_nuke_btn:
+        nuke_btn = f'[<button class="rbtn" report_url="/nuke/{board}/{num}/{num}">Nuke</button>]'
+
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
         /{board}/<br>
-        <span class="post_controls">
-            [<a href="/{thread_path}" class="btnr parent" >View</a>]
+        <span class="post_controls">{nuke_btn}
+            [<a href="/{thread_path}" class="btnr parent">View</a>]
             [<a href="{CANONICAL_HOST}/{thread_path}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
         </span>
         { wpt['t_cc'] }{nl}

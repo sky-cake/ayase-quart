@@ -44,7 +44,7 @@ bp = Blueprint('bp_web_admin', __name__)
 async def latest(is_admin: bool):
     catalog = await get_latest_ops_as_catalog(board_shortnames)
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op))
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin)
         for batch in catalog
         for op in batch['threads']
     )

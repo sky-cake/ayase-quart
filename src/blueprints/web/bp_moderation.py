@@ -8,7 +8,7 @@ from quart_rate_limiter import rate_limit
 from asagi_converter import get_post
 from boards import board_shortnames
 from configs import mod_conf
-from enums import ModStatus, PublicAccess
+from enums import ModStatus, PublicAccess, ReportAction
 from forms import ReportUserForm
 from leafs import generate_post_html, post_files_hide
 from moderation import fc
@@ -18,7 +18,8 @@ from moderation.auth import (
     login_web_usr_required,
     require_web_usr_is_active,
     require_web_usr_permissions,
-    web_usr_is_admin
+    web_usr_is_admin,
+    require_web_usr_is_admin,
 )
 from moderation.report import (
     create_report,
@@ -35,6 +36,49 @@ from security import apply_csrf_validation_on_endpoint, session_csrf_token_name,
 
 
 bp = Blueprint('bp_web_moderation', __name__)
+
+
+@bp.post('/nuke/<string:board>/<int:thread_num>/<int:num>')
+@apply_csrf_validation_on_endpoint
+@login_web_usr_required
+@load_web_usr_data
+@require_web_usr_is_active
+@require_web_usr_is_admin
+async def route_create_report(board: str, thread_num: int, num: int):
+    validate_board(board)
+
+    # turn csrf on the form, and use route decorator to validate csrf on api requests
+    form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
+
+    if request.method == 'POST' and (await form.validate_on_submit()):
+        submitter_category = form.submitter_category.data
+        submitter_notes = form.submitter_notes.data
+
+        post = await get_post(board, num)
+        if not post:
+            return jsonify({'message': 'we dont have this post archived'})
+
+        op = thread_num == num
+        report_parent_id = await create_report(
+            board,
+            thread_num,
+            num,
+            op,
+            request.remote_addr,
+            submitter_notes,
+            submitter_category,
+            ModStatus.open,
+            None,
+        )
+        msg, code = await reports_action_routine(
+            current_web_usr,
+            report_parent_id,
+            ReportAction.post_delete,
+        )
+
+        return jsonify({'message': msg})
+    return jsonify({'message': f'error: {form.data}: {form.errors}'})
+
 
 
 @bp.post('/report/<string:board>/<int:thread_num>/<int:num>')

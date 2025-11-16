@@ -219,7 +219,7 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     p.check('paginate')
 
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op))
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin)
         for batch in catalog
         for op in batch['threads']
     )
@@ -257,7 +257,7 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     p.check('paginate')
 
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op))
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin)
         for batch in catalog
         for op in batch['threads']
     )

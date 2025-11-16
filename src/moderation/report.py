@@ -263,7 +263,7 @@ async def create_report(
     submitter_category: str,
     mod_status: str,
     mod_notes: str = None
-):
+) -> int:
     now = datetime.now()
     public_access = PublicAccess.hidden if mod_conf['hide_post_if_reported'] else PublicAccess.visible
 
@@ -287,6 +287,8 @@ async def create_report(
         values ({db_m.Phg().size(params_child)})
     ;"""
     await db_m.query_dict(sql, params=params_child, commit=True, p_id=DbPool.mod)
+
+    return report_parent_id
 
 
 async def edit_report_if_exists(report_parent_id: int, public_access: PublicAccess=None, mod_status: ModStatus=None, mod_notes: str=None) -> dict:
