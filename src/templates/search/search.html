@@ -13,7 +13,7 @@
   <div>{{html_search_memo|safe}}</div>
   <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data">
     <div class="form">
-      <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="y"></div>
+      <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
       <div class="row">
         <div class="column">
           {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
@@ -117,7 +117,7 @@
         </div>
         {{ render_field(form.order_by) }}
         {{ search_plugin_html|safe }}
-        <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="y"></div>
+        <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
       </div>
   </form>
   </div>
