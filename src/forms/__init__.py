@@ -110,6 +110,7 @@ class RadioCSVField(RadioField):
         self.data = None
 
 
+valid_numeric_cmp_choices = [('=', '='), ('>', '>'), ('<', '<'), ('>=', '>='), ('<=', '<=')]
 class SearchForm(StripForm):
     do_not_strip: tuple[str] = ('comment',)
 
@@ -122,8 +123,10 @@ class SearchForm(StripForm):
     comment = TextAreaField('Comment', validators=[Optional(), Length(2, 1024)])
     op_title = StringField('OP Subject', validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
     op_comment = TextAreaField('OP Comment', validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
-    min_title_length = IntegerField('Subject', validators=[Optional(), NumberRange(0, 100)])
-    min_comment_length = IntegerField('Comment', validators=[Optional(), NumberRange(0, 2_000)])
+    tl = IntegerField('Subject', validators=[Optional(), NumberRange(0, 100)])
+    tlop = SelectField('Subject cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
+    cl = IntegerField('Comment', validators=[Optional(), NumberRange(0, 2_000)])
+    clop = SelectField('Comment cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
     num = IntegerField('Post Number', validators=[Optional(), NumberRange(min=0)])
     media_filename = StringField('Filename', validators=[Optional(), Length(2, 256)])
     media_hash = StringField('File Hash', validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
@@ -141,7 +144,9 @@ class SearchForm(StripForm):
     is_not_sticky = BooleanField('Not sticky', default=False, validators=[Optional()])
     page = IntegerField(default=1, validators=[NumberRange(min=1)])
     width = IntegerField('Media width', default=None, validators=[Optional(), NumberRange(0, 10_000)])
+    wop = SelectField('Width cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
     height = IntegerField('Media height', default=None, validators=[Optional(), NumberRange(0, 10_000)])
+    hop = SelectField('Height cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
     capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
 
@@ -182,6 +187,7 @@ def strip_2_none(s: str) -> str | None:
     return s
 
 
+valid_numeric_cmp_operators = ('=', '>', '<', '>=', '<=')
 def validate_search_form(form: SearchForm):
     if not form.boards.data:
         raise BadRequest('select a board')
@@ -227,6 +233,15 @@ def validate_search_form(form: SearchForm):
     if form.gallery_mode.data:
         form.has_file.data = True
         form.has_no_file.data = False
+
+    if form.wop.data and form.wop.data not in valid_numeric_cmp_operators:
+        raise BadRequest('width operator is invalid')
+    if form.hop.data and form.hop.data not in valid_numeric_cmp_operators:
+        raise BadRequest('height operator is invalid')
+    if form.tlop.data and form.tlop.data not in valid_numeric_cmp_operators:
+        raise BadRequest('title length operator is invalid')
+    if form.clop.data and form.clop.data not in valid_numeric_cmp_operators:
+        raise BadRequest('comment length operator is invalid')
 
 
 class IndexSearchConfigForm(QuartForm):

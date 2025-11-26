@@ -72,6 +72,9 @@ if mod_conf['enabled'] and db_mod_conf['database']:
 stats_conf = conf.get('stats', {'enabled': False})
 
 
+search_plugins_conf = conf.get('search_plugins', {'enabled': False})
+
+
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = make_src_path(sqlite_db)
 # if moderation_db := db_mod_conf.get('database'):

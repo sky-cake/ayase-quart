@@ -51,7 +51,7 @@ class LnxSearch(BaseSearch):
                 #         "fast": False
                 #     }
                 # },
-                'search_fields': ['title', 'comment'],
+                'search_fields': ['title', 'comment', 'media_filename'],
                 "boost_fields": {},
                 "reader_threads": 16,
                 "max_concurrency": 4, # keep low for larger datasets
@@ -194,18 +194,28 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.min_title_length:
+        if q.tl:
+            operator = q.tlop if hasattr(q, 'tlop') and q.tlop else '='
+            if operator == '=':
+                ctx = f'title_length:{q.tl}'
+            else:
+                ctx = f'title_length:{operator}{q.tl}'
             query.append({
                 'occur': 'must',
                 'normal': {
-                    'ctx': f'title_length:>={q.min_title_length}',
+                    'ctx': ctx,
                 },
             })
-        if q.min_comment_length:
+        if q.cl:
+            operator = q.clop if hasattr(q, 'clop') and q.clop else '='
+            if operator == '=':
+                ctx = f'comment_length:{q.cl}'
+            else:
+                ctx = f'comment_length:{operator}{q.cl}'
             query.append({
                 'occur': 'must',
                 'normal': {
-                    'ctx': f'comment_length:>={q.min_comment_length}',
+                    'ctx': ctx,
                 },
             })
         if q.before is not None:
@@ -299,15 +309,8 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
-        if q.media_filename is not None:
-            query.append(
-                {
-                    'occur': 'must',
-                    'normal': {
-                        'ctx': f'media_filename:{q.media_filename}',
-                    },
-                }
-            )
+        if q.media_filename:
+            query.extend(get_term_query('media_filename', q.media_filename))
         if q.trip is not None:
             query.append(
                 {
@@ -318,24 +321,33 @@ class LnxSearch(BaseSearch):
                 }
             )
         if q.width: # anything not 0
+            operator = q.wop if hasattr(q, 'wop') and q.wop else '='
+            if operator == '=':
+                ctx = f'media_w:{q.width}'
+            else:
+                ctx = f'media_w:{operator}{q.width}'
             query.append(
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'media_w:>={q.width}',
+                        'ctx': ctx,
                     },
                 }
             )
         if q.height: # anything not 0
+            operator = q.hop if hasattr(q, 'hop') and q.hop else '='
+            if operator == '=':
+                ctx = f'media_h:{q.height}'
+            else:
+                ctx = f'media_h:{operator}{q.height}'
             query.append(
                 {
                     'occur': 'must',
                     'normal': {
-                        'ctx': f'media_h:>={q.height}',
+                        'ctx': ctx,
                     },
                 }
             )
-        # print(query)
         return query
 
 

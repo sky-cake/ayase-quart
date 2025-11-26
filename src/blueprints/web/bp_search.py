@@ -2,7 +2,7 @@ from time import perf_counter
 
 from quart import flash
 
-from configs import app_conf, index_search_conf, vanilla_search_conf, SITE_NAME
+from configs import app_conf, index_search_conf, vanilla_search_conf, search_plugins_conf, SITE_NAME
 from forms import SearchFormFTS, SearchForm, SearchFormSQL
 from moderation import fc
 from posts.comments import html_comment, html_highlight
@@ -134,7 +134,9 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     p = Perf(f'{handler.form_title} search', enabled=app_conf.get('testing'))
 
     plugin_templates: list[Template] = []
-    if search_plugins:
+    plugins_enabled = search_plugins_conf.get('enabled')
+    use_search_plugins = plugins_enabled and search_plugins
+    if use_search_plugins:
         bind_plugin_fields_to_form(handler.form, search_plugins, plugin_templates)
 
     # turn off csrf so search result links can be shared
@@ -154,7 +156,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
 
         time_search_start = perf_counter()
 
-        if search_plugins:
+        if use_search_plugins:
             result = await intersect_search_plugin_results(search_plugins, handler.form)
 
             if result.performed_search:

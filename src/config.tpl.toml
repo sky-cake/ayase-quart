@@ -144,6 +144,10 @@ version = '1' # only matters for quickwit
 multi_board_search = true # allow searching multiple boards at once?
 
 
+[search_plugins]
+enabled = false # if true, load search plugins from the plugins directory
+
+
 [moderation]
 enabled = true # true, false
 

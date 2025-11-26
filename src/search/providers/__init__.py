@@ -22,7 +22,7 @@ search_index_fields = [
     SearchIndexField('title', str, searchable=True, optional=True),
     SearchIndexField('comment', str, searchable=True, optional=True),
     SearchIndexField('board', int, filterable=True),
-    SearchIndexField('media_filename', str, filterable=True, optional=True),
+    SearchIndexField('media_filename', str, searchable=True, filterable=True, optional=True),
     SearchIndexField('title_length', int, filterable=True, optional=True),
     SearchIndexField('comment_length', int, filterable=True, optional=True),
     SearchIndexField('media_hash', str, filterable=True, optional=True),

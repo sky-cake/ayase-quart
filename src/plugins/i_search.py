@@ -2,6 +2,7 @@ import importlib
 import pkgutil
 from abc import ABC, abstractmethod
 
+from configs import search_plugins_conf
 from forms import SearchForm
 from jinja2 import Template
 from wtforms import Field
@@ -94,4 +95,8 @@ def load_search_plugins() -> dict[str, SearchPlugin]:
     return plugins
 
 
-search_plugins = load_search_plugins()
+# Only load plugins if enabled in config
+if search_plugins_conf.get('enabled', False):
+    search_plugins = load_search_plugins()
+else:
+    search_plugins = {}

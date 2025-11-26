@@ -4,7 +4,7 @@
 {% block scripts -%}
 	{{ super() }}
 	<script type="text/javascript" defer src="/static/js/thread.js" integrity="sha384-cthqILLDUUP6xf82AmpVTicAfNYIbHTxZtJGUxyA6hZnHIeG6A9FnilfcdTVcJ9t"></script>
-	<script type="text/javascript" defer src="/static/js/search.js" integrity="sha384-lr9l7FW61N769vaFTqH9iI1UeCHtoBjWQUf3WdBLKQalLRmgzLfwtSI4B6jEvmfo"></script>
+	<script type="text/javascript" defer src="/static/js/search.js" integrity="sha384-3dsROq8pg2vFVERuypB0CBhul5U1iXQQC203kNUzmrycWSefdpyc2kN1Ha6k8vPi"></script>
 {% endblock %}
 
 {% block body %}
@@ -55,8 +55,14 @@
         </div>
       </div>
       <div class="row">
-        <div class="column">{{ render_field(form.min_title_length, placeholder='Min length', class='w5em') }}</div>
-        <div class="column">{{ render_field(form.min_comment_length, placeholder='Min length', class='w5em') }}</div>
+        <div class="column">
+          {{ render_field(form.tl, placeholder='Length', class='w5em') }}
+          {{ render_field(form.cl, placeholder='Length', class='w5em') }}
+        </div>
+        <div class="column">
+          {{ render_field(form.tlop, class='w5em btn') }}
+          {{ render_field(form.clop, class='w5em btn') }}
+        </div>
       </div>
       <div class="row">
         <div class="column">
@@ -80,12 +86,20 @@
       </div>
       <div class="row">
         <div class="column">
-          {{ render_field(form.width, placeholder='Min width', class='w5em') }}
-          {{ render_field(form.height, placeholder='Min height', class='w5em') }}
+          {{ render_field(form.width, placeholder='Width', class='w5em') }}
+          {{ render_field(form.height, placeholder='Height', class='w5em') }}
+        </div>
+        <div class="column">
+          {{ render_field(form.wop, class='w5em btn') }}
+          {{ render_field(form.hop, class='w5em btn') }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
         </div>
         <div class="column">
           {{ render_field(form.capcode, class='w5em btn') }}
-          {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
         </div>
       </div>
 

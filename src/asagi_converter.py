@@ -214,8 +214,8 @@ sql_search_filters = dict(
     is_not_deleted=SqlSearchFilter('deleted = 0', placeholder=False),
     is_sticky=SqlSearchFilter('sticky = 1', placeholder=False),
     is_not_sticky=SqlSearchFilter('sticky = 0', placeholder=False),
-    width=SqlSearchFilter(f'media_w >= {temp_phg}'),
-    height=SqlSearchFilter(f'media_h >= {temp_phg}'),
+    width=SqlSearchFilter(''), # fragment set dynamically in validate_and_generate_params()
+    height=SqlSearchFilter(''), # fragment set dynamically in validate_and_generate_params()
     capcode=SqlSearchFilter(f'capcode = {temp_phg}'),
     num=SqlSearchFilter(f'num = {temp_phg}'),
     thread_nums=SqlSearchFilter(None, in_list=True, placeholder=True, fieldname='thread_num'),
@@ -236,6 +236,13 @@ def validate_and_generate_params(form_data: dict, phg1: BasePlaceHolderGen) -> t
 
         if (field in defaults_to_ignore) and (field_val == defaults_to_ignore[field]):
             continue
+
+        if field == 'width':
+            operator = form_data['wop']
+            s_filter.fragment = f'media_w {operator} {temp_phg}'
+        elif field == 'height':
+            operator = form_data['hop']
+            s_filter.fragment = f'media_h {operator} {temp_phg}'
 
         if s_filter.like:
             field_val = f'%{field_val}%'
@@ -311,8 +318,8 @@ def get_board_2_nums_where(board: str, where_query: str, form_data: dict, phg: B
 
 def get_board_specific_where_clause(board: str, where_query: str, params: list[str], form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
     """Additional where filters MUST come after `where_query` for Postgresql param counting."""
-    where_query += get_min_title_length_where(where_query, form_data)
-    where_query += get_min_comment_length_where(where_query, form_data)
+    where_query += get_tl_where(where_query, form_data)
+    where_query += get_cl_where(where_query, form_data)
     where_query += get_facet_where(board, where_query, form_data, phg)
 
     board_2_nums_where, board_2_nums_params = get_board_2_nums_where(board, where_query, form_data, phg)
@@ -348,19 +355,21 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, wher
     return total_hits, total_hits_per_board
 
 
-def get_min_title_length_where(where_query: str, form_data: dict) -> str:
-    min_title_length = form_data.get('min_title_length')
-    if min_title_length:
+def get_tl_where(where_query: str, form_data: dict) -> str:
+    tl = form_data.get('tl')
+    if tl:
+        operator = form_data['tlop']
         pre = ' and' if where_query else ' where '
-        return f'''{pre} {db_q.length_method}(title) > {int(min_title_length)}'''
+        return f'''{pre} {db_q.length_method}(title) {operator} {int(tl)}'''
     return ''
 
 
-def get_min_comment_length_where(where_query: str, form_data: dict) -> str:
-    min_comment_length = form_data.get('min_comment_length')
-    if min_comment_length:
+def get_cl_where(where_query: str, form_data: dict) -> str:
+    cl = form_data.get('cl')
+    if cl:
+        operator = form_data['clop']
         pre = ' and' if where_query else ' where '
-        return f'''{pre} {db_q.length_method}(comment) > {int(min_comment_length)}'''
+        return f'''{pre} {db_q.length_method}(comment) {operator} {int(cl)}'''
     return ''
 
 

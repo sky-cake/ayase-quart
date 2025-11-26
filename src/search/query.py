@@ -14,8 +14,10 @@ class IndexSearchQuery:
     boards: list[int]
     comment: Optional[str] = None
     title: Optional[str] = None
-    min_title_length: Optional[int] = None
-    min_comment_length: Optional[int] = None
+    tl: Optional[int] = None
+    tlop: Optional[str] = '='
+    cl: Optional[int] = None
+    clop: Optional[str] = '='
     num: Optional[int] = None
     nums: Optional[list[int]] = None
     thread_nums: Optional[list[int]] = None
@@ -23,7 +25,9 @@ class IndexSearchQuery:
     media_hash: Optional[str] = None
     trip: Optional[str] = None
     width: Optional[int] = 0
+    wop: Optional[str] = '='
     height: Optional[int] = 0
+    hop: Optional[str] = '='
     capcode: Optional[int] = None
     before: Optional[int] = None
     after: Optional[int] = None
@@ -63,11 +67,13 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
     if params['num'] and not params.get('nums'):
         q.num = int(params['num'])
 
-    if params.get('min_title_length'):
-        q.min_title_length = params['min_title_length']
+    if params.get('tl'):
+        q.tl = params['tl']
+        q.tlop = params['tlop']
 
-    if params.get('min_comment_length'):
-        q.min_comment_length = params['min_comment_length']
+    if params.get('cl'):
+        q.cl = params['cl']
+        q.clop = params['clop']
 
     if params['hits_per_page']:
         q.hits_per_page = clamp_positive_int(params['hits_per_page'], 1, index_search_conf['hits_per_page'])
@@ -81,8 +87,10 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
         q.has_no_file = True
     if params['width']:
         q.width = clamp_positive_int(params['width'])
+        q.wop = params['wop']
     if params['height']:
         q.height = clamp_positive_int(params['height'])
+        q.hop = params['hop']
     if params['capcode'] != Capcode.default.value:
         q.capcode = capcode_2_id(params['capcode'])
     if params['tripcode']:
