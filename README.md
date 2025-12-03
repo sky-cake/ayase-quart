@@ -146,7 +146,6 @@ Only LNX 0.9.0 is supported. 0.10.0 is not a completed version of LNX.
 Terminal A
 
 1. In a terminal, go to `~/ayase-quart/index_search/lnx/`
-   - If data was loaded into LNX before, delete the subdirectory `~/ayase-quart/index_search/lnx/data` LNX previously created.
 2. Review the configs in the file `~/ayase-quart/index_search/lnx/docker-compose.yml`
 3. Spin up LNX container with `sudo docker-compose up`
    - Later, you can run `sudo docker-compose up -d`, but first we need to confirm it's being populated with data
@@ -154,7 +153,7 @@ Terminal A
 Terminal B
 
 1. If you haven't already, set the index search configs in `config.toml`.
-2. cd to `~/ayase-quart/src` then run `python -m search load --reset a b c g gif ...`
+2. cd to `~/ayase-quart/src` then run `python -m search load [options] a b c g gif ...`
 3. You should see a bunch of loading bars progressing.
 4. In Terminal A, you should see LNX spraying a bunch of output. That's good and means it's working
 
@@ -163,6 +162,29 @@ Now go ahead and try searching the index on you AQ instance in your browser.
 Terminal A
 
 1. Once the index loader in Terminal B completes, you can `ctrl-c` to stop the LNX docker container, and spin it back up with `sudo docker-compose up -d` to make it run in the background
+
+Here is a script to help you spin up LNX. You can have a cronjob run this on system reboots if you wish.
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! sudo docker ps --format '{{.Image}}' | grep -q '^chillfish8/lnx'; then
+    echo "LNX is down"
+
+    # free buffer cache
+    free
+    sync
+    echo 1 > /proc/sys/vm/drop_caches
+    free
+
+    cd /path/to/index_search/lnx/ # set your path
+    docker compose up -d
+    echo "LNX should be up now"
+else
+    echo "LNX is already up"
+fi
+```
 
 
 ## Certificates
