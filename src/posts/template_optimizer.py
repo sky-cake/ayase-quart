@@ -109,7 +109,7 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     comment = post['comment']
     board = post['board_shortname']
     ts_unix = post['ts_unix']
-    quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
+    quotelinks_t = get_quotelink_t_thread(num, board, thread_num, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
     report_t = get_report_t(post)
@@ -139,11 +139,11 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     '''
 
 
-def get_quotelink_t_thread(num: int, board: str, quotelinks: list[int]):
+def get_quotelink_t_thread(num: int, board: str, thread_num: int, quotelinks: list[int]):
     if not quotelinks:
         return ''
     quotelink_gen = (
-        f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>'
+        f'<span class="quotelink"><a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>'
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
@@ -401,7 +401,8 @@ def get_quotelink_t(post: dict):
     if not (quotelinks := post['quotelinks']):
         return ''
     board = post['board_shortname']
-    quotelinks = ' '.join(f'<span class="quotelink"><a href="#p{quotelink}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>' for quotelink in quotelinks)
+    thread_num = post['thread_num']
+    quotelinks = ' '.join(f'<span class="quotelink"><a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>' for quotelink in quotelinks)
     return f'<div id="bl_{post["num"]}" class="backlink">Replies: {quotelinks}</div>'
 
 
