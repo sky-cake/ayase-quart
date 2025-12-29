@@ -146,6 +146,12 @@ media_hash_file_input.addEventListener('change', () => {
     }
 });
 
+function auto_select_single_board() {
+    const board_inputs = doc_query_all('#searchform #boards input');
+    if (board_inputs.length !== 1) return;
+    board_inputs[0].checked = true; // checked works with checkbox & radio inputs
+}
+
 function generateMediaHash(file) {
     var reader = new FileReader();
     reader.onloadend = function(e){
@@ -161,3 +167,5 @@ function generateMediaHash(file) {
     };
     reader.readAsBinaryString(file);
 };
+
+auto_select_single_board();
