@@ -52,9 +52,11 @@ def main():
     assert os.path.isdir(html_dir)
 
     integrities = collect_js_integrities(js_dir)
+    integrities = dict(sorted(integrities.items()))
+
     # update_html_integrities(html_dir, integrities)
     with open(make_src_path('asset_hashes.json'), 'w') as f:
-        json.dump(integrities, f)
+        json.dump(integrities, f, indent=4)
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,11 @@
+{
+    "admin_reports.js": "sha384-M49Gl7Nk5ZK7IXGTtpgdKEP3MGdJCAJRcFivlVjyzq/tPOjoNK4XvY/BXce5fT0k",
+    "admin_users.js": "sha384-bhVs400cgCHNKNyDp6Q+fYumFlKvfhDXk6GOOFHA5OUqEH7axIaaXcRXKJFxNx94",
+    "chart.js": "sha384-XcdcwHqIPULERb2yDEM4R0XaQKU3YnDsrTmjACBZyfdVVqjh6xQ4/DCMd7XLcA6Y",
+    "index.js": "sha384-Fvjd0ZIy/ovG86kj6IIart99D67xH9/CvsKUmNttmj+pK+iWlRwtxNQamZHKbMqd",
+    "reports.js": "sha384-+Hw7M7UjZRnnH9CkXi7VFjybL7XOj2f4NPyfKPt5RxTZrcsHGvLU7o9VWXvN7TJd",
+    "search.js": "sha384-jdspJ7XItl8+API4Szy5MTQnnzv3Z6Dpd2HQVv3uCqDvATJHbYApJIH0dkLa2Yig",
+    "stats.js": "sha384-EWVNsKaXoOFeEsXriSjurSwM8kI5ZcD4r1AVKWzRDusKSwziGDpUf9MMwhxMxF+6",
+    "thread.js": "sha384-b9Ktk8DOJhl3DVyrzWsTxgiKty7CS1etyjL6BIRyTvAaW0e1a3m4VSYlsQpjyqlB",
+    "utils.js": "sha384-q6EPvnPOXUzqeDJyxLD+6z4HJQQlXJY+jpIfSB9axDMfG1Kb6+DsT0JU3GYj/UyC"
+}
