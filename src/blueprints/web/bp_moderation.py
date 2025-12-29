@@ -7,7 +7,7 @@ from quart_rate_limiter import rate_limit
 
 from asagi_converter import get_post
 from boards import board_shortnames
-from configs import mod_conf
+from configs import mod_conf, archive_conf
 from enums import ModStatus, PublicAccess
 from forms import ReportUserForm
 from leafs import generate_post_html, post_files_hide
@@ -109,7 +109,7 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
 
         d['Check'] = f'<input type="checkbox" class="select_report" data-report-id="{report_parent_id}">'
 
-        source_link = f'[<a href="https://boards.4chan.org/{r.board_shortname}/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">Source</a>]'
+        source_link = f'[<a href="{archive_conf['canonical_host']}/{r.board_shortname}/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">Source</a>]'
 
         endpoint_html = f"""<input type="hidden" name="endpoint" value="{request.endpoint}">"""
         d['About'] = f"""

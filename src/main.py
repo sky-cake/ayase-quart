@@ -73,7 +73,8 @@ def create_app():
 
     if mod_conf['enabled']:
         app.before_serving(init_moderation)
-        app.before_serving(fc.init)
+        
+        # app.before_serving(fc.init)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.before_serving(db_q.prime_db_pool)

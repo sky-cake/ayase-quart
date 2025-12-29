@@ -32,18 +32,24 @@ dependencies = [
     'aiosqlite',
     'async-lru',
     'coredis',
+    'click',
     'Flask-WTF',
+    'hypercorn',
+    'jinja2',
     'msgpack',
+    'markupsafe',
     'orjson',
+    'pillow',
+    'python-dateutil',
+    'pybase64',
     'Quart',
     'quart-wtforms',
     'quart-auth',
     'quart-rate-limiter',
     'quart-schema[pydantic]',
     'quart-uploads',
-    'pillow',
-    'python-dateutil',
-    'pybase64',
+    'requests',
+    'tabulate',
     'tqdm',
     'zlib-ng',
 ]
@@ -60,7 +66,6 @@ Demo = 'https://ayasequart.org'
 
 [project.optional-dependencies]
 dev = [
-    'ruff',
 ]
 tests = [
     'pytest',
@@ -74,9 +79,6 @@ mysql = [
 postgresql = [
     'asyncpg',
 ]
-
-[tool.uv]
-default-groups = ['dev', 'tests']
 
 [tool.pytest.ini_options]
 testpaths = [

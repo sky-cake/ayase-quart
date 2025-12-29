@@ -18,7 +18,7 @@ class BaseFilterCache(ABC):
         self.enabled = mod_conf['enabled']
         self.remove_replies_to_hidden_op = mod_conf['remove_replies_to_hidden_op']
         self.regex_filter = mod_conf['regex_filter']
-        self.hide_4chan_deleted_posts = mod_conf['hide_4chan_deleted_posts']
+        self.hide_upstream_deleted_posts = mod_conf['hide_upstream_deleted_posts']
 
         super().__init__()
 
@@ -33,7 +33,7 @@ class BaseFilterCache(ABC):
 
         `(board, [(num, op), ...])`
         """
-        if not (self.hide_4chan_deleted_posts and board_shortnames):
+        if not (self.hide_upstream_deleted_posts and board_shortnames):
             return
         for board in board_shortnames:
             numops = await get_deleted_numops_by_board(board)
@@ -96,7 +96,7 @@ class BaseFilterCache(ABC):
             or
             ((post['board_shortname'], post['num']) in board_num_pairs)
             or
-            (self.hide_4chan_deleted_posts and post['deleted'])
+            (self.hide_upstream_deleted_posts and post['deleted'])
             or
             (self.regex_filter and post['comment'] and re.search(self.regex_filter, post['comment'], re.IGNORECASE))
         )
@@ -210,6 +210,8 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def is_post_removed(self, board: str, num: int) -> bool:
+        if not self.enabled:
+            return False
         phg = db_m.Phg()
         sql = f"""select num from board_nums_cache where board_shortname = {phg()} and num = {phg()}"""
         row = await db_m.query_tuple(sql, params=[board, num])

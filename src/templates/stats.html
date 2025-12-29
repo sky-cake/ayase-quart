@@ -3,8 +3,8 @@
 
 {% block scripts -%}
 {{ super() }}
-<script type="text/javascript" defer src="/static/js/chart.js" integrity="sha384-XcdcwHqIPULERb2yDEM4R0XaQKU3YnDsrTmjACBZyfdVVqjh6xQ4/DCMd7XLcA6Y"></script>
-<script type="text/javascript" defer src="/static/js/stats.js" integrity="sha384-EWVNsKaXoOFeEsXriSjurSwM8kI5ZcD4r1AVKWzRDusKSwziGDpUf9MMwhxMxF+6"></script>
+<script type="text/javascript" defer src="/static/js/chart.js" {{ get_integrity("chart.js")|safe }}></script>
+<script type="text/javascript" defer src="/static/js/stats.js" {{ get_integrity("stats.js")|safe }}></script>
 {% endblock %}
 
 {% block body %}

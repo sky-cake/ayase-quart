@@ -9,6 +9,7 @@ def get_thread_path(board: str, thread_num: int) -> str:
 
 # re-implemented from templates/macros.html
 def render_thread_stats(post: dict) -> str:
+    posters_t = f'/ <span class="ts-ips" data-tip="Posters" title="Posters">{posters}</span>' if (posters := post.get('posters')) else ''
     return f"""
     <div class="thread-stats">
         { 'Sticky /' if post['sticky'] else ''}
@@ -16,10 +17,7 @@ def render_thread_stats(post: dict) -> str:
         <span class="ts-replies" data-tip="Replies" title="Replies">{ post.get('nreplies', '?') }</span>
         /
         <span class="ts-images" data-tip="Images" title="Files">{ post.get('nimages', '?') }</span>
-        /
-        <span data-tip="Posters" class="ts-ips" title="Posters">
-            { post.get('posters', '?') }
-        </span>
+        {posters_t}
     </div>
     """
 

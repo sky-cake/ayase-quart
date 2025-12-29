@@ -1,6 +1,6 @@
 from html import escape
 
-from configs import archive_conf, site_conf
+from configs import archive_conf, site_conf, mod_conf
 from media import ext_is_image, ext_is_video, get_image_path, get_thumb_path
 from posts.capcodes import Capcode
 from threads import get_thread_path
@@ -112,6 +112,7 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     quotelinks_t = get_quotelink_t_thread(num, board, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
+    report_t = get_report_t(post)
 
     return f'''
     <div id="pc{num}">
@@ -123,7 +124,7 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
                 <span class="dateTime inblk" data-utc="{ts_unix}"></span>
                 <a href="/{post_path_t}">No.{num}</a>
                 <span class="inblk">
-                    [<button class="rbtn" report_url="/report/{board}/{thread_num}/{num}">Report</button>]
+                    {report_t}
                     [<a href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank">Source</a>]
                 </span>
             </div>
@@ -190,6 +191,8 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 
 
 def get_report_t(post: dict) -> str:
+    if not mod_conf.get('enabled', False):
+        return ''
     return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">Report</button>]"""
 
 
@@ -474,16 +477,14 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
-        /{board}/<br>
-        <span class="post_controls">{nuke_btn}
-            [<a href="{CANONICAL_HOST}/{thread_path}" class="btnr parent" rel="noreferrer" target="_blank" >Source</a>]
-        </span>
-        { wpt['t_cc'] }{nl}
-        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-        <a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>
+            <div class="post_controls">
+                {nuke_btn} /{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]
+            </div>
+            { wpt['t_cc'] }{nl}
+            <div class="dateTime inblk" data-utc="{ts_unix}"></div>
+            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>{get_thread_stats_t(wpt)}</div>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
-    {get_thread_stats_t(wpt)}
     <div class="teaser">
         { title_t }
         { wpt.get('comment', '')}
@@ -499,11 +500,11 @@ def get_title_t(thread: dict):
 
 # almost same as threads.render_thread_stats...
 def get_thread_stats_t(thread: dict) -> str:
+    posters_t = f'/ P: <b>{posters}</b>' if (posters := thread.get('posters')) else ''
     return f"""
-    <div class="meta">
-        Replies: <b>{ thread['nreplies'] }</b> / Images: <b>{ thread['nimages'] }</b> / Posters: <b>{ thread.get('posters', '?') }
-        </b>
-    </div>
+    <span class="meta">
+        R: <b>{ thread['nreplies'] }</b> / I: <b>{ thread['nimages'] }</b> {posters_t}
+    </span>
     """
 
 def get_thread_sticky_locked_t(thread: dict) -> str:

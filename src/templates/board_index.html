@@ -2,7 +2,7 @@
 
 {% block scripts -%}
 	{{ super() }}
-	<script type="text/javascript" defer src="/static/js/thread.js" integrity="sha384-cthqILLDUUP6xf82AmpVTicAfNYIbHTxZtJGUxyA6hZnHIeG6A9FnilfcdTVcJ9t"></script>
+	<script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
 {% endblock %}
 
 {% block body %}

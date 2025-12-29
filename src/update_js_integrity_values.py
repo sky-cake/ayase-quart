@@ -2,6 +2,7 @@ import pathlib
 import hashlib
 import os
 import base64
+import json
 
 def calculate_integrity(file_path: str) -> str:
     with open(file_path, 'rb') as f:
@@ -50,7 +51,9 @@ def main():
     assert os.path.isdir(html_dir)
 
     integrities = collect_js_integrities(js_dir)
-    update_html_integrities(html_dir, integrities)
+    # update_html_integrities(html_dir, integrities)
+    with open('./asset_hashes.json', 'w') as f:
+        json.dump(integrities, f)
 
 if __name__ == '__main__':
     main()

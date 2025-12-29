@@ -398,6 +398,7 @@ ul {
     cursor: pointer;
     padding: 0;
     filter: none;
+    font-size: inherit;
 }
 
 .rbtn:disabled {

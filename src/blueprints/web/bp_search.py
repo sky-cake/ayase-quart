@@ -14,7 +14,7 @@ from posts.template_optimizer import (
 from search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
 from search.pagination import template_pagination_links, total_pages
 from templates import template_search
-from utils import Perf
+from perf import Perf
 from plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
 from jinja2 import Template
 from quart_wtf import QuartForm
@@ -131,7 +131,7 @@ def bind_plugin_fields_to_form(form: QuartForm, search_plugins: dict[str, Search
 
 
 async def search_handler(handler: SearchHandler, request_args: dict, endpoint_path: str, logged_in=False, is_admin=False) -> str:
-    p = Perf(f'{handler.form_title} search', enabled=app_conf.get('testing'))
+    p = Perf(f'{handler.form_title} search')
 
     plugin_templates: list[Template] = []
     plugins_enabled = search_plugins_conf.get('enabled')
@@ -234,6 +234,6 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     )
 
     p.check('rendered page')
-    print(p)
+    p.emit()
 
     return rendered_page

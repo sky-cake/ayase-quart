@@ -279,13 +279,17 @@ ruff check
 ```
 
 ### Other
-
-JS `<script>` integrity checksums are created with `openssl dgst -sha384 -binary src/static/js/tagging.js | openssl base64`.
-
+JS `<script>` ressources should be served with integrity checksums in production.
 ```bash
-cd src/static/js
-
-for file in *.js; do [ -f "$file" ] && echo $file && openssl dgst -sha384 -binary "$file" | openssl base64 && echo ''; done
+cd src && python update_js_integrity_values.py
+```
+Running the commands above will create/overwrite `src/asset_hashes.json`, which contains the hashes of all javascript files under `/static/js`. This file will be loaded into the templating system and render script tags like so:
+```html
+<script type="text/javascript" defer src="/static/js/index.js" integrity="sha384-b9Ktk8DOJhl3DVyrzWsTxgiKty7CS1etyjL6BIRyTvAaW0e1a3m4VSYlsQpjyqlB"></script>
+```
+When doing multiple edits during development/debugging, disabling integrity checks can be done by deleting or emptying out the `src/asset_hashes.json` file. This will produce script tags like this instead:
+```html
+<script type="text/javascript" defer src="/static/js/index.js"></script>
 ```
 
 ## Production

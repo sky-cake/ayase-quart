@@ -32,7 +32,7 @@ from templates import (
     template_thread
 )
 from threads import render_thread_stats
-from utils import Perf
+from perf import Perf
 from utils.validation import validate_board, validate_threads
 from moderation.report import generate_report_form
 from security import inject_csrf_token_to_session, get_csrf_input
@@ -93,7 +93,7 @@ async def favicon():
 @web_usr_is_admin
 async def v_board_index(board: str, is_admin: bool, logged_in: bool):
     validate_board(board)
-    p = Perf('index', enabled=app_conf.get('testing'))
+    p = Perf('index')
 
     index, quotelinks = await generate_index(board)
     p.check('query')
@@ -126,7 +126,7 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
         report_form_t=generate_report_form(),
     )
     p.check('render')
-    print(p)
+    p.emit()
 
     return rendered
 
@@ -137,7 +137,7 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
 @web_usr_logged_in
 @web_usr_is_admin
 async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_in: bool):
-    p = Perf('index page', enabled=app_conf.get('testing'))
+    p = Perf('index page')
     validate_board(board)
     p.check('validate board')
 
@@ -172,7 +172,7 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
         report_form_t=generate_report_form(),
     )
     p.check('rendered')
-    print(p)
+    p.emit()
 
     return rendered
 
@@ -208,7 +208,7 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
 async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     validate_board(board)
 
-    p = Perf('catalog', enabled=app_conf.get('testing'))
+    p = Perf('catalog')
     catalog = await generate_catalog(board)
     p.check('query')
 
@@ -235,7 +235,7 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
         is_admin=is_admin,
     )
     p.check('render')
-    print(p)
+    p.emit()
 
     return render
 
@@ -248,7 +248,7 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
 async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: bool):
     validate_board(board)
 
-    p = Perf('catalog page', enabled=app_conf.get('testing'))
+    p = Perf('catalog page')
     catalog = await generate_catalog(board, page_num)
     p.check('query')
 
@@ -275,7 +275,7 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
         is_admin=is_admin,
     )
     p.check('render')
-    print(p)
+    p.emit()
 
     return render
 
@@ -288,7 +288,7 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
 async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool):
     validate_board(board)
 
-    p = Perf('thread', enabled=app_conf.get('testing'))
+    p = Perf('thread')
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board, thread_num)
     p.check('queries')
@@ -320,7 +320,7 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
         report_form_t=generate_report_form(),
     )
     p.check('rendered')
-    print(p)
+    p.emit()
     return render
 
 
@@ -330,7 +330,7 @@ async def v_post(board: str, post_id: int):
     """
     validate_board(board)
 
-    p = Perf('post', enabled=app_conf.get('testing'))
+    p = Perf('post')
     post_2_quotelinks, post = await generate_post(board, post_id)
     p.check('query')
 
@@ -345,5 +345,5 @@ async def v_post(board: str, post_id: int):
     html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks={})))
 
     p.check('render')
-    print(p)
+    p.emit()
     return jsonify(html_content=html_content)

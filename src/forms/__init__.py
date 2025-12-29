@@ -120,13 +120,13 @@ class SearchForm(StripForm):
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
     order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
     title = StringField('Subject', validators=[Optional(), Length(2, 256)])
-    comment = TextAreaField('Comment', validators=[Optional(), Length(2, 1024)])
+    comment = StringField('Comment', validators=[Optional(), Length(2, 1024)])
     op_title = StringField('OP Subject', validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
-    op_comment = TextAreaField('OP Comment', validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
+    op_comment = StringField('OP Comment', validators=[Optional(), Length(2, 1024)], description='Search posts belonging to a thread matching this OP comment.')
     tl = IntegerField('Subject', validators=[Optional(), NumberRange(0, 100)])
-    tlop = SelectField('Subject cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
+    tlop = SelectField('Subject cmp', default=None, choices=valid_numeric_cmp_choices, validate_choice=False)
     cl = IntegerField('Comment', validators=[Optional(), NumberRange(0, 2_000)])
-    clop = SelectField('Comment cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
+    clop = SelectField('Comment cmp', default=None, choices=valid_numeric_cmp_choices, validate_choice=False)
     num = IntegerField('Post Number', validators=[Optional(), NumberRange(min=0)])
     media_filename = StringField('Filename', validators=[Optional(), Length(2, 256)])
     media_hash = StringField('File Hash', validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
@@ -144,10 +144,10 @@ class SearchForm(StripForm):
     is_not_sticky = BooleanField('Not sticky', default=False, validators=[Optional()])
     page = IntegerField(default=1, validators=[NumberRange(min=1)])
     width = IntegerField('Media width', default=None, validators=[Optional(), NumberRange(0, 10_000)])
-    wop = SelectField('Width cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
+    wop = SelectField('Width cmp', default=None, choices=valid_numeric_cmp_choices, validate_choice=False)
     height = IntegerField('Media height', default=None, validators=[Optional(), NumberRange(0, 10_000)])
-    hop = SelectField('Height cmp', default='=', choices=valid_numeric_cmp_choices, validate_choice=True)
-    capcode = SelectField('Capcode', default=Capcode.default.value, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
+    hop = SelectField('Height cmp', default=None, choices=valid_numeric_cmp_choices, validate_choice=False)
+    capcode = SelectField('Capcode', default=None, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
     submit = SubmitField('Search')
 
     async def validate(self, extra_validators=None) -> bool:
@@ -234,14 +234,14 @@ def validate_search_form(form: SearchForm):
         form.has_file.data = True
         form.has_no_file.data = False
 
-    if form.wop.data and form.wop.data not in valid_numeric_cmp_operators:
-        raise BadRequest('width operator is invalid')
-    if form.hop.data and form.hop.data not in valid_numeric_cmp_operators:
-        raise BadRequest('height operator is invalid')
-    if form.tlop.data and form.tlop.data not in valid_numeric_cmp_operators:
-        raise BadRequest('title length operator is invalid')
-    if form.clop.data and form.clop.data not in valid_numeric_cmp_operators:
-        raise BadRequest('comment length operator is invalid')
+    if form.width.data and form.wop.data and form.wop.data not in valid_numeric_cmp_operators:
+        form.wop.data = '='
+    if form.height.data and form.hop.data and form.hop.data not in valid_numeric_cmp_operators:
+        form.hop.data = '='
+    if form.tl.data and form.tlop.data and form.tlop.data not in valid_numeric_cmp_operators:
+        form.tlop.data = '='
+    if form.cl.data and form.clop.data and form.clop.data not in valid_numeric_cmp_operators:
+        form.clop.data = '='
 
 
 class IndexSearchConfigForm(QuartForm):

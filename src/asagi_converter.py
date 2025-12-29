@@ -22,6 +22,7 @@ from posts.quotelinks import (
     get_quotelink_lookup,
     get_quotelink_lookup_raw
 )
+from enums import DbType
 from utils.validation import validate_board, validate_boards
 from db.base_db import BasePlaceHolderGen
 
@@ -245,6 +246,10 @@ def validate_and_generate_params(form_data: dict, phg1: BasePlaceHolderGen) -> t
             s_filter.fragment = f'media_h {operator} {temp_phg}'
 
         if s_filter.like:
+            if '"' not in field_val:
+                field_val = '%'.join(field_val.strip().split())
+            elif field_val.startswith('"') and field_val.endswith('"') and '"' not in field_val[1:-1]:
+                field_val = field_val[1:-1]
             field_val = f'%{field_val}%'
 
         if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
@@ -576,6 +581,32 @@ def substitute_square_brackets(text):
     return text
 
 
+async def get_page_threads_normal(board: str, post_count: int, page_num: int=1) -> list[dict]:
+    sql = f'''
+    select thread_num, nreplies, nimages
+    from `{board}_threads`
+    order by time_bump desc limit {post_count}
+    {get_offset(page_num - 1, post_count)};
+    '''
+    return await db_q.query_dict(sql)
+
+
+async def get_page_threads_deferred(board: str, post_count: int, page_num: int=1) -> list[dict]:
+    sql = f'''
+    with thread_nums as (
+        select thread_num from `{board}_threads`
+        order by time_bump desc limit {post_count}
+        {get_offset(page_num - 1, post_count)}
+    ) select thread_num, nreplies, nimages
+    from thread_nums
+    left join `{board}_threads` using(thread_num);
+    '''
+    return await db_q.query_dict(sql)
+
+
+get_page_threads = get_page_threads_deferred if db_q.db_type == DbType.mysql else get_page_threads_normal
+
+
 async def generate_index(board: str, page_num: int=1):
     """
     - Generates the board index.
@@ -598,19 +629,7 @@ async def generate_index(board: str, page_num: int=1):
         # - omitted_images: int (to be implemented)
     """
     index_post_count = 10
-
-    sql = f'''
-        select
-            thread_num,
-            nreplies,
-            nimages
-        from `{board}_threads`
-        order by time_op desc
-        limit {index_post_count}
-        {get_offset(page_num - 1, index_post_count)}
-    '''
-
-    if not (threads := await db_q.query_dict(sql)):
+    if not (threads := await get_page_threads(board, index_post_count, page_num)):
         return {'threads': []}, {}
 
     phg_size = db_q.Phg().size(threads)
@@ -640,6 +659,7 @@ async def generate_index(board: str, page_num: int=1):
     left join `{board}` on
         latest_replies.reply_num = `{board}`.num
     where latest_replies.reply_number <= 3
+    order by num asc
     '''
 
     thread_nums = tuple(t['thread_num'] for t in threads)
@@ -690,22 +710,10 @@ async def generate_catalog(board: str, page_num: int=1):
     - Does not parse comments with `html_comment()`
     """
     catalog_post_count = 150
-
-    threads_query = f'''
-        select
-            thread_num,
-            nreplies,
-            nimages
-        from `{board}_threads`
-        order by time_op desc
-        limit {catalog_post_count}
-        {get_offset(page_num - 1, catalog_post_count)}
-    '''
-
-    if not (rows := await db_q.query_tuple(threads_query)):
+    if not (rows := await get_page_threads(board, catalog_post_count, page_num)):
         return []
 
-    threads = {row[0]: row[1:] for row in rows}
+    threads = {row['thread_num']: (row['nreplies'], row['nimages']) for row in rows}
 
     posts_query = f'''
         {get_selector(board)}
@@ -875,7 +883,7 @@ async def move_post_to_delete_table(post: dict) -> str:
 
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:
-    """Returns op post nums marked as deleted by 4chan staff."""
+    """Returns op post nums marked as deleted by upstream imageboard staff."""
     
     sql = f"""select num from `{board}` where deleted = 1 and op = 1"""
     rows = await db_q.query_tuple(sql)
@@ -885,7 +893,7 @@ async def get_deleted_ops_by_board(board: str) -> list[int]:
 
 
 async def get_deleted_non_ops_by_board(board: str) -> list[int]:
-    """Returns non-op post nums marked as deleted by 4chan staff."""
+    """Returns non-op post nums marked as deleted by upstream imageboard staff."""
     
     sql = f"""select num from `{board}` where deleted = 1 and op = 0;"""
     rows = await db_q.query_tuple(sql)
@@ -895,7 +903,7 @@ async def get_deleted_non_ops_by_board(board: str) -> list[int]:
 
 
 async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
-    """Returns all nums marked as deleted by 4chan staff in the format [(num, op), ...]"""
+    """Returns all nums marked as deleted by upstream imageboard staff in the format [(num, op), ...]"""
 
     sql = f"""select num, op from `{board}` where deleted = 1;"""
     rows = await db_q.query_tuple(sql)
@@ -969,10 +977,10 @@ async def get_latest_ops_as_catalog(boards: list[str]):
     latest_ops = await asyncio.gather(*(
         db_q.query_dict(f"""
             {get_selector(board)}
-            FROM `{board}`
-            WHERE op = 1
-            ORDER BY num DESC
-            LIMIT 5;
+            from `{board}`
+            where op = 1
+            order by num desc
+            limit 5;
         """)
         for board in boards
     ))

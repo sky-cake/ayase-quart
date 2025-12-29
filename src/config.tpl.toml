@@ -143,6 +143,11 @@ headers = { content-type = 'application/json', Authorization = 'password' }
 version = '1' # only matters for quickwit
 multi_board_search = true # allow searching multiple boards at once?
 
+[index_search.lnx]
+max_concurrency = 4 # default 4, good range = 4-16, keep low for larger datasets to prevent io & lock contention, otherwise higher to scale requests/s
+reader_threads = 8 # vcpus, default 4
+writer_threads = 8 # vcpus, default 4
+writer_buffer = 2_147_483_648 # bytes before mandatory block compaction & disk flush, plan for extra overhead, default 268_435_456 (256MB)
 
 [search_plugins]
 enabled = false # if true, load search plugins from the plugins directory
@@ -162,7 +167,7 @@ hide_post_if_reported = true # true, false
 n_reports_then_hide = 1
 
 
-hide_4chan_deleted_posts = true # hide 4chan staff deleted posts in archive
+hide_upstream_deleted_posts = true # hide upstream staff deleted posts in archive
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 
 filter_cache_type = 'sqlite' # 'sqlite', 'bloom' (not supported yet)

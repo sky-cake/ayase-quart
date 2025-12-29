@@ -1,5 +1,6 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
+from functools import cache
 
 from boards import board_objects
 from configs import (
@@ -12,8 +13,15 @@ from configs import (
     stats_conf,
     vanilla_search_conf
 )
+from configs.conf_loader import load_asset_hashes
 from utils import make_src_path
 from utils.timestamps import ts_2_formatted
+
+@cache
+def get_integrity(filename: str) -> str:
+    if asset_hash := load_asset_hashes().get(filename):
+        return f'integrity="{asset_hash}"'
+    return ''
 
 render_constants = dict(
     site_name=SITE_NAME,
@@ -25,6 +33,7 @@ render_constants = dict(
     endpoint=lambda: request.endpoint,
     url_for=url_for,
     get_flashed_messages=get_flashed_messages,
+    get_integrity=get_integrity,
     format_ts=ts_2_formatted,
     board_objects=board_objects,
     testing=app_conf['testing'],

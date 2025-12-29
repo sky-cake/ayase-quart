@@ -8,6 +8,7 @@ from . import POST_PK, IndexSearchQuery, SearchIndexField, search_index_fields
 from .baseprovider import BaseSearch
 
 pk = POST_PK
+lnx_conf = index_search_conf.get('lnx', {})
 
 
 def get_term_query(fieldname: str, terms: str) -> list[dict]:
@@ -53,10 +54,10 @@ class LnxSearch(BaseSearch):
                 # },
                 'search_fields': ['title', 'comment', 'media_filename'],
                 "boost_fields": {},
-                "reader_threads": 16,
-                "max_concurrency": 4, # keep low for larger datasets
-                "writer_buffer": 4_294_967_296, # 4GB
-                "writer_threads": 16,
+                "max_concurrency": lnx_conf.get('max_concurrency', 4),  # keep low for larger datasets in config.toml
+                "reader_threads": lnx_conf.get('reader_threads', 4),  # set to number of vcpus in config.toml
+                "writer_threads": lnx_conf.get('writer_threads', 4),  # set to number of vcpus in config.toml
+                "writer_buffer": lnx_conf.get('writer_buffer', 268_435_456),  # 256MB
                 "set_conjunction_by_default": True,  # default AND instead of OR for queries
                 "use_fast_fuzzy": False,  # only exact match
                 "strip_stop_words": False,  # keep words like 'the' and 'with'

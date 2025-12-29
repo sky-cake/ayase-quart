@@ -18,5 +18,7 @@ async def init_moderation():
 
         await create_user_if_not_exists(admin_username, admin_password, True, True, set([p for p in Permissions]), notes=None)
 
+    await db_m.pool_manager.close_all_pools()
+
 
 fc: BaseFilterCache = get_filter_cache(mod_conf)

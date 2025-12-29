@@ -3,8 +3,8 @@
 
 {% block scripts -%}
 	{{ super() }}
-	<script type="text/javascript" defer src="/static/js/thread.js" integrity="sha384-cthqILLDUUP6xf82AmpVTicAfNYIbHTxZtJGUxyA6hZnHIeG6A9FnilfcdTVcJ9t"></script>
-	<script type="text/javascript" defer src="/static/js/search.js" integrity="sha384-3dsROq8pg2vFVERuypB0CBhul5U1iXQQC203kNUzmrycWSefdpyc2kN1Ha6k8vPi"></script>
+	<script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
+	<script type="text/javascript" defer src="/static/js/search.js" {{ get_integrity("search.js")|safe }}></script>
 {% endblock %}
 
 {% block body %}
@@ -16,21 +16,16 @@
       <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
       <div class="row">
         <div class="column">
-          {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
           {{ render_field(form.title, placeholder='Post Subject', class='w240') }}
-          {{ render_field(form.comment, placeholder='Post Comment') }}
+          {{ render_field(form.comment, placeholder='Post Comment', class='w240') }}
         </div>
       </div>
       <div class="row">
-        <div class="column">
-          <div class="border mtb-1">
+        <div class="column border">
+          <div class="m1">
             Search results must have OPs where...
             {{ render_field(form.op_title, placeholder='OP Subject', class='w240') }}
-            {{ render_field(form.op_comment, placeholder='OP Comment') }}
+            {{ render_field(form.op_comment, placeholder='OP Comment', class='w240') }}
           </div>
         </div>
       </div>
@@ -66,22 +61,42 @@
       </div>
       <div class="row">
         <div class="column">
-          {{ render_field(form.has_file) }}
-          {{ render_field(form.has_no_file) }}
+          {{ render_field(form.tripcode, placeholder='Tripcode', class='w5em') }}
         </div>
         <div class="column">
-          {{ render_field(form.is_op) }}
-          {{ render_field(form.is_not_op) }}
+          {{ render_field(form.capcode, class='w5em btn') }}
         </div>
       </div>
       <div class="row">
         <div class="column">
-          {{ render_field(form.is_deleted) }}
+          {{ render_field(form.has_no_file) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.has_file) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.is_not_op) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.is_op) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
           {{ render_field(form.is_not_deleted) }}
         </div>
         <div class="column">
-          {{ render_field(form.is_sticky) }}
+          {{ render_field(form.is_deleted) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
           {{ render_field(form.is_not_sticky) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.is_sticky) }}
         </div>
       </div>
       <div class="row">
@@ -96,26 +111,34 @@
       </div>
       <div class="row">
         <div class="column">
-          {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
+          {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
         </div>
         <div class="column">
-          {{ render_field(form.capcode, class='w5em btn') }}
+          {{ render_field(form.media_filename, placeholder='Filename', class='w5em') }}
         </div>
       </div>
-
-        <div class="row">
-          <div class="column">
-            {{ render_field(form.num, placeholder='Post Num', class='w5em') }}
-            {{ render_field(form.tripcode, placeholder='Tripcode', class='w5em') }}
-          </div>
-          <div class="column">
-            {{ render_field(form.media_filename, placeholder='Filename', class='w5em') }}
-            {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
-            <div id="drop_zone">Select/Drop File</div>
-            <input id="media_hash_file_input" class="hidden" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
-          </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.num, placeholder='Post Num', class='w5em') }}
         </div>
-        {{ render_field(form.order_by) }}
+        <div class="column">
+          <div id="drop_zone">Select/Drop File</div>
+          <input id="media_hash_file_input" class="hidden" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.order_by) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.gallery_mode, title='Displays a mosaic of images.', class='w5em') }}
+        </div>
+        <div class="column">
+          {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
+        </div>
+      </div>
         {{ search_plugin_html|safe }}
         <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
       </div>

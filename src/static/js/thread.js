@@ -29,6 +29,8 @@ function setup_media_events() {
     }
 }
 
+const quotelink_resp_cache = new Map();
+const quotelink_fetching = new Set();
 function quotelink_mouseover(event) {
     const quotelink = event.target;
     const backlink = quotelink.parentElement.parentElement.id;
@@ -42,22 +44,35 @@ function quotelink_mouseover(event) {
 
     quotelink_preview_hide();
 
-    if (target_post === null) {
-        fetch(`/${board}/post/${num}`).then(response => {
-            return response.ok ? response.json() : Promise.reject();
-        }).then(data => {
-            let previewContent = data && data.html_content ? data.html_content : get_quotelink_preview_default_string();
-            target_post = document.createElement("div");
-            target_post.innerHTML = previewContent;
-            quotelink_preview_show(target_post, quotelink, backlink_num);
-        }).catch(() => {
-            let default_preview = document.createElement("div");
-            default_preview.innerHTML = get_quotelink_preview_default_string();
-            quotelink_preview_show(default_preview, quotelink, backlink_num);
-        });
-    } else {
+    if (target_post !== null) { // on-page post
         quotelink_preview_show(target_post, quotelink, backlink_num);
+        return;
     }
+
+    const post_key = `/${board}/post/${num}`;
+    target_post = document.createElement("div");
+    if (quotelink_resp_cache.has(post_key)) { // off-page post in cache
+        target_post.innerHTML = quotelink_resp_cache.get(post_key);
+        quotelink_preview_show(target_post, quotelink, backlink_num);
+        return;
+    }
+    if (quotelink_fetching.has(post_key)) return; // already in flight
+
+    quotelink_fetching.add(post_key)
+    fetch(post_key).then(response => {
+        return response.ok ? response.json() : Promise.reject();
+    }).then(data => {
+        let previewContent = data && data.html_content ? data.html_content : get_quotelink_preview_default_string();
+        target_post.innerHTML = previewContent;
+        if (data && data.html_content) { // only cache good results
+            quotelink_resp_cache.set(post_key, data.html_content);
+        }
+    }).catch(() => {
+        target_post.innerHTML = get_quotelink_preview_default_string();
+    }).finally(() => {
+        quotelink_preview_show(target_post, quotelink, backlink_num);
+        quotelink_fetching.delete(post_key); // clear in flight
+    });
 }
 
 function setup_quotelink_events() {
