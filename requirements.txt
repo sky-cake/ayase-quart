@@ -55,7 +55,7 @@ tqdm==4.67.1
 types-aiofiles==24.1.0.20250516
 typing-inspection==0.4.1
 typing_extensions==4.13.2
-urllib3==2.5.0
+urllib3==2.6.0
 werkzeug>=3.1.4
 wrapt==1.17.2
 wsproto==1.2.0
