@@ -281,7 +281,7 @@ ruff check
 ### Other
 JS `<script>` ressources should be served with integrity checksums in production.
 ```bash
-cd src && python update_js_integrity_values.py
+python update_js_integrity_values.py
 ```
 Running the commands above will create/overwrite `src/asset_hashes.json`, which contains the hashes of all javascript files under `/static/js`. This file will be loaded into the templating system and render script tags like so:
 ```html
