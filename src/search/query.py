@@ -38,7 +38,7 @@ class IndexSearchQuery:
     sticky: Optional[bool] = None
     hits_per_page: int = index_search_conf['hits_per_page']
     page: Optional[int] = 1
-    sort: str = 'asc'
+    sort: str = 'desc'
     sort_by: Optional[str] = 'timestamp'
     spoiler: Optional[bool] = None
     highlight: bool = False
@@ -113,8 +113,8 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
     if params['date_before']:
         dt = datetime.combine(params['date_before'], datetime.min.time())
         q.before = int(dt.timestamp())
-    if params['order_by'] in ('asc', 'desc'):
-        q.sort = params['order_by']
+    if (order_by := params.get('order_by')) in ('asc', 'desc'):
+        q.sort = order_by
     if page := params.get('page'):
         q.page = page
 

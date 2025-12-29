@@ -36,7 +36,6 @@ searchform.addEventListener('submit', function (event) {
             if (value === "") continue;
             if (key === 'capcode' && value === "default") continue;
             if (key === 'hits_per_page' && value === "50") continue;
-            if (key === 'order_by' && value === "desc") continue;
             if (key === 'safe_search' && value === "2") continue;
 
             if (operatorToBaseKey[key]) {

@@ -430,7 +430,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     validate_boards(boards)
 
     # some extra validation
-    order_by: str = dict(asc='asc', desc='desc')[form_data['order_by']]
+    order_by: str = dict(asc='asc', desc='desc').get(form_data.get('order_by', 'desc'), 'desc')
     hits_per_page: int = int(form_data['hits_per_page'])
     page_num: int = int(form_data['page'])
 

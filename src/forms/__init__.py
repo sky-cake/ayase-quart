@@ -118,7 +118,7 @@ class SearchForm(StripForm):
     hits_per_page: IntegerField
 
     gallery_mode = BooleanField('Gallery Mode', default=False, validators=[Optional()])
-    order_by = RadioField('Order By', choices=[('asc', 'asc'), ('desc', 'desc')], default='desc')
+    order_by = RadioField('Order By', default=None, choices=[('asc', 'asc'), ('desc', 'desc')], validate_choice=False)
     title = StringField('Subject', validators=[Optional(), Length(2, 256)])
     comment = StringField('Comment', validators=[Optional(), Length(2, 1024)])
     op_title = StringField('OP Subject', validators=[Optional(), Length(2, 256)], description='Search posts belonging to a thread matching this OP subject')
@@ -211,9 +211,6 @@ def validate_search_form(form: SearchForm):
 
     if form.gallery_mode.data and form.has_no_file.data:
         raise BadRequest("search gallery mode only shows files")
-
-    if form.order_by.data not in ['asc', 'desc']:
-        raise BadRequest('order_by is unknown')
 
     if form.is_op.data and form.is_not_op.data:
         raise BadRequest('is_op is contradicted')
