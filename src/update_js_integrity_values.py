@@ -3,6 +3,7 @@ import hashlib
 import os
 import base64
 import json
+from utils import make_src_path
 
 def calculate_integrity(file_path: str) -> str:
     with open(file_path, 'rb') as f:
@@ -52,7 +53,7 @@ def main():
 
     integrities = collect_js_integrities(js_dir)
     # update_html_integrities(html_dir, integrities)
-    with open('./asset_hashes.json', 'w') as f:
+    with open(make_src_path('asset_hashes.json'), 'w') as f:
         json.dump(integrities, f)
 
 if __name__ == '__main__':
