@@ -1,7 +1,7 @@
 import asyncio
 from functools import cache, wraps
 
-from configs import db_conf, db_mod_conf
+from configs import db_conf, db_mod_conf, mod_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from enums import DbType
 
@@ -103,5 +103,8 @@ def close_all_databases(func):
 
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query
-db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
+
+if mod_conf['enabled']:
+    db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
+
 # db_eav = DbHandler({'database': make_src_path('eav.db')}, DbType.sqlite)

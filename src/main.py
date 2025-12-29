@@ -10,8 +10,8 @@ from quart_schema import RequestSchemaValidationError
 from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
-from configs import QuartConfig, app_conf, mod_conf
-from db import db_q, db_m
+from configs import QuartConfig, app_conf, mod_conf, index_search_conf
+from db import db_q
 from db.redis import close_redis
 from moderation import fc, init_moderation
 from render import render_controller
@@ -48,8 +48,17 @@ async def app_exception(e: Exception):
 
 async def close_dbs():
     close_redis()
+
     await db_q.close_db_pool()
-    await db_m.close_db_pool()
+
+    if mod_conf['enabled']:
+        from db import db_m
+        await db_m.close_db_pool()
+
+    if index_search_conf.get('enabled', False):
+        from search import get_index_search_provider
+        sp = get_index_search_provider()
+        await sp.close()
 
 
 def create_app():
