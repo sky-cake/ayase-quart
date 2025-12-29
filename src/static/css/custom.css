@@ -187,6 +187,13 @@ div.reply span.fileThumb img {
     margin-bottom: 0 !important
 }
 
+.reply:target,
+.reply.highlight {
+    background: #1d1d21 !important;
+    border: 1px solid #111 !important;
+    padding: 2px
+}
+
 div.post div.file .fileThumb img {
     border: none;
     float: left
