@@ -11,7 +11,7 @@ from werkzeug.exceptions import HTTPException
 
 from blueprints import blueprints
 from configs import QuartConfig, app_conf, mod_conf
-from db import db_q
+from db import db_q, db_m
 from db.redis import close_redis
 from moderation import fc, init_moderation
 from render import render_controller
@@ -47,9 +47,9 @@ async def app_exception(e: Exception):
 
 
 async def close_dbs():
-    wait_close_db = db_q.close_db_pool()
     close_redis()
-    await wait_close_db
+    await db_q.close_db_pool()
+    await db_m.close_db_pool()
 
 
 def create_app():
@@ -73,11 +73,9 @@ def create_app():
 
     if mod_conf['enabled']:
         app.before_serving(init_moderation)
-        
-        # app.before_serving(fc.init)
+        app.before_serving(fc.init)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
-    app.before_serving(db_q.prime_db_pool)
     app.after_serving(close_dbs)
 
     if mod_conf['enabled']:

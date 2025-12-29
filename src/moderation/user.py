@@ -9,7 +9,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from configs import mod_conf
 from db import db_m
 from db.redis import get_redis
-from enums import DbPool
 
 REDIS_MOD_DB: int = mod_conf.get('redis_db', 1)
 
@@ -102,7 +101,7 @@ async def get_all_users(include_pwd: bool=False)-> Optional[list[dict]]:
     left join user_permissions using (user_id)
     group by users.user_id
     ;"""
-    if not (users := await db_m.query_dict(sql, p_id=DbPool.mod)):
+    if not (users := await db_m.query_dict(sql)):
         return
     for user in users:
         user['permissions'] = get_permissions_from_string(user['permissions'])
@@ -123,7 +122,7 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
     where user_id={db_m.Phg()()}
     group by users.user_id
     ;"""
-    if not (users := await db_m.query_dict(sql, params=(user_id,), p_id=DbPool.mod)):
+    if not (users := await db_m.query_dict(sql, params=(user_id,))):
         return
     user = users[0]
     user['permissions'] = set([Permissions(p) for p in user['permissions'].split(',')]) if user['permissions'] else set()
@@ -133,7 +132,7 @@ async def get_user_by_id(user_id: int) -> Optional[dict]:
 
 
 async def get_user_by_username(username: str, include_pwd: bool=False) -> Optional[dict]:
-    if not (rows := await db_m.query_dict(f"select user_id from users where username={db_m.Phg()()}", params=(username,), p_id=DbPool.mod)):
+    if not (rows := await db_m.query_dict(f"select user_id from users where username={db_m.Phg()()}", params=(username,))):
         return
     user = await get_user_by_id(rows[0]['user_id'])
     if not include_pwd:
@@ -153,7 +152,7 @@ async def create_user_if_not_exists(username: str, password: str, is_active: boo
         values ({db_m.Phg().size(params)})
     returning user_id
     ;"""
-    rows = await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    rows = await db_m.query_dict(sql, params=params, commit=True)
     if not rows:
         raise ValueError(rows)
     user_id = rows[0]['user_id']
@@ -173,18 +172,18 @@ async def edit_user_password_by_username(username: str, password: str) -> str:
     where username={phg()}
     ;"""
     params = (gen_pwd(password), datetime.now(), username,)
-    await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=params, commit=True)
     return 'Password updated.'
 
 
 async def set_user_permissions(user_id: int, permissions: Iterable[Permissions]):
     sql = f'delete from user_permissions where user_id = {db_m.Phg()()};'
-    await db_m.query_dict(sql, params=(user_id,), commit=False, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=(user_id,), commit=False)
 
     phg = db_m.Phg()
     sql = f'insert into user_permissions (user_id, permission_name) values({phg()}, {phg()});'
     for permission in permissions:
-        await db_m.query_dict(sql, params=(user_id, permission.name), commit=True, p_id=DbPool.mod)
+        await db_m.query_dict(sql, params=(user_id, permission.name), commit=True)
 
 
 def gen_pwd(password: str) -> str:
@@ -198,7 +197,7 @@ async def meets_active_admin_requirements(user_id: int) -> bool:
         from users
         where is_admin=1 and is_active=1 and user_id != {db_m.Phg()()}
     ;"""
-    rows = await db_m.query_dict(sql, p_id=DbPool.mod, params=[user_id])
+    rows = await db_m.query_dict(sql, params=[user_id])
     if not rows:
         raise ValueError(rows)
     if rows[0]['active_admin_count'] == 0:
@@ -227,7 +226,7 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
 
     pwd = [gen_pwd(password)] if password else []
     params = pwd + [is_admin, is_active, notes, datetime.now(), user_id,]
-    rows = await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    rows = await db_m.query_dict(sql, params=params, commit=True)
 
     if not rows:
         raise ValueError("Failed to update user")
@@ -249,7 +248,7 @@ async def set_user_active_status(user_id: int, is_active: bool):
     where user_id={phg()}
     ;"""
     params = (is_active, datetime.now(), user_id)
-    await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=params, commit=True)
 
 
 async def set_user_password(user_id: int, new_password: str):
@@ -263,7 +262,7 @@ async def set_user_password(user_id: int, new_password: str):
     where user_id={phg()}
     ;"""
     params = (gen_pwd(new_password), datetime.now(), user_id,)
-    await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=params, commit=True)
 
 
 async def delete_user(user_id: int) -> tuple[str, int]:
@@ -274,7 +273,7 @@ async def delete_user(user_id: int) -> tuple[str, int]:
     if not (await meets_active_admin_requirements(user_id)):
         return 'User not deleted. There must always be at least one active admin.', 403
 
-    await db_m.query_dict(f"delete from users where user_id={db_m.Phg()()};", params=(user_id,), commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(f"delete from users where user_id={db_m.Phg()()};", params=(user_id,), commit=True)
     return f'''User '{user.username}' deleted.''', 200
 
 

@@ -1,41 +1,29 @@
 import asyncpg
 
-from enums import DbPool
-
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
 class PostgresqlPoolManager(BasePoolManager):
     def __init__(self, postgresql_conf=None):
         self.postgresql_conf = postgresql_conf or {}
-        self.pools = {}
+        self.pool = None
 
-    async def create_pool(self, p_id=DbPool.main, dict_row=False):
+
+    async def get_pool(self, dict_row=False):
         """`dict_row` is a placeholder/vestigial."""
-        if p_id in self.pools:
-            return self.pools[p_id]
+        if self.pool:
+            return self.pool
 
-        pool = await asyncpg.create_pool(**self.postgresql_conf)
-        self.pools[p_id] = pool
-        return pool
+        self.pool = await asyncpg.create_pool(**self.postgresql_conf, dict_row=dict_row)
+        return self.pool
 
-    async def get_pool(self, p_id=DbPool.main, store=True, dict_row=False):
-        if not store:
-            return await asyncpg.create_pool(**self.postgresql_conf)
 
-        if p_id not in self.pools:
-            await self.create_pool(p_id, dict_row=dict_row)
-
-        return self.pools[p_id]
-
-    async def close_pool(self, p_id=DbPool.main):
-        if p_id in self.pools:
-            await self.pools[p_id].close()
-            del self.pools[p_id]
-
-    async def close_all_pools(self):
-        for p_id in list(self.pools.keys()):
-            await self.close_pool(p_id)
+    async def close_pool(self):
+        if self.pool is None:
+            return
+        
+        await self.pool.close()
+        self.pool = None
 
 
 class PostgresqlQueryRunner(BaseQueryRunner):
@@ -44,8 +32,8 @@ class PostgresqlQueryRunner(BaseQueryRunner):
         self.sql_echo = sql_echo
 
 
-    async def run_query(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
-        pool = await self.pool_manager.get_pool(p_id, dict_row=dict_row)
+    async def run_query(self, query: str, params=None, commit=False, dict_row=True):
+        pool = await self.pool_manager.get_pool(dict_row=dict_row)
 
         async with pool.acquire() as conn:
             if self.sql_echo:
@@ -67,11 +55,12 @@ class PostgresqlQueryRunner(BaseQueryRunner):
             return await conn.fetch(query, *params if params else [])
 
 
-    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main):
-        return await self.run_query(query, params, p_id=p_id, dict_row=False)
+    async def run_query_fast(self, query: str, params=None):
+        return await self.run_query(query, params, dict_row=False)
     
-    async def run_script(self, query: str, p_id=DbPool.main):
-        return await self.run_query_fast(query, p_id=p_id)
+    
+    async def run_script(self, query: str):
+        return await self.run_query_fast(query)
 
 
 class PostgresqlPlaceholderGen(BasePlaceHolderGen):

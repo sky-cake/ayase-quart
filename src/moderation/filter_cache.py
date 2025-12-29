@@ -9,7 +9,6 @@ from asagi_converter import (
 )
 from boards import board_shortnames
 from db import db_m
-from enums import DbPool
 from utils import make_src_path, read_file
 
 
@@ -142,11 +141,11 @@ class FilterCacheSqlite(BaseFilterCache):
             sql_statements = read_file(make_src_path("moderation", "sql", script)).split(";")
             for sql in sql_statements:
                 sql += ";"
-                await db_m.query_dict(sql, p_id=DbPool.mod, commit=True)
+                await db_m.query_dict(sql, commit=True)
 
 
     async def _is_cache_populated(self) -> bool:
-        bn_count = await db_m.query_tuple("select count(*) from board_nums_cache", p_id=DbPool.mod)
+        bn_count = await db_m.query_tuple("select count(*) from board_nums_cache")
         return bool(bn_count[0][0])
 
 
@@ -157,7 +156,7 @@ class FilterCacheSqlite(BaseFilterCache):
         It's also better than adding extra filters (is deleted, and regexes) in our database queries.
         We will populate our cache with reported posts only.
         """
-        pool: Connection = await db_m.pool_manager.get_pool(p_id=DbPool.mod)
+        pool: Connection = await db_m.pool_manager.get_pool()
         iter_funcs = [
             self.get_numops_by_board_and_regex_iter,
             self.get_deleted_numops_per_board_iter,
@@ -171,14 +170,14 @@ class FilterCacheSqlite(BaseFilterCache):
                 await pool.executemany("insert or ignore into board_nums_cache (board_shortname, num, op) values (?, ?, ?)", params)
                 await pool.commit()
 
-            rows = await db_m.query_tuple("select board_shortname, op, group_concat(distinct num) as nums from report_parent group by board_shortname, op", p_id=DbPool.mod)
+            rows = await db_m.query_tuple("select board_shortname, op, group_concat(distinct num) as nums from report_parent group by board_shortname, op")
             await pool.executemany("insert or ignore into board_nums_cache (board_shortname, op, num) values (?, ?, ?)", rows)
             await pool.commit()
 
 
     async def _teardown(self):
         sql = """delete from board_nums_cache"""
-        pool: Connection = await db_m.pool_manager.get_pool(p_id=DbPool.mod)
+        pool: Connection = await db_m.pool_manager.get_pool()
         await pool.execute(sql)
         await pool.commit()
 

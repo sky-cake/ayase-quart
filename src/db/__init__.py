@@ -3,7 +3,7 @@ from functools import cache, wraps
 
 from configs import db_conf, db_mod_conf
 from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
-from enums import DbPool, DbType
+from enums import DbType
 
 
 @cache
@@ -77,28 +77,28 @@ class DbHandler:
         self.Phg: type[BasePlaceHolderGen] = self.db_module['PlaceholderGenerator'] # "Place Holder Generator"
         self.length_method = 'CHAR_LENGTH' if db_type == DbType.mysql else 'LENGTH' # sqlite and pg
 
-    async def prime_db_pool(self):
-        await self.pool_manager.create_pool()
+    async def get_db_pool(self):
+        await self.pool_manager.get_pool()
 
     async def close_db_pool(self):
         await self.pool_manager.close_pool()
 
-    async def query_tuple(self, query: str, params=None, p_id=DbPool.main, commit=False):
-        return await self.query_runner.run_query_fast(query, params=params, p_id=p_id, commit=commit)
+    async def query_tuple(self, query: str, params=None, commit=False):
+        return await self.query_runner.run_query_fast(query, params=params, commit=commit)
 
-    async def query_dict(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
-        return await self.query_runner.run_query(query, params=params, commit=commit, p_id=p_id, dict_row=dict_row)
+    async def query_dict(self, query: str, params=None, commit=False, dict_row=True):
+        return await self.query_runner.run_query(query, params=params, commit=commit, dict_row=dict_row)
     
-    async def run_script(self, query: str, p_id=DbPool.main):
-        return await self.query_runner.run_script(query, p_id=p_id)
+    async def run_script(self, query: str):
+        return await self.query_runner.run_script(query)
 
 
 def close_all_databases(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         func(*args, **kwargs)
-        asyncio.run(db_q.pool_manager.close_all_pools())
-        asyncio.run(db_m.pool_manager.close_all_pools())
+        asyncio.run(db_q.close_db_pool())
+        asyncio.run(db_m.close_db_pool())
     return wrapper
 
 

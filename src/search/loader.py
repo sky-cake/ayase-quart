@@ -68,7 +68,7 @@ class BoardLoaderPipeline:
         self.search_provider = search_provider
 
     async def run(self):
-        wait_pool = db_q.prime_db_pool()
+        wait_pool = db_q.get_db_pool()
         self.process_pool = Executor(max_workers=EXEC_PROCESSES)
         await wait_pool
         try:

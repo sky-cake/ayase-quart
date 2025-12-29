@@ -5,7 +5,6 @@ from asagi_converter import get_post, move_post_to_delete_table
 from configs import index_search_conf, mod_conf
 from db import db_m, db_q
 from enums import (
-    DbPool,
     ModStatus,
     PublicAccess,
     ReportAction,
@@ -139,7 +138,7 @@ async def get_report_count(
         w = ' and '.join(where_child)
         sql += f' and report_parent_id in ( select report_parent_id from report_child where {w})'
 
-    if (reports := (await db_m.query_dict(sql, params=params, p_id=DbPool.mod))):
+    if (reports := (await db_m.query_dict(sql, params=params))):
         return reports[0]['report_count']
     return 0
 
@@ -222,24 +221,24 @@ async def get_reports(
     """
     params.extend([page_size, page_num * page_size])
 
-    if (reports := await db_m.query_dict(sql, params=params, p_id=DbPool.mod)):
+    if (reports := await db_m.query_dict(sql, params=params)):
         return reports
     return []
 
 
 async def get_report_by_id(report_parent_id: int) -> Optional[dict]:
-    if (reports := await db_m.query_dict(f'select * from report_parent where report_parent_id={db_m.Phg()()};', params=(report_parent_id,), p_id=DbPool.mod)):
+    if (reports := await db_m.query_dict(f'select * from report_parent where report_parent_id={db_m.Phg()()};', params=(report_parent_id,))):
         return reports[0]
 
 
 async def get_report_by_board(board: str) -> Optional[list[dict]]:
-    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.Phg()()};', params=(board,), p_id=DbPool.mod)):
+    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={db_m.Phg()()};', params=(board,))):
         return reports
 
 
 async def get_report_by_post_num(board: str, num: int) -> Optional[list[dict]]:
     phg = db_m.Phg()
-    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={phg()} and num={phg()};', params=(board, num,), p_id=DbPool.mod)):
+    if (reports := await db_m.query_dict(f'select * from report_parent where board_shortname={phg()} and num={phg()};', params=(board, num,))):
         return reports
 
 
@@ -247,7 +246,7 @@ async def get_report_parent_id(board: str, num: int) -> Optional[int]:
     report_parent_id = None
     phg = db_m.Phg()
     sql = f'select report_parent_id from report_parent where board_shortname = {phg()} and num = {phg()};'
-    rows = await db_m.query_dict(sql, params=[board, num], p_id=DbPool.mod)
+    rows = await db_m.query_dict(sql, params=[board, num])
     if rows:
         report_parent_id = rows[0]['report_parent_id']
     return report_parent_id
@@ -276,7 +275,7 @@ async def create_report(
             report_parent (board_shortname, num, thread_num, op, mod_status, public_access, mod_notes, last_updated_at)
             values ({db_m.Phg().size(params_parent)}) returning report_parent_id
         ;"""
-        report_parent_id = (await db_m.query_dict(sql, params=params_parent, commit=True, p_id=DbPool.mod))[0]['report_parent_id']
+        report_parent_id = (await db_m.query_dict(sql, params=params_parent, commit=True))[0]['report_parent_id']
         if not report_parent_id:
             raise ValueError(report_parent_id)
 
@@ -286,7 +285,7 @@ async def create_report(
             report_child (report_parent_id, submitter_ip, submitter_notes, submitter_category, created_at)
         values ({db_m.Phg().size(params_child)})
     ;"""
-    await db_m.query_dict(sql, params=params_child, commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=params_child, commit=True)
 
     return report_parent_id
 
@@ -319,7 +318,7 @@ async def edit_report_if_exists(report_parent_id: int, public_access: PublicAcce
         where report_parent_id={phg()}
     ;"""
     params = params + [datetime.now(), report_parent_id]
-    await db_m.query_dict(sql, params=params, commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=params, commit=True)
     return report
 
 
@@ -329,7 +328,7 @@ async def delete_report_if_exists(report_parent_id: int) -> dict:
 
     # cascading will delete `report_child` records
     sql = f'delete from report_parent where report_parent_id={db_m.Phg()()};'
-    await db_m.query_dict(sql, params=(report_parent_id,), commit=True, p_id=DbPool.mod)
+    await db_m.query_dict(sql, params=(report_parent_id,), commit=True)
 
     return report
 

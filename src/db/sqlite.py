@@ -1,7 +1,6 @@
 import aiosqlite
 
 from configs import mod_conf
-from enums import DbPool
 
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
@@ -22,9 +21,14 @@ class SqlitePoolManager(BasePoolManager):
     def __init__(self, sqlite_conf=None, sql_echo=False):
         self.sqlite_conf = sqlite_conf or {}
         self.sql_echo = sql_echo
-        self.pools = {}
+        self.pool = None
 
-    async def create_pool(self, p_id=DbPool.main, dict_row=False):
+
+    async def get_pool(self, dict_row=False):
+        if self.pool:
+            self.pool.row_factory = row_factory if dict_row else None
+            return self.pool
+
         db_path = self.sqlite_conf['database']
         load_sqlite_into_memory = self.sqlite_conf.get('load_sqlite_into_memory')
 
@@ -50,37 +54,15 @@ class SqlitePoolManager(BasePoolManager):
             # regex_version = await cur.fetchone()
             # print(f'regex_version(): {regex_version}')
 
-        self.pools[p_id] = pool
-        return pool
+        self.pool = pool
+        return self.pool
 
-    async def get_pool(self, p_id=DbPool.main, store=True, dict_row=False):
-        if not store:
-            return await self.create_pool(p_id, dict_row=dict_row)
 
-        if p_id in self.pools:
-            # assuming this is cheap to toggle
-            # we avoid having to juggle p_id codes this way
-            # still get to have multiple pools for asagi, moderation, etc. if we want
-            self.pools[p_id].row_factory = row_factory if dict_row else None
-            return self.pools[p_id]
+    async def close_pool(self):
+        if self.pool is None:
+            return
 
-        pool = await self.create_pool(p_id, dict_row=dict_row)
-        # print(f'created sqlite pool {pool}')
-        return pool
-
-    async def close_pool(self, p_id=DbPool.main):
-        if pool := self.pools.pop(p_id, None):
-            await pool.close()
-
-    async def close_all_pools(self):
-        for pool in self.pools.values():
-            await pool.close()
-        self.pools.clear()
-
-    async def save_all_pools(self):
-        for pool in self.pools.values():
-            # print(f'saving sqlite pool: {pool}')
-            await pool.commit()
+        await self.pool.close()
 
 
 class SqliteQueryRunner(BaseQueryRunner):
@@ -88,8 +70,9 @@ class SqliteQueryRunner(BaseQueryRunner):
         self.pool_manager = pool_manager
         self.sql_echo = sql_echo
 
-    async def run_query(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
-        pool = await self.pool_manager.get_pool(p_id, dict_row=dict_row)
+
+    async def run_query(self, query: str, params=None, commit=False, dict_row=True):
+        pool = await self.pool_manager.get_pool(dict_row=dict_row)
 
         if self.sql_echo:
             print('::SQL::', query)
@@ -104,12 +87,13 @@ class SqliteQueryRunner(BaseQueryRunner):
 
             return results
 
-    async def run_query_fast(self, query: str, params=None, p_id=DbPool.main, commit=False):
-        return await self.run_query(query, params, p_id=p_id, dict_row=False, commit=commit)
+
+    async def run_query_fast(self, query: str, params=None, commit=False):
+        return await self.run_query(query, params, dict_row=False, commit=commit)
 
 
-    async def run_query_many(self, query: str, params=None, commit=False, p_id=DbPool.main, dict_row=True):
-        pool = await self.pool_manager.get_pool(p_id, dict_row=dict_row)
+    async def run_query_many(self, query: str, params=None, commit=False, dict_row=True):
+        pool = await self.pool_manager.get_pool(dict_row=dict_row)
 
         if self.sql_echo:
             print('::SQL::', query)
@@ -124,8 +108,9 @@ class SqliteQueryRunner(BaseQueryRunner):
 
             return results
         
-    async def run_script(self, query: str, p_id=DbPool.main):
-        pool = await self.pool_manager.get_pool(p_id)
+
+    async def run_script(self, query: str):
+        pool = await self.pool_manager.get_pool()
 
         if self.sql_echo:
             print('::SQL::', query)
