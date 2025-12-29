@@ -189,13 +189,17 @@ def strip_2_none(s: str) -> str | None:
 
 valid_numeric_cmp_operators = ('=', '>', '<', '>=', '<=')
 def validate_search_form(form: SearchForm):
-    if not form.boards.data:
+    if not (boards := form.boards.data):
         raise BadRequest('select a board')
 
     if len(form.boards.data) < 1:
         raise BadRequest('select a board')
 
-    if len(form.boards.data) > len(board_shortnames):
+    if isinstance(boards, str):
+        # radio buttons makes form.boards.data str instead of list[str]
+        boards = [boards]
+
+    if len(boards) > len(board_shortnames):
         raise BadRequest('too many boards selected')
 
     if not form.boards.validate_choice:
