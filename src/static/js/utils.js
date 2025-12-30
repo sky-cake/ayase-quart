@@ -96,9 +96,10 @@ function plural_past(val) {
  * Render utc unix timestamp to client locale + relative humanized
  * @param {number} ts utc unix timestamp
  * @param {Date|undefined} now optional Date() object when calculating many
+ * @param {Boolean|undefined} relative_time_nl Put (N <unit of time> ago) on a new line?
  * @returns {string} formatted timestamp
  */
-function format_timestamp(ts, now=undefined) {
+function format_timestamp(ts, now=undefined, relative_time_nl=false) {
     const postDate = new Date(ts * 1000);
     const _now = now ?? new Date();
     const delta = _now - postDate;
@@ -126,8 +127,11 @@ function format_timestamp(ts, now=undefined) {
     } else if (seconds) {
         relative_time = `${seconds} sec${plural_past(seconds)}`;
     }
+
+	let sep = ' ';
+	if (relative_time_nl) sep = '<br>'
     
-    return `${formatted_ts} (${relative_time})`;
+    return `${formatted_ts}${sep}(${relative_time})`;
 }
 
 const video_extensions = new Map([

@@ -146,12 +146,13 @@ function set_up_board_buttons() {
 
 function updateDateTimes() {
     const dateTimeElements = doc_query_all('.dateTime');
+    const is_catalog = Boolean(document.getElementById('catalog_threads'));
     const now = new Date();
     for (const element of dateTimeElements) {
         const data_utc = get_data_integer(element, 'utc');
         if (data_utc) {
-            const formattedString = format_timestamp(data_utc, now);
-            element.textContent = formattedString;
+            const formattedString = format_timestamp(data_utc, now, is_catalog);
+            element.innerHTML = formattedString;
         }
     }
 }
