@@ -188,6 +188,15 @@ fi
 ```
 
 
+## Updating AQ
+
+The `main` branch of this repo is considered to be the latest and greatest version of AQ, ready for production.
+
+1. `git pull --ff origin main`
+1. `python update_js_integrity_values.py`
+1. `sudo systemctl restart _aq && sleep 1 && sudo systemctl status _aq` assuming a systemd service named `_aq.service` exists.
+1. Note: it's possible fields in `configs.toml` have been added or removed.
+
 ## Certificates
 
 Certificates are required for moderation (any web-based authentication). AQ will not work without them unless `moderation.auth.cookie_secure=false`.
