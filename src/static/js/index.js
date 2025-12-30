@@ -6,7 +6,7 @@ function remove_cloned_image() {
 }
 
 function set_up_clickable_media() {
-    const els = doc_query_all("img, .media_togg");
+    const els = doc_query_all(".mtog");
     for (const el of els) {
         el.removeEventListener("click", handleMediaClick);
         el.addEventListener("click", handleMediaClick);
@@ -17,7 +17,7 @@ function handleMediaClick(e) {
     const el = e.currentTarget;
     const container = el.closest(".media_cont");
     if (!container) return;
-    const media = container.querySelector("img, video");
+    const media = container.querySelector("img.mtog, video.mtog");
     if (!media) return;
 
     expandMedia(media);
@@ -26,7 +26,7 @@ function handleMediaClick(e) {
 function expandMedia(e) {
     remove_cloned_image();
     const container = e.closest(".media_cont");
-    const toggle = container?.querySelector(".media_togg");
+    const toggle = container?.querySelector(".mtog");
     if (!container) return;
 
     const ext = e.dataset.ext;
@@ -50,7 +50,7 @@ function expandMedia(e) {
             video.dataset.full_media_src = e.dataset.full_media_src;
             video.dataset.width = e.dataset.width || e.getAttribute("width");
             video.dataset.height = e.dataset.height || e.getAttribute("height");
-            if (e.dataset.class) video.dataset.class = e.dataset.class;
+            if (e.classList) video.classList = e.classList;
 
             const src = document.createElement("source");
             src.src = e.dataset.full_media_src;
@@ -70,7 +70,7 @@ function expandMedia(e) {
             img.dataset.full_media_src = e.dataset.full_media_src;
             img.width = e.dataset.width || 250;
             img.height = e.dataset.height || 174;
-            if (e.dataset.class) img.className = e.dataset.class;
+            if (e.classList) img.classList = e.classList;
             img.loading = "lazy";
 
             container.replaceChild(img, e);
@@ -87,7 +87,7 @@ function expandMedia(e) {
             img.dataset.full_media_src = e.dataset.full_media_src;
             img.width = e.dataset.width || 250;
             img.height = e.dataset.height || 174;
-            if (e.dataset.class) img.className = e.dataset.class;
+            if (e.classList) img.classList = e.classList;
             img.loading = "lazy";
 
             container.replaceChild(img, e);
@@ -101,7 +101,7 @@ function expandMedia(e) {
             img.dataset.full_media_src = e.dataset.full_media_src;
             img.dataset.width = e.dataset.width || e.getAttribute("width");
             img.dataset.height = e.dataset.height || e.getAttribute("height");
-            if (e.dataset.class) img.dataset.class = e.dataset.class;
+            if (e.classList) img.classList = e.classList;
             img.style = "max-height:60vh;max-width:80vw;";
             img.removeAttribute("width");
             img.removeAttribute("height");
@@ -144,21 +144,6 @@ function set_up_board_buttons() {
     }
 }
 
-function setup_code_clipboard() {
-	for (const codeElement of doc_query_all('code')) {
-		const copyButton = document.createElement('button');
-		copyButton.innerHTML = `copy`;
-		copyButton.classList.add('codecopybtn');
-	
-		codeElement.parentNode.insertBefore(copyButton, codeElement.nextSibling);
-	
-		copyButton.addEventListener('click', function () {
-			const codeContent = codeElement.textContent;
-			copy_code(copyButton, codeContent.replaceAll('<br>', '\n').replaceAll('&gt;', '>').replaceAll('&lt;', '<'), 'copy', 'copied', 'failed');
-		});
-	}
-}
-
 function updateDateTimes() {
     const dateTimeElements = doc_query_all('.dateTime');
     const now = new Date();
@@ -169,20 +154,6 @@ function updateDateTimes() {
             element.textContent = formattedString;
         }
     }
-}
-
-// fts
-function setup_data_toggles() {
-	for (const el of doc_query_all("[data-toggle]")) {
-		el.addEventListener("click", () => {
-			const idee = get_data_string(el, 'toggle');
-			const target = document.getElementById(idee);
-			if (target) {
-				const isVisible = getComputedStyle(target).display !== "none";
-				target.style.display = isVisible ? "none" : "block";
-			}
-		});
-	}
 }
 
 // global variable video expand
@@ -207,7 +178,6 @@ function setup_video_intersection_events() {
 
 function init_index() {
 	updateDateTimes();
-	setup_data_toggles();
 	setup_video_intersection_events();
     set_up_clickable_media();
     set_up_board_buttons();
