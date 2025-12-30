@@ -84,6 +84,7 @@ Assuming you have a data source set up, you can:
     sudo systemctl restart redis
     sudo systemctl status redis
     ```
+1. `python update_js_integrity_values.py` will set HTML `<script>` integrity checksums in a file `src/asset_hashes.json`.
 1. `python main.py`
 1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
 1. [Optional] Set up a full text search (FTS) database for index searching.
