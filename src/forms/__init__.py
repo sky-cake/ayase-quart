@@ -84,7 +84,7 @@ def is_too_long(s: str):
 
 
 def date_filter(x):
-    return datetime.strptime(x, '%Y-%m-%d') if x and re.fullmatch(r'\d\d\d\d-\d\d-\d\d', x) else None
+    return datetime.fromisoformat(x) if x else None
 
 
 class MultiCheckboxCSVField(MultiCheckboxField):
