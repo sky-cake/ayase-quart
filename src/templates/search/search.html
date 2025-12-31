@@ -36,7 +36,7 @@
         <div class="field_label w3em">End</div>{{ form.date_before }}
       </div>
       <div class="row">
-        <div class="column">
+        <div class="column border">
           {% if form.boards.type == 'MultiCheckboxCSVField' %}
           <div class="mb05 d-flex">
             <div class="field_label">Boards</div>
@@ -133,7 +133,7 @@
       </div>
       <div class="row">
         <div class="column">
-          {{ render_field(form.gallery_mode, title='Displays a mosaic of images.', class='w5em') }}
+          {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
         </div>
         <div class="column">
           {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
