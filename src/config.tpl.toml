@@ -95,8 +95,8 @@ max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
 
 [media]
 # set image_uri or thumb_uri to '' if you don't want any boards to serve image, or thumb media, respectively
-image_uri = "https://192.168.1.16:9003/static/ritual/{board}/image" # must contain {board}
-thumb_uri = "https://192.168.1.16:9003/static/ritual/{board}/thumb" # must contain {board}
+image_uri = "https://192.168.1.16:9001/static/ritual/{board}/image" # must contain {board}
+thumb_uri = "https://192.168.1.16:9001/static/ritual/{board}/thumb" # must contain {board}
 
 # Below are optional settings for serving media outside the quart app's static path
 #       i.e. outside of '/path/to/ayase_quart/src/static'

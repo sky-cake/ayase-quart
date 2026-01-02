@@ -115,7 +115,7 @@ if not app_conf.get('testing', False):
     print('and point hypercorn to this asgi app with one of the following:')
     print('    1. /aq/venv/bin/hypercorn --config file:/aq/src/hypercorn.tpl.py /aq/src/main:app')
     print('    2. hypercorn --config hypercorn.tpl.toml /aq/src/main:app')
-    print('    3. hypercorn --bind 0.0.0.0:9003 --workers 3 /aq/src/main:app')
+    print('    3. hypercorn --bind 0.0.0.0:9001 --workers 3 /aq/src/main:app')
     print('Note: these are examples only. You ought to study the configs you use.')
     print('Hypercorn configs are documented at https://hypercorn.readthedocs.io/en/latest/how_to_guides/configuring.html')
 
