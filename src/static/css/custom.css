@@ -1068,12 +1068,16 @@ h3 {
         max-height: none;
         overflow-y: unset;
     }
+    .cover {
+        width: 30vw;
+        height: 30vw;
+    }
 }
 
 @media (max-width: 420px) {
     .cover {
-        width: 150px;
-        height: 150px;
+        width: 30vw;
+        height: 30vw;
     }
 
     .form-control {
