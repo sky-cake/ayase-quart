@@ -66,6 +66,7 @@ function quotelink_mouseover(event) {
         target_post.innerHTML = previewContent;
         if (data && data.html_content) { // only cache good results
             quotelink_resp_cache.set(post_key, data.html_content);
+            quotelink.href = `/${board}/thread/${data.thread_num}${id_post_num}`; // update off-page href with real thread_num
         }
     }).catch(() => {
         target_post.innerHTML = get_quotelink_preview_default_string();

@@ -346,4 +346,4 @@ async def v_post(board: str, post_id: int):
 
     p.check('render')
     p.emit()
-    return jsonify(html_content=html_content)
+    return jsonify(html_content=html_content, thread_num=post['thread_num'])
