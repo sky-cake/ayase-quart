@@ -1,7 +1,7 @@
 // image hover display
 function media_mouseout(event) {
     if (event.target.tagName.toLowerCase() === 'img') {
-        remove_cloned_image();
+        remove_overlay_image();
     }
 }
 
