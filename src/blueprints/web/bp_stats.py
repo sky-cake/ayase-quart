@@ -29,6 +29,7 @@ async def v_stats(logged_in: bool, is_admin: bool):
     return await render_controller(
         template_stats,
         board_objects=board_objects,
+        logo_filename='logo.png',
         title='Stats',
         tab_title='Stats',
         logged_in=logged_in,

@@ -6,11 +6,12 @@
 <script type="text/javascript" defer src="/static/js/chart.js" {{ get_integrity("chart.js")|safe }}></script>
 <script type="text/javascript" defer src="/static/js/stats.js" {{ get_integrity("stats.js")|safe }}></script>
 {% endblock %}
-
 {% block body %}
+<div class="center mt-1">
+    <img id="logo" src="{{url_for('static', filename=logo_filename)}}"/>
+</div>
 <div class="mw1000 mauto">
   <div>
-    <img id="logo" src="{{ url_for('static', filename='logo.png') }}" />
   </div>
   <h2>Archive Posts per Month</h2>
   <p>Note: fraction-of-posts-archived values are rough estimates. They are simply calculated by doing: <span class="codetext">number_of_posts_archived / [max_post_num - min_post_num]</span>.</p>
