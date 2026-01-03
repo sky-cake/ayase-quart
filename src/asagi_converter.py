@@ -12,7 +12,7 @@ from textwrap import dedent
 from async_lru import alru_cache
 from werkzeug.security import safe_join
 
-from configs import stats_conf
+from configs import stats_conf, vanilla_search_conf
 from db import db_q
 from db.redis import get_redis
 from posts.capcodes import Capcode
@@ -431,7 +431,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     # some extra validation
     order_by: str = dict(asc='asc', desc='desc').get(form_data.get('order_by', 'desc'), 'desc')
-    hits_per_page: int = int(form_data['hits_per_page'])
+    hits_per_page = int(form_data.get('hits_per_page') or vanilla_search_conf.get('hits_per_page', 50))
     page_num: int = int(form_data['page'])
 
     if max_hits and (page_num * hits_per_page > max_hits):

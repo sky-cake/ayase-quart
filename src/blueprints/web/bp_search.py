@@ -20,6 +20,7 @@ from jinja2 import Template
 from quart_wtf import QuartForm
 from moderation.report import generate_report_form
 
+MAX_HITS_PER_PAGE = max(index_search_conf.get('hits_per_page', 50), vanilla_search_conf.get('hits_per_page', 50))
 
 class SearchHandler:
     form: SearchForm
@@ -200,7 +201,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
                 # if total_hits == handler.form.hits_per_page.data:
                 #     await flash('- Max page size reached. Note that AQ does not perform pagination with search plugins. To find other results, specify other query arguments.')
             else:
-                page_count = total_pages(total_hits, handler.form.hits_per_page.data)
+                page_count = total_pages(total_hits, handler.form.hits_per_page.data or MAX_HITS_PER_PAGE)
                 page_links = template_pagination_links(endpoint_path, handler.form.data, page_count, section='resulttop')
                 p.check('templated links')
 

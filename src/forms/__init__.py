@@ -169,7 +169,7 @@ class SearchFormSQL(SearchForm):
     else:
         boards = RadioCSVField('Board', choices=board_shortnames, validate_choice=True)
 
-    hits_per_page = IntegerField('Per page', default=vanilla_search_conf['hits_per_page'], validators=[NumberRange(1, vanilla_search_conf['hits_per_page'])], description='Per board')
+    hits_per_page = IntegerField('Per page', validators=[Optional(), NumberRange(1, per_page := vanilla_search_conf['hits_per_page'])], description=f'Per board max {per_page}')
 
 
 class SearchFormFTS(SearchFormSQL):
@@ -178,7 +178,7 @@ class SearchFormFTS(SearchFormSQL):
     else:
         boards = RadioCSVField('Board', choices=board_shortnames, validate_choice=True)
 
-    hits_per_page = IntegerField('Per page', default=index_search_conf['hits_per_page'], validators=[NumberRange(1, index_search_conf['hits_per_page'])], description='Per board')
+    hits_per_page = IntegerField('Per page', validators=[Optional(), NumberRange(1, per_page := index_search_conf['hits_per_page'])], description=f'Per board max {per_page}')
 
 
 def strip_2_none(s: str) -> str | None:
