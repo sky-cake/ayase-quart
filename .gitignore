@@ -11,6 +11,7 @@ target/
 *.log
 secret.txt
 asset_hashes.json
+*.dump
 
 # Virtualenvs
 .env

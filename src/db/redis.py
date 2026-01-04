@@ -7,7 +7,7 @@ def get_redis(db: int) -> Redis:
     if not hasattr(get_redis, 'clients'):
         get_redis.clients = {}
     if db not in get_redis.clients:
-        client = Redis(**redis_conf, db=db)
+        client = Redis(**redis_conf, db=db, decode_responses=False)
         get_redis.clients[db] = client
     return get_redis.clients[db]
 

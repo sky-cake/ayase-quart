@@ -6,5 +6,8 @@ def get_filter_cache(mod_conf: dict) -> BaseFilterCache:
         case 'sqlite':
             from .sqlite_fc import FilterCacheSqlite
             return FilterCacheSqlite(mod_conf)
+        case 'redis':
+            from .redis_fc import FilterCacheRedis
+            return FilterCacheRedis(mod_conf)
         case _:
             raise NotImplementedError(f'Unsupported filter cache type: {filter_cache_type}')

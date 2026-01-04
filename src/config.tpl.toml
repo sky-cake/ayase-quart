@@ -170,7 +170,7 @@ n_reports_then_hide = 1
 hide_upstream_deleted_posts = true # hide upstream staff deleted posts in archive
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 
-filter_cache_type = 'sqlite' # 'sqlite', 'bloom' (not supported yet)
+filter_cache_type = 'sqlite' # 'sqlite', 'redis'
 
 regex_filter = '' # never serve posts matching this regex pattern e.g. 'gentoo|based'
 path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/releases
@@ -179,14 +179,23 @@ path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/rel
 # if empty, images can still be served if their URLs are known
 hidden_images_path = '' # e.g. '/home/garbage/disposal'
 
-# Use redis to cache user auth and filter reported posts
-# Ensure redis connection is valid (see [redis])
-redis = true # true, false.
-redis_db = 1 # redis database id
-
 [moderation.sqlite]
 database = 'path/to/moderation.db' # path to the moderation database
 load_sqlite_into_memory = false # this must be false to persist data
+
+# Use redis to cache user auth and filter reported posts
+# Ensure redis connection is valid (see [redis])
+[moderation.redis]
+db = 4 # redis database id (default 4)
+
+fc_key_prefix = 'filter_cache:' # (default 'filter_cache:')
+fc_dump_dir = '../data/filter_cache/' # (default '../data/filter_cache/')
+bloom_err_rate = 0.01  # 1% false positive rate (default 0.01)
+bloom_init_size = 4_000_000  # Initial capacity per board (default 8_000_000)
+bloom_resize_mult = 2  # Growth factor when capacity is reached (default 2)
+cuckoo_capacity = 10_000 # total capacity per board (default 10_000)
+cuckoo_bucket = 2000 # capacity per bucket (default 1000)
+cuckoo_iter_max = 5 # bucket swaps per (board, num) (default 10)
 
 [moderation.auth]
 cookie_samesite='Strict'
