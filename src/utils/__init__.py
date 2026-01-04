@@ -1,5 +1,4 @@
 import os
-from time import perf_counter
 
 
 def printr(msg):

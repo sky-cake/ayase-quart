@@ -54,6 +54,12 @@ div.sideArrows {
     margin-top: 0;
     margin-left: 2px
 }
+.sideArrows::after {
+	content: '>>';
+}
+.sourcelink::after {
+	content: 'Source';
+}
 
 div.thread,
 .clear_both {

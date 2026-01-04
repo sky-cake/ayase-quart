@@ -1,10 +1,12 @@
 from html import escape
+from itertools import product
 
 from configs import archive_conf, site_conf, mod_conf
-from media import ext_is_image, ext_is_video, get_image_path, get_thumb_path
+from media import ext_is_video, get_image_path, get_thumb_path
 from posts.capcodes import Capcode
 from threads import get_thread_path
 from utils.timestamps import ts_2_formatted
+from enums import ImgTagClass
 
 CANONICAL_HOST: str = archive_conf['canonical_host']
 CANONICAL_NAME: str = archive_conf['canonical_name']
@@ -92,7 +94,7 @@ def render_wrapped_post_t_thread(post: dict):
 
     if not any(rare_vals): # basic text/image reply post
         esc_user_data(post) # not sure this is the correct logic...
-        return render_post_t_basic(post, include_view_link=False)
+        return render_post_t_basic(post)
 
     # anything remotely special uses official wrap_post_t
     return render_wrapped_post_t(wrap_post_t(post), include_view_link=False)
@@ -114,39 +116,24 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     post_path_t = get_post_path(board, thread_num, num)
     report_t = get_report_t(post)
 
-    return f'''
-    <div id="pc{num}">
-        <div class="sideArrows">&gt;&gt;</div>
-        <div id="p{num}" class="post reply">
-            <div class="postInfo" id="pi{num}">
-                <span class="inblk"><b>/{board}/</b></span>
-                <span class="name N">{ANONYMOUS_NAME}</span>
-                <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-                <a href="/{post_path_t}">No.{num}</a>
-                <span class="inblk">
-                    {report_t}
-                    [<a href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank">Source</a>]
-                </span>
-            </div>
-            <div>
-                {media_t}
-                <blockquote class="postMessage" id="m{num}">{comment}</blockquote>
-            </div>
-            <div class="clear_both"></div>
-            {quotelinks_t}
-        </div>
+    return f'''<div id="pc{num}"><div class="sideArrows"></div><div id="p{num}" class="post reply">
+    <div class="postInfo" id="pi{num}">
+        <b class="inblk">/{board}/</b> <span class="name N">{ANONYMOUS_NAME}</span>
+        <span class="dateTime inblk" data-utc="{ts_unix}"></span> <a href="/{post_path_t}">No.{num}</a>
+        {report_t}[<a class="sourcelink" href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank"></a>]
     </div>
-    '''
+    {media_t}<blockquote class="postMessage" id="m{num}">{comment}</blockquote>{quotelinks_t}
+</div></div>'''
 
 
 def get_quotelink_t_thread(num: int, board: str, thread_num: int, quotelinks: list[int]):
     if not quotelinks:
         return ''
     quotelink_gen = (
-        f'<span class="quotelink"><a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>'
+        f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink inblk" data-board="{board}">&gt;&gt;{quotelink}</a>'
         for quotelink in quotelinks
     )
-    return f'<div id="bl_{num}" class="backlink">Replies: {" ".join(quotelink_gen)}</div>'
+    return f'<div id="bl_{num}" class="clear_both backlink">Replies: {" ".join(quotelink_gen)}</div>'
 
 
 def get_post_path(board: str, thread_num: int, num: int) -> str:
@@ -163,24 +150,17 @@ def get_media_t_thread(post: dict, num: int, board: str):
 
     is_spoiler = post['spoiler']
     spoiler = 'Spoiler,' if is_spoiler else ''
-    classes = 'spoiler' if is_spoiler else ''
 
     full_src = get_image_path(board, media_orig)
     thumb_src = get_thumb_path(board, preview_orig)
 
-    return f"""
-	<div class="file" id="f{num}">
+    return f"""<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
-            File:
-            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
-            (<span title="{md5h}">
-                {spoiler}
-                {media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}
-            </span>)
+            File: <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
         </div>
-        {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src, classes=classes)}
-    </div>
-	"""
+        {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
+    </div>"""
 
 ### END post_t
 
@@ -193,7 +173,7 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 def get_report_t(post: dict) -> str:
     if not mod_conf.get('enabled', False):
         return ''
-    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">Report</button>]"""
+    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">Report</button>] """
 
 
 def get_sub_t(post: dict):
@@ -257,27 +237,34 @@ def media_metadata_t(media_size: int, media_w: int, media_h: int):
         return f'{media_size / mb_d :.2f} MB, {media_w}x{media_h}'
     return f'{media_size / kb_d :.1f} KB, {media_w}x{media_h}'
 
+def make_imgclassbf_lu() -> dict[int, str]:
+    product_iter = (
+        tuple(ImgTagClass(1 << i) for i, enabled in enumerate(combination) if enabled)
+        for combination in product((True, False), repeat=len(ImgTagClass))
+    )
+    return {
+        sum(flags): ' '.join(f.name for f in flags)
+        for flags in product_iter
+    }
 
-def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes: str=None, is_search=False, is_catalog=False):
+imgclass_lu = make_imgclassbf_lu()
+def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_search=False, is_catalog=False):
     """Will render image with object-fit: cover by default"""
 
     if not (media_filename := post['media_filename']):
         return ''
 
     ext = media_filename.rsplit('.', 1)[-1]
-    # is_img = ext_is_image(ext)
     is_video = ext_is_video(ext)
 
     board = post['board_shortname']
 
-    if classes is None:
-        classes = 'cover spoiler' if post['spoiler'] else 'cover'
+    classes: int = 0 # bitfield/flags
+    if post['spoiler']:
+        classes += ImgTagClass.spoiler
     if not is_catalog:
-        if classes: classes += ' '
-        classes += 'mtog'
-
-    if classes: classes += ' '
-    classes += 'is_video' if is_video else 'is_image'
+        classes += ImgTagClass.mtog
+    classes += ImgTagClass.is_video if is_video else ImgTagClass.is_image
 
     if full_src is None:
         full_src = get_image_path(board, post['media_orig'])
@@ -289,19 +276,11 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, classes
     media_link = f"""<span class="c{ext}">{ext}</span> [<a href="/{board}/thread/{post['thread_num']}#p{post['num']}" rel="noreferrer" target="_blank" class="click">Post</a>]""" if is_search and not is_catalog else ''
     mtog = f"""[<span class="mtog play click">Play</span>]""" if is_video and not is_catalog else ''
     br = '<br>' if media_link or mtog else ''
-    # data-media_hash="{ post['media_hash'] }" # not used by anything, omitting
     return f"""<div class="media_cont fileThumb">{media_link}{mtog}{br}
-<img
-  id="{_id}"
-  src="{thumb_src}"
-  data-full_media_src="{full_src}" data-thumb_src="{thumb_src}" data-ext="{ext}"
-  class="{classes}"
-  width="{ post['preview_w'] }" height="{ post['preview_h'] }"
-  data-expanded="false" 
-  loading="lazy"
-/>
-</div>
-"""
+<img loading="lazy" src="{thumb_src}" width="{ post['preview_w'] }" height="{ post['preview_h'] }"
+  id="{_id}" class="{imgclass_lu[classes]}" data-expanded="false" data-ext="{ext}"
+  data-full_media_src="{full_src}" data-thumb_src="{thumb_src}"
+/></div>"""
 
 
 def get_media_t(post: dict):
@@ -315,7 +294,6 @@ def get_media_t(post: dict):
     board = post['board_shortname']
     spoiler = 'Spoiler,' if post['spoiler'] else ''
 
-    classes = 'spoiler' if post['spoiler'] else ''
     full_src = get_image_path(board, media_orig)
     thumb_src = get_thumb_path(board, preview_orig)
 
@@ -323,12 +301,9 @@ def get_media_t(post: dict):
 	<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
             File: <a href="{full_src}" title="{media_orig}">{media_filename}</a>
-            (<span title="{md5h}">
-                {spoiler}
-                {media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}
-            </span>)
+            (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
         </div>
-        {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src, classes=classes)}
+        {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
     </div>
 	"""
 
@@ -401,7 +376,7 @@ def get_filedeleted_t(post: dict):
 
 def get_header_t(post: dict):
     num = post['num']
-    return f"""<div id="pc{num}"> {'<div class="sideArrows">&gt;&gt;</div>' if not post['op'] else ''} <div id="p{num}" class="post reply">"""
+    return f"""<div id="pc{num}">{'<div class="sideArrows"></div>' if not post['op'] else ''} <div id="p{num}" class="post reply">"""
 
 
 def get_quotelink_t(post: dict):
@@ -409,8 +384,8 @@ def get_quotelink_t(post: dict):
         return ''
     board = post['board_shortname']
     thread_num = post['thread_num']
-    quotelinks = ' '.join(f'<span class="quotelink"><a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a></span>' for quotelink in quotelinks)
-    return f'<div id="bl_{post["num"]}" class="backlink">Replies: {quotelinks}</div>'
+    quotelinks = ' '.join(f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink inblk" data-board="{board}">&gt;&gt;{quotelink}</a>' for quotelink in quotelinks)
+    return f'<div id="bl_{post["num"]}" class="backlink clear_both">Replies: {quotelinks}</div>'
 
 
 def esc_user_data(post: dict):
@@ -460,7 +435,6 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
         { wpt['t_media'] if not is_op else '' }
         <blockquote class="postMessage" id="m{num}">{wpt['comment']}</blockquote>
     </div>
-    <div class="clear_both"></div>
     { wpt['t_quotelink'] }
     </div>
     </div>
@@ -472,7 +446,6 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     board = wpt['board_shortname']
     title_t = get_title_t(wpt)
     ts_unix = wpt['ts_unix']
-    classes = 'spoiler' if wpt['spoiler'] else ''
     nl = '<br>' if wpt['t_cc'] else ''
     thread_path = get_thread_path(board, num)
     post_path = get_post_path(board, num, num)
@@ -492,7 +465,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
             <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>{get_thread_stats_t(wpt)}</div>
         </div>
-    <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, classes=classes, is_catalog=True)}</a>
+    <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
     <div class="teaser">
         { title_t }
         { wpt.get('comment', '')}

@@ -1,4 +1,4 @@
-from enum import Enum, StrEnum
+from enum import Enum, StrEnum, IntFlag, auto
 
 
 class DbType(Enum):
@@ -50,3 +50,10 @@ class SubmitterCategory(StrEnum):
     impersonation = 'Impersonation'
     bots = 'Bots or scrapers'
     other = 'Other'
+
+
+class ImgTagClass(IntFlag):
+    spoiler = auto()
+    mtog = auto()
+    is_image = auto()
+    is_video = auto()

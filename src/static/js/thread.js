@@ -33,11 +33,11 @@ const quotelink_resp_cache = new Map();
 const quotelink_fetching = new Set();
 function quotelink_mouseover(event) {
     const quotelink = event.target;
-    const backlink = quotelink.parentElement.parentElement.id;
-
     const num = quotelink.getAttribute("href").split("#p")[1];
     const board = get_data_string(quotelink, 'board');
-    let backlink_num = backlink ? backlink.replace(/^bl_/, '') : null;
+
+    const backlink = quotelink.parentElement.parentElement.id;
+    const backlink_num = backlink ? backlink.replace(/^(bl_|p)/, '') : null;
 
     const id_post_num = "#p" + num;
     let target_post = document.querySelector(id_post_num);
