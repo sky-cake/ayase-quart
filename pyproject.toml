@@ -45,6 +45,7 @@ dependencies = [
     'Quart',
     'quart-wtforms',
     'quart-auth',
+    'quart-flask-patch',
     'quart-rate-limiter',
     'quart-schema[pydantic]',
     'quart-uploads',

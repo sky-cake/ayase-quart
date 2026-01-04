@@ -103,8 +103,6 @@ def close_all_databases(func):
 
 
 db_q = DbHandler(db_conf, db_conf['db_type']) # query
-
-if mod_conf['enabled']:
-    db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
+db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
 
 # db_eav = DbHandler({'database': make_src_path('eav.db')}, DbType.sqlite)
