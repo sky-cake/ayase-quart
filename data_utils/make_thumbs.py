@@ -114,7 +114,7 @@ def main():
         pattern = f"**/*.{ext}"
         files.extend(start_dir.glob(pattern))
     files = [f for f in files if f.is_file()]
-    
+
     if not files:
         print(f"No matching files found in {start_dir}")
         sys.exit(1)

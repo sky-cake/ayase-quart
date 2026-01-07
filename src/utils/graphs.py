@@ -9,7 +9,7 @@ class Graph:
 
     def __contains__(self, item):
         return item in self.graph
-    
+
     def __repr__(self):
         return '\n'.join(f'{k}: {v}' for k, v in self.graph.items())
 
@@ -34,10 +34,10 @@ class Graph:
 
     def get_root(self):
         return min(self.graph) if self.graph else None
-    
+
     def is_connected(self, node: int):
         return bool(self.graph.get(node))
-    
+
     def remove_node(self, node: int):
         del self.graph[node]
 

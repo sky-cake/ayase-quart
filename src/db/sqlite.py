@@ -107,7 +107,7 @@ class SqliteQueryRunner(BaseQueryRunner):
                 await pool.commit()
 
             return results
-        
+
 
     async def run_script(self, query: str):
         pool = await self.pool_manager.get_pool()

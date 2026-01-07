@@ -107,19 +107,19 @@ def test_clamp_positive_int():
     assert clamp_positive_int(10, lower=5) == 10
     assert clamp_positive_int(10, lower=5, upper=15) == 10
     assert clamp_positive_int(20, lower=5, upper=15) == 15
-  
+
     assert clamp_positive_int(5.5) == 5
     assert clamp_positive_int(-5.5) == 5
     assert clamp_positive_int(10.5, lower=5) == 10
     assert clamp_positive_int(10.5, lower=5, upper=15) == 10
     assert clamp_positive_int(20.5, lower=5, upper=15) == 15
-  
+
     assert clamp_positive_int('5') == 5
     assert clamp_positive_int('-5') == 5
     assert clamp_positive_int('10', lower=5) == 10
     assert clamp_positive_int('10', lower=5, upper=15) == 10
     assert clamp_positive_int('20', lower=5, upper=15) == 15
-  
+
     assert clamp_positive_int(0) == 0
     assert clamp_positive_int(-0) == 0
     assert clamp_positive_int(0, lower=5) == 5

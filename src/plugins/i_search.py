@@ -11,10 +11,10 @@ from wtforms import Field
 class SearchPluginResult:
     def __init__(self):
         self.board_2_nums: dict[str, set[int]] = dict()
-        
+
         # html to show the user after plugin searches
         self.flash_msg: str = ''
-        
+
         # helps determine if we should do a native search
         self.performed_search = False
 

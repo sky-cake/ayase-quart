@@ -24,7 +24,7 @@ def html_comment(comment: str, thread_num: int, board: str) -> str:
 
 def _html_comment_yotsuba(comment: str, thread_num: int, board: str):
     """Will escape html if needed.
-    
+
     Note: Yes, there are multiple `in comment` statements,
     but this is 1-2ms faster than looping over `comment` once, believe it or not.
     """
@@ -60,7 +60,7 @@ def _html_comment_vichan(comment: str):
         # after: <a class="quotelink" data-board="sec" href="/sec/thread/14192#p14202">&gt;&gt;14202</a>
 
         comment = vichan_comment_re.sub('', comment)
-        
+
         replacement = r'\1 class="quotelink" data-board="\3"\2\3/thread/\5\7p\8\9'
         comment = vichan_ql_pat_re.sub(replacement, comment)
 

@@ -33,7 +33,7 @@ class MysqlPoolManager(BasePoolManager):
         d['autocommit'] = True
 
         self.pool = await aiomysql.create_pool(**d)
-    
+
         return self.pool
 
 

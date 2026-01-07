@@ -24,4 +24,3 @@ bp = Blueprint("bp_web_vanilla_search", __name__)
 async def v_vanilla_search_get(is_admin: bool, logged_in: bool):
     endpoint_path = url_for('bp_web_vanilla_search.v_vanilla_search_get')
     return await search_handler(SearchHandlerSQL(), request.args.to_dict(flat=True), endpoint_path, logged_in=logged_in, is_admin=is_admin)
-

@@ -401,7 +401,7 @@ async def delete_post(current_usr: User, board_shortname: str, num: int, report_
             flash_msg += ' Report deleted.'
         else:
             flash_msg += ' Report seems to already be deleted.'
-    
+
     return flash_msg.strip()
 
 

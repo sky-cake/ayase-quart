@@ -23,7 +23,7 @@ def render_thread_stats(post: dict) -> str:
 
 def get_graph_from_thread(quotelinks: dict[int, list[int]], posts: list[dict]):
     """`generate_thread()` returns compatible args.
-    
+
     Debugging thread: http://127.0.0.1:9001/g/thread/105205235
     """
 

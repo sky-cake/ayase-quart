@@ -22,4 +22,3 @@ def fuvii(d: dict[str, Any], key: str, default_val_fn: Callable[[Any], Any]|Any=
     else:
         # does not update a key's value if the key exists already
         d.setdefault(key, default_val_fn)
-

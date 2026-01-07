@@ -112,8 +112,10 @@ ignore = [
     'E501', # line too long
 ]
 extend-select = [
-    # 'W291', # trailing whitespace
-    # 'W293', # blank lines with whitespace
+    'W291', # trailing whitespace
+    'W292', # ensure trailing newline
+    'W293', # blank lines with whitespace
+    'W391', # at most 1 trailing newline
 ]
 
 # [tool.pyright]

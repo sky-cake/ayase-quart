@@ -106,4 +106,3 @@ class FilterCacheSqlite(BaseFilterCache):
             params=[board, num, op],
             commit=True,
         )
-

@@ -67,7 +67,7 @@ async def send_file_from_directory_no_headers(
     as_attachment: bool = False,
     attachment_filename: str | None = None,
 ) -> Response:
-    
+
     raw_file_path = safe_join(str(directory), file_name)
     if raw_file_path is None:
         raise NotFound()

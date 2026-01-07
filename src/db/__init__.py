@@ -88,7 +88,7 @@ class DbHandler:
 
     async def query_dict(self, query: str, params=None, commit=False, dict_row=True):
         return await self.query_runner.run_query(query, params=params, commit=commit, dict_row=dict_row)
-    
+
     async def run_script(self, query: str):
         return await self.query_runner.run_script(query)
 

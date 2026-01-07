@@ -65,11 +65,11 @@ def watch(log_path: str, conn: Connection, sleep_time: float = 1.0, start_at_end
                     log_data = json.loads(line)
                 except json.JSONDecodeError:
                     continue
-                
+
                 insert(conn, log_data)
                 count += 1
                 continue
-            
+
             if first:
                 print(f'Slurped {count} valid json lines.')
             first = False

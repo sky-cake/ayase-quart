@@ -340,7 +340,7 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, wher
     for board in boards:
 
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
-        
+
         where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
         params = tuple(params) if params else None
 
@@ -492,7 +492,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
             limit {hits_per_board_to_query[board]}
             {offset}
         """
-    
+
         calls.append(db_q.query_dict(sql, params=params))
 
     board_posts = await asyncio.gather(*calls)
@@ -753,7 +753,7 @@ async def generate_thread(board: str, thread_num: int) -> tuple[dict]:
 
     The post tuple is tuple[1]:
     ```
-        {'posts': [{...}, {...}, {...}, ...]}, 
+        {'posts': [{...}, {...}, {...}, ...]},
     ```
 
     OPs have these extra fields added to them compared to comments:
@@ -884,7 +884,7 @@ async def move_post_to_delete_table(post: dict) -> str:
 
 async def get_deleted_ops_by_board(board: str) -> list[int]:
     """Returns op post nums marked as deleted by upstream imageboard staff."""
-    
+
     sql = f"""select num from `{board}` where deleted = 1 and op = 1"""
     rows = await db_q.query_tuple(sql)
     if not rows:
@@ -894,7 +894,7 @@ async def get_deleted_ops_by_board(board: str) -> list[int]:
 
 async def get_deleted_non_ops_by_board(board: str) -> list[int]:
     """Returns non-op post nums marked as deleted by upstream imageboard staff."""
-    
+
     sql = f"""select num from `{board}` where deleted = 1 and op = 0;"""
     rows = await db_q.query_tuple(sql)
     if not rows:
@@ -903,7 +903,7 @@ async def get_deleted_non_ops_by_board(board: str) -> list[int]:
 
 
 async def is_post_op(board: str, num: int) -> bool:
-    
+
     sql = f"""select num, op from `{board}` where num = {db_q.Phg()()}"""
     rows = await db_q.query_tuple(sql, params=[num])
     if not rows:

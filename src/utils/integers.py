@@ -10,7 +10,7 @@ def startswith_uint(characters: str) -> bool:
 
         if c in string_of_uints:
             return True
-        
+
         # stop iterating if the streak of ints broken
         # avoids subcript range checks on `characters`
         return False
@@ -27,7 +27,7 @@ def startswith_uint_no0(characters: str) -> bool:
 
         if c in string_of_uints_no0:
             return True
-        
+
         # stop iterating if the streak of ints broken
         # avoids subcript range checks on `characters`
         return False
