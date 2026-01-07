@@ -902,25 +902,6 @@ async def get_deleted_non_ops_by_board(board: str) -> list[int]:
     return [(row[0], row[1]) for row in rows]
 
 
-async def get_deleted_numops_by_board(board: str) -> list[tuple[int]]:
-    """Returns all nums marked as deleted by upstream imageboard staff in the format [(num, op), ...]"""
-
-    sql = f"""select num, op from `{board}` where deleted = 1;"""
-    rows = await db_q.query_tuple(sql)
-    if not rows:
-        return []
-    return [(row[0], row[1]) for row in rows]
-
-
-async def get_numops_by_board_and_regex(board: str, pattern: str) -> list[tuple[int]]:
-    sql = f"""select num, op from `{board}` where comment is not null and comment regexp {db_q.Phg()()};"""
-    
-    rows = await db_q.query_tuple(sql, params=(pattern,))
-    if not rows:
-        return []
-    return [(row[0], row[1]) for row in rows]
-
-
 async def is_post_op(board: str, num: int) -> bool:
     
     sql = f"""select num, op from `{board}` where num = {db_q.Phg()()}"""

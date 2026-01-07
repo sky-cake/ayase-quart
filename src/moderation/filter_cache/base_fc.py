@@ -1,11 +1,42 @@
 import re
 from abc import ABC, abstractmethod
+from typing import Any, Generator
 
-from asagi_converter import (
-    get_deleted_numops_by_board,
-    get_numops_by_board_and_regex
-)
 from boards import board_shortnames
+from db import db_q
+
+type NumOpGen = Generator[list[tuple[int, int]], Any, None]
+
+async def board_numops_deleted_gen(board: str, after_num: int=0, limit: int=5000) -> NumOpGen:
+    """Returns all nums marked as deleted by upstream imageboard staff in the format [(num, op), ...]"""
+    while True:
+        sql = f"""
+        select num, op from `{board}`
+        where
+            deleted = 1
+            and num > {after_num}
+        order by num asc limit {limit}
+        ;"""
+        if not (rows := await db_q.query_tuple(sql)):
+            break
+        after_num = rows[-1][0]
+        yield rows
+
+async def board_numops_regex_gen(board: str, pattern: str, after_num: int=0, limit: int=5000) -> NumOpGen:
+    while True:
+        phg = db_q.Phg()
+        sql = f"""
+        select num, op from `{board}`
+        where
+            comment is not null
+            and comment regexp {phg()}
+            and num > {after_num}
+        order by num asc limit {limit}
+        ;"""
+        if not (rows := await db_q.query_tuple(sql, (pattern,))):
+            break
+        after_num = rows[-1][0]
+        yield rows
 
 class BaseFilterCache(ABC):
     def __init__(self, mod_conf: dict):
@@ -19,7 +50,6 @@ class BaseFilterCache(ABC):
     async def init(self):
         if not self.enabled:
             return
-
         await self._create_cache()
 
     async def get_deleted_numops_per_board_iter(self):
@@ -30,8 +60,10 @@ class BaseFilterCache(ABC):
         if not (self.hide_upstream_deleted_posts and board_shortnames):
             return
         for board in board_shortnames:
-            numops = await get_deleted_numops_by_board(board)
-            yield board, numops
+            async for numops in board_numops_deleted_gen(board):
+                if not numops:
+                    continue
+                yield board, numops
 
     async def get_numops_by_board_and_regex_iter(self):
         """Returns a tuple[str, tuple[int, int]]
@@ -41,8 +73,10 @@ class BaseFilterCache(ABC):
         if not (self.regex_filter and board_shortnames):
             return
         for board in board_shortnames:
-            numops = await get_numops_by_board_and_regex(board, self.regex_filter)
-            yield board, numops
+            async for numops in board_numops_regex_gen(board):
+                if not numops:
+                    continue
+                yield board, numops
 
     @abstractmethod
     async def _create_cache(self) -> None:

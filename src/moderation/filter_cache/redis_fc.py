@@ -106,6 +106,8 @@ class FilterCacheRedis(BaseFilterCache):
         self.cf = RedisFilter(CuckooFilter(client=self.redis))
 
     async def _create_cache(self) -> None:
+        if await self._is_cache_populated():
+            return
         for board in board_shortnames:
             await self.bf.reserve(
                 board,
@@ -119,8 +121,7 @@ class FilterCacheRedis(BaseFilterCache):
                 bucketsize=mod_r_conf.get('cuckoo_bucket', CF_DEFAULT_BUCKET),
                 maxiterations=mod_r_conf.get('cuckoo_iter_max', CF_DEFAULT_ITER_MAX),
             )
-        if not await self._is_cache_populated():
-            await self._populate_cache()
+        await self._populate_cache()
 
     async def _is_cache_populated(self) -> bool:
         if not (keys := await self.redis.keys(f'{FC_KEY_PREFIX}*')):
