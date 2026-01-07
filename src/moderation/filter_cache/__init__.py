@@ -1,6 +1,10 @@
 from .base_fc import BaseFilterCache
 
 def get_filter_cache(mod_conf: dict) -> BaseFilterCache:
+    if not mod_conf.get('enabled', False):
+        from .null_fc import FilterCacheNull
+        return FilterCacheNull(mod_conf)
+
     filter_cache_type = mod_conf['filter_cache_type']
     match filter_cache_type:
         case 'sqlite':

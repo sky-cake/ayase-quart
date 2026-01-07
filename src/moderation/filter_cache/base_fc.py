@@ -80,6 +80,7 @@ class BaseFilterCache(ABC):
     async def delete_post(self, board: str, num: int, op: int) -> None:
         raise NotImplementedError()
 
+    @abstractmethod
     async def get_board_num_pairs(self, posts: list) -> set[tuple[str, int]]:
         """`set[('g', 12345), ('x', 6789), ...]`"""
         raise NotImplementedError()
@@ -107,18 +108,13 @@ class BaseFilterCache(ABC):
         note = 'Only visible to AQ staff.'
 
         if is_authority:
-            posts = [
+            return [
                 post
                 if not self.should_filter(board_num_pairs, post)
                 else post | dict(deleted=note)
                 for post in posts
             ]
-            return posts
-
-        posts = [
-            post
-            for post in posts
+        return [
+            post for post in posts
             if not self.should_filter(board_num_pairs, post)
         ]
-        return posts
-

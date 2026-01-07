@@ -59,9 +59,6 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def get_op_thread_removed_count(self, board: str) -> int:
-        if not self.enabled:
-            return 0
-
         rows = await db_m.query_tuple(f'select count(*) from board_nums_cache where board_shortname = {db_m.Phg()()} and op = 1', params=[board])
         return rows[0][0]
 
@@ -85,8 +82,6 @@ class FilterCacheSqlite(BaseFilterCache):
 
 
     async def is_post_removed(self, board: str, num: int) -> bool:
-        if not self.enabled:
-            return False
         phg = db_m.Phg()
         sql = f"""select num from board_nums_cache where board_shortname = {phg()} and num = {phg()}"""
         row = await db_m.query_tuple(sql, params=[board, num])

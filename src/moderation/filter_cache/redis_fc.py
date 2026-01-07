@@ -174,8 +174,6 @@ class FilterCacheRedis(BaseFilterCache):
             await self.redis.delete(*keys)
 
     async def get_op_thread_removed_count(self, board: str) -> int:
-        if not self.enabled:
-            return 0
         if count := await self.redis.get(fmt_op_count_key(board)):
             return int(count.decode())
         return 0
@@ -234,22 +232,16 @@ class FilterCacheRedis(BaseFilterCache):
         return await self.delete_post(board, num, op)
 
     async def is_post_removed(self, board: str, num: int) -> bool:
-        if not self.enabled:
-            return False
         if await self.get_deleted(board, nums := [num]):
             return True
         return bool(await self.get_reported(board, nums))
 
     async def insert_post(self, board: str, num: int, op: int) -> None:
-        if not self.enabled:
-            return
         await self.bf.add_num(board, num)
         if op == 1:
             await self.redis.incr(fmt_op_count_key(board))
 
     async def delete_post(self, board: str, num: int, op: int) -> None:
-        if not self.enabled:
-            return
         # no deleting from bloom filter, rebuild from scratch
         if op == 1:
             await self.redis.decr(fmt_op_count_key(board))
