@@ -101,15 +101,14 @@ class SearchHandlerFTS(SearchHandler):
     highlight: bool = index_search_conf['highlight']
     html_search_memo = """
     <div class="mtb-1">Full text search is much faster than SQL search, but it may not have recent data.</div>
-    <button class="form_btn pbtn" data-toggle="fts_info">Syntax ⓘ</button>
-    <div id="fts_info" class="mtb-1 hidden">
+    <details><summary class="click">Query syntax ⓘ</summary>
         These are the main search operations, more can be found at <a href="https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html" target="_blank">docs.rs/tantivy</a>.
         <ul class="m-0 liststyle">
             <li><span class="codetext">"exact term"</span></li>
             <li><span class="codetext">+devices +usb-c -adapter</span> requires posts with "devices" and "usb-c", and not "adapter"</li>
             <li><span class="codetext">x AND y OR z</span> which is equivalent to <span class="codetext">((+x +y) z)</span></li>
         </ul>
-    </div>
+    </details>
     """
     html_message_error: str = (
         'There seems to be a problem with the submitted query.<br>'

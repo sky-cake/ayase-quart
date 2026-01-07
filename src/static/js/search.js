@@ -165,22 +165,8 @@ function generateMediaHash(file) {
     reader.readAsBinaryString(file);
 };
 
-function setup_data_toggles() {
-	for (const el of doc_query_all("[data-toggle]")) {
-		el.addEventListener("click", () => {
-			const idee = get_data_string(el, 'toggle');
-			const target = document.getElementById(idee);
-			if (target) {
-				const isVisible = getComputedStyle(target).display !== "none";
-				target.style.display = isVisible ? "none" : "block";
-			}
-		});
-	}
-}
-
 function init_search() {
     auto_select_single_board();
-    setup_data_toggles();
 }
 
 init_search();
