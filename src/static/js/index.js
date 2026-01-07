@@ -128,10 +128,7 @@ function set_image_toggle(e) {
 
 function set_up_image_toggles() {
     // Images can be opened and closed by clicking them
-    const images = doc_query_all("img.mtog.is_image");
-
-    for (let i = 0; i < images.length; i++) {
-        const image = images[i];
+    for (const image of doc_query_all('img.mtog.is_image')) {
         image.addEventListener('click', set_image_toggle);
     }
 }
@@ -222,19 +219,13 @@ function replace_thumb_with_video(video_thumb) {
 }
 
 function set_up_video_toggles() {
-    // Videos can be opened by clicking their thumbnail
     // Videos can be opened and closed by clicking a Play/Close button
-
-    const video_play_btns = doc_query_all("span.mtog.play");
-    for (let i = 0; i < video_play_btns.length; i++) {
-        const play_btn = video_play_btns[i];
+    for (const play_btn of doc_query_all('span.mtog.play')) {
         play_btn.addEventListener('click', play_video_via_btn);
     }
-
-    const video_thumbs = doc_query_all("img.mtog.is_video");
-    for (let i = 0; i < video_thumbs.length; i++) {
-        const video_thumb = video_thumbs[i];
-        video_thumb.addEventListener('click', play_video_via_thumb_click);
+    // Videos can be opened by clicking their thumbnail
+    for (const vid_thumb of doc_query_all('img.mtog.is_video')) {
+        vid_thumb.addEventListener('click', play_video_via_thumb_click);
     }
 }
 
