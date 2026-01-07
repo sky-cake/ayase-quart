@@ -32,6 +32,7 @@ render_constants = dict(
     stats_enabled=stats_conf['enabled'],
     endpoint=lambda: request.endpoint,
     url_for=url_for,
+    custom_banner=site_conf.get('custom_banner', None),
     get_flashed_messages=get_flashed_messages,
     get_integrity=get_integrity,
     format_ts=ts_2_formatted,

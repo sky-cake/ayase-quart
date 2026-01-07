@@ -30,7 +30,7 @@ name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 site_email = ''
 anonymous_username = 'Anonymous'
-
+# custom_banner = 'Important message!' # html, empty string ('') to disable, default None == promo banner
 
 [archive]
 type = 'yotsuba' # 'yotsuba' (4chan), 'vichan' (lainchan, holotower)
