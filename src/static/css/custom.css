@@ -831,7 +831,9 @@ img {
 
 .fileText {
     word-break: break-all;
-    ;
+}
+.fileText::before {
+    content: 'File:';
 }
 
 #top {
