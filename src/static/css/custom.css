@@ -18,6 +18,11 @@ body {
     color: #dddddd !important;
 }
 
+fieldset {
+    border-width: 1px;
+    border-color: #aaa;
+}
+
 #quote-preview {
     display: block;
     position: absolute;
@@ -939,6 +944,11 @@ button:disabled {
 .search input {
     display: block;
     margin: 5px 0;
+}
+
+#searchform fieldset {
+    width: 100%;
+    padding: 0.25rem;
 }
 
 .filters label {

@@ -29,25 +29,22 @@
           </div>
         </div>
       </div>
+      <div class="row">
+        <fieldset>
+          <legend>Boards
+            {% if form.boards.type == 'MultiCheckboxCSVField' %}
+              <button type="button" class="form_btn pbtn check_all_boards">All</button>
+              <button type="button" class="form_btn pbtn uncheck_all_boards">None</button>
+            {% endif %}
+          </legend>
+          {{ render_field(form.boards) }}
+        </fieldset>
+      </div>
       <div class="row pb3">
         <div class="field_label w3em">Start</div>{{ form.date_after }}
       </div>
       <div class="row pb3">
         <div class="field_label w3em">End</div>{{ form.date_before }}
-      </div>
-      <div class="row">
-        <div class="column border">
-          {% if form.boards.type == 'MultiCheckboxCSVField' %}
-          <div class="mb05 d-flex">
-            <div class="field_label">Boards</div>
-            <button type="button" class="form_btn pbtn check_all_boards">All</button>
-            <button type="button" class="form_btn pbtn uncheck_all_boards">None</button>
-          </div>
-          {% else %}
-          <div class="field_label">Boards</div>
-          {% endif %}
-          {{ render_field(form.boards) }}
-        </div>
       </div>
       <div class="row">
         <div class="column">
@@ -65,14 +62,6 @@
         </div>
         <div class="column">
           {{ render_field(form.capcode, class='w5em btn') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.has_no_file) }}
-        </div>
-        <div class="column">
-          {{ render_field(form.has_file) }}
         </div>
       </div>
       <div class="row">
@@ -97,6 +86,14 @@
         </div>
         <div class="column">
           {{ render_field(form.is_sticky) }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="column">
+          {{ render_field(form.has_no_file) }}
+        </div>
+        <div class="column">
+          {{ render_field(form.has_file) }}
         </div>
       </div>
       <div class="row">
