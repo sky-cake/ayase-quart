@@ -34,7 +34,7 @@ searchform.addEventListener('submit', function (event) {
 
         for (const [key, value] of formData.entries()) {
             if (value === "") continue;
-            if (key === 'capcode' && value === "default") continue;
+            if (key === 'capcode' && value === "any") continue;
 
             if (operatorToBaseKey[key]) {
                 const baseKeyValue = formData.get(operatorToBaseKey[key]);

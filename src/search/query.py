@@ -91,7 +91,7 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
     if params['height']:
         q.height = clamp_positive_int(params['height'])
         q.hop = params['hop']
-    if params['capcode'] not in (None, Capcode.default.value):
+    if params['capcode'] not in (None, Capcode.any.value):
         q.capcode = capcode_2_id(params['capcode'])
     if params['tripcode']:
         q.trip = params['tripcode']

@@ -227,7 +227,7 @@ def validate_and_generate_params(form_data: dict, phg1: BasePlaceHolderGen) -> t
     defaults_to_ignore = {
         'width': 0,
         'height': 0,
-        'capcode': Capcode.default.value,
+        'capcode': Capcode.any.value,
     }
     params = []
     where_parts = []

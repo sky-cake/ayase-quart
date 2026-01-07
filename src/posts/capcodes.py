@@ -7,7 +7,7 @@ from enum import StrEnum
 
 
 class Capcode(StrEnum):
-    default = 'default'
+    any = 'any'
     user = 'N'
     founder = 'F'
     dev = 'D'
