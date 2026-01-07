@@ -64,7 +64,7 @@
 <div id="board_nav" class="mw1000 center">
 {% if board %}
 [
-    <a href="{{canonical_host}}/{{board}}/catalog" rel="noreferrer" target="_blank">/{{board}}/ on {{canonical_name}}</a> /
+    <a href="{{board_objects_d[board]['upstream_catalog']}}" rel="noreferrer" target="_blank">/{{board}}/ on {{canonical_name}}</a> /
     <a href="/{{ board }}">Index</a> /
     <a href="/{{ board }}/catalog">Catalog</a>
 ]

@@ -7,7 +7,7 @@ from quart_rate_limiter import rate_limit
 
 from asagi_converter import get_post
 from boards import board_shortnames
-from configs import mod_conf, archive_conf
+from configs import mod_conf
 from enums import ModStatus, PublicAccess
 from forms import ReportUserForm
 from leafs import generate_post_html, post_files_hide
@@ -34,6 +34,7 @@ from render import render_controller
 from templates import template_reports_index
 from utils.validation import validate_board
 from security import apply_csrf_validation_on_endpoint, session_csrf_token_name, validate_csrf_token, get_csrf_input
+from upstream import get_post_upstream
 
 
 bp = Blueprint('bp_web_moderation', __name__)
@@ -109,7 +110,7 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
 
         d['Check'] = f'<input type="checkbox" class="select_report" data-report-id="{report_parent_id}">'
 
-        source_link = f'[<a href="{archive_conf['canonical_host']}/{r.board_shortname}/thread/{r.thread_num}#p{r.num}" rel="noreferrer" target="_blank">Source</a>]'
+        source_link = f'[<a href="{get_post_upstream(r.board_shortname, r.thread_num, r.num)}" rel="noreferrer" target="_blank">Source</a>]'
 
         endpoint_html = f"""<input type="hidden" name="endpoint" value="{request.endpoint}">"""
         d['About'] = f"""

@@ -1,15 +1,14 @@
 from html import escape
 from itertools import product
 
-from configs import archive_conf, site_conf, mod_conf
+from configs import site_conf, mod_conf
 from media import ext_is_video, get_image_path, get_thumb_path
 from posts.capcodes import Capcode
 from threads import get_thread_path
 from utils.timestamps import ts_2_formatted
 from enums import ImgTagClass
+from upstream import get_thread_upstream, get_post_upstream, CANONICAL_NAME
 
-CANONICAL_HOST: str = archive_conf['canonical_host']
-CANONICAL_NAME: str = archive_conf['canonical_name']
 ANONYMOUS_NAME: str = site_conf['anonymous_username']
 
 
@@ -114,13 +113,14 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     quotelinks_t = get_quotelink_t_thread(num, board, thread_num, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
+    upstream_path = get_post_upstream(board, thread_num, num)
     report_t = get_report_t(post)
 
     return f'''<div id="pc{num}"><div class="sideArrows"></div><div id="p{num}" class="post reply">
     <div class="postInfo" id="pi{num}">
         <b class="inblk">/{board}/</b> <span class="name N">{ANONYMOUS_NAME}</span>
         <span class="dateTime inblk" data-utc="{ts_unix}"></span> <a href="/{post_path_t}">No.{num}</a>
-        {report_t}[<a class="sourcelink" href="{CANONICAL_HOST}/{post_path_t}" rel="noreferrer" target="_blank"></a>]
+        {report_t}[<a class="sourcelink" href="{upstream_path}" rel="noreferrer" target="_blank"></a>]
     </div>
     {media_t}<blockquote class="postMessage" id="m{num}">{comment}</blockquote>{quotelinks_t}
 </div></div>'''
@@ -315,9 +315,9 @@ def set_links(post: dict):
     thread_path = get_thread_path(board, thread_num)
     post_path = get_post_path(board, thread_num, num)
     post['t_thread_link_rel'] = thread_path
-    post['t_thread_link_src'] = f'{CANONICAL_HOST}/{thread_path}'
     post['t_post_link_rel'] = post_path
-    post['t_post_link_src'] = f'{CANONICAL_HOST}/{post_path}'
+    post['t_thread_link_src'] = get_thread_upstream(board, thread_num)
+    post['t_post_link_src'] = get_post_upstream(board, thread_num, num)
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'

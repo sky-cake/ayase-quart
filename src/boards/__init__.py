@@ -6,6 +6,7 @@ from tomllib import load
 from configs import app_conf, db_conf, media_conf
 from db import get_db_tables
 from utils import make_src_path
+from upstream import get_catalog_upstream
 
 BOARDS_FILE = make_src_path('boards.toml')
 DEFAULT_BOARDS_FILE = make_src_path('boards.tpl.toml')
@@ -28,7 +29,10 @@ def _load_boards_toml():
 def get_shorts_objects(boards: dict):
     '''return (board_shorts, board_objects)'''
     board_shorts = sorted([board for board in boards])
-    board_objects = [{'shortname': short, 'name': long} for short, long in boards.items()]
+    board_objects = [
+        {'shortname': short, 'name': long, 'upstream_catalog': get_catalog_upstream(short)}
+        for short, long in boards.items()
+    ]
     board_objects.sort(key=lambda x: x['shortname'])
     return board_shorts, board_objects
 

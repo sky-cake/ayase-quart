@@ -36,6 +36,7 @@ render_constants = dict(
     get_integrity=get_integrity,
     format_ts=ts_2_formatted,
     board_objects=board_objects,
+    board_objects_d={b['shortname']:b for b in board_objects},
     testing=app_conf['testing'],
     canonical_host=archive_conf['canonical_host'],
     canonical_name=archive_conf['canonical_name'],

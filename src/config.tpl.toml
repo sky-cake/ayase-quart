@@ -37,6 +37,9 @@ type = 'yotsuba' # 'yotsuba' (4chan), 'vichan' (lainchan, holotower)
 canonical_name = '4chan' # '4chan', 'Lainchan', 'Holotower'
 canonical_host = 'https://boards.4chan.org'
 comments_preescaped = false # false (4chan scrapers), true (vichan APIs)
+# catalog_path = '/catalog.html' # after /{board} default '/catalog'
+# thread_path = '/res/{thread}.html' # after /{board} default '/thread/{thread}'
+# post_path = '#{num}' # after thread_path  default '#p{num}'
 
 
 [stats]
