@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
 {% block body %}
-
-  <div class="row">
+<div class="row">
     <div class="column">
-      <div>Note: You must use the cli module to load your data into a search engine's index.</div>
-      <div>Go to <code>src</code> and run <code>python -m search load --reset board1 [board2 [board3 ...]]</code></div>
-      <div>For example, you can load all boards with <code>python -m search load --reset {{board_list}}</code></div>
+        <div>Note: You must use the cli module to load your data into a search engine's index.</div>
+        <div>Go to <code>src</code> and run <code>python -m search load --reset board1 [board2 [board3 ...]]</code></div>
+        <div>For example, you can load all boards with <code>python -m search load --reset {{board_list}}</code></div>
     </div>
-  </div>
-
+</div>
 {% endblock %}

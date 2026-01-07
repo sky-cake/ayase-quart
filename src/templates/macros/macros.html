@@ -1,47 +1,47 @@
 {%- macro table(list_of_dicts, safe_cols=None) -%}
-  {% if list_of_dicts %}
-  <table>
-    <thead>
-      <tr>
-        {%- for col in list_of_dicts[0].keys() -%}
-          <td><b>{{ col }}</b></td>
-        {%- endfor -%}
-      </tr>
-    </thead>
-    <tbody>
-      {%- for row in list_of_dicts -%}
-        <tr>
-          {%- for col in row.keys() -%}
-            <td>
-              {% if safe_cols and col in safe_cols %}
-                {{ row[col]|safe}}
-              {% else %}
-                {{ row[col] }}
-              {% endif %}
-            </td>
-          {%- endfor -%}
-        </tr>
-      {%- endfor -%}
-    </tbody>
-  </table>
-  {% else %}
+{% if list_of_dicts %}
+    <table>
+        <thead>
+            <tr>
+                {%- for col in list_of_dicts[0].keys() -%}
+                    <td><b>{{ col }}</b></td>
+                {%- endfor -%}
+            </tr>
+        </thead>
+        <tbody>
+            {%- for row in list_of_dicts -%}
+                <tr>
+                    {%- for col in row.keys() -%}
+                        <td>
+                            {% if safe_cols and col in safe_cols %}
+                                {{ row[col]|safe}}
+                            {% else %}
+                                {{ row[col] }}
+                            {% endif %}
+                        </td>
+                    {%- endfor -%}
+                </tr>
+            {%- endfor -%}
+        </tbody>
+    </table>
+{% else %}
     No data.
-  {% endif %}
+{% endif %}
 {%- endmacro -%}
 
 
 {% macro render_field(field) %}
-  <div class="form-control">
+<div class="form-control">
     {% if field.name not in ['submit', 'captcha_id', 'captcha_answer', 'boards'] %}
-      <div class="field_label">{{ field.label }}</div>
+        <div class="field_label">{{ field.label }}</div>
     {% endif %}
     {{ field(**kwargs)|safe }}
-  </div>
-  {% if field.errors %}
+</div>
+{% if field.errors %}
     <div class="block">
-      <div class="block">
-        ^{% for error in field.errors %}{{ error }}{% endfor %}
-      </div>
+        <div class="block">
+            ^{% for error in field.errors %}{{ error }}{% endfor %}
+        </div>
     </div>
-  {% endif %}
+{% endif %}
 {% endmacro %}

@@ -1,20 +1,20 @@
 {% from 'macros/macros.html' import render_field %}
 {% extends 'base.html' %}
 {% block body %}
-  {% if not is_admin and not logged_in %}
-  <form id="login_form" action="{{url_for('bp_web_auth.login_post')}}" method="post" class="form" novalidate=True>
-      <h3 class="center">Right this way...</h3>
-      {{ form.csrf_token() }}
-      {{ render_field(form.username ) }}
-      {{ render_field(form.password) }}
-      <div>
-        {{ render_field(form.captcha_id) }}
-        <img width="65px" src="data:image/jpeg;base64,{{form.captcha_b64_img_str}}"/>
-        {{ render_field(form.captcha_answer, placeholder='Solution') }}
-      </div>
-      <div class="mtb-1"><input id="submit" name="submit" type="submit" value="Submit"></div>
-    </form>
-  {% else %}
-    <p>User currently logged in.</p>
-  {% endif %}
+    {% if not is_admin and not logged_in %}
+        <form id="login_form" action="{{url_for('bp_web_auth.login_post')}}" method="post" class="form" novalidate=True>
+            <h3 class="center">Right this way...</h3>
+            {{ form.csrf_token() }}
+            {{ render_field(form.username ) }}
+            {{ render_field(form.password) }}
+            <div>
+                {{ render_field(form.captcha_id) }}
+                <img width="65px" src="data:image/jpeg;base64,{{form.captcha_b64_img_str}}"/>
+                {{ render_field(form.captcha_answer, placeholder='Solution') }}
+            </div>
+            <div class="mtb-1"><input id="submit" name="submit" type="submit" value="Submit"></div>
+        </form>
+    {% else %}
+        <p>User currently logged in.</p>
+    {% endif %}
 {% endblock %}

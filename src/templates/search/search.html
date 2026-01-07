@@ -2,166 +2,166 @@
 {% from 'macros/macros.html' import render_field %}
 
 {% block scripts -%}
-	{{ super() }}
-	<script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
-	<script type="text/javascript" defer src="/static/js/search.js" {{ get_integrity("search.js")|safe }}></script>
+    {{ super() }}
+    <script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
+    <script type="text/javascript" defer src="/static/js/search.js" {{ get_integrity("search.js")|safe }}></script>
 {% endblock %}
 
 {% block body %}
 <div class="search_container">
-  <div class="sticky_top mvh">
-  <div>{{html_search_memo|safe}}</div>
-  <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data">
-    <div class="form">
-      <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.title, placeholder='Post Subject', class='w240') }}
-          {{ render_field(form.comment, placeholder='Post Comment', class='w240') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column border">
-          <div class="m1">
-            Search results must have OPs where...
-            {{ render_field(form.op_title, placeholder='OP Subject', class='w240') }}
-            {{ render_field(form.op_comment, placeholder='OP Comment', class='w240') }}
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <fieldset>
-          <legend>Boards
-            {% if form.boards.type == 'MultiCheckboxCSVField' %}
-              <button type="button" class="form_btn pbtn check_all_boards">All</button>
-              <button type="button" class="form_btn pbtn uncheck_all_boards">None</button>
-            {% endif %}
-          </legend>
-          {{ render_field(form.boards) }}
-        </fieldset>
-      </div>
-      <div class="row pb3">
-        <div class="field_label w3em">Start</div>{{ form.date_after }}
-      </div>
-      <div class="row pb3">
-        <div class="field_label w3em">End</div>{{ form.date_before }}
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.tl, placeholder='Length', class='w5em') }}
-          {{ render_field(form.cl, placeholder='Length', class='w5em') }}
-        </div>
-        <div class="column">
-          {{ render_field(form.tlop, class='w5em btn') }}
-          {{ render_field(form.clop, class='w5em btn') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.tripcode, placeholder='Tripcode', class='w5em') }}
-        </div>
-        <div class="column">
-          {{ render_field(form.capcode, class='w5em btn') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.is_not_op) }}
-        </div>
-        <div class="column">
-          {{ render_field(form.is_op) }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.is_not_deleted) }}
-        </div>
-        <div class="column">
-          {{ render_field(form.is_deleted) }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.is_not_sticky) }}
-        </div>
-        <div class="column">
-          {{ render_field(form.is_sticky) }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.has_no_file) }}
-        </div>
-        <div class="column">
-          {{ render_field(form.has_file) }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.width, placeholder='Width', class='w5em') }}
-          {{ render_field(form.height, placeholder='Height', class='w5em') }}
-        </div>
-        <div class="column">
-          {{ render_field(form.wop, class='w5em btn') }}
-          {{ render_field(form.hop, class='w5em btn') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
-        </div>
-        <div class="column">
-          <div id="drop_zone">Select/Drop File</div>
-          <input id="media_hash_file_input" class="hidden" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.media_filename, placeholder='Filename', class='w240') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.num, placeholder='Post Num', class='w5em') }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.order_by) }}
-        </div>
-      </div>
-      <div class="row">
-        <div class="column">
-          {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
-        </div>
-        <div class="column">
-          {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
-        </div>
-      </div>
-        {{ search_plugin_html|safe }}
-        <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
-      </div>
-  </form>
-  </div>
+    <div class="sticky_top mvh">
+        <div>{{html_search_memo|safe}}</div>
+        <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data">
+            <div class="form">
+                <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.title, placeholder='Post Subject', class='w240') }}
+                        {{ render_field(form.comment, placeholder='Post Comment', class='w240') }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column border">
+                        <div class="m1">
+                            Search results must have OPs where...
+                            {{ render_field(form.op_title, placeholder='OP Subject', class='w240') }}
+                            {{ render_field(form.op_comment, placeholder='OP Comment', class='w240') }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <fieldset>
+                        <legend>Boards
+                            {% if form.boards.type == 'MultiCheckboxCSVField' %}
+                                <button type="button" class="form_btn pbtn check_all_boards">All</button>
+                                <button type="button" class="form_btn pbtn uncheck_all_boards">None</button>
+                            {% endif %}
+                        </legend>
+                        {{ render_field(form.boards) }}
+                    </fieldset>
+                </div>
+                <div class="row pb3">
+                    <div class="field_label w3em">Start</div>{{ form.date_after }}
+                </div>
+                <div class="row pb3">
+                    <div class="field_label w3em">End</div>{{ form.date_before }}
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.tl, placeholder='Length', class='w5em') }}
+                        {{ render_field(form.cl, placeholder='Length', class='w5em') }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.tlop, class='w5em btn') }}
+                        {{ render_field(form.clop, class='w5em btn') }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.tripcode, placeholder='Tripcode', class='w5em') }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.capcode, class='w5em btn') }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.is_not_op) }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.is_op) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.is_not_deleted) }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.is_deleted) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.is_not_sticky) }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.is_sticky) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.has_no_file) }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.has_file) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.width, placeholder='Width', class='w5em') }}
+                        {{ render_field(form.height, placeholder='Height', class='w5em') }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.wop, class='w5em btn') }}
+                        {{ render_field(form.hop, class='w5em btn') }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
+                    </div>
+                    <div class="column">
+                        <div id="drop_zone">Select/Drop File</div>
+                        <input id="media_hash_file_input" class="hidden" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.media_filename, placeholder='Filename', class='w240') }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.num, placeholder='Post Num', class='w5em') }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.order_by) }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="column">
+                        {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
+                    </div>
+                    <div class="column">
+                        {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
+                    </div>
+                </div>
+                    {{ search_plugin_html|safe }}
+                    <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
+                </div>
+        </form>
+    </div>
 
-  <div id="resulttop">
-    {% if page_post_count %}
-      {{yield_message|safe}}<br>On this page: {{page_post_count}}
-      {% if page_links %}<br>Pages{{ page_links|safe }}{% endif %}
-    {% endif %}
-    {% if page_post_count %}
-      <div class="board">
-        {% if not gallery_mode %}{{ posts_t|safe }}{% else %}<div class="row">{{ posts_t|safe }}</div>{% endif %}
-      </div>
-    {% else %}
-      {% if searched %}
-        {{yield_message|safe}}
-      {% endif %}
-    {% endif %}
-    {% if page_links %}
-      <div class="mt">Pages</div>
-      {{ page_links|safe }}
-    {% endif %}
-  </div>
+    <div id="resulttop">
+        {% if page_post_count %}
+            {{yield_message|safe}}<br>On this page: {{page_post_count}}
+            {% if page_links %}<br>Pages{{ page_links|safe }}{% endif %}
+        {% endif %}
+        {% if page_post_count %}
+            <div class="board">
+                {% if not gallery_mode %}{{ posts_t|safe }}{% else %}<div class="row">{{ posts_t|safe }}</div>{% endif %}
+            </div>
+        {% else %}
+            {% if searched %}
+                {{yield_message|safe}}
+            {% endif %}
+        {% endif %}
+        {% if page_links %}
+            <div class="mt">Pages</div>
+            {{ page_links|safe }}
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

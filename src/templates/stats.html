@@ -11,23 +11,23 @@
     <img id="logo" src="{{url_for('static', filename=logo_filename)}}"/>
 </div>
 <div class="mw1000 mauto">
-  <div>
-  </div>
-  <h2>Archive Posts per Month</h2>
-  <p>Note: fraction-of-posts-archived values are rough estimates. They are simply calculated by doing: <span class="codetext">number_of_posts_archived / [max_post_num - min_post_num]</span>.</p>
-  <div class="mb-2">
-    <button id="select-random" class="form_btn pbtn">Random</button>
-    <button id="clear-all" class="form_btn pbtn">Clear</button>
-  </div>
+    <div>
+    </div>
+    <h2>Archive Posts per Month</h2>
+    <p>Note: fraction-of-posts-archived values are rough estimates. They are simply calculated by doing: <span class="codetext">number_of_posts_archived / [max_post_num - min_post_num]</span>.</p>
+    <div class="mb-2">
+        <button id="select-random" class="form_btn pbtn">Random</button>
+        <button id="clear-all" class="form_btn pbtn">Clear</button>
+    </div>
 
-  <div id="board-buttons" class="stat_buttons">
-    {% for board_object in board_objects %}
-    <button class="board-toggle form_btn pbtn" data-board="{{ board_object.shortname }}">/{{ board_object.shortname }}/</button>
-    {% endfor %}
-  </div>
+    <div id="board-buttons" class="stat_buttons">
+        {% for board_object in board_objects %}
+            <button class="board-toggle form_btn pbtn" data-board="{{ board_object.shortname }}">/{{ board_object.shortname }}/</button>
+        {% endfor %}
+    </div>
 
-  <div id="loading" class="hidden center mt-1 green_bg">Loading...</div>
+    <div id="loading" class="hidden center mt-1 green_bg">Loading...</div>
 
-  <canvas id="activityChart" class="m-2 rounded beige_bg"></canvas>
+    <canvas id="activityChart" class="m-2 rounded beige_bg"></canvas>
 </div>
 {% endblock %}
