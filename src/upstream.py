@@ -20,5 +20,5 @@ def get_catalog_upstream(board: str) -> str:
 def get_thread_upstream(board: str, thread_num: int) -> str:
     return f'{get_board_upstream(board)}{THREAD_SRC_PATH.format(thread=thread_num)}'
 
-def get_post_upstream(board: str, thread_num: int, num) -> str:
+def get_post_upstream(board: str, thread_num: int, num: int) -> str:
     return f'{get_thread_upstream(board, thread_num)}{POST_SRC_PATH.format(num=num)}'
