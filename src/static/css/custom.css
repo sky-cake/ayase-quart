@@ -1,7 +1,5 @@
 html {
-    -moz-text-size-adjust: 100%;
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%
+    -ms-text-size-adjust: 100%;
 }
 
 body {
@@ -801,8 +799,14 @@ input:focus {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 
 input[type="number"] {
+    appearance: textfield;
     -moz-appearance: textfield;
 }
 
