@@ -173,7 +173,7 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 def get_report_t(post: dict) -> str:
     if not mod_conf.get('enabled', False):
         return ''
-    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}">Report</button>] """
+    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>] """
 
 
 def get_sub_t(post: dict):
@@ -453,7 +453,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     nuke_btn = ''
     if show_nuke_btn and csrf_input:
         # no js required
-        nuke_btn = f"""[<form class="actionform form" action="/nuke/{board}/{num}" method="post">{csrf_input}<button class="rbtn" type="submit">Nuke</button></form>]"""
+        nuke_btn = f"""[<form class="actionform form" action="/nuke/{board}/{num}" method="post">{csrf_input}<button class="adminbtn" type="submit">Nuke</button></form>]"""
 
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">

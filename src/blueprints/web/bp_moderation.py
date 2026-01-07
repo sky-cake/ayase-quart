@@ -117,17 +117,17 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
         <br>
         <br>
         [
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="rbtn" type="submit">Post Hide</button></form> |
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="rbtn" type="submit">Post Show</button></form> |
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="rbtn" type="submit">Report Open</button></form> |
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="rbtn" type="submit">Report Close</button></form>
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="adminbtn" type="submit">Post Hide</button></form> |
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="adminbtn" type="submit">Post Show</button></form> |
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="adminbtn" type="submit">Report Open</button></form> |
+            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="adminbtn" type="submit">Report Close</button></form>
         ]
         <br>
         <br>
         <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_save_notes')}" method="post">
             {csrf_input}
             <textarea name="mod_notes" rows="2" cols="20" placeholder="Moderation notes">{escape(r.mod_notes) if r.mod_notes else ''}</textarea>
-            [<button class="rbtn" type="submit">Save Notes</button>]
+            [<button class="adminbtn" type="submit">Save Notes</button>]
         </form>
         <br>
         <br>

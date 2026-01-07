@@ -60,6 +60,9 @@ div.sideArrows {
 .sourcelink::after {
 	content: 'Source';
 }
+.rbtn::after {
+	content: 'Report';
+}
 
 div.thread,
 .clear_both {
@@ -404,7 +407,7 @@ ul {
     filter: none;
 }
 
-.rbtn {
+.rbtn, .adminbtn {
     background-color: inherit;
     border: none;
     color: #81a2be;
@@ -414,7 +417,7 @@ ul {
     font-size: inherit;
 }
 
-.rbtn:disabled {
+.rbtn:disabled, .adminbtn:disabled {
     background-color: inherit;
     border: none;
     color: #727272 !important;
