@@ -43,8 +43,8 @@ bp = Blueprint("bp_web_app", __name__)
 
 async def make_pagination_board_index(board: str, index: dict, page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board)
-    op_thread_removed_count = await fc.get_op_thread_removed_count(board)
-    op_thread_count -= op_thread_removed_count
+    # op_thread_removed_count = await fc.get_op_thread_removed_count(board)
+    # op_thread_count -= op_thread_removed_count
 
     board_index_thread_count = len(index['threads'])
 
@@ -180,8 +180,8 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
 
 async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int) -> Pagination:
     op_thread_count = await get_op_thread_count(board)
-    op_thread_removed_count = await fc.get_op_thread_removed_count(board)
-    op_thread_count -= op_thread_removed_count
+    # op_thread_removed_count = await fc.get_op_thread_removed_count(board)
+    # op_thread_count -= op_thread_removed_count
 
     catalog_pages = int(op_thread_count / 15) + 1  # we grab 150 threads per catalog page
 
