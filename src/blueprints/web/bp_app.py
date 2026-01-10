@@ -157,6 +157,7 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
         render_thread_stats(thread['posts'][0]) +
         get_posts_t(thread['posts'], quotelinks)
         for thread in index["threads"]
+        if thread['posts']
     )
     p.check('post_t')
 
