@@ -75,7 +75,6 @@ maxsize = 50
 
 [db.sqlite] # follow aiosqlite connection keys
 database = 'path/to/file.db'
-load_sqlite_into_memory = false # this must be false to persist data
 
 
 [db.postgresql] # follow aiosqlite connection keys
@@ -184,7 +183,6 @@ hidden_images_path = '' # e.g. '/home/garbage/disposal'
 
 [moderation.sqlite]
 database = 'path/to/moderation.db' # path to the moderation database
-load_sqlite_into_memory = false # this must be false to persist data
 
 # Use redis to cache user auth and filter reported posts
 # Ensure redis connection is valid (see [redis])

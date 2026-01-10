@@ -30,20 +30,8 @@ class SqlitePoolManager(BasePoolManager):
             return self.pool
 
         db_path = self.sqlite_conf['database']
-        load_sqlite_into_memory = self.sqlite_conf.get('load_sqlite_into_memory')
 
-        if load_sqlite_into_memory:
-            mem_pool = await aiosqlite.connect(':memory:')
-
-            file_pool = await aiosqlite.connect(db_path)
-            await file_pool.backup(mem_pool)
-            await file_pool.close()
-
-            pool = mem_pool
-
-        else:
-            pool = await aiosqlite.connect(db_path)
-
+        pool = await aiosqlite.connect(db_path)
         pool.row_factory = row_factory if dict_row else None
 
         if mod_conf['enabled'] and mod_conf['regex_filter'] and mod_conf['path_to_regex_so']:
