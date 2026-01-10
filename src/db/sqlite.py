@@ -12,7 +12,7 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 
-def row_factory(cursor, row: tuple):
+def row_factory(cursor: aiosqlite.Cursor, row: tuple):
     keys = [col[0] for col in cursor.description]
     return DotDict({k: v for k, v in zip(keys, row)})
 
@@ -24,25 +24,20 @@ class SqlitePoolManager(BasePoolManager):
         self.pool = None
 
 
-    async def get_pool(self, dict_row=False):
-        if self.pool:
-            self.pool.row_factory = row_factory if dict_row else None
-            return self.pool
-
+    async def get_pool(self):
         db_path = self.sqlite_conf['database']
 
-        pool = await aiosqlite.connect(db_path)
-        pool.row_factory = row_factory if dict_row else None
+        if self.pool is None:
+            self.pool = await aiosqlite.connect(db_path)
 
         if mod_conf['enabled'] and mod_conf['regex_filter'] and mod_conf['path_to_regex_so']:
-            await pool.enable_load_extension(True)
-            await pool.load_extension(mod_conf['path_to_regex_so'])
+            await self.pool.enable_load_extension(True)
+            await self.pool.load_extension(mod_conf['path_to_regex_so'])
 
-            async with pool.execute('select regex_version();') as cursor:
+            async with self.pool.execute('select regex_version();') as cursor:
                 result = await cursor.fetchone()
                 print(result)
 
-        self.pool = pool
         return self.pool
 
 
@@ -60,13 +55,16 @@ class SqliteQueryRunner(BaseQueryRunner):
 
 
     async def run_query(self, query: str, params=None, commit=False, dict_row=True):
-        pool = await self.pool_manager.get_pool(dict_row=dict_row)
+        pool = await self.pool_manager.get_pool()
 
         if self.sql_echo:
             print('::SQL::', query)
             print('::PARAMS::', params)
 
         async with pool.execute(query, params) as cursor:
+            if dict_row:
+                cursor.row_factory = row_factory
+
             results = await cursor.fetchall()
 
             # commit comes after `fetchall` to support `returing` statements
@@ -81,13 +79,16 @@ class SqliteQueryRunner(BaseQueryRunner):
 
 
     async def run_query_many(self, query: str, params=None, commit=False, dict_row=True):
-        pool = await self.pool_manager.get_pool(dict_row=dict_row)
+        pool: aiosqlite.Connection = await self.pool_manager.get_pool()
 
         if self.sql_echo:
             print('::SQL::', query)
             print('::PARAMS::', params)
 
         async with pool.executemany(query, params) as cursor:
+            if dict_row:
+                cursor.row_factory = row_factory
+
             results = await cursor.fetchall()
 
             # commit comes after `fetchall` to support `returing` statements

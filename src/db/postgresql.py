@@ -9,12 +9,9 @@ class PostgresqlPoolManager(BasePoolManager):
         self.pool = None
 
 
-    async def get_pool(self, dict_row=False):
-        """`dict_row` is a placeholder/vestigial."""
-        if self.pool:
-            return self.pool
-
-        self.pool = await asyncpg.create_pool(**self.postgresql_conf, dict_row=dict_row)
+    async def get_pool(self):
+        if self.pool is None:
+            self.pool = await asyncpg.create_pool(**self.postgresql_conf)
         return self.pool
 
 
@@ -32,8 +29,9 @@ class PostgresqlQueryRunner(BaseQueryRunner):
         self.sql_echo = sql_echo
 
 
-    async def run_query(self, query: str, params=None, commit=False, dict_row=True):
-        pool = await self.pool_manager.get_pool(dict_row=dict_row)
+    async def run_query(self, query: str, params=None, commit=False, **kwargs):
+        """kwargs to soak up `dict_row`"""
+        pool = await self.pool_manager.get_pool()
 
         async with pool.acquire() as conn:
             if self.sql_echo:
