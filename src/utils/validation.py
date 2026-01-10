@@ -19,6 +19,13 @@ def validate_threads(threads: list[dict]):
         abort(404)
 
 
+def validate_catalog(catalog: list[dict]):
+    for c in catalog:
+        if c['threads']:
+            return
+    abort(404)
+
+
 def validate_board_value_error(board: str) -> None:
     if board not in boards.boards:
         raise ValueError(board)

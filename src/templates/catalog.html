@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block body %}
-    {% include 'pagination.html' %}
-    <div id="catalog_threads">
-        {{threads|safe}}
-    </div>
-    {% include 'pagination.html' %}
+{% if threads %}
+{% include 'pagination.html' %}
+<div id="catalog_threads">
+    {{threads|safe}}
+</div>
+{% include 'pagination.html' %}
+{% else %}
+    No results
+{% endif %}
 {% endblock %}

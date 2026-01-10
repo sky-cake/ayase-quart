@@ -33,7 +33,7 @@ from templates import (
 )
 from threads import render_thread_stats
 from perf import Perf
-from utils.validation import validate_board, validate_threads
+from utils.validation import validate_board, validate_threads, validate_catalog
 from moderation.report import generate_report_form
 from security import inject_csrf_token_to_session, get_csrf_input
 
@@ -217,6 +217,8 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
 
+    validate_catalog(catalog)
+
     pagination = await make_pagination_catalog(board, catalog, 0)
     p.check('paginate')
 
@@ -256,6 +258,8 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     # `nreplies` won't always be correct, but it does not effect paging
     catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
+
+    validate_catalog(catalog)
 
     pagination = await make_pagination_catalog(board, catalog, page_num)
     p.check('paginate')
