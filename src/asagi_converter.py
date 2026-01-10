@@ -559,6 +559,7 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
     return get_quotelink_lookup(rows)
 
 
+@alru_cache(ttl=60*2)
 async def get_op_thread_count(board: str) -> int:
     rows = await db_q.query_tuple(f'select count(*) from `{board}_threads`;')
     return rows[0][0]
