@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../src'))
 from boards import board_shortnames
 from enums import DbType
-from configs import db_tag_conf, db_conf
+from configs import db_conf
 
 
 def process_databases(old_db_path, tagger_db_path, board):

@@ -11,7 +11,6 @@ from tqdm import tqdm
 from tqdm.asyncio import tqdm as tqdm_a
 
 from ..asagi_converter import get_selector, selector_columns
-from ..configs import index_search_conf
 from ..db import db_q
 from ..posts.capcodes import capcode_2_id
 from ..posts.quotelinks import get_quotelink_lookup

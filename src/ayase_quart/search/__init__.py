@@ -1,5 +1,3 @@
-from quart import flash
-
 from ..asagi_converter import search_posts
 from ..configs import index_search_conf, vanilla_search_conf
 from .post_metadata import board_2_int

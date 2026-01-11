@@ -1,4 +1,4 @@
-from quart import Blueprint, session, request, abort
+from quart import session, request, abort
 import secrets
 from functools import wraps
 

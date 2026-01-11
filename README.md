@@ -281,7 +281,7 @@ Options:
 
 ### Formatting
 
-Do **not** sort imports automatically. Tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
+Do **not** sort imports automatically. If not configured correctly, some tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
 
 Lint checking can be performed using ruff:
 

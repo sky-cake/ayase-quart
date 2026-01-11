@@ -170,10 +170,10 @@ preview = true
 select = [
 ]
 ignore = [
-    'F401', # unused imports
     'E501', # line too long
 ]
 extend-select = [
+    'F401', # unused imports
     'W291', # trailing whitespace
     'W292', # ensure trailing newline
     'W293', # blank lines with whitespace
