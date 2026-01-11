@@ -54,8 +54,8 @@ At least version SQLite 3.35.0 is required if you want to use the moderation too
 
 Assuming you have a data source set up, you can:
 
-1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
-1. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
+1. Copy `./boards.tpl.toml` to `./boards.toml` and edit `./boards.toml` with your desired boards.
+1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
 	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
 		- Run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
 		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
@@ -64,7 +64,7 @@ Assuming you have a data source set up, you can:
       - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
       - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
       - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
+1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in cwd (`./`). They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
 1. Create a virtualenv and install dependencies,
    
     ```bash
@@ -84,8 +84,8 @@ Assuming you have a data source set up, you can:
     sudo systemctl restart redis
     sudo systemctl status redis
     ```
-1. `python update_js_integrity_values.py` will set HTML `<script>` integrity checksums in a file `src/asset_hashes.json`.
-1. `python main.py`
+1. `python update_js_integrity_values.py` will set HTML `<script>` integrity checksums in a file `asset_hashes.json`.
+1. `hypercorn -w 2 -b 127.0.0.1:9001 src:app`
 1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
 1. [Optional] Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`.
@@ -101,7 +101,7 @@ Assuming you have a data source set up, you can:
         | [QuickWit ](https://quickwit.io/docs/get-started/quickstart) | [quickwit](https://github.com/quickwit-oss/quickwit) | (partial support, not tested) |
 
     - Remember to check that your config port matches the docker container port.
-    - Run `python -m search load --reset board1 [board2 [board3 ...]`.
+    - Run `python -m src.search load --reset board1 [board2 [board3 ...]`.
 
 1. [Optional] Submit pull requests with fixes and new features!
 
@@ -154,7 +154,7 @@ Terminal A
 Terminal B
 
 1. If you haven't already, set the index search configs in `config.toml`.
-2. cd to `~/ayase-quart/src` then run `python -m search load [options] a b c g gif ...`
+2. Run `python -m src.search load [options] a b c g gif ...`
 3. You should see a bunch of loading bars progressing.
 4. In Terminal A, you should see LNX spraying a bunch of output. That's good and means it's working
 
@@ -205,7 +205,7 @@ If you're on Windows, you can use Git Bash to execute the command.
 
 `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem`
 
-Save the two certs in `./src`.
+Save the two certs in `./`.
 
 
 ## Themes
@@ -233,9 +233,9 @@ The moderation system requires authentication. The default username and password
 
 Here is a test drive of the cli.
 
-`python ./src/cli/reports.py`
+`python -m src.cli.reports`
 ```bash
-Usage: python ./src/cli/reports.py [OPTIONS] COMMAND [ARGS]...
+Usage: python -m src.cli.reports [OPTIONS] COMMAND [ARGS]...
 
 Options:
 --help  Show this message and exit.
@@ -248,12 +248,12 @@ cli-get-reports
 cli-reports-action
 ```
 
-`python ./src/cli/reports.py cli-get-report-count`
+`python -m src.cli.reports cli-get-report-count`
 ```bash
 Report count: 4
 ```
 
-`python ./src/cli/reports.py cli-get-reports --public_access v --created_at_gte "2024-01-01"`
+`python -m src.cli.reports cli-get-reports --public_access v --created_at_gte "2024-01-01"`
 ```bash
 |   report_parent_id | board_shortname   |      num |   thread_num | public_access   | mod_status   | mod_notes   |   ip_count | submitter_category          | submitter_notes   | link                                                |
 |--------------------+-------------------+----------+--------------+-----------------+--------------+-------------+------------+-----------------------------+-------------------+-----------------------------------------------------|
@@ -261,7 +261,7 @@ Report count: 4
 |                  3 | r9k               | 80365280 |     80365251 | v               | o            |             |          1 | DCMA                        | aaaaaa            | http://127.0.0.1:9001/r9k/thread/80365251#p80365280 |
 ```
 
-`python ./src/cli/reports.py cli-reports-action --help`
+`python -m src.cli.reports cli-reports-action --help`
 ```bash
 Usage: reports.py cli-reports-action [OPTIONS]
 
@@ -293,11 +293,11 @@ JS `<script>` ressources should be served with integrity checksums in production
 ```bash
 python update_js_integrity_values.py
 ```
-Running the commands above will create/overwrite `src/asset_hashes.json`, which contains the hashes of all javascript files under `/static/js`. This file will be loaded into the templating system and render script tags like so:
+Running the commands above will create/overwrite `asset_hashes.json`, which contains the hashes of all javascript files under `/static/js`. This file will be loaded into the templating system and render script tags like so:
 ```html
 <script type="text/javascript" defer src="/static/js/index.js" integrity="sha384-b9Ktk8DOJhl3DVyrzWsTxgiKty7CS1etyjL6BIRyTvAaW0e1a3m4VSYlsQpjyqlB"></script>
 ```
-When doing multiple edits during development/debugging, disabling integrity checks can be done by deleting or emptying out the `src/asset_hashes.json` file. This will produce script tags like this instead:
+When doing multiple edits during development/debugging, disabling integrity checks can be done by deleting or emptying out the `asset_hashes.json` file. This will produce script tags like this instead:
 ```html
 <script type="text/javascript" defer src="/static/js/index.js"></script>
 ```
