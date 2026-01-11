@@ -1,15 +1,13 @@
 import asyncio
-import os
 import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from .loader import load_full, load_incremental
 from .providers import get_index_search_provider
+from ..configs import REPO_PKG
 
-help_text = """
-Usage: python -m search COMMANDS [args]
-       Run this from the directory `./ayase-quart/src`
+help_text = f"""
+Usage: python -m {REPO_PKG}.search COMMANDS [args]
+       Run this from the directory `./ayase-quart`
 Commands:
     create
         create search indexes
@@ -20,11 +18,11 @@ Commands:
     delete
         delete search indexes
 All use cases:
-    ./ayase-quart/src$ python -m search load --full         g ck biz
-    ./ayase-quart/src$ python -m search load --full --reset g ck biz
-    ./ayase-quart/src$ python -m search load --incr         g ck biz
-    ./ayase-quart/src$ python -m search create
-    ./ayase-quart/src$ python -m search delete
+    ./ayase-quart/$ python -m {REPO_PKG}.search load --full         g ck biz
+    ./ayase-quart/$ python -m {REPO_PKG}.search load --full --reset g ck biz
+    ./ayase-quart/$ python -m {REPO_PKG}.search load --incr         g ck biz
+    ./ayase-quart/$ python -m {REPO_PKG}.search create
+    ./ayase-quart/$ python -m {REPO_PKG}.search delete
 """
 
 
