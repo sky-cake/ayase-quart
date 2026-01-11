@@ -1,6 +1,6 @@
 from coredis import Redis
 
-from configs import redis_conf
+from ..configs import redis_conf
 
 
 def get_redis(db: int) -> Redis:

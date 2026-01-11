@@ -2,10 +2,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from configs import index_search_conf
-from posts.capcodes import Capcode, capcode_2_id
-from utils.integers import clamp_positive_int
-
+from ..configs import index_search_conf
+from ..posts.capcodes import Capcode, capcode_2_id
+from ..utils.integers import clamp_positive_int
 from .post_metadata import board_2_int
 
 

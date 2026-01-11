@@ -7,7 +7,7 @@ from typing import Any, Callable, Generator
 from aiohttp import ClientSession, TCPConnector
 from orjson import dumps
 
-from search.post_metadata import unpack_metadata
+from ..post_metadata import unpack_metadata
 
 from . import IndexSearchQuery
 

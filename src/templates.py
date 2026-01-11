@@ -2,8 +2,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from quart import get_flashed_messages, request, url_for
 from functools import cache
 
-from boards import board_objects
-from configs import (
+from .boards import board_objects
+from .configs import (
     SITE_NAME,
     app_conf,
     archive_conf,
@@ -13,9 +13,9 @@ from configs import (
     stats_conf,
     vanilla_search_conf
 )
-from configs.conf_loader import load_asset_hashes
-from utils import make_src_path
-from utils.timestamps import ts_2_formatted
+from .configs.conf_loader import load_asset_hashes
+from .utils import make_src_path
+from .utils.timestamps import ts_2_formatted
 
 @cache
 def get_integrity(filename: str) -> str:

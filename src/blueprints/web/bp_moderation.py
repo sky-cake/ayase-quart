@@ -5,14 +5,14 @@ from html import escape
 from quart import Blueprint, flash, jsonify, redirect, request, url_for
 from quart_rate_limiter import rate_limit
 
-from asagi_converter import get_post
-from boards import board_shortnames
-from configs import mod_conf
-from enums import ModStatus, PublicAccess
-from forms import ReportUserForm
-from leafs import generate_post_html, post_files_hide
-from moderation import fc
-from moderation.auth import (
+from ...asagi_converter import get_post
+from ...boards import board_shortnames
+from ...configs import mod_conf
+from ...enums import ModStatus, PublicAccess
+from ...forms import ReportUserForm
+from ...leafs import generate_post_html, post_files_hide
+from ...moderation import fc
+from ...moderation.auth import (
     current_web_usr,
     load_web_usr_data,
     login_web_usr_required,
@@ -21,20 +21,20 @@ from moderation.auth import (
     web_usr_is_admin,
     require_web_usr_is_admin,
 )
-from moderation.report import (
+from ...moderation.report import (
     create_report,
     get_report_count,
     get_reports,
     reports_action_routine,
     delete_post,
 )
-from moderation.user import Permissions
-from paginate import Pagination
-from render import render_controller
-from templates import template_reports_index
-from utils.validation import validate_board
-from security import apply_csrf_validation_on_endpoint, session_csrf_token_name, validate_csrf_token, get_csrf_input
-from upstream import get_post_upstream
+from ...moderation.user import Permissions
+from ...paginate import Pagination
+from ...render import render_controller
+from ...templates import template_reports_index
+from ...utils.validation import validate_board
+from ...security import apply_csrf_validation_on_endpoint, session_csrf_token_name, validate_csrf_token, get_csrf_input
+from ...upstream import get_post_upstream
 
 
 bp = Blueprint('bp_web_moderation', __name__)

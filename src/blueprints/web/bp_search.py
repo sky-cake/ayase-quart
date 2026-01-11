@@ -1,24 +1,24 @@
 from time import perf_counter
 
 from quart import flash
+from jinja2 import Template
+from quart_wtf import QuartForm
 
-from configs import app_conf, index_search_conf, vanilla_search_conf, search_plugins_conf, SITE_NAME
-from forms import SearchFormFTS, SearchForm, SearchFormSQL
-from moderation import fc
-from posts.comments import html_comment, html_highlight
-from posts.template_optimizer import (
+from ...configs import app_conf, index_search_conf, vanilla_search_conf, search_plugins_conf, SITE_NAME
+from ...forms import SearchFormFTS, SearchForm, SearchFormSQL
+from ...moderation import fc
+from ...posts.comments import html_comment, html_highlight
+from ...posts.template_optimizer import (
     get_media_img_t,
     render_wrapped_post_t,
     wrap_post_t
 )
-from search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
-from search.pagination import template_pagination_links, total_pages
-from templates import template_search
-from perf import Perf
-from plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
-from jinja2 import Template
-from quart_wtf import QuartForm
-from moderation.report import generate_report_form
+from ...search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
+from ...search.pagination import template_pagination_links, total_pages
+from ...templates import template_search
+from ...perf import Perf
+from ...plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
+from ...moderation.report import generate_report_form
 
 MAX_HITS_PER_PAGE = max(index_search_conf.get('hits_per_page', 50), vanilla_search_conf.get('hits_per_page', 50))
 

@@ -1,6 +1,6 @@
 from quart import Blueprint, Response, abort, current_app, jsonify
 
-from asagi_converter import (
+from ...asagi_converter import (
     generate_catalog,
     generate_index,
     generate_post,
@@ -8,34 +8,34 @@ from asagi_converter import (
     get_counts_from_posts,
     get_op_thread_count
 )
-from boards import get_title
-from configs import app_conf
-from moderation import fc
-from moderation.auth import (
-    load_web_usr_data,
-    web_usr_is_admin,
-    web_usr_logged_in
-)
-from paginate import Pagination
-from posts.template_optimizer import (
-    get_posts_t,
-    get_posts_t_thread,
-    render_catalog_card,
-    render_wrapped_post_t,
-    wrap_post_t
-)
-from render import render_controller
-from templates import (
-    template_board_index,
-    template_catalog,
-    template_index,
-    template_thread
-)
-from threads import render_thread_stats
-from perf import Perf
-from utils.validation import validate_board
-from moderation.report import generate_report_form
-from security import inject_csrf_token_to_session, get_csrf_input
+from ...boards import get_title
+from ...configs import app_conf
+from ...moderation import fc
+from ...moderation.auth import (
+     load_web_usr_data,
+     web_usr_is_admin,
+     web_usr_logged_in
+ )
+from ...paginate import Pagination
+from ...posts.template_optimizer import (
+     get_posts_t,
+     get_posts_t_thread,
+     render_catalog_card,
+     render_wrapped_post_t,
+     wrap_post_t
+ )
+from ...render import render_controller
+from ...templates import (
+     template_board_index,
+     template_catalog,
+     template_index,
+     template_thread
+ )
+from ...threads import render_thread_stats
+from ...perf import Perf
+from ...utils.validation import validate_board
+from ...moderation.report import generate_report_form
+from ...security import inject_csrf_token_to_session, get_csrf_input
 
 
 bp = Blueprint("bp_web_app", __name__)

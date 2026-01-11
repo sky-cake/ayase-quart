@@ -1,13 +1,13 @@
 from html import escape
 from itertools import product
 
-from configs import site_conf, mod_conf
-from media import ext_is_video, get_image_path, get_thumb_path
-from posts.capcodes import Capcode
-from threads import get_thread_path
-from utils.timestamps import ts_2_formatted
-from enums import ImgTagClass
-from upstream import get_thread_upstream, get_post_upstream, CANONICAL_NAME
+from ..configs import site_conf, mod_conf
+from ..media import ext_is_video, get_image_path, get_thumb_path
+from ..posts.capcodes import Capcode
+from ..threads import get_thread_path
+from ..utils.timestamps import ts_2_formatted
+from ..enums import ImgTagClass
+from ..upstream import get_thread_upstream, get_post_upstream, CANONICAL_NAME
 
 ANONYMOUS_NAME: str = site_conf['anonymous_username']
 

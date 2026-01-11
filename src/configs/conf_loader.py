@@ -2,7 +2,7 @@ import tomllib
 import json
 from functools import cache
 
-from utils import make_src_path
+from ..utils import make_src_path
 
 CONF_FILE = 'config.toml'
 TEST_CONF_FILE = 'config-test.toml' # not used yet
@@ -15,7 +15,7 @@ def load_config_file(testing: bool=False) -> dict:
 
 @cache
 def _load_config_toml(filename: str) -> dict:
-    with open(make_src_path(filename), 'rb') as f:
+    with open(filename, 'rb') as f:
         return tomllib.load(f)
 
 @cache

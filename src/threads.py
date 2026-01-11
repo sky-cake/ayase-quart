@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from utils.graphs import Graph
+from .utils.graphs import Graph
 
 
 @lru_cache(maxsize=4096)

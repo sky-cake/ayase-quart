@@ -1,12 +1,12 @@
 # maintain syntax highlighting without loading this example
 if 0:
-    from forms import SearchForm
     from jinja2 import Template
-    from templates import env
     from wtforms import Field, StringField
     from wtforms.validators import DataRequired
 
-    from plugins.i_search import SearchPlugin, SearchPluginResult
+    from ...forms import SearchForm
+    from ...templates import env
+    from ..i_search import SearchPlugin, SearchPluginResult
 
 
     # there must exist a class that implements SearchPlugin

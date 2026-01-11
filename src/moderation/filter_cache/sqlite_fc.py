@@ -1,7 +1,7 @@
 from aiosqlite import Connection
 
-from db import db_m
-from utils import make_src_path, read_file
+from ...db import db_m
+from ...utils import make_src_path, read_file
 from .base_fc import BaseFilterCache
 
 class FilterCacheSqlite(BaseFilterCache):

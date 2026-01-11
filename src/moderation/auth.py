@@ -5,8 +5,8 @@ from quart import current_app, request
 from quart_auth import QuartAuth, Unauthorized
 from werkzeug.local import LocalProxy
 
-from configs import mod_conf
-from moderation.user import Permissions, User
+from ..configs import mod_conf
+from .user import Permissions, User
 
 # quart_auth notes
 

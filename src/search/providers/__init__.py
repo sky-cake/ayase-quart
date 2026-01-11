@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from configs import index_search_conf
-from enums import IndexSearchType
+from ...configs import index_search_conf
+from ...enums import IndexSearchType
 
 from ..query import IndexSearchQuery  # noqa: F401
 

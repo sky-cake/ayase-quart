@@ -5,19 +5,19 @@ from quart import Blueprint, current_app, flash, redirect, url_for
 from quart_auth import Action
 from quart_rate_limiter import rate_limit
 
-from configs import app_conf
-from forms import LoginForm
-from moderation.auth import (
+from ...configs import app_conf
+from ...forms import LoginForm
+from ...moderation.auth import (
     auth_web,
     current_web_usr,
     load_web_usr_data,
     web_usr_is_admin,
     web_usr_logged_in
 )
-from moderation.user import User, is_valid_creds
-from render import render_controller
-from security.captcha import MathCaptcha
-from templates import template_login
+from ...moderation.user import User, is_valid_creds
+from ...render import render_controller
+from ...security.captcha import MathCaptcha
+from ...templates import template_login
 
 
 bp = Blueprint("bp_web_auth", __name__, template_folder="templates")

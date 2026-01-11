@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from db import db_m
+from ..db import db_m
 
 
 async def create_message(username: str, title: str, comment: str) -> None:

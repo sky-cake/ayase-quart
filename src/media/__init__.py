@@ -1,6 +1,6 @@
 from functools import cache
 
-from configs import media_conf
+from ..configs import media_conf
 
 from .filesystem import media_fs_partition
 

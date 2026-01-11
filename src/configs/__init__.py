@@ -1,8 +1,8 @@
 import os
 
-from enums import DbType
-from utils import make_src_path, split_csv
-from utils import strip_slashes as sslash
+from ..enums import DbType
+from ..utils import make_src_path, split_csv
+from ..utils import strip_slashes as sslash
 
 from .conf_common import fuvii
 from .conf_loader import load_config_file
@@ -76,7 +76,7 @@ search_plugins_conf = conf.get('search_plugins', {'enabled': False})
 
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
-    db_conf['database'] = make_src_path(sqlite_db)
+    db_conf['database'] = sqlite_db
 # if moderation_db := db_mod_conf.get('database'):
 #     db_mod_conf['database'] = moderation_db
 fuvii(db_mod_conf, 'database') # ^ not sure what the logic of this one is

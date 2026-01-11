@@ -1,6 +1,6 @@
 from quart import abort
 
-import boards
+from .. import boards
 
 
 def validate_board(board: str) -> None:

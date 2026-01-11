@@ -9,10 +9,10 @@ import aiofiles
 from coredis import Redis
 from coredis.modules.filters import BloomFilter, CuckooFilter
 
-from configs import mod_conf
-from boards import board_shortnames
-from db import db_m, db_q
-from db.redis import get_redis
+from ...configs import mod_conf
+from ...boards import board_shortnames
+from ...db import db_m, db_q
+from ...db.redis import get_redis
 from .base_fc import BaseFilterCache
 
 FILTER_INSERT_BATCH = 1000

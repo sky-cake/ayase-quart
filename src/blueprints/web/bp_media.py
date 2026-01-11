@@ -4,8 +4,8 @@ import re
 from quart import Blueprint, abort
 from werkzeug.security import safe_join
 
-from configs import media_conf
-from utils.web_helpers import send_file_no_headers
+from ...configs import media_conf
+from ...utils.web_helpers import send_file_no_headers
 
 bp = Blueprint("bp_app_media", __name__)
 

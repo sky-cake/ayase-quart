@@ -1,9 +1,9 @@
 import asyncio
 from functools import cache, wraps
 
-from configs import db_conf, db_mod_conf, mod_conf
-from db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
-from enums import DbType
+from ..configs import db_conf, db_mod_conf, mod_conf
+from ..db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
+from ..enums import DbType
 
 
 @cache

@@ -10,12 +10,12 @@ from typing import Optional
 
 import click
 
-from boards import board_shortnames
-from cli.utils import MockAdmin, print_list_of_dict, print_result
-from configs import app_conf
-from db import close_all_databases
-from enums import ModStatus, PublicAccess, ReportAction, SubmitterCategory
-from moderation.report import (
+from ..boards import board_shortnames
+from ..cli.utils import MockAdmin, print_list_of_dict, print_result
+from ..configs import app_conf
+from ..db import close_all_databases
+from ..enums import ModStatus, PublicAccess, ReportAction, SubmitterCategory
+from ..moderation.report import (
     delete_report_if_exists,
     edit_report_if_exists,
     get_report_count,

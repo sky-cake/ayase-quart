@@ -4,8 +4,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from search.loader import load_full, load_incremental
-from search.providers import get_index_search_provider
+from .loader import load_full, load_incremental
+from .providers import get_index_search_provider
 
 help_text = """
 Usage: python -m search COMMANDS [args]

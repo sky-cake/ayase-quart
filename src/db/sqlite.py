@@ -1,7 +1,6 @@
 import aiosqlite
 
-from configs import mod_conf
-
+from ..configs import mod_conf
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 

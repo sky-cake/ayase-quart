@@ -2,8 +2,8 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Generator
 
-from boards import board_shortnames
-from db import db_q
+from ...boards import board_shortnames
+from ...db import db_q
 
 type NumOpGen = Generator[list[tuple[int, int]], Any, None]
 

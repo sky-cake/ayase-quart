@@ -1,22 +1,22 @@
 from datetime import datetime
 from typing import Optional
 
-from asagi_converter import get_post, move_post_to_delete_table
-from configs import index_search_conf, mod_conf
-from db import db_m, db_q
-from enums import (
+from ..asagi_converter import get_post, move_post_to_delete_table
+from ..configs import index_search_conf, mod_conf
+from ..db import db_m, db_q
+from ..enums import (
     ModStatus,
     PublicAccess,
     ReportAction,
     SubmitterCategory
 )
-from leafs import post_files_delete, post_files_hide, post_files_show
-from moderation import fc
-from moderation.user import Permissions, User
-from search.post_metadata import board_2_int, board_int_doc_id_2_pk
-from search.providers import get_index_search_provider
-from utils.validation import validate_board
-from security import get_csrf_input
+from ..leafs import post_files_delete, post_files_hide, post_files_show
+from ..search.post_metadata import board_2_int, board_int_doc_id_2_pk
+from ..search.providers import get_index_search_provider
+from ..utils.validation import validate_board
+from ..security import get_csrf_input
+from . import fc
+from .user import Permissions, User
 
 
 category_options_html = '\n'.join(

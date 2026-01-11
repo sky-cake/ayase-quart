@@ -6,9 +6,9 @@ from typing import Any, Iterable, Optional
 from quart_auth import Action, AuthUser
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from configs import mod_conf
-from db import db_m
-from db.redis import get_redis
+from ..configs import mod_conf
+from ..db import db_m
+from ..db.redis import get_redis
 
 REDIS_MOD_DB: int = mod_conf.get('redis_db', 1)
 

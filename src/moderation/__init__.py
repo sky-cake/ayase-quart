@@ -1,8 +1,8 @@
-from configs import mod_conf
-from db import db_m
-from moderation.filter_cache import BaseFilterCache, get_filter_cache
-from moderation.user import Permissions, create_user_if_not_exists
-from utils import make_src_path, read_file
+from ..configs import mod_conf
+from ..db import db_m
+from ..utils import make_src_path, read_file
+from .filter_cache import BaseFilterCache, get_filter_cache
+from .user import Permissions, create_user_if_not_exists
 
 
 async def init_moderation():

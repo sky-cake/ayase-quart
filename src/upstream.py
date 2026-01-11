@@ -1,6 +1,6 @@
 from functools import cache, lru_cache
 
-from configs import archive_conf
+from .configs import archive_conf
 
 CANONICAL_HOST: str = archive_conf['canonical_host']
 CANONICAL_NAME: str = archive_conf['canonical_name']

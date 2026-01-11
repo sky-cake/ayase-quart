@@ -1,7 +1,7 @@
 import click
 from tabulate import tabulate
 
-from moderation.user import User
+from ..moderation.user import User
 
 
 class MockAdmin(User):

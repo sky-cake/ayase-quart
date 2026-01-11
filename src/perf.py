@@ -1,7 +1,7 @@
 from time import perf_counter
 from logging import getLogger
 
-from configs import TESTING
+from .configs import TESTING
 
 logger = getLogger('perf')
 

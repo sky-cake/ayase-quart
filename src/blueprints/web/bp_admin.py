@@ -1,17 +1,17 @@
 from quart import Blueprint, flash, redirect, request, url_for
 from html import escape
 
-from asagi_converter import get_latest_ops_as_catalog
-from boards import board_shortnames
-from forms import UserCreateForm, UserEditForm, CSRFForm
-from moderation.auth import (
+from ...asagi_converter import get_latest_ops_as_catalog
+from ...boards import board_shortnames
+from ...forms import UserCreateForm, UserEditForm, CSRFForm
+from ...moderation.auth import (
     load_web_usr_data,
     login_web_usr_required,
     require_web_usr_is_active,
     require_web_usr_permissions,
     web_usr_is_admin
 )
-from moderation.user import (
+from ...moderation.user import (
     Permissions,
     create_user_if_not_exists,
     delete_user,
@@ -20,9 +20,9 @@ from moderation.user import (
     get_user_by_id,
     is_valid_creds
 )
-from posts.template_optimizer import render_catalog_card, wrap_post_t
-from render import render_controller
-from templates import (
+from ...posts.template_optimizer import render_catalog_card, wrap_post_t
+from ...render import render_controller
+from ...templates import (
     template_catalog,
     template_users_create,
     template_users_delete,
@@ -30,7 +30,7 @@ from templates import (
     template_users_index,
     template_users_view
 )
-from security import get_csrf_input
+from ...security import get_csrf_input
 
 
 bp = Blueprint('bp_web_admin', __name__)

@@ -2,10 +2,12 @@ import importlib
 import pkgutil
 from abc import ABC, abstractmethod
 
-from configs import search_plugins_conf
-from forms import SearchForm
 from jinja2 import Template
 from wtforms import Field
+
+from ..configs import search_plugins_conf
+from ..forms import SearchForm
+from . import REPO_PKG
 
 
 class SearchPluginResult:
@@ -83,7 +85,7 @@ async def intersect_search_plugin_results(search_plugins: dict[str, SearchPlugin
 def load_search_plugins() -> dict[str, SearchPlugin]:
     """Returns {<plugin module name>: <SearchPlugin>}"""
     plugins: dict[str, SearchPlugin] = {}
-    package_module = importlib.import_module('plugins.search')
+    package_module = importlib.import_module(f'{REPO_PKG}.plugins.search')
 
     for _, module_name, is_pkg in pkgutil.iter_modules(package_module.__path__, package_module.__name__ + '.'):
         module = importlib.import_module(module_name)

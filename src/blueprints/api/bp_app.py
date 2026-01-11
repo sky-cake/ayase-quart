@@ -1,10 +1,10 @@
 from quart import Blueprint
 
-from asagi_converter import generate_catalog, generate_index, generate_thread
-from configs import app_conf
-from moderation import fc
-from moderation.auth import api_usr_authenticated
-from utils.validation import validate_board
+from ...asagi_converter import generate_catalog, generate_index, generate_thread
+from ...configs import app_conf
+from ...moderation import fc
+from ...moderation.auth import api_usr_authenticated
+from ...utils.validation import validate_board
 
 bp = Blueprint("bp_api_app", __name__, url_prefix='/api/v1')
 

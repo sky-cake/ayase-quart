@@ -1,4 +1,4 @@
-from db import db_eav
+from ..db import db_eav
 
 
 class EAV:

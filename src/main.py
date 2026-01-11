@@ -9,15 +9,15 @@ from quart_rate_limiter import RateLimiter
 from quart_schema import RequestSchemaValidationError
 from werkzeug.exceptions import HTTPException
 
-from blueprints import blueprints
-from configs import QuartConfig, app_conf, mod_conf, index_search_conf
-from db import db_q
-from db.redis import close_redis
-from moderation import fc, init_moderation
-from render import render_controller
-from templates import render_constants, template_error_message
-from utils.web_helpers import Quart2
-from plugins.i_blueprints import register_blueprint_plugins
+from .blueprints import blueprints
+from .configs import QuartConfig, app_conf, mod_conf, index_search_conf
+from .db import db_q
+from .db.redis import close_redis
+from .moderation import fc, init_moderation
+from .render import render_controller
+from .templates import render_constants, template_error_message
+from .utils.web_helpers import Quart2
+from .plugins.i_blueprints import register_blueprint_plugins
 
 
 async def print_exception(e: Exception):
@@ -52,18 +52,17 @@ async def close_dbs():
     await db_q.close_db_pool()
 
     if mod_conf['enabled']:
-        from db import db_m
+        from .db import db_m
         await db_m.close_db_pool()
 
     if index_search_conf.get('enabled', False):
-        from search import get_index_search_provider
+        from .search import get_index_search_provider
         sp = get_index_search_provider()
         await sp.close()
 
 
 def create_app():
     file_dir = os.path.dirname(__file__)
-    os.chdir(file_dir)
 
     app = Quart2(__name__)
 
@@ -90,7 +89,7 @@ def create_app():
     if mod_conf['enabled']:
         from quart_schema import QuartSchema
 
-        from moderation.auth import auth_api, auth_web
+        from .moderation.auth import auth_api, auth_web
         auth_api.init_app(app)
         auth_web.init_app(app)
         QuartSchema(app)

@@ -29,12 +29,12 @@ from wtforms.validators import (
     ValidationError
 )
 
-from boards import board_shortnames
-from configs import index_search_conf, vanilla_search_conf
-from enums import SubmitterCategory
-from moderation.user import Permissions, is_valid_creds
-from posts.capcodes import Capcode
-from utils.integers import clamp_positive_int
+from ..boards import board_shortnames
+from ..configs import index_search_conf, vanilla_search_conf
+from ..enums import SubmitterCategory
+from ..moderation.user import Permissions, is_valid_creds
+from ..posts.capcodes import Capcode
+from ..utils.integers import clamp_positive_int
 
 LENGTH_MD5_HASH = 32
 

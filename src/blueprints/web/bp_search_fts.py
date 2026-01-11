@@ -3,13 +3,13 @@ from datetime import timedelta
 from quart import Blueprint, request, url_for
 from quart_rate_limiter import rate_limit
 
-from moderation.auth import (
+from ...moderation.auth import (
     load_web_usr_data,
     web_usr_is_admin,
     web_usr_logged_in
 )
-from blueprints.web.bp_search import search_handler, SearchHandlerFTS
-from security import inject_csrf_token_to_session
+from ...blueprints.web.bp_search import search_handler, SearchHandlerFTS
+from ...security import inject_csrf_token_to_session
 
 
 bp = Blueprint("bp_web_index_search", __name__)

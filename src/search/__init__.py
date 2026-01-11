@@ -1,10 +1,10 @@
 from quart import flash
 
-from asagi_converter import search_posts
-from configs import index_search_conf, vanilla_search_conf
-from search.post_metadata import board_2_int
-from search.providers import get_index_search_provider
-from search.query import IndexSearchQuery, get_index_search_query
+from ..asagi_converter import search_posts
+from ..configs import index_search_conf, vanilla_search_conf
+from .post_metadata import board_2_int
+from .providers import get_index_search_provider
+from .query import IndexSearchQuery, get_index_search_query
 
 
 async def _get_posts_and_total_hits_fts(form_data: dict) -> tuple[list[dict], int]:
