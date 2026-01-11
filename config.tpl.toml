@@ -139,7 +139,7 @@ enabled = true
 highlight = false # highlight results?
 hits_per_page = 50
 max_hits = 1_000
-provider = 'lnx' # 'lnx', 'meili', 'manticore', 'typesense', 'quickwit'
+provider = 'lnx' # 'lnx', 'meili', 'typesense'
 host = 'http://localhost:8000' # index search host. It should really be a LAN IP address like '192.168.1.122' - not 'localhost', nor a domain name.
 headers = { content-type = 'application/json', Authorization = 'password' }
 version = '1' # only matters for quickwit

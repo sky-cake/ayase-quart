@@ -96,9 +96,7 @@ Assuming you have a data source set up, you can:
         |-------------|--------|-------|
         | [LNX      ](https://docs.lnx.rs/) | [lnx](https://github.com/lnx-search/lnx) | (fully supported, tested) |
         | [Meili    ](https://www.meilisearch.com/docs/learn/getting_started/installation) | [meilisearch](https://github.com/meilisearch/meilisearch) | (partial support, not tested) |
-        | [Manticore](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [manticoresearch](https://github.com/manticoresoftware/manticoresearch) | (partial support, not tested) |
         | [TypeSense](https://typesense.org/docs/guide/install-typesense.html) | [typesense](https://github.com/typesense/typesense) | (partial support, not tested) |
-        | [QuickWit ](https://quickwit.io/docs/get-started/quickstart) | [quickwit](https://github.com/quickwit-oss/quickwit) | (partial support, not tested) |
 
     - Remember to check that your config port matches the docker container port.
     - Run `python -m src.search load --reset board1 [board2 [board3 ...]`.

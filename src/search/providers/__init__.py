@@ -48,12 +48,8 @@ def get_index_search_provider():
             from .meili import MeiliSearch as Search_p
         case IndexSearchType.typesense:
             from .typesense import TypesenseSearch as Search_p
-        case IndexSearchType.manticore:
-            from .manticore import ManticoreSearch as Search_p
         case IndexSearchType.lnx:
             from .lnx import LnxSearch as Search_p
-        case IndexSearchType.quickwit:
-            from .quickwit import QuickwitSearch as Search_p
         case _:
             from .lnx import LnxSearch as Search_p
 

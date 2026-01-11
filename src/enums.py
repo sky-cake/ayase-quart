@@ -9,10 +9,8 @@ class DbType(Enum):
 
 class IndexSearchType(StrEnum):
     meili = 'meili'
-    manticore = 'manticore'
     lnx = 'lnx'
     typesense = 'typesense'
-    quickwit = 'quickwit'
 
 
 class ModStatus(StrEnum):
