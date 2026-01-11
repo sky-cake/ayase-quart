@@ -17,7 +17,7 @@ from .base_fc import BaseFilterCache
 
 FILTER_INSERT_BATCH = 1000
 
-FC_DEFAULT_DUMP_DIR = '../data/filter_cache/'
+FC_DEFAULT_DUMP_DIR = './data/filter_cache/'
 FC_DEFAULT_KEY_PREFIX = 'filter_cache:'
 FC_DEFAULT_DB = 4
 

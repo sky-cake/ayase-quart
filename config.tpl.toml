@@ -190,7 +190,7 @@ database = 'path/to/moderation.db' # path to the moderation database
 db = 4 # redis database id (default 4)
 
 fc_key_prefix = 'filter_cache:' # (default 'filter_cache:')
-fc_dump_dir = '../data/filter_cache/' # (default '../data/filter_cache/')
+fc_dump_dir = './data/filter_cache/' # (default './data/filter_cache/')
 bloom_err_rate = 0.01  # 1% false positive rate (default 0.01)
 bloom_init_size = 4_000_000  # Initial capacity per board (default 8_000_000)
 bloom_resize_mult = 2  # Growth factor when capacity is reached (default 2)
