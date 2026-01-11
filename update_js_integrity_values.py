@@ -3,7 +3,6 @@ import hashlib
 import os
 import base64
 import json
-from utils import make_src_path
 
 def calculate_integrity(file_path: str) -> str:
     with open(file_path, 'rb') as f:
@@ -45,8 +44,8 @@ def make_path(*path):
     return os.path.join(os.path.dirname(__file__), *path)
 
 def main():
-    js_dir = make_path('static', 'js')
-    html_dir = make_path('templates')
+    js_dir = make_path('src', 'static', 'js')
+    html_dir = make_path('src', 'templates')
 
     assert os.path.isdir(js_dir)
     assert os.path.isdir(html_dir)
@@ -55,7 +54,7 @@ def main():
     integrities = dict(sorted(integrities.items()))
 
     # update_html_integrities(html_dir, integrities)
-    with open(make_src_path('asset_hashes.json'), 'w') as f:
+    with open(make_path('asset_hashes.json'), 'w') as f:
         json.dump(integrities, f, indent=4)
 
 if __name__ == '__main__':

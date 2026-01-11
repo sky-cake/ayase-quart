@@ -2,8 +2,6 @@ import tomllib
 import json
 from functools import cache
 
-from ..utils import make_src_path
-
 CONF_FILE = 'config.toml'
 TEST_CONF_FILE = 'config-test.toml' # not used yet
 ASSET_HASHES_FILE = 'asset_hashes.json'
@@ -20,7 +18,7 @@ def _load_config_toml(filename: str) -> dict:
 
 @cache
 def _load_json_file(filename: str) -> dict:
-    with open(make_src_path(filename), 'rb') as f:
+    with open(filename, 'rb') as f:
         return json.load(f)
 
 def load_asset_hashes() -> dict:
