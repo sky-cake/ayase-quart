@@ -78,11 +78,67 @@ postgresql = [
     'asyncpg',
 ]
 
+# https://github.com/pypa/pip/issues/13449#issuecomment-3671676583 for pip in docker
+[dependency-groups]
+base = [
+    'aiofiles',
+    'aiohttp',
+    'aiosqlite',
+    'async-lru',
+    'coredis',
+    'click',
+    'Flask-WTF',
+    'hypercorn',
+    'jinja2',
+    'msgpack',
+    'markupsafe',
+    'orjson',
+    'pillow',
+    'python-dateutil',
+    'pybase64',
+    'Quart',
+    'quart-wtforms',
+    'quart-auth',
+    'quart-flask-patch',
+    'quart-rate-limiter',
+    'quart-schema[pydantic]',
+    'quart-uploads',
+    'requests',
+    'tabulate',
+    'tqdm',
+    'zlib-ng',
+]
+dev = [
+    'pytest',
+    'pytest-asyncio',
+    'requests',
+]
+mysql = [
+    'aiomysql',
+    'cryptography',
+]
+postgresql = [
+    'asyncpg',
+]
+all = [
+    {include-group = "base"},
+    {include-group = "postgresql"},
+    {include-group = "mysql"},
+    {include-group = "dev"},
+]
+
 [build-system]
 requires = ['setuptools']
 build-backend = 'setuptools.build_meta'
 [tool.setuptools.packages.find]
 where = ['src']
+[tool.setuptools.package-data]
+ayase_quart = [
+    'static/**/*',
+    'templates/**/*',
+    'fonts/**/*',
+    'moderation/sql/**/*',
+]
 
 [tool.uv]
 package = true
