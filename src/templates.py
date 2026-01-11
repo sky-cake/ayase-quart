@@ -1,20 +1,19 @@
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, select_autoescape, PackageLoader
 from quart import get_flashed_messages, request, url_for
 from functools import cache
 
 from .boards import board_objects
 from .configs import (
-    SITE_NAME,
+    SITE_NAME, REPO_PKG,
     app_conf,
     archive_conf,
     index_search_conf,
     mod_conf,
     site_conf,
     stats_conf,
-    vanilla_search_conf
+    vanilla_search_conf,
 )
 from .configs.conf_loader import load_asset_hashes
-from .utils import make_src_path
 from .utils.timestamps import ts_2_formatted
 
 @cache
@@ -44,7 +43,7 @@ render_constants = dict(
 )
 
 env = Environment(
-    loader=FileSystemLoader(make_src_path('templates')),
+    loader=PackageLoader(REPO_PKG),
     autoescape=select_autoescape(["html", "xml"]),
     auto_reload=app_conf.get('autoreload', True),
 )
@@ -78,7 +77,7 @@ template_reports_edit = env.get_template('reports/edit.html')
 
 
 safe_env = Environment(
-    loader=FileSystemLoader(make_src_path('templates')),
+    loader=PackageLoader(REPO_PKG),
     auto_reload=app_conf.get('autoreload', True),
     trim_blocks=True,
     lstrip_blocks=True,

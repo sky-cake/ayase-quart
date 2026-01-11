@@ -5,9 +5,8 @@ from abc import ABC, abstractmethod
 from jinja2 import Template
 from wtforms import Field
 
-from ..configs import search_plugins_conf
+from ..configs import search_plugins_conf, REPO_PKG
 from ..forms import SearchForm
-from . import REPO_PKG
 
 
 class SearchPluginResult:

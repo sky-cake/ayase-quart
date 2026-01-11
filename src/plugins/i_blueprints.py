@@ -3,7 +3,7 @@ import pkgutil
 
 from quart import Quart
 
-from . import REPO_PKG
+from ..configs import REPO_PKG
 
 
 def register_blueprint_plugins(app: Quart) -> None:
