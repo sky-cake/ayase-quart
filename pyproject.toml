@@ -1,10 +1,10 @@
 [project]
-name = 'Ayase-Quart'
+name = 'ayase-quart'
 version = '0.0.1'
 requires-python = '>=3.12,<3.14'
 description = 'A web interface for imageboard archives using the Asagi database schema'
 readme = 'README.md'
-license = 'AGPLv3'
+license = 'AGPL-3.0-or-later'
 license-files = ['LICENSE']
 authors = [
     { name = 'sky-cake', email = 'ayasequart@proton.me' },
@@ -17,7 +17,6 @@ classifiers = [
     'Intended Audience :: Developers',
     'Intended Audience :: System Administrators',
     'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU Affero General Public License v3',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Topic :: Communications :: BBS',
@@ -67,8 +66,6 @@ Demo = 'https://ayasequart.org'
 
 [project.optional-dependencies]
 dev = [
-]
-tests = [
     'pytest',
     'pytest-asyncio',
     'requests',
@@ -80,6 +77,15 @@ mysql = [
 postgresql = [
     'asyncpg',
 ]
+
+[build-system]
+requires = ['setuptools']
+build-backend = 'setuptools.build_meta'
+[tool.setuptools]
+packages = ['src'] # TODO: nest package under src
+
+[tool.uv]
+package = true
 
 [tool.pytest.ini_options]
 testpaths = [

@@ -1,28 +1,13 @@
-# Custom dev setups
+# custom dev setups
 launch.json
 .vscode
+notes/
 
-# Build artifacts
-__pycache__/
-dist/
-build/
-sdist/
-target/
-*.log
+# runtime data
+data/
 secret.txt
 asset_hashes.json
 *.dump
-
-# Virtualenvs
-.env
-.venv
-env/
-venv/
-env.bak/
-venv.bak/
-
-# full text search
-data/
 
 # sqlite databases
 *.db
@@ -30,7 +15,7 @@ data/
 # SSL keys
 *.pem
 
-# User toml config files, except templates and pyproject
+# user toml config files, except templates and pyproject
 *.toml
 !*.tpl.toml
 !pyproject.toml
@@ -46,3 +31,20 @@ src/plugins/search/*
 
 src/plugins/static/*.css
 src/plugins/static/*.js
+
+# Build artifacts
+__pycache__/
+dist/
+build/
+sdist/
+target/
+*.log
+*.egg-info/
+
+# Virtualenvs
+.env
+.venv
+env/
+venv/
+env.bak/
+venv.bak/
