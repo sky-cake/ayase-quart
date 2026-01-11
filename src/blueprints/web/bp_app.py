@@ -33,7 +33,7 @@ from templates import (
 )
 from threads import render_thread_stats
 from perf import Perf
-from utils.validation import validate_board, validate_threads, validate_catalog
+from utils.validation import validate_board
 from moderation.report import generate_report_form
 from security import inject_csrf_token_to_session, get_csrf_input
 
@@ -101,7 +101,6 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
     index['threads'] = [{'posts': await fc.filter_reported_posts(posts['posts'], is_authority=logged_in)} for posts in index['threads']]
     p.check('filter_reported')
 
-    validate_threads(index['threads'])
     p.check('validate')
 
     pagination = await make_pagination_board_index(board, index, 0)
@@ -147,7 +146,6 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
     index['threads'] = [{'posts': await fc.filter_reported_posts(posts['posts'], is_authority=logged_in)} for posts in index['threads']]
     p.check('filter_reported')
 
-    validate_threads(index['threads'])
     p.check('validate thread')
 
     pagination = await make_pagination_board_index(board, index, page_num)
@@ -217,8 +215,6 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
 
-    validate_catalog(catalog)
-
     pagination = await make_pagination_catalog(board, catalog, 0)
     p.check('paginate')
 
@@ -258,8 +254,6 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     # `nreplies` won't always be correct, but it does not effect paging
     catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
-
-    validate_catalog(catalog)
 
     pagination = await make_pagination_catalog(board, catalog, page_num)
     p.check('paginate')
@@ -304,7 +298,6 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
     # TODO: only count manually if we can't get the counts from the side tables
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
 
-    validate_threads(thread_dict['posts'])
     p.check('validate')
 
     # posts_t = get_posts_t(thread_dict['posts'], post_2_quotelinks)

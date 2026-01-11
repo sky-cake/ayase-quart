@@ -6,13 +6,9 @@
 {% endblock %}
 
 {% block body %}
-{% if threads %}
 {% include 'pagination.html' %}
 <div class="board">
     {{ threads|safe }}
 </div>
 {% include 'pagination.html' %}
-{% else %}
-    No results
-{% endif %}
 {% endblock %}
