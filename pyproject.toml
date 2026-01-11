@@ -61,8 +61,8 @@ Changes = 'https://ayasequart.org/about#news'
 Source = 'https://github.com/sky-cake/ayase-quart'
 Demo = 'https://ayasequart.org'
 
-# [project.scripts]
-# ayaseq = 'src.cli'
+[project.scripts]
+ayaseq = 'ayase_quart.cli:main'
 
 [project.optional-dependencies]
 dev = [
@@ -81,8 +81,8 @@ postgresql = [
 [build-system]
 requires = ['setuptools']
 build-backend = 'setuptools.build_meta'
-[tool.setuptools]
-packages = ['src'] # TODO: nest package under src
+[tool.setuptools.packages.find]
+where = ['src']
 
 [tool.uv]
 package = true

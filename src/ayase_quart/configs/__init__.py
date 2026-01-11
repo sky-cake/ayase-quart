@@ -7,7 +7,7 @@ from ..utils import strip_slashes as sslash
 from .conf_common import fuvii
 from .conf_loader import load_config_file
 
-REPO_PKG = 'src' # TODO: remember to change after turning repo to package
+REPO_PKG = 'ayase_quart'
 
 sslash_both = lambda x: sslash(x, both=True)
 
