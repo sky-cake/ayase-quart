@@ -304,6 +304,36 @@ When doing multiple edits during development/debugging, disabling integrity chec
 
 Check [`systemd.conf`](/systemd.conf) for an example systemd config file.
 
+## Debugging in VS Code
+
+Create the following launch target.
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Hypercorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "hypercorn",
+            "env": {
+                "QUART_APP": "app.py",
+                "QUART_DEBUG": "1"
+            },
+            "args": [
+                "-w",
+                "2",
+                "-b",
+                "127.0.0.1:9001",
+                "src:app"
+            ],
+            "autoStartBrowser": true,
+            "justMyCode": true,
+        }
+    ]
+}
+```
 
 ## Troubleshooting
 
