@@ -1,7 +1,7 @@
 import os
 
 from ..enums import DbType
-from ..utils import make_src_path, split_csv
+from ..utils import split_csv
 from ..utils import strip_slashes as sslash
 
 from .conf_common import fuvii
@@ -79,16 +79,8 @@ search_plugins_conf = conf.get('search_plugins', {'enabled': False})
 
 if sqlite_db := db_conf.get('sqlite', {}).get('database'):
     db_conf['database'] = sqlite_db
-# if moderation_db := db_mod_conf.get('database'):
-#     db_mod_conf['database'] = moderation_db
 fuvii(db_mod_conf, 'database') # ^ not sure what the logic of this one is
 
-def make_src_path_if_exists(x):
-    if not x:
-        return x
-    return make_src_path(x)
-fuvii(app_conf, 'ssl_key', make_src_path_if_exists)
-fuvii(app_conf, 'ssl_cert', make_src_path_if_exists)
 
 class QuartConfig():
     TESTING = app_conf.get('testing', False)
