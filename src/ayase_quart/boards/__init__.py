@@ -35,6 +35,18 @@ def get_shorts_objects(boards: dict):
     board_objects.sort(key=lambda x: x['shortname'])
     return board_shorts, board_objects
 
+# TODO: figure out how to integrate with _get_board_views
+def validate_boards_in_db(boards: dict=None) -> dict:
+    if boards is None:
+        boards = _load_boards_toml()
+    db_tables = asyncio.run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
+    valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
+    if removals := [board for board in boards if board not in valid_boards]:
+        for b in removals:
+            del boards[b]
+    if not boards:
+        raise ValueError(f'No boards to show! Configure one of {valid_boards}')
+    return boards
 
 def _get_board_views():
     boards = _load_boards_toml()
