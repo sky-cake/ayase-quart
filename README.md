@@ -317,20 +317,19 @@ Create the following launch target.
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Hypercorn",
+            "name": "AQ Debug",
             "type": "debugpy",
             "request": "launch",
             "module": "hypercorn",
+            "cwd": "path/to/ayase-quart",
             "env": {
-                "QUART_APP": "app.py",
-                "QUART_DEBUG": "1"
             },
             "args": [
                 "-w",
                 "2",
                 "-b",
                 "127.0.0.1:9001",
-                "ayase_quart.main:app"
+                "src/ayase_quart.main:app"
             ],
             "autoStartBrowser": true,
             "justMyCode": true,
