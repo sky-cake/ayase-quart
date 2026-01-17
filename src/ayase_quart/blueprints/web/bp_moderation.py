@@ -33,7 +33,13 @@ from ...paginate import Pagination
 from ...render import render_controller
 from ...templates import template_reports_index
 from ...utils.validation import validate_board
-from ...security import apply_csrf_validation_on_endpoint, session_csrf_token_name, validate_csrf_token, get_csrf_input
+from ...security import (
+    apply_csrf_validation_on_endpoint,
+    session_csrf_token_name,
+    validate_csrf_token,
+    get_csrf_input,
+    inject_csrf_token_to_session,
+)
 from ...upstream import get_post_upstream
 
 
@@ -181,6 +187,7 @@ async def make_report_pagination(mod_status: ModStatus, boards: list[str], repor
 
 @bp.get('/reports/closed')
 @bp.get('/reports/closed/<int:page_num>')
+@inject_csrf_token_to_session
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
@@ -205,6 +212,7 @@ async def reports_closed(is_admin: bool, page_num: int=0):
 
 @bp.get('/reports/open')
 @bp.get('/reports/open/<int:page_num>')
+@inject_csrf_token_to_session
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
