@@ -1,0 +1,211 @@
+[app]
+testing = false
+secret = 'DEFAULT_CHANGE_ME' # python -c "import secrets as s; print(s.token_hex(24))"
+validate_boards_db = true
+autoreload = false
+api = false # serve catalog.json, thread.json, index.json ?
+url = 'http://127.0.0.1:9001' # 'http://127.0.0.1:9001' 'https://192.168.1.100' 'https://ayasequart.com' # everything before the paths/querystrings in your url
+port = 9001
+# ssl_key = 'key.pem'
+# ssl_cert = 'cert.pem'
+
+
+proxy_trusted_hops = 0
+
+# rate limit endpoints?
+# all rates are currently hard coded
+# adding configs for each endpoint would be an appreciated contribution
+rate_limiter = true
+
+
+# tells web crawlers if they can crawl your site or not, when they ask
+allow_robots = false # robots.txt
+
+# you can change this to increase your security
+login_endpoint = '/login'
+
+
+[site]
+name = 'Ayase Quart'
+theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
+site_email = ''
+anonymous_username = 'Anonymous'
+# custom_banner = 'Important message!' # html, empty string ('') to disable, default None == promo banner
+
+[archive]
+type = 'yotsuba' # 'yotsuba' (4chan), 'vichan' (lainchan, holotower)
+canonical_name = '4chan' # '4chan', 'Lainchan', 'Holotower'
+canonical_host = 'https://boards.4chan.org'
+comments_preescaped = false # false (4chan scrapers), true (vichan APIs)
+# catalog_path = '/catalog.html' # after /{board} default '/catalog'
+# thread_path = '/res/{thread}.html' # after /{board} default '/thread/{thread}'
+# post_path = '#{num}' # after thread_path  default '#p{num}'
+
+
+[stats]
+enabled = true # true/false - allow endpoints for users to view [(posts / YYYY-MM) / board]
+redis = true
+redis_db = 2
+
+
+[traffic_log]
+# if enabled, this will create a sqlite database with insightful traffic fields for every request
+# this is unrelated to the hypercorn logging, and is purely application side logging
+enabled = true
+database = '/path/to/traffic.db'
+
+# do not log URL paths that begin with this,
+ignore_path_startswith = ['/srv', '/static', '/favico'] # list
+# ignore_path_startswith = '/srv' # string (if singular)
+
+
+[db]
+db_type = 'mysql' # mysql, sqlite, postgresql
+echo = false # if true, print rendered sql statements to console
+
+[db.mysql] # follow pymysql/aiomysql connection keys
+host = '127.0.0.1'
+port = 3306
+# unix_socket = '/var/run/mysqld/mysqld.sock'
+db = 'asagi'
+user = 'asagi'
+password = 'asagi'
+minsize = 1
+maxsize = 50
+
+[db.sqlite] # follow aiosqlite connection keys
+database = 'path/to/file.db'
+
+
+[db.postgresql] # follow aiosqlite connection keys
+host = 'localhost' # also used for unix domain socket
+port = 5432
+user = 'asagi'
+password = 'asagi'
+database = 'asagi'
+min_size = 1
+max_size = 50
+
+
+# creates a connection pool per db per process
+# db is set per functionality (ex: [moderation])
+[redis] # follow coredis connection keys
+host = "127.0.0.1"
+port = 6379
+max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
+
+
+[media]
+# set image_uri or thumb_uri to '' if you don't want any boards to serve image, or thumb media, respectively
+image_uri = "https://192.168.1.16:9001/static/ritual/{board}/image" # must contain {board}
+thumb_uri = "https://192.168.1.16:9001/static/ritual/{board}/thumb" # must contain {board}
+
+# Below are optional settings for serving media outside the quart app's static path
+#       i.e. outside of '/path/to/ayase_quart/src/static'
+
+serve_outside_static = false # true, false
+
+# `media_root_path` is the full path to the root media directory on your server
+#       i.e. if you have images like '/mnt/dl/<board>/image' set this to '/mnt/dl'
+media_root_path = ''
+
+# only serve files with these extension from outside the static path
+valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
+
+# `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board>/image
+#       i.e. if you want to serve content from '/srv/media/<board>/image' set this to '/srv/media'
+endpoint = '/srv/media'
+
+# If you use this, declare the two URIs like below, and comment out the above URI declarations.
+# image_uri = "/<endpoint>/{board}/image" # e.g. "/srv/media/{board}/image"
+# thumb_uri = "/<endpoint>/{board}/thumb" # e.g. "/srv/media/{board}/thumb"
+
+# The default is to serve media from all boards [Aside: set image_uri or thumb_url to '' to not serve the images, or thumbs, respectively]
+# You can specify a subset of boards with a whitelist
+boards_with_image = '' # comma separated list of board shortnames like '' or 'a,o'
+boards_with_thumb = '' # comma separated list of board shortnames like '' or 'g,ck,o'
+
+
+[vanilla_search]
+enabled = true
+highlight = false # highlight results?
+hits_per_page = 50
+max_hits = 1_000
+multi_board_search = false # allow searching multiple boards at once?
+
+
+[index_search]
+enabled = true
+highlight = false # highlight results?
+hits_per_page = 50
+max_hits = 1_000
+provider = 'lnx' # 'lnx', 'meili', 'typesense'
+host = 'http://localhost:8000' # index search host. It should really be a LAN IP address like '192.168.1.122' - not 'localhost', nor a domain name.
+headers = { content-type = 'application/json', Authorization = 'password' }
+version = '1' # only matters for quickwit
+multi_board_search = true # allow searching multiple boards at once?
+
+[index_search.lnx]
+max_concurrency = 4 # default 4, good range = 4-16, keep low for larger datasets to prevent io & lock contention, otherwise higher to scale requests/s
+reader_threads = 8 # vcpus, default 4
+writer_threads = 8 # vcpus, default 4
+writer_buffer = 2_147_483_648 # bytes before mandatory block compaction & disk flush, plan for extra overhead, default 268_435_456 (256MB)
+
+[search_plugins]
+enabled = false # if true, load search plugins from the plugins directory
+
+
+[moderation]
+enabled = true # true, false
+
+admin_user = 'admin'
+admin_password = 'admin'
+
+
+hide_post_if_reported = true # true, false
+
+# if a post is reported N times from different IPs, then hide it
+# 'hide_post_if_reported' takes precedence
+n_reports_then_hide = 1
+
+
+hide_upstream_deleted_posts = true # hide upstream staff deleted posts in archive
+remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
+
+filter_cache_type = 'sqlite' # 'sqlite', 'redis'
+
+regex_filter = '' # never serve posts matching this regex pattern e.g. 'gentoo|based'
+path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/releases
+
+# path where hidden images should go
+# if empty, images can still be served if their URLs are known
+hidden_images_path = '' # e.g. '/home/garbage/disposal'
+
+[moderation.sqlite]
+database = 'path/to/moderation.db' # path to the moderation database
+
+# Use redis to cache user auth and filter reported posts
+# Ensure redis connection is valid (see [redis])
+[moderation.redis]
+db = 4 # redis database id (default 4)
+
+fc_key_prefix = 'filter_cache:' # (default 'filter_cache:')
+fc_dump_dir = './data/filter_cache/' # (default './data/filter_cache/')
+bloom_err_rate = 0.01  # 1% false positive rate (default 0.01)
+bloom_init_size = 4_000_000  # Initial capacity per board (default 8_000_000)
+bloom_resize_mult = 2  # Growth factor when capacity is reached (default 2)
+cuckoo_capacity = 10_000 # total capacity per board (default 10_000)
+cuckoo_bucket = 2000 # capacity per bucket (default 1000)
+cuckoo_iter_max = 5 # bucket swaps per (board, num) (default 10)
+
+[moderation.auth]
+cookie_samesite='Strict'
+cookie_secure=false # set this to true when you are using https / are in production
+cookie_http_only=true # js does not need to access auth cookies
+cookie_name='aq'
+
+cookie_salt='web salt'
+bearer_salt='api salt'
+
+cookie_duration=604_800 # one week
+bearer_duration=604_800 # one week

@@ -54,26 +54,26 @@ At least version SQLite 3.35.0 is required if you want to use the moderation too
 
 Assuming you have a data source set up, you can:
 
-1. Copy `./src/boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
-1. Copy `./src/config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
-	- Generate and set the app secret key. It is used for CSRF, API tokens, and other things.
-		- Run `python -c "import secrets as s; print(s.token_hex(24))"` to generate a secret.
-		- Change the `app.secret` key in `config.toml` from `DEFAULT_CHANGE_ME` to the generated secret.
-    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
-      - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
-      - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
-      - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
-      - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in `./src`. They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
 1. Create a virtualenv and install dependencies,
-   
     ```bash
     python -m venv venv
     source venv/bin/activate
     python -m pip install -r requirements.txt
+    python -m pip install .
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
+1. Copy `./boards.tpl.toml` to `./boards.toml` and edit `./boards.toml` with your desired boards.
+1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
+    -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./config.toml`
+        - It is used for CSRF, API tokens, and other things.
+    - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
+        - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
+        - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
+        - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
+        - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
+1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in cwd (`./`). They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
+
 1. [Optional] Set up redis for moderation bloom filtering.
 
     ```bash
@@ -84,8 +84,8 @@ Assuming you have a data source set up, you can:
     sudo systemctl restart redis
     sudo systemctl status redis
     ```
-1. `python update_js_integrity_values.py` will set HTML `<script>` integrity checksums in a file `src/asset_hashes.json`.
-1. `python main.py`
+1. `ayaseq prep hashjs` will set HTML `<script>` integrity checksums in a file `asset_hashes.json`.
+1. `hypercorn -w 2 -b 127.0.0.1:9001 ayase_quart.main:app` to launch the webserver
 1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
 1. [Optional] Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`.
@@ -96,29 +96,30 @@ Assuming you have a data source set up, you can:
         |-------------|--------|-------|
         | [LNX      ](https://docs.lnx.rs/) | [lnx](https://github.com/lnx-search/lnx) | (fully supported, tested) |
         | [Meili    ](https://www.meilisearch.com/docs/learn/getting_started/installation) | [meilisearch](https://github.com/meilisearch/meilisearch) | (partial support, not tested) |
-        | [Manticore](https://manual.manticoresearch.com/Starting_the_server/Docker?client=Docker#Docker-compose) | [manticoresearch](https://github.com/manticoresoftware/manticoresearch) | (partial support, not tested) |
         | [TypeSense](https://typesense.org/docs/guide/install-typesense.html) | [typesense](https://github.com/typesense/typesense) | (partial support, not tested) |
-        | [QuickWit ](https://quickwit.io/docs/get-started/quickstart) | [quickwit](https://github.com/quickwit-oss/quickwit) | (partial support, not tested) |
 
     - Remember to check that your config port matches the docker container port.
-    - Run `python -m search load --reset board1 [board2 [board3 ...]`.
+    - Run:
+        ```sh
+        ayaseq search index create
+        ayaseq search load full board1 [board2 [board3 ...]]
+        ```
 
 1. [Optional] Submit pull requests with fixes and new features!
 
 
 ## Database Operations
 
-A package called [asagi-tables](https://github.com/fireballz22/asagi-tables) will allow you to do many Asagi schema operations.
+A package called [asagi-tables](https://github.com/sky-cake/asagi-tables) will allow you to do many Asagi schema operations.
 
 
 ## Plugins
 
-Ayase Quart supports,
-  
-  - Search plugins for sql and fts. See `src/plugins/search/search_example.py` for an example.
-  - Endpoint plugins for custom endpoints. See `src/plugins/blueprints/bp_example.py` for an example.
+Ayase Quart supports:
+- Search plugins for sql and fts. See `src/ayase_quart/plugins/search/search_example.py` for an example.
+- Endpoint plugins for custom endpoints. See `src/ayase_quart/plugins/blueprints/bp_example.py` for an example.
 
-When starting AQ, detected and loaded plugins are logged to stdout likeso,
+When starting AQ, detected and loaded plugins are logged to stdout like so:
 
 ```bash
 Loading search plugin: plugins.search.search_tagger
@@ -147,16 +148,17 @@ Only LNX 0.9.0 is supported. 0.10.0 is not a completed version of LNX.
 Terminal A
 
 1. In a terminal, go to `~/ayase-quart/index_search/lnx/`
-2. Review the configs in the file `~/ayase-quart/index_search/lnx/docker-compose.yml`
-3. Spin up LNX container with `sudo docker-compose up`
+1. Review the configs in the file `~/ayase-quart/index_search/lnx/docker-compose.yml`
+1. Spin up LNX container with `sudo docker-compose up`
    - Later, you can run `sudo docker-compose up -d`, but first we need to confirm it's being populated with data
 
 Terminal B
 
 1. If you haven't already, set the index search configs in `config.toml`.
-2. cd to `~/ayase-quart/src` then run `python -m search load [options] a b c g gif ...`
-3. You should see a bunch of loading bars progressing.
-4. In Terminal A, you should see LNX spraying a bunch of output. That's good and means it's working
+1. Run `ayaseq search index reset`
+1. Run `ayaseq search load full a b c g gif ...`
+1. You should see a bunch of loading bars progressing.
+1. In Terminal A, you should see LNX spraying a bunch of output. That's good and means it's working
 
 Now go ahead and try searching the index on you AQ instance in your browser.
 
@@ -193,7 +195,7 @@ fi
 The `main` branch of this repo is considered to be the latest and greatest version of AQ, ready for production.
 
 1. `git pull --ff origin main`
-1. `python update_js_integrity_values.py`
+1. `ayaseq prep hashjs`
 1. `sudo systemctl restart _aq && sleep 1 && sudo systemctl status _aq` assuming a systemd service named `_aq.service` exists.
 1. Note: it's possible fields in `configs.toml` have been added or removed.
 
@@ -205,7 +207,7 @@ If you're on Windows, you can use Git Bash to execute the command.
 
 `openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem`
 
-Save the two certs in `./src`.
+Save the two certs in `./`.
 
 
 ## Themes
@@ -233,9 +235,9 @@ The moderation system requires authentication. The default username and password
 
 Here is a test drive of the cli.
 
-`python ./src/cli/reports.py`
+`python -m ayase_quart.cli.reports`
 ```bash
-Usage: python ./src/cli/reports.py [OPTIONS] COMMAND [ARGS]...
+Usage: python -m ayase_quart.cli.reports [OPTIONS] COMMAND [ARGS]...
 
 Options:
 --help  Show this message and exit.
@@ -248,12 +250,12 @@ cli-get-reports
 cli-reports-action
 ```
 
-`python ./src/cli/reports.py cli-get-report-count`
+`python -m ayase_quart.cli.reports cli-get-report-count`
 ```bash
 Report count: 4
 ```
 
-`python ./src/cli/reports.py cli-get-reports --public_access v --created_at_gte "2024-01-01"`
+`python -m ayase_quart.cli.reports cli-get-reports --public_access v --created_at_gte "2024-01-01"`
 ```bash
 |   report_parent_id | board_shortname   |      num |   thread_num | public_access   | mod_status   | mod_notes   |   ip_count | submitter_category          | submitter_notes   | link                                                |
 |--------------------+-------------------+----------+--------------+-----------------+--------------+-------------+------------+-----------------------------+-------------------+-----------------------------------------------------|
@@ -261,7 +263,7 @@ Report count: 4
 |                  3 | r9k               | 80365280 |     80365251 | v               | o            |             |          1 | DCMA                        | aaaaaa            | http://127.0.0.1:9001/r9k/thread/80365251#p80365280 |
 ```
 
-`python ./src/cli/reports.py cli-reports-action --help`
+`python -m ayase_quart.cli.reports cli-reports-action --help`
 ```bash
 Usage: reports.py cli-reports-action [OPTIONS]
 
@@ -279,7 +281,7 @@ Options:
 
 ### Formatting
 
-Do **not** sort imports automatically. Tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
+Do **not** sort imports automatically. If not configured correctly, some tools will not respect `#noqa`, and will shuffle or delete `quart_flask_patch`.
 
 Lint checking can be performed using ruff:
 
@@ -291,13 +293,13 @@ ruff check
 ### Other
 JS `<script>` ressources should be served with integrity checksums in production.
 ```bash
-python update_js_integrity_values.py
+ayaseq prep hashjs
 ```
-Running the commands above will create/overwrite `src/asset_hashes.json`, which contains the hashes of all javascript files under `/static/js`. This file will be loaded into the templating system and render script tags like so:
+Running the commands above will create/overwrite `asset_hashes.json`, which contains the hashes of all javascript files under `/static/js`. This file will be loaded into the templating system and render script tags like so:
 ```html
 <script type="text/javascript" defer src="/static/js/index.js" integrity="sha384-b9Ktk8DOJhl3DVyrzWsTxgiKty7CS1etyjL6BIRyTvAaW0e1a3m4VSYlsQpjyqlB"></script>
 ```
-When doing multiple edits during development/debugging, disabling integrity checks can be done by deleting or emptying out the `src/asset_hashes.json` file. This will produce script tags like this instead:
+When doing multiple edits during development/debugging, disabling integrity checks can be done by deleting or emptying out the `asset_hashes.json` file. This will produce script tags like this instead:
 ```html
 <script type="text/javascript" defer src="/static/js/index.js"></script>
 ```
@@ -306,6 +308,36 @@ When doing multiple edits during development/debugging, disabling integrity chec
 
 Check [`systemd.conf`](/systemd.conf) for an example systemd config file.
 
+## Debugging in VS Code
+
+Create the following launch target.
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Hypercorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "hypercorn",
+            "env": {
+                "QUART_APP": "app.py",
+                "QUART_DEBUG": "1"
+            },
+            "args": [
+                "-w",
+                "2",
+                "-b",
+                "127.0.0.1:9001",
+                "ayase_quart.main:app"
+            ],
+            "autoStartBrowser": true,
+            "justMyCode": true,
+        }
+    ]
+}
+```
 
 ## Troubleshooting
 
