@@ -21,16 +21,16 @@ asset_hashes.json
 !pyproject.toml
 
 # plugins
-src/plugins/blueprints/*
-!src/plugins/blueprints/__init__.py
-!src/plugins/blueprints/bp_example.py
+src/ayase_quart/plugins/blueprints/*
+!src/ayase_quart/plugins/blueprints/__init__.py
+!src/ayase_quart/plugins/blueprints/bp_example.py
 
-src/plugins/search/*
-!src/plugins/search/__init__.py
-!src/plugins/search/search_example.py
+src/ayase_quart/plugins/search/*
+!src/ayase_quart/plugins/search/__init__.py
+!src/ayase_quart/plugins/search/search_example.py
 
-src/plugins/static/*.css
-src/plugins/static/*.js
+src/ayase_quart/plugins/static/*.css
+src/ayase_quart/plugins/static/*.js
 
 # Build artifacts
 __pycache__/
