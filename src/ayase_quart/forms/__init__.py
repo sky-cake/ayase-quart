@@ -231,6 +231,9 @@ def validate_search_form(form: SearchForm):
 
     form.page.data = clamp_positive_int(form.page.data, 1)
 
+    max_hits_per_page = index_search_conf.get('hits_per_page', 50) if isinstance(form, SearchFormFTS) else vanilla_search_conf.get('hits_per_page', 50)
+    form.hits_per_page.data = int(form.hits_per_page.data or max_hits_per_page)
+
     if form.gallery_mode.data:
         form.has_file.data = True
         form.has_no_file.data = False

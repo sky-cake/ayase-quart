@@ -429,9 +429,9 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     validate_boards(boards)
 
-    # some extra validation
+    # some extra validation since these variables are embedded into sql strings
     order_by: str = dict(asc='asc', desc='desc').get(form_data.get('order_by', 'desc'), 'desc')
-    hits_per_page = int(form_data.get('hits_per_page') or vanilla_search_conf.get('hits_per_page', 50))
+    hits_per_page: int = int(form_data['hits_per_page'])
     page_num: int = int(form_data['page'])
 
     if max_hits and (page_num * hits_per_page > max_hits):

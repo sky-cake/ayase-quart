@@ -20,7 +20,6 @@ from ...perf import Perf
 from ...plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
 from ...moderation.report import generate_report_form
 
-MAX_HITS_PER_PAGE = max(index_search_conf.get('hits_per_page', 50), vanilla_search_conf.get('hits_per_page', 50))
 
 class SearchHandler:
     form: SearchForm
@@ -142,6 +141,8 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     # turn off csrf so search result links can be shared
     handler.form = await handler.form.create_form(meta={'csrf': False}, data=request_args)
 
+    hits_per_page_i = handler.form.hits_per_page.data
+
     did_any_search = False
     posts_t = []
     posts = []
@@ -200,7 +201,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
                 # if total_hits == handler.form.hits_per_page.data:
                 #     await flash('- Max page size reached. Note that AQ does not perform pagination with search plugins. To find other results, specify other query arguments.')
             else:
-                page_count = total_pages(total_hits, handler.form.hits_per_page.data or MAX_HITS_PER_PAGE)
+                page_count = total_pages(total_hits, handler.form.hits_per_page.data)
                 page_links = template_pagination_links(endpoint_path, handler.form.data, page_count, section='resulttop')
                 p.check('templated links')
 
@@ -209,6 +210,16 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     yield_message = ''
     if did_any_search:
         yield_message = f'Searched archive in {time_search_end-time_search_start:,.3f}s. Post search hits: {total_hits:,}'
+
+    # this search field is a bit unusual
+    # - its value is configured
+    # - it's dependent on being for fts or sql
+    # - unlike the field 'page', where 1 is always the right default, 'hits_per_page' doesn't have a correct default
+    # - it's required, but it's also optional
+    # - we don't want it in the GET params if it differs from the default values (None, configured, or fallback defaults)
+    if not hits_per_page_i:
+        # removes param from URL
+        handler.form.hits_per_page.data = hits_per_page_i
 
     search_plugin_html = ''
     for plugin_template in plugin_templates:
