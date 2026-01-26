@@ -1,4 +1,4 @@
-from msgspec import Struct, Meta
+from msgspec import Struct, Meta, field
 from typing import Annotated
 
 from quart import Blueprint, jsonify
@@ -20,14 +20,15 @@ bp = Blueprint('bp_api_moderation', __name__, url_prefix='/api/v1')
 
 BoardStr = Annotated[str, Meta(min_length=1, max_length=5)]
 BoardList = Annotated[list[BoardStr], Meta(min_length=1, max_length=len(board_shortnames))]
+PosInt = Annotated[int, Meta(ge=0)]
 
 
 class ReportGET(Struct):
     public_access: PublicAccess
     mod_status: ModStatus
     page_size: Annotated[int, Meta(gt=0, le=50)] = 20
-    page_num: Annotated[int, Meta(gt=0)] = 0
-    board_shortnames: BoardList | BoardStr = board_shortnames
+    page_num: PosInt = 0
+    board_shortnames: BoardList | BoardStr = field(default_factory=lambda: board_shortnames)
 
 
 @bp.get('/reports')
@@ -65,8 +66,10 @@ async def reports_post(data: ReportPOST, current_api_usr_id: int, report_parent_
     return {'error': msg}, code
 
 
-class ReportBulkPOST(ReportPOST):
-    report_parent_ids: Annotated[list[int], Meta(min_length=1)]
+class ReportBulkPOST(Struct):
+    action: ReportAction
+    report_parent_ids: Annotated[list[PosInt], Meta(min_length=1)]
+    mod_notes: str | None = None
 
 
 @bp.post('/reports/bulk')
