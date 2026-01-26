@@ -7,7 +7,7 @@ from quart_rate_limiter import rate_limit
 
 from ...configs import app_conf
 from ...forms import LoginForm
-from ...moderation.auth import (
+from ...moderation.auth_web import (
     auth_web,
     current_web_usr,
     load_web_usr_data,

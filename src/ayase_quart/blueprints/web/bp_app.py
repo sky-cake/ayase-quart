@@ -11,7 +11,7 @@ from ...asagi_converter import (
 from ...boards import get_title
 from ...configs import app_conf
 from ...moderation import fc
-from ...moderation.auth import (
+from ...moderation.auth_web import (
      load_web_usr_data,
      web_usr_is_admin,
      web_usr_logged_in

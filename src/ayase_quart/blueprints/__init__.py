@@ -38,7 +38,7 @@ if mod_conf['enabled']:
     ]
 
 
-if mod_conf['enabled'] and mod_conf.get('api', False):
+if mod_conf['enabled'] and mod_conf.get('api'):
     from .api.bp_admin import bp as bp_api_admin
     from .api.bp_auth import bp as bp_api_auth
     from .api.bp_moderation import bp as bp_api_moderation

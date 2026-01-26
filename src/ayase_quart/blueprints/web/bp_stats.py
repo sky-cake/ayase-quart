@@ -2,7 +2,7 @@ from quart import Blueprint, Response
 
 from ...asagi_converter import get_post_counts_per_month_by_board
 from ...boards import board_objects
-from ...moderation.auth import (
+from ...moderation.auth_web import (
     load_web_usr_data,
     web_usr_is_admin,
     web_usr_logged_in

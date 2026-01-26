@@ -6,7 +6,7 @@ from quart_rate_limiter import rate_limit
 from quart_schema import validate_request, validate_response
 
 from ...configs import app_conf
-from ...moderation.auth import auth_api
+from ...moderation.auth_api import auth_api
 from ...moderation.user import is_valid_creds
 
 bp = Blueprint("bp_api_auth", __name__, url_prefix='/api/v1')

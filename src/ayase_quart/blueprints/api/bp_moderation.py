@@ -6,7 +6,7 @@ from quart_schema import validate_querystring, validate_request
 
 from ...boards import board_shortnames
 from ...enums import ModStatus, PublicAccess, ReportAction
-from ...moderation.auth import (
+from ...moderation.auth_api import (
     login_api_usr_required,
     require_api_usr_is_active,
     require_api_usr_permissions

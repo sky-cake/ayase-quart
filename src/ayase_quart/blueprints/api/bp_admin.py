@@ -8,7 +8,7 @@ from quart_schema import validate_request
 from ...asagi_converter import get_latest_ops_as_catalog
 from ...boards import board_shortnames
 from ...configs import mod_conf
-from ...moderation.auth import (
+from ...moderation.auth_api import (
     login_api_usr_required,
     require_api_usr_is_active,
     require_api_usr_permissions

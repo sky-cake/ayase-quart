@@ -3,7 +3,7 @@ from datetime import timedelta
 from quart import Blueprint, request, url_for
 from quart_rate_limiter import rate_limit
 
-from ...moderation.auth import (
+from ...moderation.auth_web import (
     load_web_usr_data,
     web_usr_is_admin,
     web_usr_logged_in

@@ -88,9 +88,13 @@ def create_app():
     if mod_conf['enabled']:
         from quart_schema import QuartSchema
 
-        from .moderation.auth import auth_api, auth_web
-        auth_api.init_app(app)
+        from .moderation.auth_web import auth_web
         auth_web.init_app(app)
+
+        if mod_conf.get('api'):
+            from .moderation.auth_api import auth_api
+            auth_api.init_app(app)
+
         QuartSchema(app)
 
     if not app_conf.get('testing'):

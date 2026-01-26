@@ -12,7 +12,7 @@ from ...enums import ModStatus, PublicAccess
 from ...forms import ReportUserForm
 from ...leafs import generate_post_html, post_files_hide
 from ...moderation import fc
-from ...moderation.auth import (
+from ...moderation.auth_web import (
     current_web_usr,
     load_web_usr_data,
     login_web_usr_required,

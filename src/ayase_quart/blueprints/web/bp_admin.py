@@ -4,7 +4,7 @@ from html import escape
 from ...asagi_converter import get_latest_ops_as_catalog
 from ...boards import board_shortnames
 from ...forms import UserCreateForm, UserEditForm, CSRFForm
-from ...moderation.auth import (
+from ...moderation.auth_web import (
     load_web_usr_data,
     login_web_usr_required,
     require_web_usr_is_active,
