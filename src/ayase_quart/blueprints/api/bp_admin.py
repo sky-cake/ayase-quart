@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from pydantic import BaseModel, Field
+from msgspec import Struct
 from quart import Blueprint, jsonify
 from quart_rate_limiter import rate_limit
 from quart_schema import validate_request
@@ -74,10 +74,10 @@ async def users_view(current_api_usr_id: int, user_id: int):
     return {'error': 'User not found'}, 404
 
 
-class UserPOST(BaseModel):
+class UserPOST(Struct):
     username: str
     password: str
-    permissions: list[Permissions] | None = Field(description=f'Zero or more: {[x.name for x in Permissions]}')
+    permissions: list[Permissions] | None
     is_admin: bool
     is_active: bool
     notes: str | None
@@ -103,11 +103,11 @@ async def users_create(data: UserPOST, current_api_usr_id: int):
     return {'error': 'Bad credentials'}, 400
 
 
-class UserPUT(BaseModel):
+class UserPUT(Struct):
     username: str
     password_old: str | None
     password_new: str | None
-    permissions: list[Permissions] | None = Field(description=f'Zero or more: {[x.name for x in Permissions]}')
+    permissions: list[Permissions] | None
     is_admin: bool
     is_active: bool
     notes: str | None

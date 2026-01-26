@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from msgspec import Struct, Meta
+from typing import Annotated
+
 from quart import Blueprint, jsonify
 from quart_schema import validate_querystring, validate_request
 
@@ -12,15 +14,20 @@ from ...moderation.auth import (
 from ...moderation.report import get_reports, reports_action_routine
 from ...moderation.user import Permissions, get_user_by_id
 
+
 bp = Blueprint('bp_api_moderation', __name__, url_prefix='/api/v1')
 
 
-class ReportGET(BaseModel):
-    public_access: PublicAccess = Field(None, description='v: visible, h: hidden')
-    mod_status: ModStatus = Field(None, description='o: open, c: closed')
-    page_size: int = Field(20, ge=0, le=50)
-    page_num: int = Field(0, ge=0)
-    board_shortnames: list[str] | str = Field(board_shortnames, min_items=0, max_items=len(board_shortnames))
+BoardStr = Annotated[str, Meta(min_length=1, max_length=5)]
+BoardList = Annotated[list[BoardStr], Meta(min_length=1, max_length=len(board_shortnames))]
+
+
+class ReportGET(Struct):
+    public_access: PublicAccess
+    mod_status: ModStatus
+    page_size: Annotated[int, Meta(gt=0, le=50)] = 20
+    page_num: Annotated[int, Meta(gt=0)] = 0
+    board_shortnames: BoardList | BoardStr = board_shortnames
 
 
 @bp.get('/reports')
@@ -38,8 +45,9 @@ async def reports_get(query_args: ReportGET, current_api_usr_id: int):
     )
     return jsonify(reports)
 
-class ReportPOST(BaseModel):
-    action: ReportAction = Field(f'One of: {[x.name for x in ReportAction]}')
+
+class ReportPOST(Struct):
+    action: ReportAction
     mod_notes: str | None = None
 
 
@@ -58,7 +66,7 @@ async def reports_post(data: ReportPOST, current_api_usr_id: int, report_parent_
 
 
 class ReportBulkPOST(ReportPOST):
-    report_parent_ids: list[int] = Field(min_items=1)
+    report_parent_ids: Annotated[list[int], Meta(min_length=1)]
 
 
 @bp.post('/reports/bulk')

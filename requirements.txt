@@ -27,7 +27,7 @@ idna==3.10
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
-msgpack==1.1.0
+msgpack
 multidict==6.4.4
 orjson==3.11.5
 packaging==25.0
@@ -36,8 +36,6 @@ priority==2.0.0
 propcache==0.3.1
 pybase64==1.4.1
 pycparser==2.23
-pydantic==2.11.4
-pydantic_core==2.33.2
 pyhumps==3.8.0
 Pympler==1.1
 PyMySQL==1.1.1
@@ -60,4 +58,4 @@ wrapt==1.17.2
 wsproto==1.2.0
 WTForms==3.2.1
 yarl==1.20.0
-zlib-ng==0.5.1
+zlib-ng

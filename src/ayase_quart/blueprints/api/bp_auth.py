@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from pydantic import BaseModel
+from msgspec import Struct
 from quart import Blueprint
 from quart_rate_limiter import rate_limit
 from quart_schema import validate_request, validate_response
@@ -12,12 +12,12 @@ from ...moderation.user import is_valid_creds
 bp = Blueprint("bp_api_auth", __name__, url_prefix='/api/v1')
 
 
-class Credentials(BaseModel):
+class Credentials(Struct):
     username: str
     password: str
 
 
-class Token(BaseModel):
+class Token(Struct):
     token: str
     error: str | None
 
