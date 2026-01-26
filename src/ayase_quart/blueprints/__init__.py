@@ -27,21 +27,25 @@ if vanilla_search_conf['enabled']:
 
 
 if mod_conf['enabled']:
-    from .api.bp_admin import bp as bp_api_admin
-    from .api.bp_auth import bp as bp_api_auth
-    from .api.bp_moderation import bp as bp_api_moderation
     from .web.bp_admin import bp as bp_web_admin
     from .web.bp_auth import bp as bp_web_auth
     from .web.bp_moderation import bp as bp_web_moderation
 
     blueprints += [
         bp_web_auth,
-        bp_api_auth,
-
         bp_web_admin,
-        bp_api_admin,
-
         bp_web_moderation,
+    ]
+
+
+if mod_conf['enabled'] and mod_conf.get('api', False):
+    from .api.bp_admin import bp as bp_api_admin
+    from .api.bp_auth import bp as bp_api_auth
+    from .api.bp_moderation import bp as bp_api_moderation
+
+    blueprints += [
+        bp_api_auth,
+        bp_api_admin,
         bp_api_moderation,
     ]
 

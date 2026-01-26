@@ -146,6 +146,7 @@ enabled = false # if true, load search plugins from the plugins directory
 
 [moderation]
 enabled = true # true, false
+api = false # true, false
 
 admin_user = 'admin'
 admin_password = 'admin'
