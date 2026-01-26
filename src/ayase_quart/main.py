@@ -8,7 +8,7 @@ from quart_schema import RequestSchemaValidationError
 from werkzeug.exceptions import HTTPException
 
 from .blueprints import blueprints
-from .configs import QuartConfig, app_conf, mod_conf, index_search_conf
+from .configs import QuartConfig, app_conf, mod_conf, index_search_conf, search_plugins_conf
 from .db import db_q
 from .db.redis import close_redis
 from .moderation import fc, init_moderation
@@ -75,7 +75,8 @@ def create_app():
     for bp in blueprints:
         app.register_blueprint(bp)
 
-    register_blueprint_plugins(app)
+    if search_plugins_conf['enabled']:
+        register_blueprint_plugins(app)
 
     if mod_conf['enabled']:
         app.before_serving(init_moderation)
