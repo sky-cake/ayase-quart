@@ -1,6 +1,6 @@
 import os
 
-from quart import Blueprint, abort
+from quart import Blueprint, abort, Response
 from werkzeug.security import safe_join
 
 from ...configs import media_conf
@@ -11,9 +11,13 @@ bp = Blueprint("bp_app_media", __name__)
 
 if media_conf.get('endpoint') and media_conf['serve_outside_static']:
     media_root = media_conf['media_root_path']
+
     valid_exts = set(media_conf['valid_extensions'])
     boards_with_image = set(media_conf['boards_with_image'])
     boards_with_thumb = set(media_conf['boards_with_thumb'])
+
+    use_nginx_sendfile = media_conf.get('use_nginx_sendfile', False)
+    nginx_x_accel_redirect_path = media_conf.get('nginx_x_accel_redirect', False)
 
 
     @bp.route(f'/{media_conf["endpoint"]}/<path:suffix_path>')
@@ -43,5 +47,11 @@ if media_conf.get('endpoint') and media_conf['serve_outside_static']:
 
         if not os.path.isfile(full_path):
             abort(404)
+
+        if use_nginx_sendfile:
+            return Response(
+                status=200,
+                headers={'X-Accel-Redirect': safe_join(nginx_x_accel_redirect_path, full_path)},
+            )
 
         return await send_file_no_headers(full_path)
