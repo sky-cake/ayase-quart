@@ -34,6 +34,11 @@ fuvii(media_conf, 'boards_with_thumb', split_csv)
 fuvii(media_conf, 'image_uri', lambda x: sslash(x) if x else '')
 fuvii(media_conf, 'thumb_uri', lambda x: sslash(x) if x else '')
 
+if media_conf.get('use_nginx_sendfile'):
+    fuvii(media_conf, 'nginx_x_accel_redirect_path', lambda x: f'/{sslash_both(x)}' if x else None)
+    if not media_conf['nginx_x_accel_redirect_path']:
+        raise ValueError(media_conf['nginx_x_accel_redirect_path'])
+
 if media_conf['serve_outside_static']:
     media_root = media_conf.get('media_root_path')
     if not media_root:
@@ -41,7 +46,11 @@ if media_conf['serve_outside_static']:
             '`media_root_path` must be set so we know where to serve media from.',
             media_root,
         )
+
     if not os.path.isdir(media_root):
+        raise ValueError(media_root)
+
+    if not media_root.startswith('/'):
         raise ValueError(media_root)
 
     valid_exts = media_conf.get('valid_extensions')
