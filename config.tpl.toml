@@ -118,7 +118,15 @@ boards_with_thumb = '' # comma separated list of board shortnames like '' or 'g,
 # you can avoid that with nginx's sendfile()
 # https://nginx.org/en/docs/http/ngx_http_core_module.html#internal
 use_nginx_sendfile = false
-nginx_x_accel_redirect_path = '' # e.g. '/x_accel_redirect'
+nginx_x_accel_redirect_path = '' # e.g. '/x_accel_redirect1'
+# Put this in your nginx server block,
+#    location /x_accel_redirect1/ { # start and ends with /
+#        internal;
+#        alias /; # root media directory, start and ends with /
+#        sendfile on;
+#        sendfile_max_chunk 1m; # set this and other configs you do/dont want
+#        tcp_nopush on;
+#    }
 
 [vanilla_search]
 enabled = true

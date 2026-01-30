@@ -1,7 +1,8 @@
 import os
 
-from quart import Blueprint, abort, Response
+from quart import Blueprint, abort
 from werkzeug.security import safe_join
+import mimetypes
 
 from ...configs import media_conf
 from ...utils.web_helpers import send_file_no_headers
@@ -17,7 +18,7 @@ if media_conf.get('endpoint') and media_conf['serve_outside_static']:
     boards_with_thumb = set(media_conf['boards_with_thumb'])
 
     use_nginx_sendfile = media_conf.get('use_nginx_sendfile', False)
-    nginx_x_accel_redirect_path = media_conf.get('nginx_x_accel_redirect', False)
+    nginx_x_accel_redirect_path = media_conf.get('nginx_x_accel_redirect_path', False)
 
 
     @bp.route(f'/{media_conf["endpoint"]}/<path:suffix_path>')
@@ -45,13 +46,15 @@ if media_conf.get('endpoint') and media_conf['serve_outside_static']:
         if full_path.rsplit('.', 1)[-1].lower() not in valid_exts:
             abort(404)
 
+        if use_nginx_sendfile:
+            # could not find a way of making nginx detect and set the mimetype for Content-Type
+            headers = {
+                'X-Accel-Redirect': safe_join(nginx_x_accel_redirect_path, full_path.lstrip('/')),
+                'Content-Type': mimetypes.guess_type(full_path)[0] or 'application/octet-stream',
+            }
+            return '', 200, headers
+
         if not os.path.isfile(full_path):
             abort(404)
-
-        if use_nginx_sendfile:
-            return Response(
-                status=200,
-                headers={'X-Accel-Redirect': safe_join(nginx_x_accel_redirect_path, full_path)},
-            )
 
         return await send_file_no_headers(full_path)

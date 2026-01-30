@@ -46,7 +46,11 @@ if media_conf['serve_outside_static']:
             '`media_root_path` must be set so we know where to serve media from.',
             media_root,
         )
+
     if not os.path.isdir(media_root):
+        raise ValueError(media_root)
+
+    if not media_root.startswith('/'):
         raise ValueError(media_root)
 
     valid_exts = media_conf.get('valid_extensions')
