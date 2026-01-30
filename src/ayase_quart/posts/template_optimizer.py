@@ -2,7 +2,7 @@ from html import escape
 from itertools import product
 
 from ..configs import site_conf, mod_conf
-from ..media import ext_is_video, get_image_path, get_thumb_path
+from ..media import ext_is_video, get_image_path, get_thumb_path, get_hash_search_link
 from ..posts.capcodes import Capcode
 from ..threads import get_thread_path
 from ..utils.timestamps import ts_2_formatted
@@ -158,6 +158,7 @@ def get_media_t_thread(post: dict, num: int, board: str):
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{media_filename}</a>
             (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
+	        {get_hash_search_link(board, md5h)}
         </div>
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
     </div>"""
@@ -302,6 +303,7 @@ def get_media_t(post: dict):
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{media_filename}</a>
             (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
+	        {get_hash_search_link(board, md5h)}
         </div>
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
     </div>

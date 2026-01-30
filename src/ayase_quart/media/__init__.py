@@ -1,8 +1,9 @@
 from functools import cache
+from urllib.parse import quote_plus
 
 from ..configs import media_conf
-
 from .filesystem import media_fs_partition
+from ..search import BEST_SEARCH_ENDPOINT
 
 THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
 IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
@@ -35,6 +36,12 @@ def get_image_baseuri(board: str) -> str:
 def get_thumb_baseuri(board: str) -> str:
     return THUMB_URI.format(board=board)
 
+@cache
+def get_hash_search_baseuri(board: str) -> str:
+    if not BEST_SEARCH_ENDPOINT:
+        return ''
+    return f'{BEST_SEARCH_ENDPOINT}?boards={board}&media_hash='
+
 def get_image_path(board: str, filename: str) -> str:
     if not(filename and board_has_image(board)):
         return ''
@@ -44,3 +51,8 @@ def get_thumb_path(board: str, filename: str) -> str:
     if not(filename and board_has_thumb(board)):
         return ''
     return f'{get_thumb_baseuri(board)}/{media_partition(filename)}'
+
+def get_hash_search_link(board: str, media_hash: str) -> str:
+    if not BEST_SEARCH_ENDPOINT:
+        return ''
+    return f'[<a href="{get_hash_search_baseuri(board)}{quote_plus(media_hash)}" target=_blank>View Same</a>]'

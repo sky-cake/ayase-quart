@@ -4,6 +4,9 @@ from .post_metadata import board_2_int
 from .providers import get_index_search_provider
 from .query import IndexSearchQuery, get_index_search_query
 
+# should probably make /fts and /sql StrEnums
+# definitely not url_for, otherwise circular import headaches
+BEST_SEARCH_ENDPOINT: str = '/fts' if index_search_conf.get('enabled', False) else ('/sql' if vanilla_search_conf.get('enabled', False) else '')
 
 async def _get_posts_and_total_hits_fts(form_data: dict) -> tuple[list[dict], int]:
     if not isinstance(form_data['boards'], list):
