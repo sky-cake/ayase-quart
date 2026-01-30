@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Iterable
 
-from quart import current_app, request
+from quart import current_app
 from quart_auth import QuartAuth, Unauthorized
 from werkzeug.local import LocalProxy
 

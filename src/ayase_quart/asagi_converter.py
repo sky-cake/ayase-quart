@@ -12,7 +12,7 @@ from textwrap import dedent
 from async_lru import alru_cache
 from werkzeug.security import safe_join
 
-from .configs import stats_conf, vanilla_search_conf
+from .configs import stats_conf
 from .db import db_q
 from .db.redis import get_redis
 from .posts.capcodes import Capcode
