@@ -461,11 +461,11 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
             <div class="post_controls">
-                {nuke_btn} /{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]
+                {wpt['t_filedeleted']} {nuke_btn} /{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]
             </div>
             { wpt['t_cc'] }{nl}
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
-            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a> {wpt['t_filedeleted']} {get_thread_stats_t(wpt)}</div>
+            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a> {get_thread_stats_t(wpt)}</div>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
     <div class="teaser">
