@@ -680,13 +680,25 @@ textarea:focus, input:focus {
     outline: 0;
 }
 
-.spoiler {
-    color: black;
+span.spoiler,
+span.spoiler a,
+span.spoiler a:visited {
+    color: black !important;
     background-color: black;
 }
 
-.spoiler:hover {
-    color: white;
+span.spoiler:hover {
+    color: #dddddd !important;
+}
+
+span.spoiler:visited {
+    color: #dddddd;
+}
+
+span.spoiler:hover a,
+span.spoiler:hover a:visited,
+span.spoiler:hover a:hover {
+    color: #5f89ac !important;
 }
 
 .thumb {
