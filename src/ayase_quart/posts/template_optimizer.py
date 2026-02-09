@@ -372,7 +372,7 @@ def get_filedeleted_t(post: dict):
     if not (deleted := post.get('deleted')):
         return ''
     msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
-    deleted = '[Deleted]' if deleted == 1 else escape(deleted)
+    deleted = '[Del]' if deleted == 1 else escape(deleted)
     return f'<strong class="warning" title="This post was {msg}.">{deleted}</strong>'
 
 
@@ -465,7 +465,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             </div>
             { wpt['t_cc'] }{nl}
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
-            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>{get_thread_stats_t(wpt)}</div>
+            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>{wpt['t_filedeleted']}{get_thread_stats_t(wpt)}</div>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
     <div class="teaser">
