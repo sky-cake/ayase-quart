@@ -681,11 +681,12 @@ textarea:focus, input:focus {
 }
 
 .spoiler {
-    opacity: 0.5;
+    color: black;
+    background-color: black;
 }
 
 .spoiler:hover {
-    opacity: 1;
+    color: white;
 }
 
 .thumb {
