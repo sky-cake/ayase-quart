@@ -371,7 +371,7 @@ def get_since4pass_t(post: dict):
 def get_filedeleted_t(post: dict):
     if not (deleted := post.get('deleted')):
         return ''
-    msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted.'
+    msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted'
     deleted = '[Del]' if deleted == 1 else escape(deleted)
     return f'<strong class="warning" title="This post was {msg}.">{deleted}</strong>'
 
@@ -465,7 +465,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             </div>
             { wpt['t_cc'] }{nl}
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
-            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a>{wpt['t_filedeleted']}{get_thread_stats_t(wpt)}</div>
+            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a> {wpt['t_filedeleted']} {get_thread_stats_t(wpt)}</div>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
     <div class="teaser">
@@ -484,11 +484,7 @@ def get_title_t(thread: dict):
 # almost same as threads.render_thread_stats...
 def get_thread_stats_t(thread: dict) -> str:
     posters_t = f'/ P: <b>{posters}</b>' if (posters := thread.get('posters')) else ''
-    return f"""
-    <span class="meta">
-        R: <b>{ thread['nreplies'] }</b> / I: <b>{ thread['nimages'] }</b> {posters_t}
-    </span>
-    """
+    return f"""<span class="meta">R: <b>{ thread['nreplies'] }</b> / I: <b>{ thread['nimages'] }</b> {posters_t}</span>"""
 
 def get_thread_sticky_locked_t(thread: dict) -> str:
     locked = thread['locked']
