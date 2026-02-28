@@ -166,29 +166,43 @@ Terminal A
 
 1. Once the index loader in Terminal B completes, you can `ctrl-c` to stop the LNX docker container, and spin it back up with `sudo docker-compose up -d` to make it run in the background
 
-Here is a script to help you spin up LNX. You can have a cronjob run this on system reboots if you wish.
+Here is a script to help you spin up LNX.
 
 ```bash
+# sudo nano /usr/local/bin/start_lnx.sh
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
-if ! sudo docker ps --format '{{.Image}}' | grep -q '^chillfish8/lnx'; then
-    echo "LNX is down"
+free
+sync
+echo 1 > /proc/sys/vm/drop_caches
+free
 
-    # free buffer cache
-    free
-    sync
-    echo 1 > /proc/sys/vm/drop_caches
-    free
-
-    cd /path/to/index_search/lnx/ # set your path
-    docker compose up -d
-    echo "LNX should be up now"
-else
-    echo "LNX is already up"
-fi
+cd /mnt/aq/index_search/lnx/ # Change the path to your lnx folder.
+/usr/bin/docker compose up -d
 ```
 
+The following systemd service can run this script for you on reboots.
+
+```toml
+# sudo nano /etc/systemd/system/start_lnx.service
+[Unit]
+Description=Drop caches and start lnx docker container
+
+# /mnt is a drive I must wait for i.e. for me "findmnt /mnt" yields a result
+# we also wait for docker to start
+Requires=mnt.mount docker.service
+After=mnt.mount docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/mnt/aq/index_search/lnx/ # Change the path to your lnx folder.
+ExecStart=/usr/local/bin/start_lnx.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Updating AQ
 
