@@ -1,16 +1,12 @@
 from enum import StrEnum
 from werkzeug.security import safe_join
 
+from ..enums import MediaFP
 from ..configs import media_conf, mod_conf
 
 
 ROOT_PATH = media_conf['media_root_path']
 ROOT_HIDDEN_PATH = mod_conf['hidden_images_path']
-
-
-class MediaFP(StrEnum):
-    asagi = 'asagi'
-    sutra = 'sutra'
 
 
 if media_conf['media_fp'] == MediaFP.sutra:

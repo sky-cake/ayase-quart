@@ -1,7 +1,6 @@
 import os
 
-from ..enums import DbType
-from ..media.filesystem import MediaFP
+from ..enums import DbType, MediaFP
 from ..utils import split_csv
 from ..utils import strip_slashes as sslash
 
