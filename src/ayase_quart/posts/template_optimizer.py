@@ -2,7 +2,7 @@ from html import escape
 from itertools import product
 
 from ..configs import site_conf, mod_conf
-from ..media import ext_is_video, get_image_path, get_thumb_path, get_hash_search_link
+from ..media import ext_is_video, get_image_full_uri, get_thumb_full_uri, get_hash_search_link
 from ..posts.capcodes import Capcode
 from ..threads import get_thread_path
 from ..utils.timestamps import ts_2_formatted
@@ -151,8 +151,8 @@ def get_media_t_thread(post: dict, num: int, board: str):
     is_spoiler = post['spoiler']
     spoiler = 'Spoiler,' if is_spoiler else ''
 
-    full_src = get_image_path(board, media_orig)
-    thumb_src = get_thumb_path(board, preview_orig)
+    full_src = get_image_full_uri(board, post)
+    thumb_src = get_thumb_full_uri(board, post)
 
     return f"""<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
@@ -268,9 +268,9 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
     classes += ImgTagClass.is_video if is_video else ImgTagClass.is_image
 
     if full_src is None:
-        full_src = get_image_path(board, post['media_orig'])
+        full_src = get_image_full_uri(board, post)
     if thumb_src is None:
-        thumb_src = get_thumb_path(board, post['preview_orig'])
+        thumb_src = get_thumb_full_uri(board, post)
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
@@ -289,14 +289,13 @@ def get_media_t(post: dict):
         return ''
 
     media_orig = post['media_orig']
-    preview_orig = post['preview_orig']
     num = post['num']
     md5h = post['media_hash']
     board = post['board_shortname']
     spoiler = 'Spoiler,' if post['spoiler'] else ''
 
-    full_src = get_image_path(board, media_orig)
-    thumb_src = get_thumb_path(board, preview_orig)
+    full_src = get_image_full_uri(board, post)
+    thumb_src = get_thumb_full_uri(board, post)
 
     return f"""
 	<div class="file" id="f{num}">

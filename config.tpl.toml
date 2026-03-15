@@ -85,9 +85,27 @@ max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
 
 
 [media]
+# 'asagi' (default) = /<media_root_path>/<board_shortname>/[image|thumb]/media_orig[:4]/media_orig[4:6]/media_orig
+# 'sutra'           = /<media_root_path>/[img|thb]/media_hash[0:2]/media_hash[2:4]/media_hash[4:6]/media_hash
+media_fp = 'asagi' # 'asagi' 'sutra'
+
+# `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board>/[image|thumb]/...
+endpoint = '/srv/media'
+
+# if your goal is to serve content from '/srv/media/<board>/image' set this to '/srv/media'
+# then declare the two routes like below
+# image_uri = "/<endpoint>/{board}/image" # e.g. "/srv/media/{board}/image"
+# thumb_uri = "/<endpoint>/{board}/thumb" # e.g. "/srv/media/{board}/thumb"
+
 # set image_uri or thumb_uri to '' if you don't want any boards to serve image, or thumb media, respectively
-image_uri = "https://192.168.1.16:9001/static/ritual/{board}/image" # must contain {board}
-thumb_uri = "https://192.168.1.16:9001/static/ritual/{board}/thumb" # must contain {board}
+image_uri = '/srv/media/{board}/image' # must contain {board} if media_fp = asagi
+thumb_uri = '/srv/media/{board}/thumb' # must contain {board} if media_fp = asagi
+
+
+# if you your goal is to serve media from another url, use this
+# image_uri = 'http://192.168.1.16:9003/srv/{board}/image' # must contain {board} if media_fp = asagi
+# thumb_uri = 'http://192.168.1.16:9003/srv/{board}/thumb' # must contain {board} if media_fp = asagi
+
 
 # Below are optional settings for serving media outside the quart app's static path
 #       i.e. outside of '/path/to/ayase_quart/src/static'
@@ -101,13 +119,6 @@ media_root_path = ''
 # only serve files with these extension from outside the static path
 valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
 
-# `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board>/image
-#       i.e. if you want to serve content from '/srv/media/<board>/image' set this to '/srv/media'
-endpoint = '/srv/media'
-
-# If you use this, declare the two URIs like below, and comment out the above URI declarations.
-# image_uri = "/<endpoint>/{board}/image" # e.g. "/srv/media/{board}/image"
-# thumb_uri = "/<endpoint>/{board}/thumb" # e.g. "/srv/media/{board}/thumb"
 
 # The default is to serve media from all boards [Aside: set image_uri or thumb_url to '' to not serve the images, or thumbs, respectively]
 # You can specify a subset of boards with a whitelist
@@ -127,6 +138,7 @@ nginx_x_accel_redirect_path = '' # e.g. '/x_accel_redirect1'
 #        sendfile_max_chunk 1m; # set this and other configs you do/dont want
 #        tcp_nopush on;
 #    }
+
 
 [vanilla_search]
 enabled = true

@@ -1,6 +1,7 @@
 import os
 
 from ..enums import DbType
+from ..media.filesystem import MediaFP
 from ..utils import split_csv
 from ..utils import strip_slashes as sslash
 
@@ -39,26 +40,28 @@ if media_conf.get('use_nginx_sendfile'):
     if not media_conf['nginx_x_accel_redirect_path']:
         raise ValueError(media_conf['nginx_x_accel_redirect_path'])
 
+
+media_root = media_conf.get('media_root_path')
+if not media_root:
+    raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_root)
+
+if not os.path.isdir(media_root):
+    raise ValueError(media_root)
+
+
 if media_conf['serve_outside_static']:
-    media_root = media_conf.get('media_root_path')
-    if not media_root:
-        raise ValueError(
-            '`media_root_path` must be set so we know where to serve media from.',
-            media_root,
-        )
-
-    if not os.path.isdir(media_root):
-        raise ValueError(media_root)
-
-
     valid_exts = media_conf.get('valid_extensions')
     if not all(e for e in valid_exts):
         raise ValueError(valid_exts)
+
     fuvii(media_conf, 'valid_extensions', tuple)
 
     fuvii(media_conf, 'endpoint', sslash_both)
     if not media_conf['endpoint']:
         raise ValueError('The set media endpoint is falsey or root (/). Set it to something else.')
+
+
+media_conf['media_fp'] = MediaFP[media_conf.get('media_fp', 'asagi')]
 
 
 mod_conf = conf['moderation']

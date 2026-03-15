@@ -10,7 +10,6 @@ from itertools import batched
 from textwrap import dedent
 
 from async_lru import alru_cache
-from werkzeug.security import safe_join
 
 from .configs import stats_conf
 from .db import db_q
@@ -94,20 +93,17 @@ selector_columns_map = {
 }
 
 
-def get_full_media_path(root_path, board, qualifier, media_orig):
-    return safe_join(root_path, board, qualifier, media_orig[0:4], media_orig[4:6], media_orig)
-
-
+post_has_file_keys = ('tim', 'ext', 'md5')
 def post_has_file(post: dict) -> bool:
-    return post.get('tim') and post.get('ext') and post.get('md5')
+    return all(post.get(k) for k in post_has_file_keys)
 
 
-def get_fs_filename_thumbnail(post: dict) -> str|None:
+def get_asagi_preview_orig(post: dict) -> str|None:
     if post_has_file(post):
         return f"{post.get('tim')}s.jpg"
 
 
-def get_fs_filename_full_media(post: dict) -> str|None:
+def get_asagi_media_orig(post: dict) -> str|None:
     if post_has_file(post):
         return f"{post.get('tim')}{post.get('ext')}"
 
@@ -123,7 +119,7 @@ def get_asagi_defaults_from_post(post: dict) -> dict:
             'op': post.get('op', 0),
             'timestamp': post.get('time', 0),
             'timestamp_expired': post.get('archived_on', 0),
-            'preview_orig': get_fs_filename_thumbnail(post),
+            'preview_orig': get_asagi_preview_orig(post),
             'preview_w': post.get('preview_w', 0),
             'preview_h': post.get('preview_h', 0),
             'media_filename': post.get('media_filename'),
@@ -131,7 +127,7 @@ def get_asagi_defaults_from_post(post: dict) -> dict:
             'media_h': post.get('media_h', 0),
             'media_size': post.get('media_size', 0),
             'media_hash': post.get('media_hash'),
-            'media_orig': get_fs_filename_full_media(post),
+            'media_orig': get_asagi_media_orig(post),
             'spoiler': post.get('spoiler', 0),
             'deleted': post.get('filedeleted', 0),
             'capcode': post.get('capcode', 'N'),
