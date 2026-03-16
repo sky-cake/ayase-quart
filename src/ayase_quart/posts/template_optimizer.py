@@ -145,11 +145,9 @@ def get_media_t_thread(post: dict, num: int, board: str):
         return ''
 
     media_orig = post['media_orig']
-    preview_orig = post['preview_orig']
     md5h = post['media_hash']
 
-    is_spoiler = post['spoiler']
-    spoiler = 'Spoiler,' if is_spoiler else ''
+    spoiler = 'Spoiler,' if post['spoiler'] else ''
 
     full_src = get_image_full_uri(board, post)
     thumb_src = get_thumb_full_uri(board, post)

@@ -20,17 +20,17 @@ if media_conf['media_fp'] == MediaFP.sutra:
     sutra_translate_table = str.maketrans({'+': '-', '/': '_'})
     def get_fs_path(post: dict, media_type: MediaType, hidden: bool=False) -> str | None:
         if media_type == MediaType.full_media:
-            ext = post.get('ext')
+            ext = post.get('media_orig', '.').rsplit('.', 1)[-1]
         elif media_type == MediaType.thumbnail:
-            ext = '.jpg'
+            ext = 'jpg'
         else:
             raise ValueError(media_type)
-        
+
         media_hash = post.get('media_hash')
         if not media_hash or not ext:
             return
 
-        filename = f'{media_hash.translate(sutra_translate_table)}{ext}'
+        filename = f'{media_hash.translate(sutra_translate_table)}.{ext}'
         return safe_join(
             ROOT_HIDDEN_PATH if hidden else ROOT_PATH,
             media_type.value,
@@ -44,17 +44,17 @@ if media_conf['media_fp'] == MediaFP.sutra:
     def get_media_splits(post: dict, media_type: MediaType) -> str:
         """No padding slashes"""
         if media_type == MediaType.full_media:
-            ext = post.get('ext')
+            ext = post.get('media_orig', '.').rsplit('.', 1)[-1]
         elif media_type == MediaType.thumbnail:
-            ext = '.jpg'
+            ext = 'jpg'
         else:
             raise ValueError(media_type)
 
         media_hash = post.get('media_hash')
         if not media_hash or not ext:
-            return
+            return ''
 
-        filename = f'{media_hash.translate(sutra_translate_table)}{ext}'
+        filename = f'{media_hash.translate(sutra_translate_table)}.{ext}'
         if not filename:
             return ''
 
@@ -98,12 +98,12 @@ elif media_conf['media_fp'] == MediaFP.asagi:
             filename = post.get('media_preview')
         else:
             raise ValueError(media_type)
-        
+
         if not filename:
             return ''
 
         return f'{filename[0:4]}/{filename[4:6]}/{filename}'
-            
+
 
 
 else:
