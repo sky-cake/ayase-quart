@@ -182,6 +182,16 @@ cd /mnt/aq/index_search/lnx/ # Change the path to your lnx folder.
 /usr/bin/docker compose up -d
 ```
 
+And here is a script to help you auto-increment the LNX.
+
+```bash
+#!/bin/bash
+
+if curl -s -f http://localhost:8000/indexes/posts/stats | grep -q '"status":200'; then
+    cd /mnt/aq && source ./venv/bin/activate && python3.13 -m src.ayase_quart.search load --incr ck g jp
+fi
+```
+
 The following systemd service can run this script for you on reboots.
 
 ```toml
