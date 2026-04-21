@@ -151,6 +151,7 @@ Terminal A
 1. Review the configs in the file `~/ayase-quart/index_search/lnx/docker-compose.yml`
 1. Spin up LNX container with `sudo docker-compose up`
    - Later, you can run `sudo docker-compose up -d`, but first we need to confirm it's being populated with data
+1. Check if it's up with `curl http://localhost:8000/indexes/posts/stats`. You should get `{"status":200,...}`.
 
 Terminal B
 
@@ -187,7 +188,7 @@ And here is a script to help you auto-increment the LNX.
 ```bash
 #!/bin/bash
 
-if curl -s -f http://localhost:8000/indexes/posts/stats | grep -q '"status":200'; then
+if curl http://localhost:8000/indexes/posts/stats | grep -q '"status":200'; then
     cd /mnt/aq && source ./venv/bin/activate && python3.13 -m src.ayase_quart.search load --incr ck g jp
 fi
 ```
