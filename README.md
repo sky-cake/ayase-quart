@@ -357,6 +357,25 @@ Create the following launch target.
             ],
             "autoStartBrowser": true,
             "justMyCode": true,
+        },
+        {
+            "name": "AQ Gunicorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "gunicorn",
+            "cwd": "path/to/ayase-quart",
+            "env": {
+            },
+            "args": [
+                "ayase_quart.main:app",
+                "--bind", "127.0.0.1:9001",
+                "--worker-class", "asgi",
+                "--asgi-loop", "uvloop",
+                "--workers", "2",
+                "--asgi-lifespan", "on"
+            ],
+            "autoStartBrowser": true,
+            "justMyCode": true,
         }
     ]
 }
