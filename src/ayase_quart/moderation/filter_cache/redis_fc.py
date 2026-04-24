@@ -7,6 +7,7 @@ from typing import Literal
 
 import aiofiles
 from coredis import Redis
+from coredis.pipeline import Pipeline
 from coredis.modules.filters import BloomFilter, CuckooFilter
 
 from ...configs import mod_conf
@@ -45,6 +46,7 @@ def u32_to_bytes(val: int) -> bytes:
 @dataclass(unsafe_hash=True, order=True)
 class RedisFilter:
     rfilter: BloomFilter|CuckooFilter
+    redis: Redis
     name: Literal['bloom', 'cuckoo'] = field(init=False)
     is_bloom: bool = field(init=False)
 
@@ -78,12 +80,17 @@ class RedisFilter:
             await self.rfilter.loadchunk(self.fmt_key(board), 0, await f.read())
 
     async def get_maybe_nums(self, board: str, nums: list[int]) -> list[int]:
+        raise NotImplementedError('Redis filter cache not supported right now. Use sqlite.')
         nums_bytes = [u32_to_bytes(num) for num in nums]
-        filter_exists = await self.rfilter.mexists(self.fmt_key(board), nums_bytes)
+        # TODO "-ERR unknown command 'BF.MEXISTS', with args beginning with: 'filter_cache:bloom:g' '\x06e\x96\xf1' '\x06e\x1a ' '\x06d\xed\xe9' '\x06d\xe8\xf6' '\x06d\xe4\x80' '\x06d\xc0\xbb' \r\n"
+        async with self.redis:
+            filter_exists = await self.rfilter.mexists(self.fmt_key(board), nums_bytes)
         return [num for num, f_res in zip(nums, filter_exists) if f_res]
 
     async def add_num(self, board: str, num: int) -> None:
-        await self.rfilter.add(self.fmt_key(board), u32_to_bytes(num))
+        async with self.redis:
+            await self.rfilter.add(self.fmt_key(board), u32_to_bytes(num))
+        return
 
     async def delete_num(self, board: str, num: int) -> None:
         if self.is_bloom:
@@ -102,8 +109,8 @@ class FilterCacheRedis(BaseFilterCache):
     def __init__(self, mod_conf: dict):
         super().__init__(mod_conf)
         self.redis: Redis = get_redis(REDIS_FC_DB)
-        self.bf = RedisFilter(BloomFilter(client=self.redis))
-        self.cf = RedisFilter(CuckooFilter(client=self.redis))
+        self.bf = RedisFilter(BloomFilter(client=self.redis), self.redis)
+        self.cf = RedisFilter(CuckooFilter(client=self.redis), self.redis)
 
     async def _create_cache(self) -> None:
         if await self._is_cache_populated():
@@ -124,9 +131,10 @@ class FilterCacheRedis(BaseFilterCache):
         await self._populate_cache()
 
     async def _is_cache_populated(self) -> bool:
-        if not (keys := await self.redis.keys(f'{FC_KEY_PREFIX}*')):
-            return False
-        return len(keys) > 0
+        async with self.redis:
+            if not (keys := await self.redis.keys(f'{FC_KEY_PREFIX}*')):
+                return False
+            return len(keys) > 0
 
     async def _populate_cache(self) -> None:
         iter_funcs = [
@@ -134,15 +142,19 @@ class FilterCacheRedis(BaseFilterCache):
             self.get_deleted_numops_per_board_iter,
         ]
         board_del_ops = Counter()
+
         for iter_func in iter_funcs:
             async for board, numops in iter_func():
                 board_del_ops[board] += sum(1 for _, op in numops if op == 1)
                 await self.bf.bulk_add(board, [num for num, _ in numops])
 
-        async with await self.redis.pipeline(transaction=True) as pipe:
-            for board, del_ops in board_del_ops.items():
-                pipe.incrby(fmt_op_count_key(board), del_ops)
-            await pipe.execute()
+        async with self.redis:
+            async with self.redis.pipeline(transaction=True) as pipe:
+                pipe: Pipeline
+                for board, del_ops in board_del_ops.items():
+                    pipe.incrby(fmt_op_count_key(board), del_ops)
+        
+        # auto execute()s on context exit in coredis 6.x
 
         sql = """
         select board_shortname, num
@@ -171,13 +183,15 @@ class FilterCacheRedis(BaseFilterCache):
             except: pass
 
     async def _teardown(self) -> None:
-        if keys := await self.redis.keys(f'{self.FC_PREFIX}*'):
-            await self.redis.delete(*keys)
+        async with self.redis:
+            if keys := await self.redis.keys(f'{self.FC_PREFIX}*'):
+                await self.redis.delete(*keys)
 
     async def get_op_thread_removed_count(self, board: str) -> int:
-        if count := await self.redis.get(fmt_op_count_key(board)):
-            return int(count.decode())
-        return 0
+        async with self.redis:
+            if count := await self.redis.get(fmt_op_count_key(board)):
+                return int(count.decode())
+            return 0
 
     # TODO: need to thread in hide_deleted, hide_reported and hide_reported_after_n
     async def get_board_num_pairs(self, posts: list[dict], hide_deleted: bool=True, hide_reported: bool=False) -> set[tuple[str, int]]:
@@ -240,9 +254,11 @@ class FilterCacheRedis(BaseFilterCache):
     async def insert_post(self, board: str, num: int, op: int) -> None:
         await self.bf.add_num(board, num)
         if op == 1:
-            await self.redis.incr(fmt_op_count_key(board))
+            async with self.redis:
+                await self.redis.incr(fmt_op_count_key(board))
 
     async def delete_post(self, board: str, num: int, op: int) -> None:
         # no deleting from bloom filter, rebuild from scratch
         if op == 1:
-            await self.redis.decr(fmt_op_count_key(board))
+            async with self.redis:
+                await self.redis.decr(fmt_op_count_key(board))

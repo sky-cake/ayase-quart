@@ -934,17 +934,17 @@ async def get_post_counts_per_month_by_board(board: str) -> str:
     """Returns json formatted string.
     """
     if stats_conf['redis']:
-        r = get_redis(stats_conf['redis_db'])
+        redis = get_redis(stats_conf['redis_db'])
+        async with redis:
+            key = f'post_counts_{board}'
+            post_counts = await redis.get(key)
+            if post_counts:
+                return post_counts # do not loads(), cache dumps()
 
-        key = f'post_counts_{board}'
-        post_counts = await r.get(key)
-        if post_counts:
-            return post_counts # do not loads(), cache dumps()
-
-        post_counts = await _get_post_counts_per_month_by_board(board)
-        post_counts = json.dumps(post_counts)
-        if post_counts:
-            await r.set(key, post_counts)
+            post_counts = await _get_post_counts_per_month_by_board(board)
+            post_counts = json.dumps(post_counts)
+            if post_counts:
+                await redis.set(key, post_counts)
         return post_counts
 
     post_counts = await _get_post_counts_per_month_by_board(board)

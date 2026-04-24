@@ -63,9 +63,9 @@ Assuming you have a data source set up, you can:
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
-1. Copy `./boards.tpl.toml` to `./boards.toml` and edit `./boards.toml` with your desired boards.
-1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
-    -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./config.toml`
+1. Copy `./boards.tpl.toml` to `./src/boards.toml` and edit `./src/boards.toml` with your desired boards.
+1. Copy `./config.tpl.toml` to `./src/config.toml` and edit `./src/config.toml` with proper settings.
+    -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./src/config.toml`
         - It is used for CSRF, API tokens, and other things.
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
         - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
@@ -342,19 +342,20 @@ Create the following launch target.
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "AQ Debug",
+            "name": "AQ Hypercorn",
             "type": "debugpy",
             "request": "launch",
+            "python": "path/to/ayase-quart/venv/bin/python",
             "module": "hypercorn",
-            "cwd": "path/to/ayase-quart",
+            "cwd": "path/to/ayase-quart/src",
             "env": {
             },
             "args": [
                 "-w",
-                "2",
+                "1",
                 "-b",
                 "127.0.0.1:9001",
-                "src/ayase_quart.main:app"
+                "ayase_quart.main:app"
             ],
             "autoStartBrowser": true,
             "justMyCode": true,
@@ -363,8 +364,9 @@ Create the following launch target.
             "name": "AQ Gunicorn",
             "type": "debugpy",
             "request": "launch",
+            "python": "path/to/ayase-quart/venv/bin/python",
             "module": "gunicorn",
-            "cwd": "path/to/ayase-quart",
+            "cwd": "path/to/ayase-quart/src",
             "env": {
             },
             "args": [
@@ -372,7 +374,7 @@ Create the following launch target.
                 "--bind", "127.0.0.1:9001",
                 "--worker-class", "asgi",
                 "--asgi-loop", "uvloop",
-                "--workers", "2",
+                "--workers", "1",
                 "--asgi-lifespan", "on"
             ],
             "autoStartBrowser": true,
