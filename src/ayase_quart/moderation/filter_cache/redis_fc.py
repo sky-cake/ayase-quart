@@ -80,7 +80,7 @@ class RedisFilter:
             await self.rfilter.loadchunk(self.fmt_key(board), 0, await f.read())
 
     async def get_maybe_nums(self, board: str, nums: list[int]) -> list[int]:
-        raise NotImplementedError('Redis filter cache not supported right now. Use sqlite.')
+        # raise NotImplementedError('Redis filter cache not supported right now. Use sqlite.')
         nums_bytes = [u32_to_bytes(num) for num in nums]
         # TODO "-ERR unknown command 'BF.MEXISTS', with args beginning with: 'filter_cache:bloom:g' '\x06e\x96\xf1' '\x06e\x1a ' '\x06d\xed\xe9' '\x06d\xe8\xf6' '\x06d\xe4\x80' '\x06d\xc0\xbb' \r\n"
         async with self.redis:
@@ -194,7 +194,7 @@ class FilterCacheRedis(BaseFilterCache):
             return 0
 
     # TODO: need to thread in hide_deleted, hide_reported and hide_reported_after_n
-    async def get_board_num_pairs(self, posts: list[dict], hide_deleted: bool=True, hide_reported: bool=False) -> set[tuple[str, int]]:
+    async def get_board_num_pairs(self, posts: list[dict], hide_deleted: bool=True, hide_reported: bool=True) -> set[tuple[str, int]]:
         if not posts or not (hide_deleted or hide_reported):
             return set()
         board_nums = defaultdict(list)

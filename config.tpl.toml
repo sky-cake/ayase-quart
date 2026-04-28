@@ -82,6 +82,7 @@ max_size = 50
 host = "127.0.0.1"
 port = 6379
 max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
+password = 'mypassword'
 
 
 [media]
