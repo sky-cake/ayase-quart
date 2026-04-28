@@ -19,16 +19,16 @@ if media_conf['media_fp'] == MediaFP.sutra:
 
     sutra_translate_table = str.maketrans({'+': '-', '/': '_'})
     def get_fs_path(post: dict, media_type: MediaType, hidden: bool=False) -> str | None:
+        if not (media_hash := post.get('media_hash')) or not (media_orig := post.get('media_orig')):
+            return
+
         if media_type == MediaType.full_media:
-            ext = post.get('media_orig', '.').rsplit('.', 1)[-1]
+            ext = media_orig.rsplit('.', 1)[-1]
         elif media_type == MediaType.thumbnail:
             ext = 'jpg'
         else:
             raise ValueError(media_type)
 
-        media_hash = post.get('media_hash')
-        if not media_hash or not ext:
-            return
 
         filename = f'{media_hash.translate(sutra_translate_table)}.{ext}'
         return safe_join(

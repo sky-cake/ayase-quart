@@ -63,11 +63,13 @@ class RedisFilter:
 
     async def reserve(self, board: str, **kwargs: dict) -> None:
         try:
-            await self.rfilter.reserve(self.fmt_key(board), **kwargs)
+            async with self.redis:
+                await self.rfilter.reserve(self.fmt_key(board), **kwargs)
         except Exception: pass
 
     async def export_dump(self, board: str) -> None:
-        _, board_dump = await self.rfilter.scandump(self.fmt_key(board), 0)
+        async with self.redis:
+            _, board_dump = await self.rfilter.scandump(self.fmt_key(board), 0)
         if not board_dump:
             return
         async with aiofiles.open(self.dump_path(board), 'wb') as f:
@@ -77,12 +79,11 @@ class RedisFilter:
         if not os.path.exists(dump_p := self.dump_path(board)):
             return
         async with aiofiles.open(dump_p, 'rb') as f:
-            await self.rfilter.loadchunk(self.fmt_key(board), 0, await f.read())
+            async with self.redis:
+                await self.rfilter.loadchunk(self.fmt_key(board), 0, await f.read())
 
     async def get_maybe_nums(self, board: str, nums: list[int]) -> list[int]:
-        # raise NotImplementedError('Redis filter cache not supported right now. Use sqlite.')
         nums_bytes = [u32_to_bytes(num) for num in nums]
-        # TODO "-ERR unknown command 'BF.MEXISTS', with args beginning with: 'filter_cache:bloom:g' '\x06e\x96\xf1' '\x06e\x1a ' '\x06d\xed\xe9' '\x06d\xe8\xf6' '\x06d\xe4\x80' '\x06d\xc0\xbb' \r\n"
         async with self.redis:
             filter_exists = await self.rfilter.mexists(self.fmt_key(board), nums_bytes)
         return [num for num, f_res in zip(nums, filter_exists) if f_res]
@@ -95,15 +96,18 @@ class RedisFilter:
     async def delete_num(self, board: str, num: int) -> None:
         if self.is_bloom:
             return
-        await self.rfilter.delete(self.fmt_key(board), u32_to_bytes(num))
+
+        async with self.redis:
+            await self.rfilter.delete(self.fmt_key(board), u32_to_bytes(num))
 
     async def bulk_add(self, board: str, nums: list[int]) -> None:
         key = self.fmt_key(board)
         nums_bytes = [u32_to_bytes(num) for num in nums]
-        if self.is_bloom:
-            await self.rfilter.madd(key, nums_bytes)
-        else:
-            await self.rfilter.insert(key, nums_bytes)
+        async with self.redis:
+            if self.is_bloom:
+                await self.rfilter.madd(key, nums_bytes)
+            else:
+                await self.rfilter.insert(key, nums_bytes)
 
 class FilterCacheRedis(BaseFilterCache):
     def __init__(self, mod_conf: dict):
@@ -219,20 +223,21 @@ class FilterCacheRedis(BaseFilterCache):
         }
 
     async def get_reported(self, board: str, nums: list[int]) -> set[tuple[str, int]]:
-        if not (maybe_nums := await self.cf.get_maybe_nums(board, nums)):
+        if not (maybe_nums := await self.bf.get_maybe_nums(board, nums)):
             return set()
         phg = db_m.Phg()
         sql = f"""
         select num from report_parent where
-            board = {phg()}
+            board_shortname = {phg()}
             and public_access = 'h'
             and mod_status = 'o'
             and num in ({phg.qty(len(maybe_nums))})
         ;"""
-        return {
+        rows = {
             (board, row[0]) for row in
-            await db_m.query_tuple(sql, (*maybe_nums,))
+            await db_m.query_tuple(sql, (board, *maybe_nums,))
         }
+        return rows
 
     async def _insert_reported_num(self, board: str, num: int) -> None:
         await self.cf.add_num(board, num)
