@@ -63,8 +63,8 @@ Assuming you have a data source set up, you can:
     sudo apt update
     sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
     ```
-1. Copy `./boards.tpl.toml` to `.boards.toml` and edit `./boards.toml` with your desired boards.
-1. Copy `./config.tpl.toml` to `.config.toml` and edit `./config.toml` with proper settings.
+1. Copy `./boards.tpl.toml` to `./boards.toml` and edit `./boards.toml` with your desired boards.
+1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
     -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./config.toml`
         - It is used for CSRF, API tokens, and other things.
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
