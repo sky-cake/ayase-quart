@@ -367,9 +367,6 @@ Create the following launch target.
             "request": "launch",
             "python": "path/to/ayase-quart/venv/bin/python",
             "module": "gunicorn",
-            "cwd": "path/to/ayase-quart/src",
-            "env": {
-            },
             "args": [
                 "ayase_quart.main:app",
                 "--bind", "127.0.0.1:9001",
@@ -385,7 +382,7 @@ Create the following launch target.
 }
 ```
 
-Toml configs must go in ./src if you want to use gunicorn like this and don't install AQ as a package. See https://github.com/benoitc/gunicorn/discussions/3610
+To use Gunicorn like this, install AQ as a package with the command `python -m pip install -e .` (see [Basic Set Up](#Basic-Set-Up)).
 
 ## Troubleshooting
 
