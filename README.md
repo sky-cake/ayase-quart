@@ -380,6 +380,10 @@ Restart MySQL Server, `sudo systemctl restart mysql`. Check the status `sudo sys
 
 ## Archive Set Up
 
+### Ritual
+
+[Ritual](https://github.com/sky-cake/Ritual) is a basic linear-flow archiver that supports SQLite and MySQL. It's what I use for [ayasequart.org](https://ayasequart.org).
+
 ### Neofuuka
 
 [Neofuuka](https://github.com/bibanon/neofuuka-scraper) is a good choice if you can't compile Hayden, or don't need Hayden's ultra low memory consumption, but note that you need to use this [Neofuuka fork](https://github.com/sky-cake/neofuuka-scraper) if you want to filter threads since it's not supported in the original version. On the other hand, Hayden supports filtering threads out-of-the-box.
