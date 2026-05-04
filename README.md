@@ -172,7 +172,7 @@ fi
 
 The following systemd service can run this script for you on reboots.
 
-```toml
+```ini
 # sudo nano /etc/systemd/system/start_lnx.service
 [Unit]
 Description=Drop caches and start lnx docker container
