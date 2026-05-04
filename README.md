@@ -22,30 +22,6 @@ AQ supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https:/
 This project is a descendent of [Ayase](https://github.com/bibanon/ayase).
 
 
-## Donate & Support
-
-If you like Ayase Quart, please consider donating. 
-
-  - BTC: 3NTq5J41seSiCckK9PJc8cpkD1Bp9CNUSA
-  - ETH: 0x1bfCADA8C808Eb3AE7964304F69004a1053Fb1da
-  - USDC: 0xAd002E0e9A64DE5e0B93BB7509B475309A2e1ac8
-
-You could also help out by,
-
-  - Opening PRs for fixes or new features
-  - Auditing the project
-  - Notifying the project of any bugs, security vulnerabilities, or performance issues
-  - Proposing new features
-  - Testing the project, and reporting noteworthy findings
-
-
-## License
-
-This project uses the GNU Affero General Public License v3.0 (GNU AGPLv3).
-
-Also, it is expected you will not remove or hide any existing links or references to this GitHub repository. For example, the "Powered by Ayase Quart" footer should remain visible on all Ayase Quart instances.
-
-
 ## Basic Set Up
 
 Use Python 3.12.x or 3.13.x.
@@ -455,3 +431,26 @@ Note: You will need to create the database hayden_asagi, but Hayden takes care o
     }
 }
 ```
+
+## License
+
+This project uses the GNU Affero General Public License v3.0 (GNU AGPLv3).
+
+Also, it is expected you will not remove or hide any existing links or references to this GitHub repository. For example, the "Powered by Ayase Quart" footer should remain visible on all Ayase Quart instances.
+
+
+## Donate & Support
+
+If you like Ayase Quart, please consider donating. 
+
+  - BTC: 3NTq5J41seSiCckK9PJc8cpkD1Bp9CNUSA
+  - ETH: 0x1bfCADA8C808Eb3AE7964304F69004a1053Fb1da
+  - USDC: 0xAd002E0e9A64DE5e0B93BB7509B475309A2e1ac8
+
+You could also help out by,
+
+  - Opening PRs for fixes or new features
+  - Auditing the project
+  - Notifying the project of any bugs, security vulnerabilities, or performance issues
+  - Proposing new features
+  - Testing the project, and reporting noteworthy findings
