@@ -58,11 +58,23 @@ Assuming you have a data source set up, you can:
     ```bash
     python -m venv venv
     source venv/bin/activate
+    pip install --upgrade pip
     python -m pip install -r requirements.txt
-    python -m pip install .
+    python -m pip install -e .
     sudo apt update
-    sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
+    sudo apt install python3-dev default-libmysqlclient-dev build-essential
     ```
+1. Install redis with `sudo apt install redis-server`, and do the following if you use systemd,
+    ```bash
+    # Set line `supervised no` to `supervised systemd`.
+    # Configure listening port and whatever else you want.
+    sudo nano /etc/redis/redis.conf
+
+    sudo systemctl restart redis
+    sudo systemctl status redis
+    ```
+    - You could also use this redis docker image if you'd like.
+        - `sudo docker run -d --name redis-stack -p 6379:6379 -e REDIS_ARGS="--requirepass mypassword" redis/redis-stack-server:latest`
 1. Copy `./boards.tpl.toml` to `./boards.toml` and edit `./boards.toml` with your desired boards.
 1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
     -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./config.toml`
@@ -72,22 +84,7 @@ Assuming you have a data source set up, you can:
         - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
         - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
         - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in cwd (`./`). They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
-
-1. [Optional] Set up redis for moderation bloom filtering (`config.toml` variable `filter_cache_type = 'redis'`). Note that sqlite can be used for this too.
-    - With this docker image, you do not need to compile redis to incorporate bloom|cuckoo filters
-        - `sudo docker run -d --name redis-stack -p 6379:6379 -e REDIS_ARGS="--requirepass mypassword" redis/redis-stack-server:latest`
-    - Otherwise, set up redis on your system, and do the following if using systemd,
-
-        ```bash
-        # Set line `supervised no` to `supervised systemd`.
-        # Configure listening port and whatever else you want.
-        sudo nano /etc/redis/redis.conf
-
-        sudo systemctl restart redis
-        sudo systemctl status redis
-        ```
-
+1. [Optional] If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in cwd (`./`). They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
 1. `ayaseq prep hashjs` will set HTML `<script>` integrity checksums in a file `asset_hashes.json`.
 1. `hypercorn -w 2 -b 127.0.0.1:9001 ayase_quart.main:app` to launch the webserver
 1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
@@ -388,7 +385,7 @@ Create the following launch target.
 }
 ```
 
-Toml configs must go in ./src if you want to use gunicorn like this. See https://github.com/benoitc/gunicorn/discussions/3610
+Toml configs must go in ./src if you want to use gunicorn like this and don't install AQ as a package. See https://github.com/benoitc/gunicorn/discussions/3610
 
 ## Troubleshooting
 

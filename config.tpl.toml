@@ -188,7 +188,8 @@ n_reports_then_hide = 1
 hide_upstream_deleted_posts = true # hide upstream staff deleted posts in archive
 remove_replies_to_hidden_op = true # true, false # If remove_op_replies is true, then replies to hidden OPs are also hidden
 
-filter_cache_type = 'sqlite' # 'sqlite', 'redis'
+# 'redis' is currently not supported
+filter_cache_type = 'sqlite' # 'sqlite'
 
 regex_filter = '' # never serve posts matching this regex pattern e.g. 'gentoo|based'
 path_to_regex_so = '' # download from https://github.com/asg017/sqlite-regex/releases
