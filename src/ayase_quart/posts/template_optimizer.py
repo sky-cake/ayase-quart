@@ -130,7 +130,7 @@ def get_quotelink_t_thread(num: int, board: str, thread_num: int, quotelinks: li
     if not quotelinks:
         return ''
     quotelink_gen = (
-        f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink inblk" data-board="{board}">&gt;&gt;{quotelink}</a>'
+        f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a>'
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="clear_both backlink">Replies: {" ".join(quotelink_gen)}</div>'
