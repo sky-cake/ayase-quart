@@ -284,7 +284,7 @@ footer {
 }
 
 #catalog_threads {
-    padding: 0 1em;
+    padding: 0 0.5em;
     text-align: center;
 }
 
@@ -1097,6 +1097,21 @@ h3 {
         width: 30vw;
         height: 30vw;
     }
+    #catalog_threads img {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+    }
+    #catalog_threads>.thread {
+        width: 150px;
+        max-height: 360px;
+    }
+    #catalog_threads .dateTime {
+        display: none;
+    }
+    .meta {
+        display: inline-block;
+    }
 }
 
 @media (max-width: 420px) {
@@ -1104,14 +1119,21 @@ h3 {
         width: 30vw;
         height: 30vw;
     }
-
     .form-control {
         list-style: none;
         margin-bottom: 3px;
         display: table;
     }
-
     .ul3col {
         grid-template-rows: repeat(100, auto);
+    }
+    #catalog_threads img {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+    }
+    #catalog_threads>.thread {
+        width: 120px;
+        max-height: 360px;
     }
 }
