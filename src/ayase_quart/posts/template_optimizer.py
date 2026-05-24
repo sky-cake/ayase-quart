@@ -154,7 +154,7 @@ def get_media_t_thread(post: dict, num: int, board: str):
 
     return f"""<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
-            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
 	        {get_hash_search_link(board, md5h)}
         </div>
@@ -298,7 +298,7 @@ def get_media_t(post: dict):
     return f"""
 	<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
-            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
 	        {get_hash_search_link(board, md5h)}
         </div>

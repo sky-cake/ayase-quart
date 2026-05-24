@@ -3,7 +3,11 @@ from collections import defaultdict
 from html import escape
 from typing import Generator
 
+from ..configs import archive_conf
 from ..utils.integers import get_prefix_uint_no0
+
+
+COMMENTS_PREESCAPED = archive_conf['comments_preescaped']
 
 
 def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
@@ -36,14 +40,14 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
     return post_2_quotelinks
 
 
-def extract_quotelinks(comment: str, html=False) -> list[int]:
+def extract_quotelinks(comment: str) -> list[int]:
     """Given some escaped post/comment, `text`, returns a list of all the quotelinks (>>123456) in it."""
     quotelinks = []
     if not comment:
         return quotelinks
 
     # if the comment is not already html escaped, escape it
-    comment_esc = comment if html else escape(comment)
+    comment_esc = comment if COMMENTS_PREESCAPED else escape(comment)
 
     # text = '>>20074095\n>>20074101\nYou may be buying the wrong eggs'
     lines = comment_esc.split("\n")

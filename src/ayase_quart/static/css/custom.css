@@ -132,7 +132,7 @@ div.post blockquote.postMessage {
     display: block;
 }
 
-blockquote>span.quote {
+span.quote {
     color: #b5bd68;
 }
 
@@ -678,6 +678,10 @@ div.form-check {
 
 textarea:focus, input:focus {
     outline: 0;
+}
+
+.teaser a {
+    pointer-events: none;
 }
 
 span.spoiler,

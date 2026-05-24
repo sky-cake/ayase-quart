@@ -704,7 +704,6 @@ async def generate_catalog(board: str, page_num: int=1):
     """
     - Generates the catalog structure.
     - Returns html escaped titles and comments.
-    - Does not parse comments with `html_comment()`
     """
     catalog_post_count = 150
     if not (rows := await get_page_threads(board, catalog_post_count, page_num)):
@@ -725,7 +724,7 @@ async def generate_catalog(board: str, page_num: int=1):
 
     for post in posts:
         post['title'] = html_title(post['title'])
-        post['comment'] = html_title(post['comment'])
+        post['comment'] = html_comment(post['comment'], post['thread_num'], board)
 
     batch_size = 15
     return [

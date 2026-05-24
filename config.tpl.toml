@@ -33,10 +33,9 @@ anonymous_username = 'Anonymous'
 # custom_banner = 'Important message!' # html, empty string ('') to disable, default None == promo banner
 
 [archive]
-type = 'yotsuba' # 'yotsuba' (4chan), 'vichan' (lainchan, holotower)
 canonical_name = '4chan' # '4chan', 'Lainchan', 'Holotower'
 canonical_host = 'https://boards.4chan.org'
-comments_preescaped = false # false (4chan scrapers), true (vichan APIs)
+comments_preescaped = false # false (4chan), true (vichan|lainchan|holotower)
 # catalog_path = '/catalog.html' # after /{board} default '/catalog'
 # thread_path = '/res/{thread}.html' # after /{board} default '/thread/{thread}'
 # post_path = '#{num}' # after thread_path  default '#p{num}'
