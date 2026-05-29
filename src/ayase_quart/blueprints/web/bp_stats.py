@@ -9,14 +9,15 @@ from ...moderation.auth_web import (
 )
 from ...render import render_controller
 from ...templates import template_stats
-from ...utils.validation import validate_board
+from ...utils.validation import validate_board_query_parameter
+
 
 bp = Blueprint('bp_web_stats', __name__)
 
 
 @bp.get("/stats/<string:board>")
+@validate_board_query_parameter
 async def stats_board(board: str):
-    validate_board(board)
     post_counts_per_month_by_board = await get_post_counts_per_month_by_board(board)
     return Response(post_counts_per_month_by_board, content_type='application/json')
 

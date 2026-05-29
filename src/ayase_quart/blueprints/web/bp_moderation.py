@@ -32,7 +32,7 @@ from ...moderation.user import Permissions
 from ...paginate import Pagination
 from ...render import render_controller
 from ...templates import template_reports_index
-from ...utils.validation import validate_board
+from ...utils.validation import validate_board_query_parameter
 from ...security import (
     apply_csrf_validation_on_endpoint,
     session_csrf_token_name,
@@ -52,8 +52,8 @@ bp = Blueprint('bp_web_moderation', __name__)
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_is_admin
+@validate_board_query_parameter
 async def route_nuke_post(board: str, num: int):
-    validate_board(board)
 
     msg = await delete_post(current_web_usr, board, num)
 
@@ -64,9 +64,8 @@ async def route_nuke_post(board: str, num: int):
 @bp.post('/report/<string:board>/<int:thread_num>/<int:num>')
 @apply_csrf_validation_on_endpoint
 @rate_limit(4, timedelta(hours=1))
+@validate_board_query_parameter
 async def route_create_report(board: str, thread_num: int, num: int):
-    validate_board(board)
-
     # turn csrf on the form, and use route decorator to validate csrf on api requests
     form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
 
