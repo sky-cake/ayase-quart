@@ -215,7 +215,7 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
     phg = db_m.Phg()
 
     if not is_admin or not is_active:
-        if not (await meets_active_admin_requirements()):
+        if not (await meets_active_admin_requirements(user_id)):
             return 'User not updated. There must always be at least one active admin.', 403
 
     pwd = f'password={phg()},' if password else ''
