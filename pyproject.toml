@@ -38,7 +38,6 @@ dependencies = [
     'msgpack',
     'markupsafe',
     'orjson',
-    'pillow',
     'python-dateutil',
     'pybase64',
     'Quart',
@@ -92,7 +91,6 @@ base = [
     'msgpack',
     'markupsafe',
     'orjson',
-    'pillow',
     'python-dateutil',
     'pybase64',
     'Quart',
@@ -134,7 +132,6 @@ where = ['src']
 ayase_quart = [
     'static/**/*',
     'templates/**/*',
-    'fonts/**/*',
     'moderation/sql/**/*',
 ]
 

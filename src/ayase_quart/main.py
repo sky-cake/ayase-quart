@@ -1,4 +1,3 @@
-import os
 import traceback
 
 from hypercorn.middleware import ProxyFixMiddleware
@@ -60,12 +59,9 @@ async def close_dbs():
 
 
 def create_app():
-    file_dir = os.path.dirname(__file__)
-
     app = Quart2(__name__)
 
     app.config.from_object(QuartConfig)
-    app.config['MATH_CAPTCHA_FONT'] = os.path.join(file_dir, 'fonts/tly.ttf')
 
     RateLimiter(app, enabled=app_conf['rate_limiter'])
 

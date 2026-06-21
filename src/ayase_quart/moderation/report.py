@@ -91,8 +91,8 @@ async def get_report_count(
         where.append(f'mod_status = {phg()}')
         params.append(mod_status)
     if board_shortnames:
-        assert isinstance(board_shortnames, list)
-        assert isinstance(board_shortnames[0], str)
+        if not isinstance(board_shortnames, list) or not isinstance(board_shortnames[0], str):
+            raise TypeError('board_shortnames must be a list of strings')
         where.append(f'board_shortname in ({phg.size(board_shortnames)})')
         params.extend(board_shortnames)
     if report_parent_id:
@@ -169,8 +169,8 @@ async def get_reports(
         where.append(f'rp.mod_status = {phg()}')
         params.append(mod_status)
     if board_shortnames:
-        assert isinstance(board_shortnames, list)
-        assert isinstance(board_shortnames[0], str)
+        if not isinstance(board_shortnames, list) or not isinstance(board_shortnames[0], str):
+            raise TypeError('board_shortnames must be a list of strings')
         where.append(f'rp.board_shortname in ({phg.size(board_shortnames)})')
         params.extend(board_shortnames)
     if report_parent_id:
@@ -193,7 +193,7 @@ async def get_reports(
         where.append(f'rc.created_at >= {phg()}')
         params.append(created_at_gte)
     if created_at_lte:
-        where.append(f'rc.created_at =< {phg()}')
+        where.append(f'rc.created_at <= {phg()}')
         params.append(created_at_lte)
 
     sql = """

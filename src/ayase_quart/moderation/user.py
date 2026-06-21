@@ -182,6 +182,9 @@ async def set_user_permissions(user_id: int, permissions: Iterable[Permissions])
     sql = f'delete from user_permissions where user_id = {db_m.Phg()()};'
     await db_m.query_dict(sql, params=(user_id,), commit=False)
 
+    if not permissions:
+        return
+
     phg = db_m.Phg()
     sql = f'insert into user_permissions (user_id, permission_name) values({phg()}, {phg()});'
     for permission in permissions:
@@ -215,7 +218,7 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
     phg = db_m.Phg()
 
     if not is_admin or not is_active:
-        if not (await meets_active_admin_requirements()):
+        if not (await meets_active_admin_requirements(user_id)):
             return 'User not updated. There must always be at least one active admin.', 403
 
     pwd = f'password={phg()},' if password else ''
