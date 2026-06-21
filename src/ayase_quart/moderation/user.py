@@ -182,6 +182,9 @@ async def set_user_permissions(user_id: int, permissions: Iterable[Permissions])
     sql = f'delete from user_permissions where user_id = {db_m.Phg()()};'
     await db_m.query_dict(sql, params=(user_id,), commit=False)
 
+    if not permissions:
+        return
+
     phg = db_m.Phg()
     sql = f'insert into user_permissions (user_id, permission_name) values({phg()}, {phg()});'
     for permission in permissions:
