@@ -74,8 +74,6 @@ async def redis_get_user_data(user_id: int) -> dict | None:
 
     deserialized = {}
     for key, value in user_data.items():
-        key = key.decode('utf-8')
-        value = value.decode('utf-8')
         try:
             deserialized[key] = json.loads(value)
         except (json.JSONDecodeError, TypeError):

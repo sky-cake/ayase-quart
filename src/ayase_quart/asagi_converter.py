@@ -934,16 +934,20 @@ async def get_post_counts_per_month_by_board(board: str) -> str:
     """
     if stats_conf['redis']:
         redis = get_redis(stats_conf['redis_db'])
-        async with redis:
-            key = f'post_counts_{board}'
-            post_counts = await redis.get(key)
-            if post_counts:
-                return post_counts # do not loads(), cache dumps()
+        try:
+            async with redis:
+                key = f'post_counts_{board}'
+                post_counts = await redis.get(key)
+                if post_counts:
+                    return post_counts # do not loads(), cache dumps()
 
-            post_counts = await _get_post_counts_per_month_by_board(board)
-            post_counts = json.dumps(post_counts)
-            if post_counts:
-                await redis.set(key, post_counts)
+                post_counts = await _get_post_counts_per_month_by_board(board)
+                post_counts = json.dumps(post_counts)
+                if post_counts:
+                    await redis.set(key, post_counts)
+        except RuntimeError:
+            # too many redis connections, "this Redis has already been entered"
+            return
         return post_counts
 
     post_counts = await _get_post_counts_per_month_by_board(board)

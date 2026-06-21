@@ -194,7 +194,7 @@ class FilterCacheRedis(BaseFilterCache):
     async def get_op_thread_removed_count(self, board: str) -> int:
         async with self.redis:
             if count := await self.redis.get(fmt_op_count_key(board)):
-                return int(count.decode())
+                return int(count)
             return 0
 
     # TODO: need to thread in hide_deleted, hide_reported and hide_reported_after_n
