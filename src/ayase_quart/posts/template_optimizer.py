@@ -452,7 +452,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     nuke_btn = ''
     if show_nuke_btn and csrf_input:
         # no js required
-        nuke_btn = f"""[<form class="actionform form" action="/nuke/{board}/{num}" method="post">{csrf_input}<button class="adminbtn" type="submit">Nuke</button></form>]"""
+        nuke_btn = f"""<form class="form plain nukethreadform" action="/nuke/{board}/{num}" method="post">{csrf_input}[<button class="abtn nukethreadbtn" type="submit"></button>]</form>"""
 
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">

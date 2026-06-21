@@ -66,9 +66,6 @@ div.sideArrows {
 .sourcelink::after {
 	content: 'Source';
 }
-.rbtn::after {
-	content: 'Report';
-}
 
 div.thread, .clear_both {
     margin: 0;
@@ -405,7 +402,7 @@ ul {
     filter: none;
 }
 
-.rbtn, .adminbtn {
+.rbtn, .abtn {
     background-color: inherit;
     border: none;
     color: #81a2be;
@@ -415,7 +412,7 @@ ul {
     font-size: inherit;
 }
 
-.rbtn:disabled, .adminbtn:disabled {
+.rbtn:disabled .abtn:disabled {
     background-color: inherit;
     border: none;
     color: #727272 !important;
@@ -423,14 +420,28 @@ ul {
     padding: 0;
 }
 
-.actionform {
+.rbtn::after {
+	content: 'Report';
+}
+
+.nukethreadbtn::after {
+	content: 'Nuke';
+}
+
+.nukethreadform {
+    display: none;
+}
+
+.plain {
     border: none;
     background-color: inherit;
-    color: #99bcd9 !important;
-    cursor: pointer;
     padding: 0;
     margin: 0;
-    display: inline;
+}
+
+button:disabled {
+    text-decoration: line-through;
+    text-decoration-style: wavy;
 }
 
 hr {
