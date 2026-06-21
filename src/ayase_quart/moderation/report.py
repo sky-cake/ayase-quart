@@ -91,8 +91,8 @@ async def get_report_count(
         where.append(f'mod_status = {phg()}')
         params.append(mod_status)
     if board_shortnames:
-        assert isinstance(board_shortnames, list)
-        assert isinstance(board_shortnames[0], str)
+        if not isinstance(board_shortnames, list) or not isinstance(board_shortnames[0], str):
+            raise TypeError('board_shortnames must be a list of strings')
         where.append(f'board_shortname in ({phg.size(board_shortnames)})')
         params.extend(board_shortnames)
     if report_parent_id:
