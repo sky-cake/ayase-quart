@@ -193,7 +193,7 @@ async def get_reports(
         where.append(f'rc.created_at >= {phg()}')
         params.append(created_at_gte)
     if created_at_lte:
-        where.append(f'rc.created_at =< {phg()}')
+        where.append(f'rc.created_at <= {phg()}')
         params.append(created_at_lte)
 
     sql = """
