@@ -22,7 +22,7 @@ from .posts.quotelinks import (
     get_quotelink_lookup_raw
 )
 from .enums import DbType
-from .utils.validation import validate_board_query_parameter, validate_boards
+from .utils.validation import validate_board, validate_boards
 from .db.base_db import BasePlaceHolderGen
 
 
@@ -908,8 +908,8 @@ async def is_post_op(board: str, num: int) -> bool:
 
 
 @alru_cache(ttl=60*60*24)
-@validate_board_query_parameter
 async def _get_post_counts_per_month_by_board(board: str):
+    validate_board(board)
     rows = await db_q.query_dict(
         f"""
         select
