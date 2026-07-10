@@ -265,8 +265,6 @@ class IndexSearchConfigForm(QuartForm):
 class LoginForm(QuartForm):
     username = StringField(validators=[DataRequired(), Length(min=1, max=128)])
     password = PasswordField(validators=[DataRequired(), Length(min=1, max=128)])
-    captcha_id = HiddenField('', validators=[DataRequired()])
-    captcha_answer = IntegerField('', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 

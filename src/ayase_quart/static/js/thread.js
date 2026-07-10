@@ -42,7 +42,9 @@ function quotelink_mouseover(event) {
     const id_post_num = "#p" + num;
     let target_post = document.querySelector(id_post_num);
 
-    quotelink_preview_hide();
+    if (!is_mobile) {
+        quotelink_preview_hide();
+    }
 
     if (target_post !== null) { // on-page post
         quotelink_preview_show(target_post, quotelink, backlink_num);
@@ -76,13 +78,40 @@ function quotelink_mouseover(event) {
     });
 }
 
+function remove_link(event){
+    event.preventDefault();
+}
+
+function hide_preview_if_not_preview_click(event) {
+    if (event.target.tagName !== "A") {
+        quotelink_preview_hide();
+    }
+}
+
 function setup_quotelink_events() {
     const quotelinks = doc_query_all("a.quotelink");
-    for (const quotelink of quotelinks) {
-        quotelink.removeEventListener("mouseover", quotelink_mouseover);
-        quotelink.removeEventListener("mouseleave", quotelink_preview_hide);
-        quotelink.addEventListener("mouseover", quotelink_mouseover);
-        quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+    if (is_mobile) {
+        for (const quotelink of quotelinks) {
+            const preview = quotelink.cloneNode();
+            preview.textContent = ' #';
+
+            quotelink.removeEventListener("click", remove_link);
+            quotelink.addEventListener("click", remove_link);
+
+            quotelink.removeEventListener("click", quotelink_mouseover);
+            quotelink.addEventListener("click", quotelink_mouseover);
+
+            quotelink.after(preview);
+        }
+        document.addEventListener("click", hide_preview_if_not_preview_click);
+    }
+    else {
+        for (const quotelink of quotelinks) {
+            quotelink.removeEventListener("mouseover", quotelink_mouseover);
+            quotelink.removeEventListener("mouseleave", quotelink_preview_hide);
+            quotelink.addEventListener("mouseover", quotelink_mouseover);
+            quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+        }
     }
 }
 
@@ -120,7 +149,9 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
         }
     }
 
-    preview.addEventListener("mouseover", quotelink_preview_hide);
+    if (!is_mobile) {
+        preview.addEventListener("mouseover", quotelink_preview_hide);
+    }
 
     document.body.appendChild(preview);
 

@@ -16,7 +16,6 @@ from ...moderation.auth_web import (
 )
 from ...moderation.user import User, is_valid_creds
 from ...render import render_controller
-from ...security.captcha import MathCaptcha
 from ...templates import template_login
 
 
@@ -64,23 +63,17 @@ async def handle_login(method: str, is_admin: bool=False, logged_in: bool=False)
     - Uses wtform csrf token
     """
     form: LoginForm = await LoginForm.create_form()
-    captcha = MathCaptcha(tff_file_path=current_app.config["MATH_CAPTCHA_FONT"])
 
     if method == 'POST' and (await form.validate_on_submit()):
-        if captcha.is_valid(form.captcha_id.data, form.captcha_answer.data):
-            username = form.username.data
-            password_candidate = form.password.data
-            user = await is_valid_creds(username, password_candidate)
-            if user:
-                auth_web.login_user(User(user.user_id, Action.WRITE_PERMANENT)) # obey configured cookie duration
-                await flash("Login successful.", "success")
-                return redirect(url_for('bp_web_moderation.reports_open'))
+        username = form.username.data
+        password_candidate = form.password.data
+        user = await is_valid_creds(username, password_candidate)
+        if user:
+            auth_web.login_user(User(user.user_id, Action.WRITE_PERMANENT)) # obey configured cookie duration
+            await flash("Login successful.", "success")
+            return redirect(url_for('bp_web_moderation.reports_open'))
 
-            await flash("Incorrect username or password.", "danger")
-        else:
-            await flash("Wrong math captcha answer.", "danger")
-
-    form.captcha_id.data, form.captcha_b64_img_str = captcha.generate_captcha()
+        await flash("Incorrect username or password.", "danger")
 
     if method == 'GET' and logged_in:
         return redirect(url_for('bp_web_moderation.reports_open'))

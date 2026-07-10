@@ -32,7 +32,7 @@ from ...moderation.user import Permissions
 from ...paginate import Pagination
 from ...render import render_controller
 from ...templates import template_reports_index
-from ...utils.validation import validate_board
+from ...utils.validation import validate_board_query_parameter
 from ...security import (
     apply_csrf_validation_on_endpoint,
     session_csrf_token_name,
@@ -52,8 +52,8 @@ bp = Blueprint('bp_web_moderation', __name__)
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_is_admin
+@validate_board_query_parameter
 async def route_nuke_post(board: str, num: int):
-    validate_board(board)
 
     msg = await delete_post(current_web_usr, board, num)
 
@@ -64,9 +64,8 @@ async def route_nuke_post(board: str, num: int):
 @bp.post('/report/<string:board>/<int:thread_num>/<int:num>')
 @apply_csrf_validation_on_endpoint
 @rate_limit(4, timedelta(hours=1))
+@validate_board_query_parameter
 async def route_create_report(board: str, thread_num: int, num: int):
-    validate_board(board)
-
     # turn csrf on the form, and use route decorator to validate csrf on api requests
     form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
 
@@ -124,17 +123,17 @@ async def formulate_reports_for_html_table(reports: list[dict]) -> list[dict]:
         <br>
         <br>
         [
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="adminbtn" type="submit">Post Hide</button></form> |
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="adminbtn" type="submit">Post Show</button></form> |
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="adminbtn" type="submit">Report Open</button></form> |
-            <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="adminbtn" type="submit">Report Close</button></form>
+            <form class="plain form inline click" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_hide')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.hidden else ''} class="abtn" type="submit">Post Hide</button></form> |
+            <form class="plain form inline click" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='post_show')}"     method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.public_access == PublicAccess.visible else ''} class="abtn" type="submit">Post Show</button></form> |
+            <form class="plain form inline click" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_open')}"   method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.open else ''} class="abtn" type="submit">Report Open</button></form> |
+            <form class="plain form inline click" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_close')}"  method="post">{csrf_input}{endpoint_html}<button {'disabled' if r.mod_status == ModStatus.closed else ''} class="abtn" type="submit">Report Close</button></form>
         ]
         <br>
         <br>
-        <form class="actionform form" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_save_notes')}" method="post">
+        <form class="plain form inline" action="{url_for('bp_web_moderation.reports_action', report_parent_id=report_parent_id, action='report_save_notes')}" method="post">
             {csrf_input}
             <textarea name="mod_notes" rows="2" cols="20" placeholder="Moderation notes">{escape(r.mod_notes) if r.mod_notes else ''}</textarea>
-            [<button class="adminbtn" type="submit">Save Notes</button>]
+            [<button class="abtn click" type="submit">Save Notes</button>]
         </form>
         <br>
         <br>

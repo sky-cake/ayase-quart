@@ -10,7 +10,6 @@ from itertools import batched
 from textwrap import dedent
 
 from async_lru import alru_cache
-from werkzeug.security import safe_join
 
 from .configs import stats_conf
 from .db import db_q
@@ -94,20 +93,17 @@ selector_columns_map = {
 }
 
 
-def get_full_media_path(root_path, board, qualifier, media_orig):
-    return safe_join(root_path, board, qualifier, media_orig[0:4], media_orig[4:6], media_orig)
-
-
+post_has_file_keys = ('tim', 'ext', 'md5')
 def post_has_file(post: dict) -> bool:
-    return post.get('tim') and post.get('ext') and post.get('md5')
+    return all(post.get(k) for k in post_has_file_keys)
 
 
-def get_fs_filename_thumbnail(post: dict) -> str|None:
+def get_asagi_preview_orig(post: dict) -> str|None:
     if post_has_file(post):
         return f"{post.get('tim')}s.jpg"
 
 
-def get_fs_filename_full_media(post: dict) -> str|None:
+def get_asagi_media_orig(post: dict) -> str|None:
     if post_has_file(post):
         return f"{post.get('tim')}{post.get('ext')}"
 
@@ -123,7 +119,7 @@ def get_asagi_defaults_from_post(post: dict) -> dict:
             'op': post.get('op', 0),
             'timestamp': post.get('time', 0),
             'timestamp_expired': post.get('archived_on', 0),
-            'preview_orig': get_fs_filename_thumbnail(post),
+            'preview_orig': get_asagi_preview_orig(post),
             'preview_w': post.get('preview_w', 0),
             'preview_h': post.get('preview_h', 0),
             'media_filename': post.get('media_filename'),
@@ -131,7 +127,7 @@ def get_asagi_defaults_from_post(post: dict) -> dict:
             'media_h': post.get('media_h', 0),
             'media_size': post.get('media_size', 0),
             'media_hash': post.get('media_hash'),
-            'media_orig': get_fs_filename_full_media(post),
+            'media_orig': get_asagi_media_orig(post),
             'spoiler': post.get('spoiler', 0),
             'deleted': post.get('filedeleted', 0),
             'capcode': post.get('capcode', 'N'),
@@ -708,7 +704,6 @@ async def generate_catalog(board: str, page_num: int=1):
     """
     - Generates the catalog structure.
     - Returns html escaped titles and comments.
-    - Does not parse comments with `html_comment()`
     """
     catalog_post_count = 150
     if not (rows := await get_page_threads(board, catalog_post_count, page_num)):
@@ -729,7 +724,7 @@ async def generate_catalog(board: str, page_num: int=1):
 
     for post in posts:
         post['title'] = html_title(post['title'])
-        post['comment'] = html_title(post['comment'])
+        post['comment'] = html_comment(post['comment'], post['thread_num'], board)
 
     batch_size = 15
     return [
@@ -938,17 +933,21 @@ async def get_post_counts_per_month_by_board(board: str) -> str:
     """Returns json formatted string.
     """
     if stats_conf['redis']:
-        r = get_redis(stats_conf['redis_db'])
+        redis = get_redis(stats_conf['redis_db'])
+        try:
+            async with redis:
+                key = f'post_counts_{board}'
+                post_counts = await redis.get(key)
+                if post_counts:
+                    return post_counts # do not loads(), cache dumps()
 
-        key = f'post_counts_{board}'
-        post_counts = await r.get(key)
-        if post_counts:
-            return post_counts # do not loads(), cache dumps()
-
-        post_counts = await _get_post_counts_per_month_by_board(board)
-        post_counts = json.dumps(post_counts)
-        if post_counts:
-            await r.set(key, post_counts)
+                post_counts = await _get_post_counts_per_month_by_board(board)
+                post_counts = json.dumps(post_counts)
+                if post_counts:
+                    await redis.set(key, post_counts)
+        except RuntimeError:
+            # too many redis connections, "this Redis has already been entered"
+            return
         return post_counts
 
     post_counts = await _get_post_counts_per_month_by_board(board)

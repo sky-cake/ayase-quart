@@ -1,6 +1,11 @@
 from enum import Enum, StrEnum, IntFlag, auto
 
 
+class MediaFP(StrEnum):
+    asagi = 'asagi'
+    sutra = 'sutra'
+
+
 class DbType(Enum):
     mysql = 1
     sqlite = 2

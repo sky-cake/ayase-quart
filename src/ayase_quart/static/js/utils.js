@@ -147,6 +147,12 @@ const image_extensions = new Set([
 	'webp',
 ]);
 
+function is_mobile_device() {
+    return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+}
+
+const is_mobile = is_mobile_device();
+
 /**
  * Determine if file extension is for video files
  * @param {string} ext file extension

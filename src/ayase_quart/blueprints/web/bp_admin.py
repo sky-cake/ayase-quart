@@ -159,7 +159,7 @@ async def users_edit(is_admin: bool, user_id: str):
     user = await get_user_by_id(user_id)
     if not user:
         await flash('That user does not exist.')
-        redirect(url_for('bp_web_admin.users_index'))
+        return redirect(url_for('bp_web_admin.users_index'))
 
     if request.method == 'POST' and (await form.validate_on_submit()):
         password_cur = form.password_cur.data
@@ -211,7 +211,8 @@ async def users_delete(is_admin: bool, user_id: str):
 
     user = await get_user_by_id(user_id)
     if not user:
-        redirect(url_for('bp_web_admin.users_index'))
+        await flash('That user does not exist.')
+        return redirect(url_for('bp_web_admin.users_index'))
 
     return await render_controller(
         template_users_delete,

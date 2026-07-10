@@ -41,22 +41,22 @@ async def redis_set_user_data(user_id: int, user_data: dict[str, Any], expire_se
     Keep that in mind when using this.
     E.g. sets will be returned as lists.
     """
-    r = get_redis(REDIS_MOD_DB)
+    redis = get_redis(REDIS_MOD_DB)
+    async with redis:
+        serialized = dict()
+        for key, value in user_data.items():
+            v = value
+            if isinstance(value, set):
+                v = json.dumps([x.value if isinstance(x, Enum) else x for x in value])
+            serialized[key] = v
 
-    serialized = dict()
-    for key, value in user_data.items():
-        v = value
-        if isinstance(value, set):
-            v = json.dumps([x.value if isinstance(x, Enum) else x for x in value])
-        serialized[key] = v
+        successes: int = await redis.hset(user_id, serialized)
 
-    successes: int = await r.hset(user_id, serialized)
+        if successes != len(user_data):
+            raise ValueError('Not all user data entries inserted to redis.', successes, len(user_data))
 
-    if successes != len(user_data):
-        raise ValueError('Not all user data entries inserted to redis.', successes, len(user_data))
-
-    if expire_seconds:
-        await r.expire(user_id, expire_seconds)
+        if expire_seconds:
+            await redis.expire(user_id, expire_seconds)
 
 
 async def redis_get_user_data(user_id: int) -> dict | None:
@@ -65,16 +65,15 @@ async def redis_get_user_data(user_id: int) -> dict | None:
     Keep that in mind when using this.
     E.g. sets will be returned as lists.
     """
-    r = get_redis(REDIS_MOD_DB)
-    user_data = await r.hgetall(user_id)
+    redis = get_redis(REDIS_MOD_DB)
+    async with redis:
+        user_data = await redis.hgetall(user_id)
 
     if not user_data:
         return None
 
     deserialized = {}
     for key, value in user_data.items():
-        key = key.decode('utf-8')
-        value = value.decode('utf-8')
         try:
             deserialized[key] = json.loads(value)
         except (json.JSONDecodeError, TypeError):
@@ -84,8 +83,9 @@ async def redis_get_user_data(user_id: int) -> dict | None:
 
 
 async def redis_delete_user_data(user_id: int):
-    r = get_redis(REDIS_MOD_DB)
-    await r.delete(user_id)
+    redis = get_redis(REDIS_MOD_DB)
+    async with redis:
+        await redis.delete(user_id)
 
 
 def get_permissions_from_string(permissions: str) -> set[Permissions]:
@@ -180,6 +180,9 @@ async def set_user_permissions(user_id: int, permissions: Iterable[Permissions])
     sql = f'delete from user_permissions where user_id = {db_m.Phg()()};'
     await db_m.query_dict(sql, params=(user_id,), commit=False)
 
+    if not permissions:
+        return
+
     phg = db_m.Phg()
     sql = f'insert into user_permissions (user_id, permission_name) values({phg()}, {phg()});'
     for permission in permissions:
@@ -213,7 +216,7 @@ async def edit_user(user_id: int, password: str=None, is_admin: bool=False, is_a
     phg = db_m.Phg()
 
     if not is_admin or not is_active:
-        if not (await meets_active_admin_requirements()):
+        if not (await meets_active_admin_requirements(user_id)):
             return 'User not updated. There must always be at least one active admin.', 403
 
     pwd = f'password={phg()},' if password else ''

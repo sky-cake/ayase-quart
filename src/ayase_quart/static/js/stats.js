@@ -78,11 +78,17 @@ async function fetchBoardData(board) {
         return boardDataCache.get(board);
     }
     showLoading(true);
-    const response = await fetch(`/stats/${board}`);
-    const data = await response.json();
-    boardDataCache.set(board, data);
-    showLoading(false);
-    return data;
+
+    try {
+        const response = await fetch(`/stats/${board}`);
+        const data = await response.json();
+        boardDataCache.set(board, data);
+        return data;
+    } catch {
+        return null;
+    } finally {
+        showLoading(false);
+    }
 }
 
 function populateDatasets(board, data, allMonths, datasets) {
@@ -136,6 +142,9 @@ async function updateChart() {
 
     for (const board of activeBoards) {
         const data = await fetchBoardData(board);
+        if (!data) {
+            return;
+        }
         for (const item of data) {
             allMonthsSet.add(item.year_month);
         }

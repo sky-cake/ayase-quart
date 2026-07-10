@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 {% block body %}
+{% if is_admin %}
+[<span id="nuke_toggle" class="abtn">Go To Nuke Mode</span>]
+{% endif %}
 {% include 'pagination.html' %}
 <div id="catalog_threads">
     {{threads|safe}}
 </div>
 {% include 'pagination.html' %}
+{% if is_admin %}
+<script type="text/javascript" defer src="/static/js/catalog.js" {{ get_integrity("catalog.js")|safe }}></script>
+{% endif %}
 {% endblock %}

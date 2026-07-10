@@ -66,9 +66,6 @@ div.sideArrows {
 .sourcelink::after {
 	content: 'Source';
 }
-.rbtn::after {
-	content: 'Report';
-}
 
 div.thread, .clear_both {
     margin: 0;
@@ -132,7 +129,7 @@ div.post blockquote.postMessage {
     display: block;
 }
 
-blockquote>span.quote {
+span.quote {
     color: #b5bd68;
 }
 
@@ -284,7 +281,7 @@ footer {
 }
 
 #catalog_threads {
-    padding: 0 1em;
+    padding: 0 0.5em;
     text-align: center;
 }
 
@@ -405,7 +402,7 @@ ul {
     filter: none;
 }
 
-.rbtn, .adminbtn {
+.rbtn, .abtn {
     background-color: inherit;
     border: none;
     color: #81a2be;
@@ -415,7 +412,7 @@ ul {
     font-size: inherit;
 }
 
-.rbtn:disabled, .adminbtn:disabled {
+.rbtn:disabled .abtn:disabled {
     background-color: inherit;
     border: none;
     color: #727272 !important;
@@ -423,14 +420,28 @@ ul {
     padding: 0;
 }
 
-.actionform {
+.rbtn::after {
+	content: 'Report';
+}
+
+.nukethreadbtn::after {
+	content: 'Nuke';
+}
+
+.nukethreadform {
+    display: none;
+}
+
+.plain {
     border: none;
     background-color: inherit;
-    color: #99bcd9 !important;
-    cursor: pointer;
     padding: 0;
     margin: 0;
-    display: inline;
+}
+
+button:disabled {
+    text-decoration: line-through;
+    text-decoration-style: wavy;
 }
 
 hr {
@@ -678,6 +689,10 @@ div.form-check {
 
 textarea:focus, input:focus {
     outline: 0;
+}
+
+.teaser a {
+    pointer-events: none;
 }
 
 span.spoiler,
@@ -1097,21 +1112,43 @@ h3 {
         width: 30vw;
         height: 30vw;
     }
+    #catalog_threads .fileThumb img {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+    }
+    #catalog_threads>.thread {
+        width: 150px;
+        max-height: 360px;
+    }
+    #catalog_threads .dateTime {
+        display: none;
+    }
+    .meta {
+        display: inline-block;
+    }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .cover {
         width: 30vw;
         height: 30vw;
     }
-
     .form-control {
         list-style: none;
         margin-bottom: 3px;
         display: table;
     }
-
     .ul3col {
         grid-template-rows: repeat(100, auto);
+    }
+    #catalog_threads .fileThumb img {
+        width: 100%;
+        height: 120px;
+        object-fit: contain;
+    }
+    #catalog_threads>.thread {
+        width: 45%;
+        max-height: 360px;
     }
 }

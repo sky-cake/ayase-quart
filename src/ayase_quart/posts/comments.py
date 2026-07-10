@@ -4,8 +4,8 @@ import re
 from ..configs import archive_conf
 from .quotelinks import html_quotelinks
 
-IS_VICHAN_ARCHIVE = archive_conf['type'] == 'vichan'
-# COMMENTS_PREESCAPED = archive_conf['comments_preescaped'] # not used atm
+
+COMMENTS_PREESCAPED = archive_conf['comments_preescaped']
 
 
 def html_title(title: str) -> str:
@@ -16,10 +16,10 @@ def html_comment(comment: str, thread_num: int, board: str) -> str:
     if not comment:
         return comment
 
-    if IS_VICHAN_ARCHIVE:
+    if COMMENTS_PREESCAPED:
         return _html_comment_vichan(comment)
-    else:
-        return _html_comment_yotsuba(comment, thread_num, board)
+
+    return _html_comment_yotsuba(comment, thread_num, board)
 
 
 def _html_comment_yotsuba(comment: str, thread_num: int, board: str):
@@ -48,7 +48,6 @@ def _html_comment_yotsuba(comment: str, thread_num: int, board: str):
     return comment
 
 
-# TODO support <span class="spoiler"></span> (see on vichan/holotower and vichan/lainchan)
 vichan_comment_re = re.compile(r'\s*onclick="[^"]*"')
 vichan_ql_pat_re = re.compile(r'(<a)([^>]*\bhref="/)([^/]+)(/res/)([^"]*?)(\.html)?(#)?(\d+)(")')
 def _html_comment_vichan(comment: str):
@@ -63,6 +62,7 @@ def _html_comment_vichan(comment: str):
 
         replacement = r'\1 class="quotelink" data-board="\3"\2\3/thread/\5\7p\8\9'
         comment = vichan_ql_pat_re.sub(replacement, comment)
+    return comment
 
 
 def replace_newlines_except_in_code(html: str):

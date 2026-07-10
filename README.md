@@ -22,30 +22,6 @@ AQ supports MySQL and SQLite, so it's compatible with [Neofuuka (MySQL)](https:/
 This project is a descendent of [Ayase](https://github.com/bibanon/ayase).
 
 
-## Donate & Support
-
-If you like Ayase Quart, please consider donating. 
-
-  - BTC: 3NTq5J41seSiCckK9PJc8cpkD1Bp9CNUSA
-  - ETH: 0x1bfCADA8C808Eb3AE7964304F69004a1053Fb1da
-  - USDC: 0xAd002E0e9A64DE5e0B93BB7509B475309A2e1ac8
-
-You could also help out by,
-
-  - Opening PRs for fixes or new features
-  - Auditing the project
-  - Notifying the project of any bugs, security vulnerabilities, or performance issues
-  - Proposing new features
-  - Testing the project, and reporting noteworthy findings
-
-
-## License
-
-This project uses the GNU Affero General Public License v3.0 (GNU AGPLv3).
-
-Also, it is expected you will not remove or hide any existing links or references to this GitHub repository. For example, the "Powered by Ayase Quart" footer should remain visible on all Ayase Quart instances.
-
-
 ## Basic Set Up
 
 Use Python 3.12.x or 3.13.x.
@@ -58,11 +34,23 @@ Assuming you have a data source set up, you can:
     ```bash
     python -m venv venv
     source venv/bin/activate
+    pip install --upgrade pip
     python -m pip install -r requirements.txt
-    python -m pip install .
+    python -m pip install -e .
     sudo apt update
-    sudo apt install python3-dev default-libmysqlclient-dev build-essential redis-server
+    sudo apt install python3-dev default-libmysqlclient-dev build-essential
     ```
+1. Install redis with `sudo apt install redis-server`, and do the following if you use systemd,
+    ```bash
+    # Set line `supervised no` to `supervised systemd`.
+    # Configure listening port and whatever else you want.
+    sudo nano /etc/redis/redis.conf
+
+    sudo systemctl restart redis
+    sudo systemctl status redis
+    ```
+    - You could also use this redis docker image if you'd like.
+        - `sudo docker run -d --name redis-stack -p 6379:6379 -e REDIS_ARGS="--requirepass mypassword" redis/redis-stack-server:latest`
 1. Copy `./boards.tpl.toml` to `./boards.toml` and edit `./boards.toml` with your desired boards.
 1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
     -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./config.toml`
@@ -72,18 +60,7 @@ Assuming you have a data source set up, you can:
         - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
         - [Neofuuka Plus Filters (MySQL)](https://github.com/sky-cake/neofuuka-scraper-plus-filters)
         - [Hayden (MySQL)](https://github.com/bbepis/Hayden) with MySQL.
-1. (Optional) If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in cwd (`./`). They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
-
-1. [Optional] Set up redis for moderation bloom filtering.
-
-    ```bash
-    # Set line `supervised no` to `supervised systemd`.
-    # Configure listening port and whatever else you want.
-    sudo nano /etc/redis/redis.conf
-
-    sudo systemctl restart redis
-    sudo systemctl status redis
-    ```
+1. [Optional] If not using a reverse proxy to manage ssl certs for public access, create SSL certificates and put them in cwd (`./`). They should be called `cert.pem` and `key.pem`. See [below](https://github.com/sky-cake/ayase-quart?#certificates) for instructions/
 1. `ayaseq prep hashjs` will set HTML `<script>` integrity checksums in a file `asset_hashes.json`.
 1. `hypercorn -w 2 -b 127.0.0.1:9001 ayase_quart.main:app` to launch the webserver
 1. Visit `http(s)://<IP_ADDRESS>:<PORT>`. The default is [http://127.0.0.1:9001](http://127.0.0.1:9001).
@@ -151,6 +128,7 @@ Terminal A
 1. Review the configs in the file `~/ayase-quart/index_search/lnx/docker-compose.yml`
 1. Spin up LNX container with `sudo docker-compose up`
    - Later, you can run `sudo docker-compose up -d`, but first we need to confirm it's being populated with data
+1. Check if it's up with `curl http://localhost:8000/indexes/posts/stats`. You should get `{"status":200,...}`.
 
 Terminal B
 
@@ -182,9 +160,19 @@ cd /mnt/aq/index_search/lnx/ # Change the path to your lnx folder.
 /usr/bin/docker compose up -d
 ```
 
+And here is a script to help you auto-increment the LNX.
+
+```bash
+#!/bin/bash
+
+if curl http://localhost:8000/indexes/posts/stats | grep -q '"status":200'; then
+    cd /mnt/aq && source ./venv/bin/activate && python3.13 -m src.ayase_quart.search load --incr ck g jp
+fi
+```
+
 The following systemd service can run this script for you on reboots.
 
-```toml
+```ini
 # sudo nano /etc/systemd/system/start_lnx.service
 [Unit]
 Description=Drop caches and start lnx docker container
@@ -236,7 +224,7 @@ AQ only serves a single CSS file, `static/css/custom.css`, which implements the 
 The moderation system requires authentication. The default username and password is `admin`.
 
 ### Web
-- The web ui uses cookie based authentication. In order to log in, you must solve a math captcha.
+- The web ui uses cookie based authentication. Set a custom endpoint in the config file for login page access.
 
 ### API
 - The API uses bearer-token based authentication. You must create a header called `Authorization` with the value `bearer: <token>` on each request. A token is first generated by sending a POST request to `http://localhost:9001/api/v1/login`. The expiration of tokens depends on the configuration of AQ.
@@ -330,19 +318,37 @@ Create the following launch target.
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "AQ Debug",
+            "name": "AQ Hypercorn",
             "type": "debugpy",
             "request": "launch",
+            "python": "path/to/ayase-quart/venv/bin/python",
             "module": "hypercorn",
             "cwd": "path/to/ayase-quart",
             "env": {
             },
             "args": [
                 "-w",
-                "2",
+                "1",
                 "-b",
                 "127.0.0.1:9001",
                 "src/ayase_quart.main:app"
+            ],
+            "autoStartBrowser": true,
+            "justMyCode": true,
+        },
+        {
+            "name": "AQ Gunicorn",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "path/to/ayase-quart/venv/bin/python",
+            "module": "gunicorn",
+            "args": [
+                "ayase_quart.main:app",
+                "--bind", "127.0.0.1:9001",
+                "--worker-class", "asgi",
+                "--asgi-loop", "uvloop",
+                "--workers", "1",
+                "--asgi-lifespan", "on"
             ],
             "autoStartBrowser": true,
             "justMyCode": true,
@@ -350,6 +356,8 @@ Create the following launch target.
     ]
 }
 ```
+
+To use Gunicorn like this, install AQ as a package with the command `python -m pip install -e .` (see [Basic Set Up](#Basic-Set-Up)).
 
 ## Troubleshooting
 
@@ -370,6 +378,10 @@ Restart MySQL Server, `sudo systemctl restart mysql`. Check the status `sudo sys
 
 
 ## Archive Set Up
+
+### Ritual
+
+[Ritual](https://github.com/sky-cake/Ritual) is a basic linear-flow archiver that supports SQLite and MySQL. It's what I use for [ayasequart.org](https://ayasequart.org).
 
 ### Neofuuka
 
@@ -422,3 +434,26 @@ Note: You will need to create the database hayden_asagi, but Hayden takes care o
     }
 }
 ```
+
+## License
+
+This project uses the GNU Affero General Public License v3.0 (GNU AGPLv3).
+
+Also, it is expected you will not remove or hide any existing links or references to this GitHub repository. For example, the "Powered by Ayase Quart" footer should remain visible on all Ayase Quart instances.
+
+
+## Donate & Support
+
+If you like Ayase Quart, please consider donating. 
+
+  - BTC: 3NTq5J41seSiCckK9PJc8cpkD1Bp9CNUSA
+  - ETH: 0x1bfCADA8C808Eb3AE7964304F69004a1053Fb1da
+  - USDC: 0xAd002E0e9A64DE5e0B93BB7509B475309A2e1ac8
+
+You could also help out by,
+
+  - Opening PRs for fixes or new features
+  - Auditing the project
+  - Notifying the project of any bugs, security vulnerabilities, or performance issues
+  - Proposing new features
+  - Testing the project, and reporting noteworthy findings

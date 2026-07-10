@@ -33,7 +33,7 @@ from ...templates import (
  )
 from ...threads import render_thread_stats
 from ...perf import Perf
-from ...utils.validation import validate_board
+from ...utils.validation import validate_board_query_parameter
 from ...moderation.report import generate_report_form
 from ...security import inject_csrf_token_to_session, get_csrf_input
 
@@ -91,8 +91,8 @@ async def favicon():
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@validate_board_query_parameter
 async def v_board_index(board: str, is_admin: bool, logged_in: bool):
-    validate_board(board)
     p = Perf('index')
 
     index, quotelinks = await generate_index(board)
@@ -135,10 +135,9 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@validate_board_query_parameter
 async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_in: bool):
     p = Perf('index page')
-    validate_board(board)
-    p.check('validate board')
 
     index, quotelinks = await generate_index(board, page_num)
     p.check('generate index')
@@ -204,9 +203,8 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@validate_board_query_parameter
 async def v_catalog(board: str, is_admin: bool, logged_in: bool):
-    validate_board(board)
-
     p = Perf('catalog')
     catalog = await generate_catalog(board)
     p.check('query')
@@ -244,9 +242,8 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@validate_board_query_parameter
 async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: bool):
-    validate_board(board)
-
     p = Perf('catalog page')
     catalog = await generate_catalog(board, page_num)
     p.check('query')
@@ -284,9 +281,8 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@validate_board_query_parameter
 async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool):
-    validate_board(board)
-
     p = Perf('thread')
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board, thread_num)
@@ -323,11 +319,10 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
 
 
 @bp.get("/<string:board>/post/<int:post_id>")
+@validate_board_query_parameter
 async def v_post(board: str, post_id: int):
     """Called by the client to generate posts not on the page - e.g. when viewing search results.
     """
-    validate_board(board)
-
     p = Perf('post')
     post_2_quotelinks, post = await generate_post(board, post_id)
     p.check('query')

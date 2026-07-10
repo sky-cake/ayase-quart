@@ -2,7 +2,7 @@ from html import escape
 from itertools import product
 
 from ..configs import site_conf, mod_conf
-from ..media import ext_is_video, get_image_path, get_thumb_path, get_hash_search_link
+from ..media import ext_is_video, get_image_full_uri, get_thumb_full_uri, get_hash_search_link
 from ..posts.capcodes import Capcode
 from ..threads import get_thread_path
 from ..utils.timestamps import ts_2_formatted
@@ -130,7 +130,7 @@ def get_quotelink_t_thread(num: int, board: str, thread_num: int, quotelinks: li
     if not quotelinks:
         return ''
     quotelink_gen = (
-        f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink inblk" data-board="{board}">&gt;&gt;{quotelink}</a>'
+        f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a>'
         for quotelink in quotelinks
     )
     return f'<div id="bl_{num}" class="clear_both backlink">Replies: {" ".join(quotelink_gen)}</div>'
@@ -145,18 +145,16 @@ def get_media_t_thread(post: dict, num: int, board: str):
         return ''
 
     media_orig = post['media_orig']
-    preview_orig = post['preview_orig']
     md5h = post['media_hash']
 
-    is_spoiler = post['spoiler']
-    spoiler = 'Spoiler,' if is_spoiler else ''
+    spoiler = 'Spoiler,' if post['spoiler'] else ''
 
-    full_src = get_image_path(board, media_orig)
-    thumb_src = get_thumb_path(board, preview_orig)
+    full_src = get_image_full_uri(board, post)
+    thumb_src = get_thumb_full_uri(board, post)
 
     return f"""<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
-            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
 	        {get_hash_search_link(board, md5h)}
         </div>
@@ -268,9 +266,9 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
     classes += ImgTagClass.is_video if is_video else ImgTagClass.is_image
 
     if full_src is None:
-        full_src = get_image_path(board, post['media_orig'])
+        full_src = get_image_full_uri(board, post)
     if thumb_src is None:
-        thumb_src = get_thumb_path(board, post['preview_orig'])
+        thumb_src = get_thumb_full_uri(board, post)
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
@@ -289,19 +287,18 @@ def get_media_t(post: dict):
         return ''
 
     media_orig = post['media_orig']
-    preview_orig = post['preview_orig']
     num = post['num']
     md5h = post['media_hash']
     board = post['board_shortname']
     spoiler = 'Spoiler,' if post['spoiler'] else ''
 
-    full_src = get_image_path(board, media_orig)
-    thumb_src = get_thumb_path(board, preview_orig)
+    full_src = get_image_full_uri(board, post)
+    thumb_src = get_thumb_full_uri(board, post)
 
     return f"""
 	<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
-            <a href="{full_src}" title="{media_orig}">{media_filename}</a>
+            <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
 	        {get_hash_search_link(board, md5h)}
         </div>
@@ -455,7 +452,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     nuke_btn = ''
     if show_nuke_btn and csrf_input:
         # no js required
-        nuke_btn = f"""[<form class="actionform form" action="/nuke/{board}/{num}" method="post">{csrf_input}<button class="adminbtn" type="submit">Nuke</button></form>]"""
+        nuke_btn = f"""<form class="form plain nukethreadform" action="/nuke/{board}/{num}" method="post">{csrf_input}[<button class="abtn nukethreadbtn" type="submit"></button>]</form>"""
 
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">

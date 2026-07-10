@@ -56,7 +56,7 @@ def require_api_usr_is_admin(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         if not current_api_usr.is_admin:
-            {'error': 'User not admin'}, 401
+            return {'error': 'User not admin'}, 401
         return await func(*args, **kwargs)
     return wrapper
 
@@ -65,7 +65,7 @@ def require_api_usr_is_active(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         if not current_api_usr.is_active:
-            {'error': 'User not active'}, 401
+            return {'error': 'User not active'}, 401
         return await func(*args, **kwargs)
     return wrapper
 
@@ -75,7 +75,7 @@ def require_api_usr_permissions(permissions: Iterable[Permissions]):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             if not current_api_usr.has_permissions(permissions):
-                {'error': 'User not permitted'}, 401
+                return {'error': 'User not permitted'}, 401
             return await func(*args, **kwargs)
         return wrapper
     return decorator
