@@ -9,7 +9,22 @@ ROOT_PATH = media_conf['media_root_path']
 ROOT_HIDDEN_PATH = mod_conf['hidden_images_path']
 
 
-if media_conf['media_fp'] == MediaFP.sutra:
+if not ROOT_PATH:
+
+    class MediaType(StrEnum):
+        full_media = ''
+        thumbnail = ''
+
+
+    def get_fs_path(post: dict, media_type: MediaType, hidden: bool=False) -> str | None:
+        return ''
+
+
+    def get_media_splits(post: dict, media_type: MediaType) -> str:
+        return ''
+
+
+elif media_conf['media_fp'] == MediaFP.sutra:
 
 
     class MediaType(StrEnum):

@@ -114,6 +114,7 @@ serve_outside_static = false # true, false
 
 # `media_root_path` is the full path to the root media directory on your server
 #       i.e. if you have images like '/mnt/dl/<board>/image' set this to '/mnt/dl'
+# if left empty, <img> nodes will have no src
 media_root_path = ''
 
 # only serve files with these extension from outside the static path

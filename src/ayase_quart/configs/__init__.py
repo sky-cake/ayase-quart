@@ -41,11 +41,10 @@ if media_conf.get('use_nginx_sendfile'):
 
 
 media_root = media_conf.get('media_root_path')
-if not media_root:
-    raise ValueError('`media_root_path` must be set so we know where to serve media from.', media_root)
-
-if not os.path.isdir(media_root):
+if media_root and not os.path.isdir(media_root):
     raise ValueError(media_root)
+elif not media_root:
+    print(f'Archived media will not be served because {media_root=}')
 
 
 if media_conf['serve_outside_static']:
