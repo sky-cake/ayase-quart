@@ -109,7 +109,7 @@ def html_bbcode(comment: str):
     return comment
 
 
-greentext_re = re.compile(r'^&gt;(?!&gt;\d)(.*)$', re.MULTILINE)
+greentext_re = re.compile(r'^[\t ]*&gt;(?!&gt;\d)(.*)$', re.MULTILINE)
 greentext_sub = r'<span class="quote">&gt;\1</span>'
 def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)
