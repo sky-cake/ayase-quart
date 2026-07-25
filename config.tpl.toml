@@ -86,7 +86,7 @@ password = 'mypassword'
 
 [media]
 # 'asagi' (default) = /<media_root_path>/<board_shortname>/[image|thumb]/media_orig[:4]/media_orig[4:6]/media_orig
-# 'sutra'           = /<media_root_path>/[img|thb]/media_hash[0:2]/media_hash[2:4]/media_hash[4:6]/media_hash
+# 'sutra'           = /<media_root_path>/[img|thb]/media_hash[0]/media_hash[1]/media_hash
 media_fp = 'asagi' # 'asagi' 'sutra'
 
 # `endpoint` serves content from your filesystem at the endpoint /<endpoint>/<board>/[image|thumb]/...

@@ -34,9 +34,8 @@ if media_conf['media_fp'] == MediaFP.sutra:
         return safe_join(
             ROOT_HIDDEN_PATH if hidden else ROOT_PATH,
             media_type.value,
-            filename[0:2],
-            filename[2:4],
-            filename[4:6],
+            filename[0],
+            filename[1],
             filename,
         )
 
@@ -58,7 +57,7 @@ if media_conf['media_fp'] == MediaFP.sutra:
         if not filename:
             return ''
 
-        return f'{filename[0:2]}/{filename[2:4]}/{filename[4:6]}/{filename}'
+        return f'{filename[0]}/{filename[1]}/{filename}'
 
 
 elif media_conf['media_fp'] == MediaFP.asagi:
