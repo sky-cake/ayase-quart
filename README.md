@@ -151,10 +151,10 @@ Here is a script to help you spin up LNX.
 #!/usr/bin/env bash
 set -e
 
-free
+free -h
 sync
 echo 1 > /proc/sys/vm/drop_caches
-free
+free -h
 
 cd /mnt/aq/index_search/lnx/ # Change the path to your lnx folder.
 /usr/bin/docker compose up -d
@@ -177,10 +177,9 @@ The following systemd service can run this script for you on reboots.
 [Unit]
 Description=Drop caches and start lnx docker container
 
-# /mnt is a drive I must wait for i.e. for me "findmnt /mnt" yields a result
-# we also wait for docker to start
-Requires=mnt.mount docker.service
-After=mnt.mount docker.service
+# wait for docker to start
+Requires=docker.service
+After=docker.service
 
 [Service]
 Type=oneshot

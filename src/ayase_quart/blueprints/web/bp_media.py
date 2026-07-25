@@ -10,8 +10,7 @@ from ...utils.web_helpers import send_file_no_headers
 bp = Blueprint("bp_app_media", __name__)
 
 
-if media_conf.get('endpoint') and media_conf['serve_outside_static']:
-    media_root = media_conf['media_root_path']
+if media_conf.get('endpoint') and media_conf['serve_outside_static'] and media_conf['media_root_path']:
 
     valid_exts = set(media_conf['valid_extensions'])
     boards_with_image = set(media_conf['boards_with_image'])
@@ -35,12 +34,12 @@ if media_conf.get('endpoint') and media_conf['serve_outside_static']:
         elif suffix_path.startswith(f'{board}/thumb/') and board not in boards_with_thumb:
             abort(404)
 
-        full_path = safe_join(media_root, suffix_path)
+        full_path = safe_join(media_conf['media_root_path'], suffix_path)
         if not full_path:
             abort(404)
 
         # faith in safe_join
-        # if not full_path.startswith(media_root):
+        # if not full_path.startswith(media_conf['media_root_path']):
         #     abort(404)
 
         if full_path.rsplit('.', 1)[-1].lower() not in valid_exts:

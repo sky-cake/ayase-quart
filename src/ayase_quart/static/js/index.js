@@ -86,6 +86,7 @@ function set_video_intersection_events() {
 
 function set_image_toggle(e) {
     const clicked_img = e.target;
+    if (!clicked_img.dataset.full_media_src && !clicked_img.dataset.thumb_src) return;
     const is_expanded = clicked_img.dataset.expanded === "true";
 
     const new_img = document.createElement("img");
@@ -141,6 +142,7 @@ function close_video_via_btn(e) {
         console.error('couldnt find video for close button', close_video);
         return;
     }
+    if (!close_video.dataset.thumb_src && !close_video.dataset.full_media_src) return;
 
     const new_img = document.createElement("img");
 
@@ -187,6 +189,7 @@ function play_video_via_btn(e) {
 }
 
 function replace_thumb_with_video(video_thumb) {
+    if (!video_thumb.dataset.full_media_src && !video_thumb.dataset.thumb_src) return;
     const new_video = document.createElement("video");
 
     new_video.dataset.ext = video_thumb.dataset.ext;

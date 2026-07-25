@@ -11,7 +11,7 @@ function media_mouseover(event) {
     if (!extension || ext_is_video(extension)) return;
     if (get_data_string(img, 'expanded') === "true") return;
     if (!(img instanceof HTMLImageElement)) return;
-    if (!img.hasAttribute('data-full_media_src') && !img.hasAttribute('data-thumb_src')) return;
+    if (!img.getAttribute('data-full_media_src') && !img.getAttribute('data-thumb_src')) return;
     if (document.getElementById('img_cloned')) return;
 
     const img_cloned = document.createElement('img');
