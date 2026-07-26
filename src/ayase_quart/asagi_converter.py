@@ -1,7 +1,6 @@
 import asyncio
 import html
 import json
-import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -559,23 +558,6 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
 async def get_op_thread_count(board: str) -> int:
     rows = await db_q.query_tuple(f'select count(*) from `{board}_threads`;')
     return rows[0][0]
-
-
-square_re = re.compile(r'.*\[(spoiler|code|banned)\].*\[/(spoiler|code|banned)\].*')
-spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL)  # with re.DOTALL, the dot matches any character, including newline characters.
-spoiler_sub = r'<span class="spoiler">\1</span>'
-code_re = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL)  # ? makes the (.*) non-greedy
-code_sub = r'<code>\1</code>'
-banned_re = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
-banned_sub = r'<span class="banned">\1</span>'
-
-
-def substitute_square_brackets(text):
-    if square_re.fullmatch(text):
-        text = spoiler_re.sub(spoiler_sub, text)
-        text = code_re.sub(code_sub, text)
-        text = banned_re.sub(banned_sub, text)
-    return text
 
 
 async def get_page_threads_normal(board: str, post_count: int, page_num: int=1) -> list[dict]:
