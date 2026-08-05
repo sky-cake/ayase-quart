@@ -410,6 +410,7 @@ ul {
     padding: 0;
     filter: none;
     font-size: inherit;
+    font-family: arial, helvetica, sans-serif;
 }
 
 .rbtn:disabled .abtn:disabled {
