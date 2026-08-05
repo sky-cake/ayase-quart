@@ -8,6 +8,51 @@ from .quotelinks import html_quotelinks
 COMMENTS_PREESCAPED = archive_conf['comments_preescaped']
 
 
+BBCODE_TAGS = {
+    'spoiler': '<span class="spoiler">{}</span>',
+    'code': '<code>{}</code>',
+}
+
+
+code_re = re.compile(r'\[(code)\](.*?)\[/\1\]', re.DOTALL)
+spoiler_re = re.compile(r'\[(spoiler)\](.*?)\[/\1\]', re.DOTALL)
+
+
+def bbcode_sub(m: re.Match):
+    tag, content = m.group(1), m.group(2)
+    return BBCODE_TAGS[tag].format(content)
+
+
+def html_bbcode(comment: str) -> str:
+    if not comment or '[' not in comment:
+        return comment
+
+    comment = comment.replace(':lit]', ']')
+
+    # only render one type of bbcode until a solution for straddling bbcode tags is decided
+    # prioritize spoilers before codes because 4chan uses <pre> and not [code] in api responses
+    found_bbcode = False
+    i = 0
+    while spoiler_re.search(comment):
+        found_bbcode = True
+        comment = spoiler_re.sub(bbcode_sub, comment)
+        if i > 5:
+            break
+        i+=1
+
+    if found_bbcode:
+        return comment
+
+    i = 0
+    while code_re.search(comment):
+        comment = code_re.sub(bbcode_sub, comment)
+        if i > 5:
+            break
+        i+=1
+
+    return comment
+
+
 def html_title(title: str) -> str:
     return html.escape(title) if title else title
 
@@ -93,23 +138,7 @@ def html_highlight(html: str, term: str, klass: str='hl_magenta') -> str:
     return ''.join(highlighted_parts)
 
 
-bbcode_re = re.compile(r'.*\[(spoiler|code|banned)\].+\[/(spoiler|code|banned)\].*', re.DOTALL)
-spoiler_re = re.compile(r'\[spoiler\](.*?)\[/spoiler\]', re.DOTALL)
-spoiler_sub = r'<span class="spoiler">\1</span>'
-code_re = re.compile(r'\[code\](.*?)\[/code\]', re.DOTALL)
-code_sub = r'<code>\1</code>'
-banned_re = re.compile(r'\[banned\](.*?)\[/banned\]', re.DOTALL)
-banned_sub = r'<span class="banned">\1</span>'
-def html_bbcode(comment: str):
-    if not bbcode_re.fullmatch(comment):
-        return comment
-    comment = spoiler_re.sub(spoiler_sub, comment)
-    comment = code_re.sub(code_sub, comment)
-    comment = banned_re.sub(banned_sub, comment)
-    return comment
-
-
-greentext_re = re.compile(r'^&gt;(?!&gt;\d)(.*)$', re.MULTILINE)
+greentext_re = re.compile(r'^[\t ]*&gt;(?!&gt;\d)(.*)$', re.MULTILINE)
 greentext_sub = r'<span class="quote">&gt;\1</span>'
 def html_greentext(comment: str):
     return greentext_re.sub(greentext_sub, comment)

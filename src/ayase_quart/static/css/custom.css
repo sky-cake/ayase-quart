@@ -455,7 +455,7 @@ code {
     color: #55d67c;
     white-space: pre;
     font-size: medium;
-    overflow: scroll;
+    overflow: auto;
     width: min-content;
     display: block;
     border: 1px solid #717171;

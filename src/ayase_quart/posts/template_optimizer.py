@@ -424,7 +424,7 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
         { wpt['t_country'] }
         { wpt['t_troll_country'] }
         <span class="dateTime inblk" data-utc="{ts_unix}"></span>
-        <a href="/{wpt['t_post_link_rel']}">No.{num}</a>
+        <a href="/{wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel']}">No.{num}</a>
         { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         <span class="inblk">
         { wpt['t_report'] } [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
@@ -446,8 +446,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     title_t = get_title_t(wpt)
     ts_unix = wpt['ts_unix']
     nl = '<br>' if wpt['t_cc'] else ''
-    thread_path = get_thread_path(board, num)
-    post_path = get_post_path(board, num, num)
+    thread_path = wpt['t_thread_link_rel']
 
     nuke_btn = ''
     if show_nuke_btn and csrf_input:
@@ -462,7 +461,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             </div>
             { wpt['t_cc'] }{nl}
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
-            <div><a href="/{post_path}" data-function="highlight" data-post="{num}">No. {num}</a> {get_thread_stats_t(wpt)}</div>
+            <div><a href="/{thread_path}" data-function="highlight" data-post="{num}">No. {num}</a> {get_thread_stats_t(wpt)}</div>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
     <div class="teaser">
