@@ -31,6 +31,7 @@ function setup_media_events() {
 
 const quotelink_resp_cache = new Map();
 const quotelink_fetching = new Set();
+let current_hovered_quotelink = null;
 function quotelink_mouseover(event) {
     const quotelink = event.target;
     const num = quotelink.getAttribute("href").split("#p")[1];
@@ -44,6 +45,7 @@ function quotelink_mouseover(event) {
 
     if (!is_mobile) {
         quotelink_preview_hide();
+        current_hovered_quotelink = quotelink;
     }
 
     if (target_post !== null) { // on-page post
@@ -73,9 +75,16 @@ function quotelink_mouseover(event) {
     }).catch(() => {
         target_post.innerHTML = get_quotelink_preview_default_string();
     }).finally(() => {
-        quotelink_preview_show(target_post, quotelink, backlink_num);
+        if (current_hovered_quotelink === quotelink) {
+            quotelink_preview_show(target_post, quotelink, backlink_num);
+        }
         quotelink_fetching.delete(post_key); // clear in flight
     });
+}
+
+function quotelink_mouseleave() {
+    current_hovered_quotelink = null;
+    quotelink_preview_hide();
 }
 
 function remove_link(event){
@@ -108,9 +117,9 @@ function setup_quotelink_events() {
     else {
         for (const quotelink of quotelinks) {
             quotelink.removeEventListener("mouseover", quotelink_mouseover);
-            quotelink.removeEventListener("mouseleave", quotelink_preview_hide);
+            quotelink.removeEventListener("mouseleave", quotelink_mouseleave);
             quotelink.addEventListener("mouseover", quotelink_mouseover);
-            quotelink.addEventListener("mouseleave", quotelink_preview_hide);
+            quotelink.addEventListener("mouseleave", quotelink_mouseleave);
         }
     }
 }
