@@ -78,12 +78,9 @@ div.opContainer {
     display: inline;
 }
 
-div.sideArrows {
+.sideArrows {
     color: #c5c8c6;
-    float: left;
-    margin-right: 2px;
-    margin-top: 0;
-    margin-left: 2px;
+    margin-right: 4px;
 }
 .sideArrows::after {
 	content: '>>';

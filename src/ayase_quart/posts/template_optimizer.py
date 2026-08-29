@@ -116,9 +116,9 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     upstream_path = get_post_upstream(board, thread_num, num)
     report_t = get_report_t(post)
 
-    return f'''<div id="pc{num}"><div class="sideArrows"></div><div id="p{num}" class="post reply">
+    return f'''<div id="pc{num}"><div id="p{num}" class="post reply">
     <div class="postInfo" id="pi{num}">
-        <b class="inblk">/{board}/</b> <span class="name N">{ANONYMOUS_NAME}</span>
+        <span class="sideArrows"></span> <b class="inblk">/{board}/</b> <span class="name N">{ANONYMOUS_NAME}</span>
         <span class="dateTime inblk" data-utc="{ts_unix}"></span> <a href="/{post_path_t}">No.{num}</a>
         {report_t}[<a class="sourcelink" href="{upstream_path}" rel="noreferrer" target="_blank"></a>]
     </div>
@@ -375,7 +375,7 @@ def get_filedeleted_t(post: dict):
 
 def get_header_t(post: dict):
     num = post['num']
-    return f"""<div id="pc{num}">{'<div class="sideArrows"></div>' if not post['op'] else ''} <div id="p{num}" class="post reply">"""
+    return f"""<div id="pc{num}"> <div id="p{num}" class="post reply">"""
 
 
 def get_quotelink_t(post: dict):
@@ -413,6 +413,7 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     { wpt['t_header'] }
     { wpt['t_media'] if is_op else '' }
     <div class="postInfo" id="pi{num}">
+        { '' if is_op else '<span class="sideArrows"></span>' }
         <span class="inblk"><b>/{wpt['board_shortname']}/</b> { op_label if is_op else '' }</span>
         { wpt['t_filedeleted'] }
         { wpt['t_sub'] }
