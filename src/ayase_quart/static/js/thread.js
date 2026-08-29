@@ -72,6 +72,9 @@ function quotelink_mouseover(event) {
         if (data && data.html_content) { // only cache good results
             quotelink_resp_cache.set(post_key, data.html_content);
             quotelink.href = `/${board}/thread/${data.thread_num}${id_post_num}`; // update off-page href with real thread_num
+            quotelink.dataset.thread = data.thread_num;
+            const icon = quotelink.nextElementSibling;
+            if (icon && icon.querySelector?.('.quotelink-icon')) icon.href = quotelink.href;
         }
     }).catch(() => {
         target_post.innerHTML = get_quotelink_preview_default_string();
@@ -87,6 +90,34 @@ function quotelink_mouseover(event) {
 function quotelink_mouseleave() {
     current_hovered_quotelink = null;
     quotelink_preview_hide();
+}
+
+function quotelink_goto(event) {
+    event.preventDefault();
+    const icon = event.currentTarget;
+    const quotelink = icon.previousElementSibling;
+    if (!quotelink) return;
+
+    const board = get_data_string(quotelink, 'board');
+    const num = quotelink.getAttribute("href").split("#p")[1];
+    const post_key = `/${board}/post/${num}`;
+
+    if (quotelink.dataset.thread) { // resolved via a prior preview fetch
+        window.location = `/${board}/thread/${quotelink.dataset.thread}#p${num}`;
+        return;
+    }
+
+    fetch(post_key).then(response => {
+        return response.ok ? response.json() : Promise.reject();
+    }).then(data => {
+        const thread_num = data.thread_num;
+        quotelink.dataset.thread = thread_num;
+        quotelink.href = `/${board}/thread/${thread_num}#p${num}`;
+        icon.href = quotelink.href;
+        window.location = quotelink.href;
+    }).catch(() => {
+        window.location = quotelink.getAttribute('href');
+    });
 }
 
 function remove_link(event){
@@ -115,6 +146,7 @@ function setup_quotelink_events() {
             const preview = quotelink.cloneNode();
             preview.innerHTML = `<svg class="quotelink-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 16 4-4-4-4"/><path d="M3 12h11"/><path d="M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/></svg>`;
             group.appendChild(preview);
+            preview.addEventListener("click", quotelink_goto);
 
             quotelink.removeEventListener("click", remove_link);
             quotelink.addEventListener("click", remove_link);
