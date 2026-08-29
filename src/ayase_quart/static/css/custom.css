@@ -44,6 +44,10 @@ fieldset {
     color: #5f89ac !important;
 }
 
+.nowrap {
+    white-space: nowrap;
+}
+
 .quotelink-spinner {
     display: inline-block;
     width: 10px;

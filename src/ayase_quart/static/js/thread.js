@@ -103,16 +103,24 @@ function setup_quotelink_events() {
     const quotelinks = doc_query_all("a.quotelink");
     if (is_mobile) {
         for (const quotelink of quotelinks) {
+            if (quotelink.parentElement.classList.contains('nowrap')) {
+                continue; // already wrapped
+            }
+
+            const group = document.createElement('span');
+            group.classList.add('nowrap');
+            quotelink.parentNode.insertBefore(group, quotelink);
+            group.appendChild(quotelink);
+
             const preview = quotelink.cloneNode();
             preview.innerHTML = `<svg class="quotelink-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 16 4-4-4-4"/><path d="M3 12h11"/><path d="M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3"/></svg>`;
+            group.appendChild(preview);
 
             quotelink.removeEventListener("click", remove_link);
             quotelink.addEventListener("click", remove_link);
 
             quotelink.removeEventListener("click", quotelink_mouseover);
             quotelink.addEventListener("click", quotelink_mouseover);
-
-            quotelink.after(preview);
         }
         document.addEventListener("click", hide_preview_if_not_preview_click);
     }
