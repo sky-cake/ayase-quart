@@ -41,12 +41,12 @@ function quotelink_mouseover(event) {
     const backlink_num = backlink ? backlink.replace(/^(bl_|p)/, '') : null;
 
     const id_post_num = "#p" + num;
+
+    quotelink_preview_hide();
+
     let target_post = document.querySelector(id_post_num);
 
-    if (!is_mobile) {
-        quotelink_preview_hide();
-        current_hovered_quotelink = quotelink;
-    }
+    current_hovered_quotelink = quotelink;
 
     if (target_post !== null) { // on-page post
         quotelink_preview_show(target_post, quotelink, backlink_num);
