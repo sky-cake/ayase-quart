@@ -38,6 +38,21 @@ fieldset {
     white-space: nowrap;
 }
 
+.quotelink-spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    vertical-align: middle;
+    animation: quotelink-spin 0.7s linear infinite;
+}
+
+@keyframes quotelink-spin {
+    to { transform: rotate(360deg); }
+}
+
 #quote-preview.reveal-spoilers s {
     background-color: #aaa !important;
     color: inherit !important;

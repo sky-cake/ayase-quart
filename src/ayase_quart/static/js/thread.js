@@ -63,6 +63,7 @@ function quotelink_mouseover(event) {
     if (quotelink_fetching.has(post_key)) return; // already in flight
 
     quotelink_fetching.add(post_key)
+    quotelink_spinner_show(quotelink);
     fetch(post_key).then(response => {
         return response.ok ? response.json() : Promise.reject();
     }).then(data => {
@@ -75,6 +76,7 @@ function quotelink_mouseover(event) {
     }).catch(() => {
         target_post.innerHTML = get_quotelink_preview_default_string();
     }).finally(() => {
+        quotelink_spinner_hide();
         if (current_hovered_quotelink === quotelink) {
             quotelink_preview_show(target_post, quotelink, backlink_num);
         }
@@ -135,6 +137,38 @@ function quotelink_preview_hide() {
     const qp = document.getElementById('quote-preview');
     if (qp) {
         qp.remove();
+    }
+    quotelink_spinner_hide();
+}
+
+let spinner_quotelink = null;
+
+function quotelink_spinner_show(quotelink) {
+    quotelink_spinner_hide();
+
+    spinner_quotelink = quotelink;
+    quotelink.dataset.originalText = quotelink.textContent;
+
+    const spinner = document.createElement('div');
+    spinner.classList.add('quotelink-spinner');
+    quotelink.textContent = '';
+    quotelink.appendChild(spinner);
+
+    // keep the trailing number, replacing only the ">>" prefix
+    quotelink.appendChild(document.createTextNode(quotelink.dataset.originalText.replace(/^&gt;&gt;|^>>/, '')));
+}
+
+function quotelink_spinner_hide() {
+    const ql = spinner_quotelink;
+    spinner_quotelink = null;
+    if (!ql) return;
+
+    const spinner = ql.querySelector('.quotelink-spinner');
+    if (spinner) spinner.remove();
+
+    if (ql.dataset.originalText !== undefined) {
+        ql.textContent = ql.dataset.originalText;
+        delete ql.dataset.originalText;
     }
 }
 
