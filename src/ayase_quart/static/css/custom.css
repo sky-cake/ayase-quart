@@ -38,6 +38,12 @@ fieldset {
     white-space: nowrap;
 }
 
+.quotelink-icon {
+    vertical-align: middle;
+    margin-left: 1px;
+    color: #5f89ac !important;
+}
+
 .quotelink-spinner {
     display: inline-block;
     width: 10px;
