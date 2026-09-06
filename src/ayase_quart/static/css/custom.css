@@ -1929,6 +1929,10 @@ position: fixed;
     .search-panel .search-body {
         grid-template-columns: 1fr;
     }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 400px) {
