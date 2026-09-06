@@ -272,10 +272,14 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
-    media_link = f"""<span class="c{ext}">{ext}</span> [<a href="/{board}/thread/{post['thread_num']}#p{post['num']}" rel="noreferrer" target="_blank" class="click">Post</a>]""" if is_search and not is_catalog else ''
-    mtog = f"""[<span class="mtog play click">Play</span>]""" if is_video and not is_catalog else ''
-    br = '<br>' if media_link or mtog else ''
-    return f"""<div class="media_cont fileThumb">{media_link}{mtog}{br}
+    label_parts = []
+    if is_search and not is_catalog:
+        label_parts.append(f'[<a href="/{board}/thread/{post['thread_num']}#p{post['num']}" rel="noreferrer" target="_blank" class="click">Post</a>]')
+    if is_video and not is_catalog:
+        label_parts.append('[<span class="mtog play click">Play</span>]')
+    media_link = f'<span class="media-label">{" ".join(label_parts)}</span>' if label_parts else ''
+    br = '<br>' if media_link else ''
+    return f"""<div class="media_cont fileThumb">{media_link}{br}
 <img loading="lazy" src="{thumb_src}" width="{ post['preview_w'] }" height="{ post['preview_h'] }"
   id="{_id}" class="{imgclass_lu[classes]}" data-expanded="false" data-ext="{ext}"
   data-full_media_src="{full_src}" data-thumb_src="{thumb_src}"

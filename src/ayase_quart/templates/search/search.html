@@ -271,7 +271,7 @@
         {% endif %}
         {% if page_post_count %}
             <div class="board">
-                {% if not gallery_mode %}{{ posts_t|safe }}{% else %}<div class="row">{{ posts_t|safe }}</div>{% endif %}
+                {% if not gallery_mode %}{{ posts_t|safe }}{% else %}<div class="gallery-grid">{{ posts_t|safe }}</div>{% endif %}
             </div>
         {% else %}
             {% if searched %}

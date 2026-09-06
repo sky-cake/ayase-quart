@@ -137,7 +137,8 @@ function set_up_image_toggles() {
 function close_video_via_btn(e) {
     const close_btn = e.target;
 
-    const close_video = close_btn.parentNode.querySelector('video');
+    const media_cont = close_btn.closest('.media_cont');
+    const close_video = media_cont ? media_cont.querySelector('video') : null;
     if (!close_video) {
         console.error('couldnt find video for close button', close_video);
         return;
@@ -164,7 +165,7 @@ function close_video_via_btn(e) {
     remove_overlay_image();
     invert_video_btn(close_btn, false);
     new_img.addEventListener('click', play_video_via_thumb_click);
-    close_btn.parentNode.replaceChild(new_img, close_video);
+    close_video.parentNode.replaceChild(new_img, close_video);
 }
 
 function play_video_via_thumb_click(e) {
@@ -179,7 +180,8 @@ function play_video_via_thumb_click(e) {
 
 function play_video_via_btn(e) {
     const play_btn = e.target;
-    const video_thumb = play_btn.parentNode.querySelector('img');
+    const media_cont = play_btn.closest('.media_cont');
+    const video_thumb = media_cont ? media_cont.querySelector('img') : null;
     if (!video_thumb) {
         console.error('couldnt find video thumbnail for play button', video_thumb);
         return;
