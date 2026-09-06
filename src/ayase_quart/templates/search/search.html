@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from 'macros/macros.html' import render_field %}
 
 {% block scripts -%}
     {{ super() }}
@@ -9,140 +8,263 @@
 
 {% block body %}
 <div class="search_container">
-    <div class="sticky_top mvh">
-        <div>{{html_search_memo|safe}}</div>
-        <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data">
-            <div class="form">
-                <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.title, placeholder='Post Subject', class='w240') }}
-                        {{ render_field(form.comment, placeholder='Post Comment', class='w240') }}
-                    </div>
+    <button type="button" id="search-open" class="search-open-btn" aria-expanded="false" aria-controls="searchform">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        Search
+    </button>
+
+    <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data" class="search-panel">
+        <div class="search-body">
+            {% if vanilla_search_enabled or index_search_enabled %}
+            <div class="search-top-row">
+                <div class="search-toggle" role="tablist" aria-label="Search mode">
+                    {% if vanilla_search_enabled %}
+                    <a role="tab" aria-selected="{{ 'true' if endpoint() == 'bp_web_vanilla_search.v_vanilla_search_get' else 'false' }}" class="toggle-option{{ ' active' if endpoint() == 'bp_web_vanilla_search.v_vanilla_search_get' }}" href="{{ url_for('bp_web_vanilla_search.v_vanilla_search_get') }}?open=1">SQL</a>
+                    {% endif %}
+                    {% if index_search_enabled %}
+                    <a role="tab" aria-selected="{{ 'true' if endpoint() == 'bp_web_index_search.v_index_search_get' else 'false' }}" class="toggle-option{{ ' active' if endpoint() == 'bp_web_index_search.v_index_search_get' }}" href="{{ url_for('bp_web_index_search.v_index_search_get') }}?open=1">FTS</a>
+                    {% endif %}
                 </div>
-                <div class="row">
-                    <div class="column border">
-                        <div class="m1">
-                            Search results must have OPs where...
-                            {{ render_field(form.op_title, placeholder='OP Subject', class='w240') }}
-                            {{ render_field(form.op_comment, placeholder='OP Comment', class='w240') }}
+
+                <button type="button" id="search-info" class="search-info-btn" aria-expanded="false" aria-label="Toggle search info" title="Search info">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </button>
+            </div>
+            {% endif %}
+
+            {% if html_search_memo %}
+            <div class="search-helper hidden" id="search-helper">{{ html_search_memo|safe }}</div>
+            {% endif %}
+
+            <section class="basic-search">
+                    <label>
+                        <span>Subject</span>
+                        {{ form.title(placeholder='Post Subject') }}
+                    </label>
+
+                    <label>
+                        <span>Comment</span>
+                        {{ form.comment(placeholder='Post Comment') }}
+                    </label>
+                </section>
+
+                <section class="filter-section op-section">
+                    <h3>Search results must have OPs where...</h3>
+
+                    <label>
+                        <span>OP Subject</span>
+                        {{ form.op_title(placeholder='OP Subject') }}
+                    </label>
+
+                    <label>
+                        <span>OP Comment</span>
+                        {{ form.op_comment(placeholder='OP Comment') }}
+                    </label>
+                </section>
+
+                <section class="filter-section">
+                    <div class="section-header">
+                        <h3>Boards</h3>
+
+                        {% if form.boards.type == 'MultiCheckboxCSVField' %}
+                            <div class="button-group">
+                                <button type="button" class="small-button check_all_boards">All</button>
+                                <button type="button" class="small-button uncheck_all_boards">None</button>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="boards">
+                        {% set boards_n = form.boards.choices | length %}
+                        {% set boards_rows_5 = ((boards_n + 4) // 5) %}
+                        {% set boards_rows_2 = ((boards_n + 1) // 2) %}
+                        {{ form.boards(style='--boards-rows-5:' ~ boards_rows_5 ~ ';--boards-rows-2:' ~ boards_rows_2) }}
+                    </div>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-field">
+                        <span>Start date</span>
+                        {{ form.date_after() }}
+                    </label>
+
+                    <label class="group-field">
+                        <span>End date</span>
+                        {{ form.date_before() }}
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-formula">
+                        <span class="field-label">
+                            <svg class="ruler-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
+                            <span>Subject</span>
+                        </span>
+                        {{ form.tlop() }}
+                        {{ form.tl(placeholder='Length', min='0', step='1') }}
+                    </label>
+
+                    <label class="group-formula">
+                        <span class="field-label">
+                            <svg class="ruler-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
+                            <span>Comment</span>
+                        </span>
+                        {{ form.clop() }}
+                        {{ form.cl(placeholder='Length', min='0', step='1') }}
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-field">
+                        <span>Tripcode</span>
+                        {{ form.tripcode(placeholder='Tripcode') }}
+                    </label>
+
+                    <label class="group-field">
+                        <span>Capcode</span>
+                        {{ form.capcode() }}
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <div class="tri-toggle" data-false="is_not_op" data-true="is_op">
+                        <div class="toggle-group" role="tablist" aria-label="OP filter">
+                            <button type="button" class="tri-option" data-state="false">Not OP</button>
+                            <button type="button" class="tri-option active" data-state="any">Any</button>
+                            <button type="button" class="tri-option" data-state="true">OP</button>
+                        </div>
+                        {{ form.is_not_op(class='tri-hidden') }}
+                        {{ form.is_op(class='tri-hidden') }}
+                    </div>
+
+                    <div class="tri-toggle" data-false="is_not_deleted" data-true="is_deleted">
+                        <div class="toggle-group" role="tablist" aria-label="Deleted filter">
+                            <button type="button" class="tri-option" data-state="false">Not deleted</button>
+                            <button type="button" class="tri-option active" data-state="any">Any</button>
+                            <button type="button" class="tri-option" data-state="true">Deleted</button>
+                        </div>
+                        {{ form.is_not_deleted(class='tri-hidden') }}
+                        {{ form.is_deleted(class='tri-hidden') }}
+                    </div>
+
+                    <div class="tri-toggle" data-false="is_not_sticky" data-true="is_sticky">
+                        <div class="toggle-group" role="tablist" aria-label="Sticky filter">
+                            <button type="button" class="tri-option" data-state="false">Not sticky</button>
+                            <button type="button" class="tri-option active" data-state="any">Any</button>
+                            <button type="button" class="tri-option" data-state="true">Sticky</button>
+                        </div>
+                        {{ form.is_not_sticky(class='tri-hidden') }}
+                        {{ form.is_sticky(class='tri-hidden') }}
+                    </div>
+
+                    <div class="tri-toggle" data-false="has_no_file" data-true="has_file">
+                        <div class="toggle-group" role="tablist" aria-label="File filter">
+                            <button type="button" class="tri-option" data-state="false">No file</button>
+                            <button type="button" class="tri-option active" data-state="any">Any</button>
+                            <button type="button" class="tri-option" data-state="true">Has file</button>
+                        </div>
+                        {{ form.has_no_file(class='tri-hidden') }}
+                        {{ form.has_file(class='tri-hidden') }}
+                    </div>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-formula">
+                        <span class="field-label">
+                            <span>Media width</span>
+                        </span>
+                        {{ form.wop() }}
+                        {{ form.width(placeholder='Width') }}
+                    </label>
+
+                    <label class="group-formula">
+                        <span class="field-label">
+                            <span>Media height</span>
+                        </span>
+                        {{ form.hop() }}
+                        {{ form.height(placeholder='Height') }}
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-field">
+                        <span>File Hash</span>
+                        {{ form.media_hash(placeholder='MD5 Hash') }}
+                    </label>
+
+                    <label class="file-drop">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+                        <span id="drop_zone">Select / Drop File</span>
+                        <input id="media_hash_file_input" class="hidden" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-field">
+                        <span>Filename</span>
+                        {{ form.media_filename(placeholder='Filename') }}
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-field">
+                        <span>Post Number</span>
+                        {{ form.num(placeholder='Post Num') }}
+                    </label>
+                </section>
+
+                <section class="group-card">
+                    <div class="group-field">
+                        <span>Order By</span>
+                        <div class="tri-toggle binary-toggle">
+                            <div class="toggle-group" data-control="radio" data-name="order_by" role="tablist" aria-label="Order by">
+                                <button type="button" class="binary-option active" data-value="desc" data-default="1">Descend</button>
+                                <button type="button" class="binary-option" data-value="asc">Ascend</button>
+                            </div>
+                            <div class="tri-hidden">{{ form.order_by() }}</div>
                         </div>
                     </div>
+                </section>
+
+                <section class="group-card">
+                    <div class="group-field">
+                        <span>Render Mode</span>
+                        <div class="tri-toggle binary-toggle">
+                            <div class="toggle-group" data-control="bool" data-name="gallery_mode" role="tablist" aria-label="Render mode">
+                                <button type="button" class="binary-option active" data-value="off">Posts</button>
+                                <button type="button" class="binary-option" data-value="on">Gallery</button>
+                            </div>
+                            {{ form.gallery_mode(class='tri-hidden') }}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="group-card">
+                    <label class="group-field">
+                        <span>Per Board</span>
+                        {{ form.hits_per_page(placeholder='Per board') }}
+                    </label>
+                </section>
+
+                {% if search_plugin_html %}
+                    <section class="filter-section plugin-section">
+                        {{ search_plugin_html|safe }}
+                    </section>
+                {% endif %}
+
+                <div class="search-footer">
+                    <button type="button" id="search-close" class="search-close" aria-label="Close search form" title="Close">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        Close
+                    </button>
+
+                    <button type="submit" class="search-button" name="submit" value="Search">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+                        Search
+                    </button>
                 </div>
-                <div class="row">
-                    <fieldset>
-                        <legend>Boards
-                            {% if form.boards.type == 'MultiCheckboxCSVField' %}
-                                <button type="button" class="form_btn pbtn check_all_boards">All</button>
-                                <button type="button" class="form_btn pbtn uncheck_all_boards">None</button>
-                            {% endif %}
-                        </legend>
-                        {{ render_field(form.boards) }}
-                    </fieldset>
-                </div>
-                <div class="row pb3">
-                    <div class="field_label w3em">Start</div>{{ form.date_after }}
-                </div>
-                <div class="row pb3">
-                    <div class="field_label w3em">End</div>{{ form.date_before }}
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.tl, placeholder='Length', class='w5em') }}
-                        {{ render_field(form.cl, placeholder='Length', class='w5em') }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.tlop, class='w5em btn') }}
-                        {{ render_field(form.clop, class='w5em btn') }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.tripcode, placeholder='Tripcode', class='w5em') }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.capcode, class='w5em btn') }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.is_not_op) }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.is_op) }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.is_not_deleted) }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.is_deleted) }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.is_not_sticky) }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.is_sticky) }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.has_no_file) }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.has_file) }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.width, placeholder='Width', class='w5em') }}
-                        {{ render_field(form.height, placeholder='Height', class='w5em') }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.wop, class='w5em btn') }}
-                        {{ render_field(form.hop, class='w5em btn') }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.media_hash, placeholder='MD5 Hash', class='w5em') }}
-                    </div>
-                    <div class="column">
-                        <div id="drop_zone">Select/Drop File</div>
-                        <input id="media_hash_file_input" class="hidden" type="file" accept=".jpg,.jpeg,.png,.gif,.webm,.mp4" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.media_filename, placeholder='Filename', class='w240') }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.num, placeholder='Post Num', class='w5em') }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.order_by) }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="column">
-                        {{ render_field(form.gallery_mode, title='Displays a mosaic of images.') }}
-                    </div>
-                    <div class="column">
-                        {{ render_field(form.hits_per_page, placeholder='Per board', class='w5em') }}
-                    </div>
-                </div>
-                    {{ search_plugin_html|safe }}
-                    <div class="mtb-1 center"><input id="submit" name="submit" type="submit" value="Search"></div>
-                </div>
+            </div>
         </form>
-    </div>
 
     <div id="resulttop">
         {% if page_post_count %}

@@ -85,7 +85,14 @@ class SearchHandlerSQL(SearchHandler):
     enabled: bool = vanilla_search_conf['enabled']
     multi_board_search: bool = vanilla_search_conf['multi_board_search']
     highlight: bool = vanilla_search_conf['highlight']
-    html_search_memo = 'SQL search will always yield existing results, but it is slower than index search. Results are exact matching.'
+    html_search_memo = """
+    <div class="mtb-1">Slower search, but allows for more flexible queries.</div>
+    <ul class="m-0 liststyle">
+        <li>Words separated by spaces will find posts containing both words in any order (e.g. dial tone)</li>
+        <li>Searches will match partial words (e.g. "ina" will find posts with "finally" or "original")</li>
+        <li>For exact phrases we recommend using full text search</li>
+    </ul>
+    """
     html_message_error: str = 'There seems to be a problem with the submitted query.'
 
     async def get_posts_and_total_hits(self):
@@ -94,20 +101,18 @@ class SearchHandlerSQL(SearchHandler):
 
 class SearchHandlerFTS(SearchHandler):
     form = SearchFormFTS
-    form_title = f'{SITE_NAME} Full Text Search'
+    form_title = f'{SITE_NAME} FTS Search'
     enabled: bool = index_search_conf['enabled']
     multi_board_search: bool = index_search_conf['multi_board_search']
     highlight: bool = index_search_conf['highlight']
     html_search_memo = """
     <div class="mtb-1">Full text search is much faster than SQL search, but it may not have recent data.</div>
-    <details><summary class="click">Query syntax ⓘ</summary>
-        These are the main search operations, more can be found at <a href="https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html" target="_blank">docs.rs/tantivy</a>.
-        <ul class="m-0 liststyle">
-            <li><span class="codetext">"exact term"</span></li>
-            <li><span class="codetext">+devices +usb-c -adapter</span> requires posts with "devices" and "usb-c", and not "adapter"</li>
-            <li><span class="codetext">x AND y OR z</span> which is equivalent to <span class="codetext">((+x +y) z)</span></li>
-        </ul>
-    </details>
+    These are the main search operations, more can be found at <a href="https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html" target="_blank">docs.rs/tantivy</a>.
+    <ul class="m-0 liststyle">
+        <li><span class="codetext">"exact term"</span></li>
+        <li><span class="codetext">+devices +usb-c -adapter</span> requires posts with "devices" and "usb-c", and not "adapter"</li>
+        <li><span class="codetext">x AND y OR z</span> which is equivalent to <span class="codetext">((+x +y) z)</span></li>
+    </ul>
     """
     html_message_error: str = (
         'There seems to be a problem with the submitted query.<br>'
@@ -237,6 +242,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         searched=did_any_search,
         quotelinks=quotelinks,
         title=handler.form_title,
+        tab_title=handler.form_title,
         cur_page=cur_page,
         total_hits=f'{total_hits:,}' if total_hits else 0,
         logged_in=logged_in,

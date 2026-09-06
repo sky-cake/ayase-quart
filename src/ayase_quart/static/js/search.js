@@ -1,92 +1,300 @@
 const searchform = document.getElementById('searchform');
-const file_upload = document.getElementById('file_upload');
+const searchPanel = document.getElementById('searchform');
+const searchOpenBtn = document.getElementById('search-open');
+const searchCloseBtn = document.getElementById('search-close');
 
-searchform.addEventListener('submit', function (event) {
+const searchInfoBtn = document.getElementById('search-info');
+const searchHelper = document.getElementById('search-helper');
+
+const dropZone = document.getElementById('drop_zone');
+const fileDrop = dropZone ? dropZone.closest('.file-drop') : null;
+
+const mediaHashInput = document.getElementById('media_hash');
+const media_hash_file_input = document.getElementById('media_hash_file_input');
+
+function on_searchform_submit(event) {
+    event.preventDefault();
+
     const checked_boards = doc_query_all('input[name="boards"]:checked');
     if (checked_boards.length === 0) {
-        event.preventDefault();
         alert('Please select at least one board.');
         return;
     }
 
-    if (searchform && file_upload) {
-        if (file_upload.files.length > 0) {
-            searchform.method = 'post';
-            searchform.enctype = 'multipart/form-data';
+    const formData = new FormData(searchform);
+    const params = new URLSearchParams();
+    const boards = [];
+
+    const operatorToBaseKey = {
+        'tlop': 'tl',
+        'clop': 'cl',
+        'wop': 'width',
+        'hop': 'height',
+    };
+
+    for (const [key, value] of formData.entries()) {
+        if (value === "") continue;
+        if (key === 'capcode' && value === "any") continue;
+
+        if (operatorToBaseKey[key]) {
+            const baseKeyValue = formData.get(operatorToBaseKey[key]);
+            if (!baseKeyValue) continue;
+        }
+
+        if (key === "boards") {
+            boards.push(value);
         } else {
-            searchform.method = 'get';
-            searchform.enctype = '';
+            params.append(key, value);
         }
-    } else {
-        event.preventDefault();
-
-        const form = event.target;
-        const formData = new FormData(form);
-        const params = new URLSearchParams();
-        const boards = [];
-
-        const operatorToBaseKey = {
-            'tlop': 'tl',
-            'clop': 'cl',
-            'wop': 'width',
-            'hop': 'height',
-        };
-
-        for (const [key, value] of formData.entries()) {
-            if (value === "") continue;
-            if (key === 'capcode' && value === "any") continue;
-
-            if (operatorToBaseKey[key]) {
-                const baseKeyValue = formData.get(operatorToBaseKey[key]);
-                if (!baseKeyValue) continue;
-            }
-
-            if (key === "boards") {
-                boards.push(value);
-            } else {
-                params.append(key, value);
-            }
-        }
-
-        let query = '';
-        if (boards.length > 0) {
-            query += `boards=${boards.join(',')}`;
-        }
-
-        const rest = params.toString();
-        if (rest) {
-            if (query) query += '&';
-            query += rest;
-        }
-
-        const url = `${window.location.pathname}?${query}`;
-        window.location.href = url;
     }
-});
 
-if (file_upload) {
-    file_upload.addEventListener('change', function (event) {
-        const files = event.target.files;
-        if (files.length > 1) {
-            alert('Please select only one file.');
-            event.target.value = '';
-            return;
+    let query = '';
+    if (boards.length > 0) {
+        query += `boards=${boards.join(',')}`;
+    }
+
+    const rest = params.toString();
+    if (rest) {
+        if (query) query += '&';
+        query += rest;
+    }
+
+    const url = `${window.location.pathname}?${query}`;
+    window.location.href = url;
+}
+
+function set_open(open) {
+    searchPanel.classList.toggle('open', open);
+    searchOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function on_search_open_btn_click(e) {
+    e.stopPropagation();
+    set_open(!searchPanel.classList.contains('open'));
+}
+
+function on_search_close_btn_click(e) {
+    e.stopPropagation();
+    set_open(false);
+}
+
+function on_document_click(e) {
+    if (!searchPanel.classList.contains('open')) return;
+    if (searchPanel.contains(e.target) || searchOpenBtn.contains(e.target)) return;
+    set_open(false);
+}
+
+function on_document_keydown(e) {
+    if (e.key === 'Escape') set_open(false);
+}
+
+function on_search_info_btn_click(e) {
+    e.stopPropagation();
+    const visible = !searchHelper.classList.contains('hidden');
+    searchHelper.classList.toggle('hidden', visible);
+    searchInfoBtn.classList.toggle('active', !visible);
+    searchInfoBtn.setAttribute('aria-expanded', visible ? 'false' : 'true');
+}
+
+function on_drop_zone_dragover(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    fileDrop.classList.add('dragover');
+}
+
+function on_drop_zone_dragleave(e) {
+    e.preventDefault();
+    fileDrop.classList.remove('dragover');
+}
+
+function on_drop_zone_drop(e) {
+    e.preventDefault();
+    fileDrop.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        generateMediaHash(file);
+    }
+}
+
+function on_hash_file_input_change() {
+    const file = media_hash_file_input.files[0];
+    if (file) {
+        generateMediaHash(file);
+    }
+}
+
+function on_media_hash_loadend(e) {
+    if (e.target.readyState === FileReader.DONE) {
+        const fileContents = e.target.result;
+        const digestBytes = Crypto.MD5(Crypto.charenc.Binary.stringToBytes(fileContents), {
+            asBytes: true
+        });
+        const digestBase64 = Crypto.util.bytesToBase64(digestBytes);
+        mediaHashInput.value = digestBase64;
+    }
+}
+
+function generateMediaHash(file) {
+    const reader = new FileReader();
+    reader.onloadend = on_media_hash_loadend;
+    reader.readAsBinaryString(file);
+}
+
+function refresh_tri_toggle(toggle, false_input, true_input) {
+    for (const btn of get_data_elem_all(toggle, 'state')) {
+        const state = btn.dataset.state;
+        const active =
+            (state === 'false' && false_input.checked) ||
+            (state === 'true' && true_input.checked) ||
+            (state === 'any' && !false_input.checked && !true_input.checked);
+        btn.classList.toggle('active', active);
+    }
+}
+
+function on_tri_option_click(e) {
+    const btn = e.target.closest('.tri-option');
+    if (!btn) return;
+
+    const toggle = btn.closest('.tri-toggle');
+    if (!toggle || !toggle.dataset.false || !toggle.dataset.true) return;
+
+    const false_input = toggle.querySelector(`input[name="${toggle.dataset.false}"]`);
+    const true_input = toggle.querySelector(`input[name="${toggle.dataset.true}"]`);
+
+    const state = btn.dataset.state;
+    false_input.checked = state === 'false';
+    true_input.checked = state === 'true';
+    refresh_tri_toggle(toggle, false_input, true_input);
+}
+
+function refresh_binary_toggle(group) {
+    const name = group.dataset.name;
+    const control = group.dataset.control;
+    let input = null;
+
+    if (control === 'bool') {
+        input = group.closest('.binary-toggle').querySelector(`input[name="${name}"]`);
+    } else {
+        input = document.querySelector(`input[name="${name}"]:checked`);
+    }
+
+    for (const btn of get_data_elem_all(group, 'value')) {
+        const btnValue = btn.dataset.value;
+        let active;
+        if (control === 'bool') {
+            active = (btnValue === 'on') === Boolean(input && input.checked);
+        } else if (input) {
+            active = input.value === btnValue;
+        } else {
+            active = btn.dataset.default === '1';
         }
-        const file = files[0];
-        if (file) {
-            const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Invalid file type. Please select a PNG, JPEG, or GIF image.');
-                event.target.value = '';
-                return;
-            }
-            if (file.size > 4.05 * 1024 * 1024) {
-                alert('File size exceeds 4MB. Please select a smaller file.');
-                event.target.value = '';
-                return;
-            }
-        }
-    });
+        btn.classList.toggle('active', active);
+    }
+}
+
+function on_binary_toggle_click(e) {
+    const btn = e.target.closest('.binary-option');
+    if (!btn) return;
+
+    const group = btn.closest('.toggle-group');
+    if (!group || !group.dataset.name) return;
+
+    const name = group.dataset.name;
+    const control = group.dataset.control;
+
+    if (control === 'bool') {
+        const input = group.closest('.binary-toggle').querySelector(`input[name="${name}"]`);
+        input.checked = btn.dataset.value === 'on';
+    } else {
+        const input = document.querySelector(`input[name="${name}"][value="${btn.dataset.value}"]`);
+        if (input) input.checked = true;
+    }
+
+    refresh_binary_toggle(group);
+}
+
+function on_panel_number_keydown(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length > 1) return;
+    if (!/[0-9]/.test(e.key)) {
+        e.preventDefault();
+    }
+}
+
+function on_panel_number_paste(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    const digits = text.replace(/\D/g, '');
+    const el = e.target;
+    const start = el.selectionStart || 0;
+    const end = el.selectionEnd || start;
+    el.value = el.value.slice(0, start) + digits + el.value.slice(end);
+}
+
+function auto_select_single_board() {
+    const board_inputs = doc_query_all('#searchform #boards input');
+    if (board_inputs.length !== 1) return;
+    board_inputs[0].checked = true; // checked works with checkbox & radio inputs
+}
+
+function init_search() {
+    auto_select_single_board();
+
+    for (const toggle of doc_query_all('#searchform .tri-toggle')) {
+        if (!toggle.dataset.false || !toggle.dataset.true) continue;
+        const false_input = toggle.querySelector(`input[name="${toggle.dataset.false}"]`);
+        const true_input = toggle.querySelector(`input[name="${toggle.dataset.true}"]`);
+        refresh_tri_toggle(toggle, false_input, true_input);
+    }
+
+    for (const group of doc_query_all('#searchform .binary-toggle .toggle-group')) {
+        refresh_binary_toggle(group);
+    }
+}
+
+if (searchform) {
+    searchform.addEventListener('submit', on_searchform_submit);
+    document.addEventListener('click', on_tri_option_click);
+    document.addEventListener('click', on_binary_toggle_click);
+
+    const number_inputs = doc_query_all('#searchform input[type="number"]');
+    for (const input of number_inputs) {
+        input.addEventListener('keydown', on_panel_number_keydown);
+        input.addEventListener('paste', on_panel_number_paste);
+    }
+}
+
+if (searchPanel && searchOpenBtn) {
+    searchOpenBtn.addEventListener('click', on_search_open_btn_click);
+
+    if (searchCloseBtn) {
+        searchCloseBtn.addEventListener('click', on_search_close_btn_click);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('open')) {
+        set_open(true);
+        urlParams.delete('open');
+        const query = urlParams.toString();
+        const url = window.location.pathname + (query ? `?${query}` : '');
+        window.history.replaceState(null, '', url);
+    } else if (!window.location.search) {
+        set_open(true);
+    }
+
+    document.addEventListener('click', on_document_click);
+    document.addEventListener('keydown', on_document_keydown);
+}
+
+if (fileDrop && mediaHashInput && media_hash_file_input) {
+    fileDrop.addEventListener('dragover', on_drop_zone_dragover);
+    fileDrop.addEventListener('dragleave', on_drop_zone_dragleave);
+    fileDrop.addEventListener('drop', on_drop_zone_drop);
+    media_hash_file_input.addEventListener('change', on_hash_file_input_change);
+}
+
+if (searchInfoBtn && searchHelper) {
+    searchInfoBtn.addEventListener('click', on_search_info_btn_click);
 }
 
 /*
@@ -107,66 +315,5 @@ d=k(d,e,c,a,b[f+6],23,76029189),a=k(a,d,e,c,b[f+9],4,-640364487),c=k(c,a,d,e,b[f
 e=l(e,c,a,d,b[f+6],15,-1560198380),d=l(d,e,c,a,b[f+13],21,1309151649),a=l(a,d,e,c,b[f+4],6,-145523070),c=l(c,a,d,e,b[f+11],10,-1120210379),e=l(e,c,a,d,b[f+2],15,718787259),d=l(d,e,c,a,b[f+9],21,-343485551),a=a+m>>>0,d=d+n>>>0,e=e+p>>>0,c=c+q>>>0;return o.endian([a,d,e,c])};i._ff=function(a,b,g,d,e,c,f){a=a+(b&g|~b&d)+(e>>>0)+f;return(a<<c|a>>>32-c)+b};i._gg=function(a,b,g,d,e,c,f){a=a+(b&d|g&~d)+(e>>>0)+f;return(a<<c|a>>>32-c)+b};i._hh=function(a,b,g,d,e,c,f){a=a+(b^g^d)+(e>>>0)+f;return(a<<c|a>>>
 32-c)+b};i._ii=function(a,b,g,d,e,c,f){a=a+(g^(b|~d))+(e>>>0)+f;return(a<<c|a>>>32-c)+b};i._blocksize=16;i._digestsize=16})();
 
-
-const dropZone = document.getElementById('drop_zone');
-const mediaHashInput = document.getElementById('media_hash');
-const media_hash_file_input = document.getElementById('media_hash_file_input');
-
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-    dropZone.style.borderColor = '#333';
-});
-
-dropZone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = '#aaa';
-});
-
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = '#aaa';
-    const file = e.dataTransfer.files[0];
-    if (file) {
-        generateMediaHash(file);
-    }
-});
-
-dropZone.addEventListener('click', () => {
-    media_hash_file_input.click();
-});
-
-media_hash_file_input.addEventListener('change', () => {
-    const file = media_hash_file_input.files[0];
-    if (file) {
-        generateMediaHash(file);
-    }
-});
-
-function auto_select_single_board() {
-    const board_inputs = doc_query_all('#searchform #boards input');
-    if (board_inputs.length !== 1) return;
-    board_inputs[0].checked = true; // checked works with checkbox & radio inputs
-}
-
-function generateMediaHash(file) {
-    var reader = new FileReader();
-    reader.onloadend = function(e){
-        if (e.target.readyState === FileReader.DONE) {
-            var fileContents = e.target.result;
-            var digestBytes = Crypto.MD5(Crypto.charenc.Binary.stringToBytes(fileContents), {
-                asBytes: true
-            });
-            var digestBase64 = Crypto.util.bytesToBase64(digestBytes);
-            // var digestBase64URL = digestBase64.replace('==', '').replace(/\//g, '_').replace(/\+/g, '-');
-            mediaHashInput.value = digestBase64;
-        }
-    };
-    reader.readAsBinaryString(file);
-};
-
-function init_search() {
-    auto_select_single_board();
-}
 
 init_search();

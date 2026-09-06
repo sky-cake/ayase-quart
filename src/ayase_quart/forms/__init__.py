@@ -164,19 +164,21 @@ class SearchForm(StripForm):
 
 
 class SearchFormSQL(SearchForm):
+    board_choices = sorted(board_shortnames, key=str.casefold)
     if vanilla_search_conf['multi_board_search']:
-        boards = MultiCheckboxCSVField('Boards', choices=board_shortnames, validate_choice=True)
+        boards = MultiCheckboxCSVField('Boards', choices=board_choices, validate_choice=True)
     else:
-        boards = RadioCSVField('Board', choices=board_shortnames, validate_choice=True)
+        boards = RadioCSVField('Board', choices=board_choices, validate_choice=True)
 
     hits_per_page = IntegerField('Per page', validators=[Optional(), NumberRange(1, per_page := vanilla_search_conf['hits_per_page'])], description=f'Per board max {per_page}')
 
 
 class SearchFormFTS(SearchFormSQL):
+    board_choices = sorted(board_shortnames, key=str.casefold)
     if index_search_conf['multi_board_search']:
-        boards = MultiCheckboxCSVField('Boards', choices=board_shortnames, validate_choice=True)
+        boards = MultiCheckboxCSVField('Boards', choices=board_choices, validate_choice=True)
     else:
-        boards = RadioCSVField('Board', choices=board_shortnames, validate_choice=True)
+        boards = RadioCSVField('Board', choices=board_choices, validate_choice=True)
 
     hits_per_page = IntegerField('Per page', validators=[Optional(), NumberRange(1, per_page := index_search_conf['hits_per_page'])], description=f'Per board max {per_page}')
 
