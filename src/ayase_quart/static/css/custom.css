@@ -1139,8 +1139,9 @@ h3 {
     transform: translate(-50%, 0);
     z-index: 1000;
 
-    width: min(calc(100vw - 24px), var(--panel-width));
-    max-height: calc(100vh - 24px);
+width: min(calc(100vw - 24px), var(--panel-width));
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
     margin: 0;
     overflow-y: auto;
 
