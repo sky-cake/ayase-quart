@@ -1306,6 +1306,8 @@ h3 {
     gap: 8px;
 
     flex: 1 1 0;
+    min-width: 0;
+    max-width: calc(50% - 5px);
 
     height: 44px;
 
@@ -1898,5 +1900,18 @@ h3 {
 
     .search-panel .search-body {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 400px) {
+    .search-panel .search-footer {
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .search-panel .search-close,
+    .search-panel .search-button {
+        font-size: 13px;
+        height: 40px;
     }
 }
