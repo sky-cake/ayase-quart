@@ -5,6 +5,7 @@ const searchCloseBtn = document.getElementById('search-close');
 
 const searchInfoBtn = document.getElementById('search-info');
 const searchHelper = document.getElementById('search-helper');
+const searchBackdrop = document.getElementById('search-backdrop');
 
 const dropZone = document.getElementById('drop_zone');
 const fileDrop = dropZone ? dropZone.closest('.file-drop') : null;
@@ -66,6 +67,9 @@ function on_searchform_submit(event) {
 function set_open(open) {
     searchPanel.classList.toggle('open', open);
     searchOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (searchBackdrop) {
+        searchBackdrop.classList.toggle('open', open);
+    }
 }
 
 function on_search_open_btn_click(e) {

@@ -1888,6 +1888,24 @@ position: fixed;
     height: 18px;
 }
 
+.search-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+
+    background: rgb(0 0 0 / 55%);
+
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.search-backdrop.open {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .search-open-btn {
     display: flex;
     align-items: center;
