@@ -62,7 +62,7 @@
                     </label>
                 </section>
 
-                <section class="filter-section">
+                <section class="filter-section boards-section">
                     <div class="section-header">
                         <h3>Boards</h3>
 
@@ -75,10 +75,7 @@
                     </div>
 
                     <div class="boards">
-                        {% set boards_n = form.boards.choices | length %}
-                        {% set boards_rows_5 = ((boards_n + 4) // 5) %}
-                        {% set boards_rows_2 = ((boards_n + 1) // 2) %}
-                        {{ form.boards(style='--boards-rows-5:' ~ boards_rows_5 ~ ';--boards-rows-2:' ~ boards_rows_2) }}
+                        {{ form.boards() }}
                     </div>
                 </section>
 

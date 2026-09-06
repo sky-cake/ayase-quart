@@ -1338,7 +1338,6 @@ h3 {
 .search-panel .search-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    align-items: start;
     gap: 10px;
 
     padding: 10px;
@@ -1351,6 +1350,10 @@ h3 {
 .search-panel .search-body > .group-card.full,
 .search-panel .search-body > .search-footer {
     grid-column: 1 / -1;
+}
+
+.search-panel .search-body > .filter-section.boards-section {
+    grid-column: auto;
 }
 
 .search-panel .basic-search,
@@ -1510,9 +1513,9 @@ h3 {
 
 .search-panel .boards ul {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
     grid-auto-flow: column;
-    grid-template-rows: repeat(var(--boards-rows-5, 1), auto);
+    grid-template-columns: repeat(var(--boards-cols, 3), 1fr);
+    grid-template-rows: repeat(var(--boards-rows, 1), auto);
     gap: 6px 18px;
 }
 
@@ -1891,11 +1894,6 @@ h3 {
     .search-panel .basic-search,
     .search-panel .op-section {
         grid-template-columns: 1fr;
-    }
-
-    .search-panel .boards ul {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(var(--boards-rows-2, 1), auto);
     }
 
     .search-panel .search-body {

@@ -237,8 +237,27 @@ function auto_select_single_board() {
     board_inputs[0].checked = true; // checked works with checkbox & radio inputs
 }
 
+function init_board_grid() {
+    const boards_ul = document.getElementById('boards');
+    if (!boards_ul) return;
+
+    const items = doc_query_all('#boards li');
+    if (items.length === 0) return;
+
+    const container_width = boards_ul.clientWidth;
+    const min_item_width = 90;
+    const cols_by_width = Math.max(1, Math.floor(container_width / min_item_width));
+    const cols = Math.min(cols_by_width, 4, items.length);
+    const rows = Math.ceil(items.length / cols);
+
+    boards_ul.style.setProperty('--boards-cols', String(cols));
+    boards_ul.style.setProperty('--boards-rows', String(rows));
+}
+
 function init_search() {
     auto_select_single_board();
+    requestAnimationFrame(init_board_grid);
+    window.addEventListener('resize', init_board_grid);
 
     for (const toggle of doc_query_all('#searchform .tri-toggle')) {
         if (!toggle.dataset.false || !toggle.dataset.true) continue;
