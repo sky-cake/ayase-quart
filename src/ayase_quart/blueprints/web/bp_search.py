@@ -14,7 +14,7 @@ from ...posts.template_optimizer import (
     wrap_post_t
 )
 from ...search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
-from ...search.pagination import template_pagination_links, total_pages
+from ...search.pagination import get_total_pages, template_pagination_links
 from ...templates import template_search
 from ...perf import Perf
 from ...plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
@@ -206,7 +206,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
                 # if total_hits == handler.form.hits_per_page.data:
                 #     await flash('- Max page size reached. Note that AQ does not perform pagination with search plugins. To find other results, specify other query arguments.')
             else:
-                page_count = total_pages(total_hits, handler.form.hits_per_page.data)
+                page_count = get_total_pages(total_hits, handler.form.hits_per_page.data)
                 page_links = template_pagination_links(endpoint_path, handler.form.data, page_count, section='resulttop')
                 p.check('templated links')
 

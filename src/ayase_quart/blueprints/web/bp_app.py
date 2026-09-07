@@ -16,7 +16,7 @@ from ...moderation.auth_web import (
      web_usr_is_admin,
      web_usr_logged_in
  )
-from ...paginate import Pagination
+from ...search.pagination import get_total_pages, template_pagination_links
 from ...posts.template_optimizer import (
      get_posts_t,
      get_posts_t_thread,
@@ -41,23 +41,23 @@ from ...security import inject_csrf_token_to_session, get_csrf_input
 bp = Blueprint("bp_web_app", __name__)
 
 
-async def make_pagination_board_index(board: str, index: dict, page_num: int) -> Pagination:
+async def make_pagination_board_index(board: str, index: dict, page_num: int):
     op_thread_count = await get_op_thread_count(board)
     # op_thread_removed_count = await fc.get_op_thread_removed_count(board)
     # op_thread_count -= op_thread_removed_count
 
     board_index_thread_count = len(index['threads'])
 
-    # https://flask-paginate.readthedocs.io/en/master/
-    return Pagination(
-        page=page_num,
-        display_msg=f'Displaying <b>{board_index_thread_count}</b> threads. <b>{op_thread_count}</b> threads in total.',
-        total=op_thread_count,
-        search=False,
-        record_name='threads',
-        href=f'/{board}/page/' + '{0}',
-        show_single_page=True,
+    info = f'Displaying <b>{board_index_thread_count}</b> threads. <b>{op_thread_count}</b> threads in total.'
+
+    index_post_count = 10  # threads per index page
+    page_links = template_pagination_links(
+        path=f'/{board}/page',
+        params={'page': page_num},
+        total_pages=get_total_pages(op_thread_count, index_post_count),
     )
+
+    return info, page_links
 
 
 @bp.get("/")
@@ -103,7 +103,7 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
 
     p.check('validate')
 
-    pagination = await make_pagination_board_index(board, index, 0)
+    pagination_info, pagination_links = await make_pagination_board_index(board, index, 0)
     p.check('pagination')
 
     threads = '<hr>'.join(
@@ -116,7 +116,8 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
 
     rendered = template_board_index.render(
         tab_title=f'/{board}/ Index',
-        pagination=pagination,
+        pagination_info=pagination_info,
+        pagination_links=pagination_links,
         threads=threads,
         board=board,
         title=get_title(board),
@@ -147,7 +148,7 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
 
     p.check('validate thread')
 
-    pagination = await make_pagination_board_index(board, index, page_num)
+    pagination_info, pagination_links = await make_pagination_board_index(board, index, page_num)
     p.check('paginate')
 
     threads = '<hr>'.join(
@@ -160,7 +161,8 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
 
     title = get_title(board)
     rendered = template_board_index.render(
-        pagination=pagination,
+        pagination_info=pagination_info,
+        pagination_links=pagination_links,
         threads=threads,
         board=board,
         title=title,
@@ -175,7 +177,7 @@ async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_i
     return rendered
 
 
-async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int) -> Pagination:
+async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int):
     op_thread_count = await get_op_thread_count(board)
     # op_thread_removed_count = await fc.get_op_thread_removed_count(board)
     # op_thread_count -= op_thread_removed_count
@@ -186,16 +188,15 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
     for c in catalog:
         catalog_page_thread_count += len(c['threads'])
 
-    # https://flask-paginate.readthedocs.io/en/master/
-    return Pagination(
-        page=page_num,
-        display_msg=f'Displaying <b>{catalog_page_thread_count}</b> threads. <b>{op_thread_count}</b> threads in total.',
-        total=catalog_pages,
-        search=False,
-        record_name='threads',
-        href=f'/{board}/catalog/' + '{0}',
-        show_single_page=True,
+    info = f'Displaying <b>{catalog_page_thread_count}</b> threads. <b>{op_thread_count}</b> threads in total.'
+
+    page_links = template_pagination_links(
+        path=f'/{board}/catalog',
+        params={'page': page_num},
+        total_pages=get_total_pages(catalog_pages, 10),
     )
+
+    return info, page_links
 
 
 @bp.get("/<string:board>/catalog")
@@ -213,7 +214,7 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
 
-    pagination = await make_pagination_catalog(board, catalog, 0)
+    pagination_info, pagination_links = await make_pagination_catalog(board, catalog, 0)
     p.check('paginate')
 
     csrf_input = get_csrf_input()
@@ -224,7 +225,8 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     )
     render = template_catalog.render(
         threads=threads,
-        pagination=pagination,
+        pagination_info=pagination_info,
+        pagination_links=pagination_links,
         board=board,
         title=get_title(board),
         tab_title=f"/{board}/ Catalog",
@@ -252,7 +254,7 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     catalog = [page | {'threads': (await fc.filter_reported_posts(page['threads'], is_authority=logged_in))} for page in catalog]
     p.check('filter_reported')
 
-    pagination = await make_pagination_catalog(board, catalog, page_num)
+    pagination_info, pagination_links = await make_pagination_catalog(board, catalog, page_num)
     p.check('paginate')
 
     csrf_input = get_csrf_input()
@@ -263,7 +265,8 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     )
     render = template_catalog.render(
         threads=threads,
-        pagination=pagination,
+        pagination_info=pagination_info,
+        pagination_links=pagination_links,
         board=board,
         title=get_title(board),
         tab_title=f"/{board}/ Catalog",

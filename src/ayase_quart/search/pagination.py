@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 
 
-def total_pages(total: int, hits_per_page: int) -> int:
+def get_total_pages(total: int, hits_per_page: int) -> int:
     """
     Given
         - a total number of results (ex: 186)
@@ -37,9 +37,9 @@ def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=No
     else:
         section = ''
 
-    link = f'<a href="{base_link}&page={page}{section}">{text}</a>'
-    wrapped = f'<li{is_active}>{link}</li>'
-    return wrapped
+    link = f'<a href="{base_link}{page}{section}">{text}</a>'
+    return f'<li{is_active}>{link}</li>'
+
 
 def template_pagination_links(path: str, params: dict, total_pages: int, section: str=None):
     """
@@ -51,22 +51,26 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
     extra buttons:
         first, last, previous, next
 
-    example page 2 of 4:
+    Links are built from `path` + `params`:
+        - if the url contains a query string, page numbers are appended as
+          query params (e.g. "/fts?boards=g&page=2")
+        - otherwise they're appended as a path segment (e.g. "/g/page/2")
+
+    example page 2 of 4, current page shown as [2]:
     <div class="paginate">
         <ul>
+            <li><a href="fts?terms=hello+there&boards=g&page=1">1</a></li>
+            <li class="is_active"><a href="fts?terms=hello+there&boards=g&page=2">[2]</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=3">3</a></li>
+            <li><a href="fts?terms=hello+there&boards=g&page=4">4</a></li><br>
             <li><a href="fts?terms=hello+there&boards=g&page=1">First</a></li>
             <li><a href="fts?terms=hello+there&boards=g&page=1">Previous</a></li>
-            <li><a href="fts?terms=hello+there&boards=g&page=1">1</a></li>
-            <li class="is_active"><a href="fts?terms=hello+there&boards=g&page=2">2</a></li>
-            <li><a href="fts?terms=hello+there&boards=g&page=3">3</a></li>
-            <li><a href="fts?terms=hello+there&boards=g&page=4">4</a></li>
             <li><a href="fts?terms=hello+there&boards=g&page=3">Next</a></li>
             <li><a href="fts?terms=hello+there&boards=g&page=4">Last</a></li>
         </ul>
     </div>
-    First Previous
-        1 2 3 4
-    Next Last
+    1 [2] 3 4
+    First Previous Next Last
     """
 
     # no results or only 1 page of results
@@ -82,8 +86,6 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
         cur_page = total_pages
 
     params.pop('page', None)
-    # params.pop('nums', None)
-    # params.pop('thread_nums', None)
 
     params_t = []
     for k, v in params.items():
@@ -95,15 +97,24 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
         else:
             params_t.append((k, v))
     enc_params = urlencode(params_t)
-    base_link = f'{path}?{enc_params}'
 
-    links = []
+    if enc_params:
+        base_link = f'{path}?{enc_params}&page='
+    else:
+        base_link = f'{path}/'
+
+    word_links = []
 
     if cur_page > 1: # not first page
-        links.append(get_page_link(base_link, 1, text='First', section=section))
-        links.append('<br>')
-        links.append(get_page_link(base_link, cur_page - 1, text='Previous', section=section))
-        links.append('<br>')
+        word_links.append(get_page_link(base_link, 1, text='First', section=section))
+        word_links.append(' ')
+        word_links.append(get_page_link(base_link, cur_page - 1, text='Previous', section=section))
+        word_links.append(' ')
+
+    if cur_page < total_pages: # not last page
+        word_links.append(get_page_link(base_link, cur_page + 1, text='Next', section=section))
+        word_links.append(' ')
+        word_links.append(get_page_link(base_link, total_pages, text='Last', section=section))
 
     page_range = 10 # 0, 1, 2, ..., (10 - cur), 11, 12, ..., 20
     lower = 1
@@ -112,15 +123,10 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
         lower = max(1, cur_page - page_range)
         upper = min(total_pages, cur_page + page_range)
 
+    page_links = []
     for page_i in range(lower, upper + 1): # numbered links
         is_active = page_i == cur_page
-        links.append(get_page_link(base_link, page_i, is_active=is_active, section=section))
+        page_links.append(get_page_link(base_link, page_i, is_active=is_active, section=section))
 
-    if cur_page < total_pages: # not last page
-        links.append('<br>')
-        links.append(get_page_link(base_link, cur_page + 1, text='Next', section=section))
-        links.append('<br>')
-        links.append(get_page_link(base_link, total_pages, text='Last', section=section))
-
-    links = ''.join(links)
+    links = ''.join(page_links) + '<br>' + ''.join(word_links)
     return f'<div class="paginate"><ul>{links}</ul></div>'

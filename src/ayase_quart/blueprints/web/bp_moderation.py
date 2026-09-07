@@ -29,8 +29,8 @@ from ...moderation.report import (
     delete_post,
 )
 from ...moderation.user import Permissions
-from ...paginate import Pagination
 from ...render import render_controller
+from ...search.pagination import get_total_pages, template_pagination_links
 from ...templates import template_reports_index
 from ...utils.validation import validate_board_query_parameter
 from ...security import (
@@ -166,22 +166,16 @@ def get_report_mod_status_link(mod_status: ModStatus) -> str:
 async def make_report_pagination(mod_status: ModStatus, boards: list[str], report_len: int, page_num: int, page_size: int=20):
     report_count = await get_report_count(mod_status=mod_status, board_shortnames=boards)
     report_count_all = await get_report_count()
-    page_size = min(page_size, report_len)
-    href=f'/reports/{mod_status.name}/' + '{0}'
-    record_name = f'{mod_status.name} reports'
 
-    pagination = Pagination(
-        page=page_num,
-        per_page=page_size,
-        page_parameter=None,
-        display_msg=f'Displaying <b>{page_size}</b> / <b>{report_count}</b> {mod_status.name} reports. <b>{report_count_all}</b> reports in total.',
-        total=report_count,
-        search=False,
-        record_name=record_name,
-        href=href,
-        show_single_page=True,
+    info = f'Displaying <b>{min(page_size, report_len)}</b> / <b>{report_count}</b> {mod_status.name} reports. <b>{report_count_all}</b> reports in total.'
+
+    page_links = template_pagination_links(
+        path=f'/reports/{mod_status.name}',
+        params={'page': page_num},
+        total_pages=get_total_pages(report_count, page_size),
     )
-    return pagination
+
+    return info, page_links
 
 
 @bp.get('/reports/closed')
@@ -195,10 +189,11 @@ async def make_report_pagination(mod_status: ModStatus, boards: list[str], repor
 async def reports_closed(is_admin: bool, page_num: int=0):
     page_size = 20
     reports = await get_reports(mod_status=ModStatus.closed, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
-    pagination = await make_report_pagination(ModStatus.closed, board_shortnames, len(reports), page_num, page_size=page_size)
+    pagination_info, pagination_links = await make_report_pagination(ModStatus.closed, board_shortnames, len(reports), page_num, page_size=page_size)
     return await render_controller(
         template_reports_index,
-        pagination=pagination,
+        pagination_info=pagination_info,
+        pagination_links=pagination_links,
         mod_status_link=get_report_mod_status_link(ModStatus.closed),
         reports=await formulate_reports_for_html_table(reports),
         title='Closed Reports',
@@ -220,11 +215,12 @@ async def reports_closed(is_admin: bool, page_num: int=0):
 async def reports_open(is_admin: bool, page_num: int=0):
     page_size=20
     reports = await get_reports(mod_status=ModStatus.open, board_shortnames=board_shortnames, page_num=page_num, page_size=page_size)
-    pagination = await make_report_pagination(ModStatus.open, board_shortnames, len(reports), page_num, page_size=page_size)
+    pagination_info, pagination_links = await make_report_pagination(ModStatus.open, board_shortnames, len(reports), page_num, page_size=page_size)
 
     return await render_controller(
         template_reports_index,
-        pagination=pagination,
+        pagination_info=pagination_info,
+        pagination_links=pagination_links,
         mod_status_link=get_report_mod_status_link(ModStatus.open),
         reports=await formulate_reports_for_html_table(reports),
         title='Reports',

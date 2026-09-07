@@ -3,4 +3,9 @@
         {{pagination.info}}
         {{pagination.links}}
     </div>
+{% elif pagination_info %}
+    <div class="paginate m-2">
+        {{pagination_info|safe}}
+        {% if pagination_links %}<br>{{ pagination_links|safe }}{% endif %}
+    </div>
 {% endif %}
