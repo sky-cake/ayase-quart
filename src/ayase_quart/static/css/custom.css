@@ -1388,7 +1388,7 @@ h3 {
     min-width: 0;
     max-width: calc(50% - 5px);
 
-    height: 44px;
+    height: 38px;
 
     border-radius: var(--radius-control);
 
