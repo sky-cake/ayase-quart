@@ -24,6 +24,11 @@
 </div>
 {%- endmacro %}
 
+{% block css -%}
+    {{ super() }}
+    <link href="/static/css/search.css" rel="stylesheet" type="text/css">
+{%- endblock css %}
+
 {% block scripts -%}
     {{ super() }}
     <script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
