@@ -863,24 +863,36 @@ img, video {
 #top {
     position: fixed;
     top: auto;
+    right: 10px;
     bottom: 10px;
-    left: 0;
-    right: 0;
+    left: auto;
 
     z-index: 1000;
 
-    width: max-content;
-    margin: 0 auto;
-
     display: none;
 
-    background-color: color-mix(in srgb, var(--color-panel) 70%, transparent);
+    align-items: center;
+    gap: 14px;
+
+    background-color: var(--color-panel);
     padding: 6px 12px;
     border-radius: var(--radius-section);
 }
 
 #top.visible {
+    display: flex;
+}
+
+#top svg {
+    width: 20px;
+    height: 20px;
     display: block;
+}
+
+#top a {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 
