@@ -34,7 +34,7 @@ function set_up_board_buttons() {
 
     if (all_btn.length) {
         all_btn[0].addEventListener('click', () => {
-            const checkboxes = doc_query_all('#boards input[type="checkbox"]');
+            const checkboxes = doc_query_all('#searchform input[name="boards"][type="checkbox"]');
             for (const checkbox of checkboxes) {
                 checkbox.checked = true;
             }
@@ -43,7 +43,7 @@ function set_up_board_buttons() {
 
     if (none_btn.length) {
         none_btn[0].addEventListener('click', () => {
-            const checkboxes = doc_query_all('#boards input[type="checkbox"]');
+            const checkboxes = doc_query_all('#searchform input[name="boards"][type="checkbox"]');
             for (const checkbox of checkboxes) {
                 checkbox.checked = false;
             }
@@ -234,12 +234,38 @@ function set_up_video_toggles() {
     }
 }
 
+function setup_top_pill() {
+    const top = document.getElementById('top');
+    if (!top) return;
+
+    const form = document.getElementById('searchform');
+    const results = document.getElementById('resulttop');
+    const has_results = results && results.querySelector('.board, .gallery-grid');
+
+    const update = () => {
+        if (window.matchMedia('(min-width: 901px)').matches || !form) {
+            top.classList.add('visible');
+            return;
+        }
+        if (!has_results) {
+            top.classList.remove('visible');
+            return;
+        }
+        top.classList.toggle('visible', form.getBoundingClientRect().bottom <= 0);
+    };
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+}
+
 function init_index() {
 	update_datetimes();
 	set_video_intersection_events();
     set_up_image_toggles();
     set_up_video_toggles();
     set_up_board_buttons();
+    setup_top_pill();
 }
 
 init_index();

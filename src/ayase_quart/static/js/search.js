@@ -1,11 +1,7 @@
 const searchform = document.getElementById('searchform');
-const searchPanel = document.getElementById('searchform');
-const searchOpenBtn = document.getElementById('search-open');
-const searchCloseBtn = document.getElementById('search-close');
 
 const searchInfoBtn = document.getElementById('search-info');
 const searchHelper = document.getElementById('search-helper');
-const searchBackdrop = document.getElementById('search-backdrop');
 
 const dropZone = document.getElementById('drop_zone');
 const fileDrop = dropZone ? dropZone.closest('.file-drop') : null;
@@ -64,32 +60,58 @@ function on_searchform_submit(event) {
     window.location.href = url;
 }
 
-function set_open(open) {
-    searchPanel.classList.toggle('open', open);
-    searchOpenBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (searchBackdrop) {
-        searchBackdrop.classList.toggle('open', open);
+function on_document_keydown(e) {
+    if (e.key === 'Escape') {
+        close_dropdowns();
     }
 }
 
-function on_search_open_btn_click(e) {
-    e.stopPropagation();
-    set_open(!searchPanel.classList.contains('open'));
+function close_dropdowns() {
+    for (const drop of doc_query_all('.dropdown')) {
+        const btn = drop.querySelector('.dropdown-btn');
+        const menu = drop.querySelector('.dropdown-menu');
+        btn.setAttribute('aria-expanded', 'false');
+        menu.classList.add('hidden');
+    }
 }
 
-function on_search_close_btn_click(e) {
-    e.stopPropagation();
-    set_open(false);
+function on_dropdown_btn_click(e) {
+    const btn = e.target.closest('.dropdown-btn');
+    if (!btn) return;
+
+    const expanded = btn.getAttribute('aria-expanded') === 'true';
+    close_dropdowns();
+    if (!expanded) {
+        btn.setAttribute('aria-expanded', 'true');
+        btn.closest('.dropdown').querySelector('.dropdown-menu').classList.remove('hidden');
+    }
 }
 
-function on_document_click(e) {
-    if (!searchPanel.classList.contains('open')) return;
-    if (searchPanel.contains(e.target) || searchOpenBtn.contains(e.target)) return;
-    set_open(false);
+function on_dropdown_option_click(e) {
+    const opt = e.target.closest('.dropdown-option');
+    if (!opt) return;
+
+    const drop = opt.closest('.dropdown');
+    const btn = drop.querySelector('.dropdown-btn');
+    const select = drop.querySelector('select');
+    const value = opt.dataset.value;
+
+    select.value = value;
+    btn.classList.toggle('dropdown-muted', value === 'any');
+    btn.querySelector('.dropdown-value').textContent = opt.textContent.trim();
+
+    for (const option of drop.querySelectorAll('.dropdown-option')) {
+        const active = option === opt;
+        option.classList.toggle('active', active);
+        option.setAttribute('aria-selected', active ? 'true' : 'false');
+    }
+
+    close_dropdowns();
 }
 
-function on_document_keydown(e) {
-    if (e.key === 'Escape') set_open(false);
+function on_document_click_dropdown(e) {
+    if (e.target.closest('.dropdown')) return;
+    close_dropdowns();
 }
 
 function on_search_info_btn_click(e) {
@@ -225,6 +247,10 @@ function on_panel_number_keydown(e) {
     }
 }
 
+function on_date_input() {
+    this.classList.toggle('date-empty', !this.value);
+}
+
 function on_panel_number_paste(e) {
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text') || '';
@@ -236,32 +262,21 @@ function on_panel_number_paste(e) {
 }
 
 function auto_select_single_board() {
-    const board_inputs = doc_query_all('#searchform #boards input');
+    const board_inputs = doc_query_all('#searchform input[name="boards"]');
     if (board_inputs.length !== 1) return;
     board_inputs[0].checked = true; // checked works with checkbox & radio inputs
 }
 
-function init_board_grid() {
-    const boards_ul = document.getElementById('boards');
-    if (!boards_ul) return;
-
-    const items = doc_query_all('#boards li');
-    if (items.length === 0) return;
-
-    const container_width = boards_ul.clientWidth;
-    const min_item_width = 90;
-    const cols_by_width = Math.max(1, Math.floor(container_width / min_item_width));
-    const cols = Math.min(cols_by_width, 4, items.length);
-    const rows = Math.ceil(items.length / cols);
-
-    boards_ul.style.setProperty('--boards-cols', String(cols));
-    boards_ul.style.setProperty('--boards-rows', String(rows));
+function scroll_to_results() {
+    const results = document.getElementById('resulttop');
+    if (results && results.querySelector('.board, .gallery-grid')) {
+        results.scrollIntoView({ block: 'start' });
+    }
 }
 
 function init_search() {
+    scroll_to_results();
     auto_select_single_board();
-    requestAnimationFrame(init_board_grid);
-    window.addEventListener('resize', init_board_grid);
 
     for (const toggle of doc_query_all('#searchform .tri-toggle')) {
         if (!toggle.dataset.false || !toggle.dataset.true) continue;
@@ -279,33 +294,22 @@ if (searchform) {
     searchform.addEventListener('submit', on_searchform_submit);
     document.addEventListener('click', on_tri_option_click);
     document.addEventListener('click', on_binary_toggle_click);
+    document.addEventListener('click', on_dropdown_btn_click);
+    document.addEventListener('click', on_dropdown_option_click);
+    document.addEventListener('click', on_document_click_dropdown);
 
     const number_inputs = doc_query_all('#searchform input[type="number"]');
     for (const input of number_inputs) {
         input.addEventListener('keydown', on_panel_number_keydown);
         input.addEventListener('paste', on_panel_number_paste);
     }
-}
 
-if (searchPanel && searchOpenBtn) {
-    searchOpenBtn.addEventListener('click', on_search_open_btn_click);
-
-    if (searchCloseBtn) {
-        searchCloseBtn.addEventListener('click', on_search_close_btn_click);
+    const date_inputs = doc_query_all('#searchform input[type="date"]');
+    for (const input of date_inputs) {
+        input.classList.toggle('date-empty', !input.value);
+        input.addEventListener('input', on_date_input);
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('open')) {
-        set_open(true);
-        urlParams.delete('open');
-        const query = urlParams.toString();
-        const url = window.location.pathname + (query ? `?${query}` : '');
-        window.history.replaceState(null, '', url);
-    } else if (!window.location.search) {
-        set_open(true);
-    }
-
-    document.addEventListener('click', on_document_click);
     document.addEventListener('keydown', on_document_keydown);
 }
 

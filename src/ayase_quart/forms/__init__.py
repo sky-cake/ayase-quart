@@ -111,6 +111,10 @@ class RadioCSVField(RadioField):
 
 
 valid_numeric_cmp_choices = [('=', '='), ('>', '>'), ('<', '<'), ('>=', '>='), ('<=', '<=')]
+capcode_choices = [('any', 'any')] + sorted(
+    [(cc.value, cc.name) for cc in Capcode if cc != Capcode.any],
+    key=lambda c: c[1],
+)
 class SearchForm(StripForm):
     do_not_strip: tuple[str] = ('comment',)
 
@@ -147,7 +151,7 @@ class SearchForm(StripForm):
     wop = SelectField('Width cmp', default=None, choices=valid_numeric_cmp_choices, validate_choice=False)
     height = IntegerField('Media height', default=None, validators=[Optional(), NumberRange(0, 10_000)])
     hop = SelectField('Height cmp', default=None, choices=valid_numeric_cmp_choices, validate_choice=False)
-    capcode = SelectField('Capcode', default=None, choices=[(cc.value, cc.name) for cc in Capcode], validate_choice=False)
+    capcode = SelectField('Capcode', default=Capcode.any.value, choices=capcode_choices, validate_choice=False)
     submit = SubmitField('Search')
 
     async def validate(self, extra_validators=None) -> bool:

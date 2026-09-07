@@ -1,5 +1,29 @@
 {% extends "base.html" %}
 
+{% macro dropdown(field) -%}
+{% set current = field.data if field.data else (field.choices[0][0] if field.choices else '') -%}
+{% set ns = namespace(label=current) -%}
+{% for value, label in field.choices -%}
+    {% if value == current %}{% set ns.label = label %}{% endif %}
+{%- endfor %}
+<div class="dropdown">
+    <button type="button" class="dropdown-btn{{ ' dropdown-muted' if current == 'any' }}" aria-haspopup="listbox" aria-expanded="false">
+        <span class="dropdown-value">{{ ns.label }}</span>
+    </button>
+    <div class="dropdown-menu hidden" role="listbox">
+        {% for value, label in field.choices -%}
+        <button type="button" class="dropdown-option{{ ' active' if value == current }}" role="option"
+            aria-selected="{{ 'true' if value == current else 'false' }}" data-value="{{ value }}">{{ label }}</button>
+        {%- endfor %}
+    </div>
+    <select class="dropdown-hidden" name="{{ field.name }}" tabindex="-1" aria-hidden="true">
+        {% for value, label in field.choices -%}
+        <option value="{{ value }}"{{ ' selected' if value == current }}>{{ label }}</option>
+        {%- endfor %}
+    </select>
+</div>
+{%- endmacro %}
+
 {% block scripts -%}
     {{ super() }}
     <script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
@@ -8,27 +32,20 @@
 
 {% block body %}
 <div class="search_container">
-    <div id="search-backdrop" class="search-backdrop"></div>
-
-    <button type="button" id="search-open" class="search-open-btn" aria-expanded="false" aria-controls="searchform">
-        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
-        Search
-    </button>
-
     <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data" class="search-panel">
         <div class="search-body">
             {% if vanilla_search_enabled or index_search_enabled %}
             <div class="search-top-row">
                 <div class="search-toggle" role="tablist" aria-label="Search mode">
                     {% if vanilla_search_enabled %}
-                    <a role="tab" aria-selected="{{ 'true' if endpoint() == 'bp_web_vanilla_search.v_vanilla_search_get' else 'false' }}" class="toggle-option{{ ' active' if endpoint() == 'bp_web_vanilla_search.v_vanilla_search_get' }}" href="{{ url_for('bp_web_vanilla_search.v_vanilla_search_get') }}?open=1">SQL</a>
+                    <a role="tab" aria-selected="{{ 'true' if endpoint() == 'bp_web_vanilla_search.v_vanilla_search_get' else 'false' }}" class="toggle-option{{ ' active' if endpoint() == 'bp_web_vanilla_search.v_vanilla_search_get' }}" href="{{ url_for('bp_web_vanilla_search.v_vanilla_search_get') }}">SQL</a>
                     {% endif %}
                     {% if index_search_enabled %}
-                    <a role="tab" aria-selected="{{ 'true' if endpoint() == 'bp_web_index_search.v_index_search_get' else 'false' }}" class="toggle-option{{ ' active' if endpoint() == 'bp_web_index_search.v_index_search_get' }}" href="{{ url_for('bp_web_index_search.v_index_search_get') }}?open=1">FTS</a>
+                    <a role="tab" aria-selected="{{ 'true' if endpoint() == 'bp_web_index_search.v_index_search_get' else 'false' }}" class="toggle-option{{ ' active' if endpoint() == 'bp_web_index_search.v_index_search_get' }}" href="{{ url_for('bp_web_index_search.v_index_search_get') }}">FTS</a>
                     {% endif %}
                 </div>
 
-                <button type="button" id="search-info" class="search-info-btn" aria-expanded="false" aria-label="Toggle search info" title="Search info">
+                <button type="button" id="search-info" class="search-icon" aria-expanded="false" aria-label="Toggle search info" title="Search info">
                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 </button>
             </div>
@@ -40,13 +57,11 @@
 
             <section class="basic-search">
                     <label>
-                        <span>Subject</span>
-                        {{ form.title(placeholder='Post Subject') }}
+                        {{ form.title(placeholder='Subject') }}
                     </label>
 
                     <label>
-                        <span>Comment</span>
-                        {{ form.comment(placeholder='Post Comment') }}
+                        {{ form.comment(placeholder='Comment') }}
                     </label>
                 </section>
 
@@ -54,24 +69,25 @@
                     <h3>Search results must have OPs where...</h3>
 
                     <label>
-                        <span>OP Subject</span>
                         {{ form.op_title(placeholder='OP Subject') }}
                     </label>
 
                     <label>
-                        <span>OP Comment</span>
                         {{ form.op_comment(placeholder='OP Comment') }}
                     </label>
                 </section>
 
                 <section class="filter-section boards-section">
                     <div class="section-header">
-                        <h3>Boards</h3>
-
+                        <span class="section-title">Boards</span>
                         {% if form.boards.type == 'MultiCheckboxCSVField' %}
                             <div class="button-group">
-                                <button type="button" class="small-button check_all_boards">All</button>
-                                <button type="button" class="small-button uncheck_all_boards">None</button>
+                                <button type="button" class="btn check_all_boards">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m16 9-5.5 5.5L8 12"/></svg>
+                            </button>
+                                <button type="button" class="btn uncheck_all_boards">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/></svg>
+                            </button>
                             </div>
                         {% endif %}
                     </div>
@@ -83,49 +99,49 @@
 
                 <section class="group-card">
                     <label class="group-field">
-                        <span>Start date</span>
                         {{ form.date_after() }}
                     </label>
 
                     <label class="group-field">
-                        <span>End date</span>
                         {{ form.date_before() }}
                     </label>
                 </section>
 
                 <section class="group-card">
                     <label class="group-formula">
-                        <span class="field-label">
-                            <svg class="ruler-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
-                            <span>Subject</span>
-                        </span>
-                        {{ form.tlop() }}
-                        {{ form.tl(placeholder='Length', min='0', step='1') }}
+                        {{ dropdown(form.tlop) }}
+                        {{ form.tl(placeholder='Subject length', min='0', step='1') }}
                     </label>
 
                     <label class="group-formula">
-                        <span class="field-label">
-                            <svg class="ruler-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg>
-                            <span>Comment</span>
-                        </span>
-                        {{ form.clop() }}
-                        {{ form.cl(placeholder='Length', min='0', step='1') }}
+                        {{ dropdown(form.clop) }}
+                        {{ form.cl(placeholder='Comment length', min='0', step='1') }}
                     </label>
                 </section>
 
                 <section class="group-card">
                     <label class="group-field">
-                        <span>Tripcode</span>
                         {{ form.tripcode(placeholder='Tripcode') }}
                     </label>
 
                     <label class="group-field">
-                        <span>Capcode</span>
-                        {{ form.capcode() }}
+                        {{ dropdown(form.capcode) }}
                     </label>
                 </section>
 
                 <section class="group-card">
+                    <label class="group-formula">
+                        {{ dropdown(form.wop) }}
+                        {{ form.width(placeholder='Media width') }}
+                    </label>
+
+                    <label class="group-formula">
+                        {{ dropdown(form.hop) }}
+                        {{ form.height(placeholder='Media height') }}
+                    </label>
+                </section>
+
+                <section class="group-card full">
                     <div class="tri-toggle" data-false="is_not_op" data-true="is_op">
                         <div class="toggle-group" role="tablist" aria-label="OP filter">
                             <button type="button" class="tri-option" data-state="false">Not OP</button>
@@ -167,28 +183,9 @@
                     </div>
                 </section>
 
-                <section class="group-card">
-                    <label class="group-formula">
-                        <span class="field-label">
-                            <span>Media width</span>
-                        </span>
-                        {{ form.wop() }}
-                        {{ form.width(placeholder='Width') }}
-                    </label>
-
-                    <label class="group-formula">
-                        <span class="field-label">
-                            <span>Media height</span>
-                        </span>
-                        {{ form.hop() }}
-                        {{ form.height(placeholder='Height') }}
-                    </label>
-                </section>
-
-                <section class="group-card">
+                <section class="group-card full">
                     <label class="group-field">
-                        <span>File Hash</span>
-                        {{ form.media_hash(placeholder='MD5 Hash') }}
+                        {{ form.media_hash(placeholder='b64( md5(file) )') }}
                     </label>
 
                     <label class="file-drop">
@@ -200,21 +197,18 @@
 
                 <section class="group-card">
                     <label class="group-field">
-                        <span>Filename</span>
                         {{ form.media_filename(placeholder='Filename') }}
                     </label>
                 </section>
 
                 <section class="group-card">
                     <label class="group-field">
-                        <span>Post Number</span>
-                        {{ form.num(placeholder='Post Num') }}
+                        {{ form.num(placeholder='Post Number') }}
                     </label>
                 </section>
 
                 <section class="group-card">
                     <div class="group-field">
-                        <span>Order By</span>
                         <div class="tri-toggle binary-toggle">
                             <div class="toggle-group" data-control="radio" data-name="order_by" role="tablist" aria-label="Order by">
                                 <button type="button" class="binary-option active" data-value="desc" data-default="1">Descend</button>
@@ -227,7 +221,6 @@
 
                 <section class="group-card">
                     <div class="group-field">
-                        <span>Render Mode</span>
                         <div class="tri-toggle binary-toggle">
                             <div class="toggle-group" data-control="bool" data-name="gallery_mode" role="tablist" aria-label="Render mode">
                                 <button type="button" class="binary-option active" data-value="off">Posts</button>
@@ -240,8 +233,7 @@
 
                 <section class="group-card">
                     <label class="group-field">
-                        <span>Per Board</span>
-                        {{ form.hits_per_page(placeholder='Per board') }}
+                        {{ form.hits_per_page(placeholder='Hits per Board') }}
                     </label>
                 </section>
 
@@ -254,11 +246,6 @@
                 </div>
 
             <div class="search-footer">
-                    <button type="button" id="search-close" class="search-close" aria-label="Close search form" title="Close">
-                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        Close
-                    </button>
-
                     <button type="submit" class="search-button" name="submit" value="Search">
                         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
                         Search
