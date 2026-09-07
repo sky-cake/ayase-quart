@@ -23,8 +23,11 @@ def get_total_pages(total: int, hits_per_page: int) -> int:
     return d
 
 
-def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=None, section: str=None):
+def get_page_link(base_link: str, page: int, is_active: bool=False, text: str=None, section: str=None, disabled: bool=False):
     text = page if text is None else text
+
+    if disabled:
+        return f'<li class="disabled"><span>{text}</span></li>'
 
     if is_active:
         is_active = ' class="is_active"'
@@ -50,6 +53,8 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
     is_active class for current page
     extra buttons:
         first, last, previous, next
+    all four extra buttons are always shown; unavailable ones are
+    rendered disabled (no link)
 
     Links are built from `path` + `params`:
         - if the url contains a query string, page numbers are appended as
@@ -105,16 +110,13 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
 
     word_links = []
 
-    if cur_page > 1: # not first page
-        word_links.append(get_page_link(base_link, 1, text='First', section=section))
-        word_links.append(' ')
-        word_links.append(get_page_link(base_link, cur_page - 1, text='Previous', section=section))
-        word_links.append(' ')
-
-    if cur_page < total_pages: # not last page
-        word_links.append(get_page_link(base_link, cur_page + 1, text='Next', section=section))
-        word_links.append(' ')
-        word_links.append(get_page_link(base_link, total_pages, text='Last', section=section))
+    word_links.append(get_page_link(base_link, 1, text='First', section=section, disabled=cur_page <= 1))
+    word_links.append(' ')
+    word_links.append(get_page_link(base_link, cur_page - 1, text='Previous', section=section, disabled=cur_page <= 1))
+    word_links.append(' ')
+    word_links.append(get_page_link(base_link, cur_page + 1, text='Next', section=section, disabled=cur_page >= total_pages))
+    word_links.append(' ')
+    word_links.append(get_page_link(base_link, total_pages, text='Last', section=section, disabled=cur_page >= total_pages))
 
     page_range = 10 # 0, 1, 2, ..., (10 - cur), 11, 12, ..., 20
     lower = 1

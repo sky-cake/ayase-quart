@@ -327,6 +327,11 @@ footer {
     padding: 2px;
 }
 
+.paginate ul li.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
 .paginate {
     width: 500px;
     max-width: 95%;
