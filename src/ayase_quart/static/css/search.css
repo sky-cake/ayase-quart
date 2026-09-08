@@ -420,6 +420,22 @@
     color-scheme: dark;
 }
 
+.search-panel input[type='date']::-webkit-datetime-edit,
+.search-panel input[type='date']::-webkit-datetime-edit-text,
+.search-panel input[type='date']::-webkit-datetime-edit-month-field,
+.search-panel input[type='date']::-webkit-datetime-edit-day-field,
+.search-panel input[type='date']::-webkit-datetime-edit-year-field {
+    color: var(--color-text);
+}
+
+.search-panel input[type='date'].date-empty::-webkit-datetime-edit,
+.search-panel input[type='date'].date-empty::-webkit-datetime-edit-text,
+.search-panel input[type='date'].date-empty::-webkit-datetime-edit-month-field,
+.search-panel input[type='date'].date-empty::-webkit-datetime-edit-day-field,
+.search-panel input[type='date'].date-empty::-webkit-datetime-edit-year-field {
+    color: var(--color-placeholder);
+}
+
 .search-panel input[type='date'].date-empty {
     color: var(--color-placeholder);
 }
@@ -668,16 +684,11 @@
 .dropdown-btn[aria-expanded='true'] {
     background: var(--color-panel);
     border-color: var(--color-focus);
-    box-shadow: 0 0 0 2px color-mix(
-        in srgb,
-        var(--color-focus) 20%,
-        transparent
-    );
 }
 
 .dropdown-menu {
     position: absolute;
-    top: calc(100% + 4px);
+    top: 100%;
     left: 0;
 
     z-index: 30;
@@ -733,8 +744,9 @@
 }
 
 .search-panel .group-formula .dropdown .dropdown-btn:hover {
-    background: var(--color-panel-raised);
-    border-color: var(--color-border);
+    color: var(--color-text);
+    background: var(--color-panel);
+    border-color: var(--color-focus);
 }
 
 .search-panel .group-formula .dropdown .dropdown-btn[aria-expanded='true'] {
