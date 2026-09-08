@@ -416,6 +416,10 @@
     );
 }
 
+.search-panel input[type='date'] {
+    color-scheme: dark;
+}
+
 .search-panel input[type='date'].date-empty {
     color: var(--color-placeholder);
 }
@@ -726,6 +730,15 @@
 
 .search-panel .group-formula .dropdown {
     flex: 0 0 40px;
+}
+
+.search-panel .group-formula .dropdown .dropdown-btn:hover {
+    background: var(--color-panel-raised);
+    border-color: var(--color-border);
+}
+
+.search-panel .group-formula .dropdown .dropdown-btn[aria-expanded='true'] {
+    border-color: var(--color-focus);
 }
 
 .search-panel .group-field .dropdown {
