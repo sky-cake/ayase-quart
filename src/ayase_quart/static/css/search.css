@@ -420,21 +420,6 @@
     color-scheme: dark;
 }
 
-.search-panel input[type='date']::-webkit-datetime-edit,
-.search-panel input[type='date']::-webkit-datetime-edit-text,
-.search-panel input[type='date']::-webkit-datetime-edit-month-field,
-.search-panel input[type='date']::-webkit-datetime-edit-day-field,
-.search-panel input[type='date']::-webkit-datetime-edit-year-field {
-    color: var(--color-text);
-}
-
-.search-panel input[type='date'].date-empty::-webkit-datetime-edit,
-.search-panel input[type='date'].date-empty::-webkit-datetime-edit-text,
-.search-panel input[type='date'].date-empty::-webkit-datetime-edit-month-field,
-.search-panel input[type='date'].date-empty::-webkit-datetime-edit-day-field,
-.search-panel input[type='date'].date-empty::-webkit-datetime-edit-year-field {
-    color: var(--color-placeholder);
-}
 
 .search-panel input[type='date'].date-empty {
     color: var(--color-placeholder);
