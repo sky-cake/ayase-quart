@@ -75,17 +75,15 @@ def test_sanitize_free_text():
 
 
 def test_get_term_query():
-    assert get_term_query('comment', 'foo(bar) >70') == [
-        {
-            'occur': 'must',
-            'normal': {
-                'ctx': 'comment:foo bar 70',
-            },
-        }
-    ]
+    assert get_term_query('comment', 'foo(bar) >70') == {
+        'occur': 'must',
+        'normal': {
+            'ctx': 'comment:foo bar 70',
+        },
+    }
 
-    assert get_term_query('comment', '::') == []
-    assert get_term_query('comment', '') == []
+    assert get_term_query('comment', '::') is None
+    assert get_term_query('comment', '') is None
 
 
 if __name__=='__main__':

@@ -46,17 +46,16 @@ def sanitize_free_text(text: str) -> str:
     return text
 
 
-def get_term_query(fieldname: str, terms: str) -> list[dict]:
-    query = []
+def get_term_query(fieldname: str, terms: str) -> dict | None:
     terms = sanitize_free_text(terms)
     if terms:
-        query.append({ # quoted terms can't use the fields: [] combo, must OR search fields
+        return {
             'occur': 'must',
             'normal': {
                 'ctx': f'{fieldname}:{terms}',
             },
-        })
-    return query
+        }
+    return
 
 
 class LnxSearch(BaseSearch):
@@ -163,8 +162,13 @@ class LnxSearch(BaseSearch):
 
     async def _search_index(self, index: str, q: IndexSearchQuery):
         url = self._get_index_url(index) + '/search'
+
+        query = self._query_builder(q)
+        if not query:
+            return [], 0
+
         payload = {
-            'query': self._query_builder(q),
+            'query': query,
             'limit': q.hits_per_page,
             'offset': 0 if q.page == 1 else (q.page - 1) * q.hits_per_page,
             'order_by': q.sort_by,
@@ -185,12 +189,21 @@ class LnxSearch(BaseSearch):
         return hits, total
 
     def _query_builder(self, q: IndexSearchQuery):
+        """
+        Short circuits if a text field is reduced to an empty string during sanitization.
+        """
         query = []
         if comment := q.comment:
-            query.extend(get_term_query('comment', comment))
+            tq = get_term_query('comment', comment)
+            if not tq:
+                return []
+            query.append(tq)
 
         if title := q.title:
-            query.extend(get_term_query('title', title))
+            tq = get_term_query('title', title)
+            if not tq:
+                return []
+            query.append(tq)
 
         if q.thread_nums:
             query.append(
@@ -342,8 +355,13 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
+
         if q.media_filename:
-            query.extend(get_term_query('media_filename', q.media_filename))
+            tq = get_term_query('media_filename', q.media_filename)
+            if not tq:
+                return []
+            query.append(tq)
+
         if q.trip is not None:
             query.append(
                 {
