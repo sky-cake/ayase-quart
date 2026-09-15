@@ -1,5 +1,6 @@
 from typing import Any
 
+import re
 from orjson import dumps, loads
 
 from ...configs import index_search_conf
@@ -10,17 +11,49 @@ pk = POST_PK
 lnx_conf = index_search_conf.get('lnx', {})
 
 
+def sanitize_free_text(text: str) -> str:
+    """
+    - Avoid error responses from LNX, try to give the user some results.
+    - Note: LNX 0.9.0 uses tantivy 0.18 https://docs.rs/tantivy/0.18.1/tantivy/query/struct.QueryParser.html
+    """
+    opt_in_lnx_chars = '+-"'
+    opt_out_lnx_chars = ':`^{}()[]'
+
+    # double quotes must balance
+    if text.count('"') % 2 == 1:
+        text = text.replace('"', ' ')
+
+    text = ''.join(' ' if char in opt_out_lnx_chars else char for char in text)
+
+    tokens = []
+    for token in text.split():
+        # allow a single + or - on the lhs of tokens, but remove multiples
+        token = re.sub(r'^[+-]{2,}', '', token)
+
+        # remove all lhs < and >
+        token = token.lstrip('<>')
+
+        if token:
+            tokens.append(token)
+
+    text = ' '.join(tokens).strip()
+
+    # need something to query aside from semantic chars
+    lnx_char_count = sum(text.count(char) for char in opt_in_lnx_chars)
+    if lnx_char_count >= len(text):
+        return ''
+
+    return text
+
+
 def get_term_query(fieldname: str, terms: str) -> list[dict]:
     query = []
-
-    # split and loop because lnx 0.9.0 uses tantivy 0.18 https://docs.rs/tantivy/0.18.1/tantivy/query/struct.QueryParser.html
-    # require format for "barack obama": ["title:barack", "body:barack", "title:obama", "body:obama"]
-    # terms = terms.replace('"', '')
+    terms = sanitize_free_text(terms)
     if terms:
         query.append({ # quoted terms can't use the fields: [] combo, must OR search fields
             'occur': 'must',
             'normal': {
-                'ctx': f'{fieldname}:{terms.strip()}',
+                'ctx': f'{fieldname}:{terms}',
             },
         })
     return query

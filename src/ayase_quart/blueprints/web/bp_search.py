@@ -106,12 +106,12 @@ class SearchHandlerFTS(SearchHandler):
     multi_board_search: bool = index_search_conf['multi_board_search']
     highlight: bool = index_search_conf['highlight']
     html_search_memo = """
-    <div class="mtb-1">Full text search is much faster than SQL search, but it may not have recent data.</div>
-    These are the main search operations, more can be found at <a href="https://docs.rs/tantivy/0.19.2/tantivy/query/struct.QueryParser.html" target="_blank">docs.rs/tantivy</a>.
+    <div class="mtb-1">Full text search is much faster than SQL search, but it may not have recent data. FTS also ignores some characters (e.g. *:,~.) while matching others (e.g. 我é°🎃)</div>
+    These search operations are supported,
     <ul class="m-0 liststyle">
-        <li><span class="codetext">"exact term"</span></li>
-        <li><span class="codetext">+devices +usb-c -adapter</span> requires posts with "devices" and "usb-c", and not "adapter"</li>
-        <li><span class="codetext">x AND y OR z</span> which is equivalent to <span class="codetext">((+x +y) z)</span></li>
+        <li><span class="codetext">"exact term" "exact term two"</span></li>
+        <li><span class="codetext">+devices +usb-c -adapter</span> yields posts with "devices" and "usb-c" but not "adapter"</li>
+        <li><span class="codetext">x AND y OR z</span></li>
     </ul>
     """
     html_message_error: str = (
