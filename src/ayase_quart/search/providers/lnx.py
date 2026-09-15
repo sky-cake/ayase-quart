@@ -37,6 +37,7 @@ def sanitize_free_text(text: str) -> str:
             tokens.append(token)
 
     text = ' '.join(tokens).strip()
+    text = text.lstrip('-')
 
     # need something to query aside from semantic chars
     lnx_char_count = sum(text.count(char) for char in opt_in_lnx_chars)

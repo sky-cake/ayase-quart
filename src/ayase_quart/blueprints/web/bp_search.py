@@ -114,13 +114,7 @@ class SearchHandlerFTS(SearchHandler):
         <li><span class="codetext">x AND y OR z</span></li>
     </ul>
     """
-    html_message_error: str = (
-        'There seems to be a problem with the submitted query.<br>'
-        '- Characters like \" and \' should come in pairs.<br>'
-        '- Brackets should be paired too.<br>'
-        '- You can escape special characters with \\ if needed.<br>'
-        '- Also note that you cannot begin or end queries with a dash.'
-    )
+    html_message_error: str = "There is an issue with the query's text field semantics. Try removing non-alphabetical chars."
 
     async def get_posts_and_total_hits(self):
         return await get_posts_and_total_hits_fts(self.form_data)

@@ -31,10 +31,12 @@ def test_sanitize_free_text():
     assert sanitize_free_text('a >b') == 'a b'
     assert sanitize_free_text('a<b') == 'a<b'
 
+    assert sanitize_free_text('-z ') == 'z' # leading - errors for alpha
+    assert sanitize_free_text('-66 ') == '66' # leading - ok for int
     assert sanitize_free_text('+35') == '+35'
-    assert sanitize_free_text('-66') == '-66'
-    assert sanitize_free_text('-66+80') == '-66+80'
-    assert sanitize_free_text('-66 +80 ') == '-66 +80'
+    assert sanitize_free_text('-66+80') == '66+80'
+    assert sanitize_free_text('-66 -80') == '66 -80'
+    assert sanitize_free_text('-66 +80 ') == '66 +80'
 
     assert sanitize_free_text('e-mail') == 'e-mail'
     assert sanitize_free_text('+devices +usb-c +e-waste -adapter') == '+devices +usb-c +e-waste -adapter'
@@ -47,6 +49,7 @@ def test_sanitize_free_text():
     assert sanitize_free_text('c++') == 'c++'
     assert sanitize_free_text('c+-') == 'c+-'
     assert sanitize_free_text('c--') == 'c--'
+
 
     assert sanitize_free_text('- ') == ''
     assert sanitize_free_text(' +') == ''
