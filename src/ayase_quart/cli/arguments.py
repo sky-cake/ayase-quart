@@ -19,6 +19,7 @@ class Cmd(StrEnum):
     search = 'search'
     mod = 'mod'
     prep = 'prep'
+    check = 'check'
 
 @dataclass(slots=True, frozen=True, init=False)
 class CmdArg:
@@ -149,6 +150,7 @@ report_edit_args = [
 ]
 
 root_cmds = [
+    Command(Cmd.check, 'validate config.toml (load configs, check keys and types)'),
     Command(Cmd.prep, 'prepare system for launch', [
         Command('secret', 'generate secret in config.toml'),
         Command('hashjs', 'generate asset_hashes.json'),

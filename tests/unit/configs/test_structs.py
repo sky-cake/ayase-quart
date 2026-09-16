@@ -175,6 +175,16 @@ def test_search_plugins_default_disabled():
     assert SearchPluginsConfig.from_dict({}).enabled is False
 
 
+def test_check_cli_ok(monkeypatch, capsys):
+    monkeypatch.setattr('sys.argv', ['ayaseq', 'check'])
+    from ayase_quart.cli import main
+    main()
+    out = capsys.readouterr().out
+    assert 'app: OK' in out
+    assert 'media: OK' in out
+    assert 'config.toml valid' in out
+
+
 def test_or_default_coerces_falsy():
     conf = SiteConfig.from_dict({'theme': '', 'anonymous_username': ''})
     assert conf.theme == 'tomorrow'
