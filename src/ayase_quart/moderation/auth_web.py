@@ -33,12 +33,12 @@ auth_web = QuartAuth(
     mode='cookie',
     singleton=False,
     user_class=User,
-    cookie_samesite     =mod_conf['auth']['cookie_samesite'],
-    cookie_secure       =mod_conf['auth']['cookie_secure'],
-    cookie_http_only    =mod_conf['auth']['cookie_http_only'],
-    cookie_name         =mod_conf['auth']['cookie_name'],
-    salt                =mod_conf['auth']['cookie_salt'],
-    duration            =mod_conf['auth']['cookie_duration'],
+    cookie_samesite     =mod_conf.auth.cookie_samesite,
+    cookie_secure       =mod_conf.auth.cookie_secure,
+    cookie_http_only    =mod_conf.auth.cookie_http_only,
+    cookie_name         =mod_conf.auth.cookie_name,
+    salt                =mod_conf.auth.cookie_salt,
+    duration            =mod_conf.auth.cookie_duration,
 )
 
 

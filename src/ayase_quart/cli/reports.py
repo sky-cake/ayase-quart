@@ -80,7 +80,7 @@ def cli_get_report_count(**kwargs):
 def cli_get_reports(**kwargs):
     reports = asyncio.run(get_reports(**kwargs))
     for r in reports:
-        r['link'] = f'{app_conf['url']}/{r.board_shortname}/thread/{r.thread_num}#p{r.num}'
+        r['link'] = f'{app_conf.url}/{r.board_shortname}/thread/{r.thread_num}#p{r.num}'
         # do we need these if there is a link ?
         # del r['board_shortname']
         # del r['thread_num']

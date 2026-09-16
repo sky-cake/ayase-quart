@@ -6,8 +6,8 @@ autoreload = false
 api = false # serve catalog.json, thread.json, index.json ?
 url = 'http://127.0.0.1:9001' # 'http://127.0.0.1:9001' 'https://192.168.1.100' 'https://ayasequart.com' # everything before the paths/querystrings in your url
 port = 9001
-# ssl_key = 'key.pem'
-# ssl_cert = 'cert.pem'
+ssl_key = '' # 'key.pem'
+ssl_cert = '' # 'cert.pem'
 
 
 proxy_trusted_hops = 0
@@ -30,15 +30,17 @@ name = 'Ayase Quart'
 theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 site_email = ''
 anonymous_username = 'Anonymous'
-# custom_banner = 'Important message!' # html, empty string ('') to disable, default None == promo banner
+custom_banner = '' # html, empty string ('') to disable, default None == promo banner
+
 
 [archive]
 canonical_name = '4chan' # '4chan', 'Lainchan', 'Holotower'
 canonical_host = 'https://boards.4chan.org'
 comments_preescaped = false # false (4chan), true (vichan|lainchan|holotower)
-# catalog_path = '/catalog.html' # after /{board} default '/catalog'
-# thread_path = '/res/{thread}.html' # after /{board} default '/thread/{thread}'
-# post_path = '#{num}' # after thread_path  default '#p{num}'
+
+# catalog_path = '/catalog'             # follows /{board}
+# thread_path = '/thread/{thread}.html' # follows /{board}
+# post_path = '#p{num}'                 # follows thread_path
 
 
 [stats]
@@ -82,6 +84,7 @@ host = "127.0.0.1"
 port = 6379
 max_connections = 1000 # ensure max open file is high enough on linux (ulimit)
 password = 'mypassword'
+ssl = false
 
 
 [media]
@@ -200,20 +203,6 @@ hidden_images_path = '' # e.g. '/home/garbage/disposal'
 
 [moderation.sqlite]
 database = 'path/to/moderation.db' # path to the moderation database
-
-# Use redis to cache user auth and filter reported posts
-# Ensure redis connection is valid (see [redis])
-[moderation.redis]
-db = 4 # redis database id (default 4)
-
-fc_key_prefix = 'filter_cache:' # (default 'filter_cache:')
-fc_dump_dir = './data/filter_cache/' # (default './data/filter_cache/')
-bloom_err_rate = 0.01  # 1% false positive rate (default 0.01)
-bloom_init_size = 4_000_000  # Initial capacity per board (default 8_000_000)
-bloom_resize_mult = 2  # Growth factor when capacity is reached (default 2)
-cuckoo_capacity = 10_000 # total capacity per board (default 10_000)
-cuckoo_bucket = 2000 # capacity per bucket (default 1000)
-cuckoo_iter_max = 5 # bucket swaps per (board, num) (default 10)
 
 [moderation.auth]
 cookie_samesite='Strict'

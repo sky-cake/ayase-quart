@@ -1,15 +1,13 @@
 from html import escape
 from itertools import product
 
-from ..configs import site_conf, mod_conf
+from ..configs import archive_conf, mod_conf, site_conf
 from ..media import ext_is_video, get_image_full_uri, get_thumb_full_uri, get_hash_search_link
 from ..posts.capcodes import Capcode
 from ..threads import get_thread_path
 from ..utils.timestamps import ts_2_formatted
 from ..enums import ImgTagClass
-from ..upstream import get_thread_upstream, get_post_upstream, CANONICAL_NAME
-
-ANONYMOUS_NAME: str = site_conf['anonymous_username']
+from ..upstream import get_thread_upstream, get_post_upstream
 
 
 type QuotelinkD = dict[int, list[int]]
@@ -118,7 +116,7 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
 
     return f'''<div id="pc{num}"><div id="p{num}" class="post reply">
     <div class="postInfo" id="pi{num}">
-        <span class="sideArrows"></span> <b class="inblk">/{board}/</b> <span class="name N">{ANONYMOUS_NAME}</span>
+        <span class="sideArrows"></span> <b class="inblk">/{board}/</b> <span class="name N">{site_conf.anonymous_username}</span>
         <span class="dateTime inblk" data-utc="{ts_unix}"></span> <a href="/{post_path_t}">No.{num}</a>
         {report_t}[<a class="sourcelink" href="{upstream_path}" rel="noreferrer" target="_blank"></a>]
     </div>
@@ -170,7 +168,7 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 
 
 def get_report_t(post: dict) -> str:
-    if not mod_conf.get('enabled', False):
+    if not mod_conf.enabled:
         return ''
     return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>] """
 
@@ -195,11 +193,11 @@ def get_cc_class_t(post: dict):
     return cc_class.get(post['capcode'], '')
 
 
-cc_t_admin = f'<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a {CANONICAL_NAME} Administrator." class="identityIcon retina">'
-cc_t_founder = f'<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the {CANONICAL_NAME} Founder." class="identityIcon retina">'
-cc_t_moderator = f'<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a {CANONICAL_NAME} Moderator." class="identityIcon retina">'
-cc_t_dev = f'<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a {CANONICAL_NAME} Developer." class="identityIcon retina">'
-cc_t_manager = f'<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a {CANONICAL_NAME} Manager." class="identityIcon retina">'
+cc_t_admin = f'<strong class="capcode hand id_admin" title="Highlight posts by Administrators">## Admin</strong> <img src="/static/images/adminicon.gif" alt="Admin Icon" title="This user is a {archive_conf.canonical_name} Administrator." class="identityIcon retina">'
+cc_t_founder = f'<strong class="capcode hand id_founder" title="Highlight posts by the Founder">## Founder</strong> <img src="/static/images/foundericon.gif" alt="Founder Icon" title="This user is the {archive_conf.canonical_name} Founder." class="identityIcon retina">'
+cc_t_moderator = f'<strong class="capcode hand id_moderator" title="Highlight posts by Moderators">## Mod</strong> <img src="/static/images/modicon.gif" alt="Mod Icon" title="This user is a {archive_conf.canonical_name} Moderator." class="identityIcon retina">'
+cc_t_dev = f'<strong class="capcode hand id_developer" title="Highlight posts by Developers">## Developer</strong> <img src="/static/images/developericon.gif" alt="Developer Icon" title="This user is a {archive_conf.canonical_name} Developer." class="identityIcon retina">'
+cc_t_manager = f'<strong class="capcode hand id_manager" title="Highlight posts by Managers">## Manager</strong> <img src="/static/images/managericon.gif" alt="Manager Icon" title="This user is a {archive_conf.canonical_name} Manager." class="identityIcon retina">'
 cc_t_verified = '<strong class="capcode hand id_verified" title="Highlight posts by Verified Users">## Verified</strong>'
 def cc_t_unknown(cc):
     return f'<strong class="capcode hand id_unknown" title="Highlight posts by Unknown Capcode">## {cc}</strong>'
@@ -392,12 +390,12 @@ def get_quotelink_t(post: dict):
 
 
 def esc_user_data(post: dict):
-    post['name'] = escape(name) if (name := post.get('name')) else ANONYMOUS_NAME
+    post['name'] = escape(name) if (name := post.get('name')) else site_conf.anonymous_username
     post['email'] = escape(email) if (email := post.get('email')) else ''
 
 
 def get_name_t(post: dict):
-    name_t = f"""<span class="name {post.get('capcode', '')}" {get_exif_title(post)}>{post.get('name', ANONYMOUS_NAME)}</span>"""
+    name_t = f"""<span class="name {post.get('capcode', '')}" {get_exif_title(post)}>{post.get('name', site_conf.anonymous_username)}</span>"""
     return email_wrap(post, name_t)
 
 

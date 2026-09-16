@@ -5,11 +5,7 @@ from ..enums import MediaFP
 from ..configs import media_conf, mod_conf
 
 
-ROOT_PATH = media_conf['media_root_path']
-ROOT_HIDDEN_PATH = mod_conf['hidden_images_path']
-
-
-if not ROOT_PATH:
+if not media_conf.media_root_path:
 
     class MediaType(StrEnum):
         full_media = ''
@@ -24,7 +20,7 @@ if not ROOT_PATH:
         return ''
 
 
-elif media_conf['media_fp'] == MediaFP.sutra:
+elif media_conf.media_fp == MediaFP.sutra:
 
 
     class MediaType(StrEnum):
@@ -47,7 +43,7 @@ elif media_conf['media_fp'] == MediaFP.sutra:
 
         filename = f'{media_hash.translate(sutra_translate_table)}.{ext}'
         return safe_join(
-            ROOT_HIDDEN_PATH if hidden else ROOT_PATH,
+            mod_conf.hidden_images_path if hidden else media_conf.media_root_path,
             media_type.value,
             filename[0],
             filename[1],
@@ -75,7 +71,7 @@ elif media_conf['media_fp'] == MediaFP.sutra:
         return f'{filename[0]}/{filename[1]}/{filename}'
 
 
-elif media_conf['media_fp'] == MediaFP.asagi:
+elif media_conf.media_fp == MediaFP.asagi:
 
 
     class MediaType(StrEnum):
@@ -95,7 +91,7 @@ elif media_conf['media_fp'] == MediaFP.asagi:
             return
 
         return safe_join(
-            ROOT_HIDDEN_PATH if hidden else ROOT_PATH,
+            mod_conf.hidden_images_path if hidden else media_conf.media_root_path,
             post['board_shortname'],
             media_type.value,
             filename[0:4],
@@ -121,4 +117,4 @@ elif media_conf['media_fp'] == MediaFP.asagi:
 
 
 else:
-    raise ValueError(media_conf['media_fp'])
+    raise ValueError(media_conf.media_fp)

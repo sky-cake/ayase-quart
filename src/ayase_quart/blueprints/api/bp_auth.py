@@ -22,7 +22,7 @@ class Token(Struct):
     error: str | None
 
 
-@bp.post(app_conf['login_endpoint'])
+@bp.post(app_conf.login_endpoint)
 @rate_limit(3, timedelta(days=1))
 @validate_request(Credentials)
 @validate_response(Token)

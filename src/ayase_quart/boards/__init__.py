@@ -4,7 +4,7 @@ from functools import cache
 from tomllib import load
 
 from ..configs import app_conf, db_conf, media_conf
-from ..db import get_db_tables
+from ..db import get_db_sub_config, get_db_tables
 from ..upstream import get_catalog_upstream
 
 BOARDS_FILE = 'boards.toml'
@@ -39,7 +39,7 @@ def get_shorts_objects(boards: dict):
 def validate_boards_in_db(boards: dict=None) -> dict:
     if boards is None:
         boards = _load_boards_toml()
-    db_tables = asyncio.run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
+    db_tables = asyncio.run(get_db_tables(get_db_sub_config(db_conf), db_conf.db_type, close_pool_after=True))
     valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
     if removals := [board for board in boards if board not in valid_boards]:
         for b in removals:
@@ -50,8 +50,8 @@ def validate_boards_in_db(boards: dict=None) -> dict:
 
 def _get_board_views():
     boards = _load_boards_toml()
-    if app_conf.get('validate_boards_db', True):
-        db_tables = asyncio.run(get_db_tables(db_conf, db_conf['db_type'], close_pool_after=True))
+    if app_conf.validate_boards_db:
+        db_tables = asyncio.run(get_db_tables(get_db_sub_config(db_conf), db_conf.db_type, close_pool_after=True))
         valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
         if removals := [board for board in boards if board not in valid_boards]:
             # print(f'Boards not found in database:\n\t[{", ".join(removals)}]\nWill be ignored.')
@@ -66,11 +66,11 @@ def _get_board_views():
 
 boards, board_shortnames, board_objects = _get_board_views()
 
-for b in media_conf['boards_with_thumb']:
+for b in media_conf.boards_with_thumb:
     if b not in board_shortnames:
         raise ValueError(f'Unknown board specified for serving thumb media with `boards_with_thumb`: {b}')
 
-for b in media_conf['boards_with_image']:
+for b in media_conf.boards_with_image:
     if b not in board_shortnames:
         raise ValueError(f'Unknown board specified for serving full media with `boards_with_image`: {b}')
 

@@ -97,7 +97,7 @@ def load_search_plugins() -> dict[str, SearchPlugin]:
 
 
 # Only load plugins if enabled in config
-if search_plugins_conf.get('enabled', False):
+if search_plugins_conf.enabled:
     search_plugins = load_search_plugins()
 else:
     search_plugins = {}

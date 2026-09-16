@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Generator
 
 from ...boards import board_shortnames
+from ...configs import ModerationConfig
 from ...db import db_q
 
 type NumOpGen = Generator[list[tuple[int, int]], Any, None]
@@ -39,11 +40,11 @@ async def board_numops_regex_gen(board: str, pattern: str, after_num: int=0, lim
         yield rows
 
 class BaseFilterCache(ABC):
-    def __init__(self, mod_conf: dict):
-        self.enabled = mod_conf['enabled']
-        self.remove_replies_to_hidden_op = mod_conf['remove_replies_to_hidden_op']
-        self.regex_filter = mod_conf['regex_filter']
-        self.hide_upstream_deleted_posts = mod_conf['hide_upstream_deleted_posts']
+    def __init__(self, mod_conf: ModerationConfig):
+        self.enabled = mod_conf.enabled
+        self.remove_replies_to_hidden_op = mod_conf.remove_replies_to_hidden_op
+        self.regex_filter = mod_conf.regex_filter
+        self.hide_upstream_deleted_posts = mod_conf.hide_upstream_deleted_posts
 
         super().__init__()
 

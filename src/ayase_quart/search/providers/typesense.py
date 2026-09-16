@@ -78,7 +78,7 @@ class TypesenseSearch(BaseSearch):
             include_fields='comment,data',
             page=q.page,
             per_page=q.hits_per_page,
-            limit_hits=index_search_conf['max_hits'],
+            limit_hits=index_search_conf.max_hits,
             search_cutoff_ms=2_000,
             num_typos=0,
             split_join_tokens='off',

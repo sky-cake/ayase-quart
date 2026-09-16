@@ -10,7 +10,7 @@ from ...utils.validation import validate_board_query_parameter
 bp = Blueprint("bp_api_app", __name__, url_prefix='/api/v1')
 
 
-if app_conf['api']:
+if app_conf.api:
     @bp.get("/<string:board>/catalog.json")
     @api_usr_authenticated
     @validate_board_query_parameter

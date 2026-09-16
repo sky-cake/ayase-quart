@@ -1,7 +1,7 @@
 from time import perf_counter
 from logging import getLogger
 
-from .configs import TESTING
+from .configs import app_conf
 
 logger = getLogger('perf')
 
@@ -40,4 +40,4 @@ class RealPerf:
         # logger.info(self)
         print(self)
 
-Perf = RealPerf if TESTING else DummyPerf
+Perf = RealPerf if app_conf.testing else DummyPerf

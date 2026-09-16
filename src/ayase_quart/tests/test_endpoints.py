@@ -20,7 +20,7 @@ class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
             '/',
             f'/{test_board}',
             f'/{test_board}/catalog',
-            f'/{app_conf.get('login_endpoint')}',
+            f'/{app_conf.login_endpoint}',
             '/sql',
             '/fts',
             '/stats',
@@ -28,7 +28,7 @@ class TestExistingEndpoints(unittest.IsolatedAsyncioTestCase):
 
         # print('Did you start the server manually with `python main.py`?')
         for endpoint in endpoints:
-            url = f'http://127.0.0.1:{app_conf.get('port')}{endpoint}'
+            url = f'http://127.0.0.1:{app_conf.port}{endpoint}'
             response = requests.get(url)
 
             self.assertEqual(response.status_code, 200, f'{response.status_code} {endpoint=}')

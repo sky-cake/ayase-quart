@@ -17,8 +17,8 @@ auth_api = QuartAuth(
     mode='bearer',
     user_class=User,
     singleton=False,
-    salt     =mod_conf['auth']['bearer_salt'],
-    duration =mod_conf['auth']['bearer_duration'],
+    salt     =mod_conf.auth.bearer_salt,
+    duration =mod_conf.auth.bearer_duration,
 )
 
 

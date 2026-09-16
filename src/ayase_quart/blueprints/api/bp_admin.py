@@ -49,7 +49,7 @@ async def configs(current_api_usr_id: int):
         'regex_filter',
         'path_to_regex_so',
     ]
-    return jsonify([{'key': c, 'value': mod_conf[c]} for c in cs]), 200
+    return jsonify([{'key': c, 'value': getattr(mod_conf, c)} for c in cs]), 200
 
 
 @bp.get('/users')

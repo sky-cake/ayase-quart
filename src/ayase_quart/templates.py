@@ -4,7 +4,7 @@ from functools import cache
 
 from .boards import board_objects
 from .configs import (
-    SITE_NAME, REPO_PKG,
+    REPO_PKG,
     app_conf,
     archive_conf,
     index_search_conf,
@@ -23,29 +23,29 @@ def get_integrity(filename: str) -> str:
     return ''
 
 render_constants = dict(
-    site_name=SITE_NAME,
-    theme=site_conf.get('theme', 'tomorrow'),
-    vanilla_search_enabled=vanilla_search_conf.get('enabled', False),
-    index_search_enabled=index_search_conf.get('enabled', False),
-    moderation_enabled=mod_conf['enabled'],
-    stats_enabled=stats_conf['enabled'],
+    site_name=site_conf.name,
+    theme=site_conf.theme,
+    vanilla_search_enabled=vanilla_search_conf.enabled,
+    index_search_enabled=index_search_conf.enabled,
+    moderation_enabled=mod_conf.enabled,
+    stats_enabled=stats_conf.enabled,
     endpoint=lambda: request.endpoint,
     url_for=url_for,
-    custom_banner=site_conf.get('custom_banner', None),
+    custom_banner=site_conf.custom_banner,
     get_flashed_messages=get_flashed_messages,
     get_integrity=get_integrity,
     format_ts=ts_2_formatted,
     board_objects=board_objects,
     board_objects_d={b['shortname']:b for b in board_objects},
-    testing=app_conf['testing'],
-    canonical_host=archive_conf['canonical_host'],
-    canonical_name=archive_conf['canonical_name'],
+    testing=app_conf.testing,
+    canonical_host=archive_conf.canonical_host,
+    canonical_name=archive_conf.canonical_name,
 )
 
 env = Environment(
     loader=PackageLoader(REPO_PKG),
     autoescape=select_autoescape(["html", "xml"]),
-    auto_reload=app_conf.get('autoreload', True),
+    auto_reload=app_conf.autoreload,
 )
 env.globals.update(render_constants)
 
@@ -78,7 +78,7 @@ template_reports_edit = env.get_template('reports/edit.html')
 
 safe_env = Environment(
     loader=PackageLoader(REPO_PKG),
-    auto_reload=app_conf.get('autoreload', True),
+    auto_reload=app_conf.autoreload,
     trim_blocks=True,
     lstrip_blocks=True,
     keep_trailing_newline=True,

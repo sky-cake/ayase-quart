@@ -914,8 +914,8 @@ async def _get_post_counts_per_month_by_board(board: str):
 async def get_post_counts_per_month_by_board(board: str) -> str:
     """Returns json formatted string.
     """
-    if stats_conf['redis']:
-        redis = get_redis(stats_conf['redis_db'])
+    if stats_conf.redis:
+        redis = get_redis(stats_conf.redis_db)
         try:
             async with redis:
                 key = f'post_counts_{board}'

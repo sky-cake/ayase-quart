@@ -5,9 +5,6 @@ from ..configs import archive_conf
 from .quotelinks import html_quotelinks
 
 
-COMMENTS_PREESCAPED = archive_conf['comments_preescaped']
-
-
 BBCODE_TAGS = {
     'spoiler': '<span class="spoiler">{}</span>',
     'code': '<code>{}</code>',
@@ -61,7 +58,7 @@ def html_comment(comment: str, thread_num: int, board: str) -> str:
     if not comment:
         return comment
 
-    if COMMENTS_PREESCAPED:
+    if archive_conf.comments_preescaped:
         return _html_comment_vichan(comment)
 
     return _html_comment_yotsuba(comment, thread_num, board)

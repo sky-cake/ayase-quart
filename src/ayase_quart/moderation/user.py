@@ -1,16 +1,11 @@
-import json
 from datetime import datetime
 from enum import Enum
-from typing import Any, Iterable, Optional
+from typing import Iterable, Optional
 
 from quart_auth import Action, AuthUser
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..configs import mod_conf
 from ..db import db_m
-from ..db.redis import get_redis
-
-REDIS_MOD_DB: int = mod_conf.get('redis_db', 1)
 
 class Permissions(Enum):
     user_create = 'user_create'
@@ -33,59 +28,6 @@ class Permissions(Enum):
     archive_latest_view = 'archive_latest_view'
     archive_configs_view = 'archive_configs_view'
     messages_view = 'messages_view'
-
-
-async def redis_set_user_data(user_id: int, user_data: dict[str, Any], expire_seconds: int = None):
-    """
-    Redis does not take dict values, so we json serialize it.
-    Keep that in mind when using this.
-    E.g. sets will be returned as lists.
-    """
-    redis = get_redis(REDIS_MOD_DB)
-    async with redis:
-        serialized = dict()
-        for key, value in user_data.items():
-            v = value
-            if isinstance(value, set):
-                v = json.dumps([x.value if isinstance(x, Enum) else x for x in value])
-            serialized[key] = v
-
-        successes: int = await redis.hset(user_id, serialized)
-
-        if successes != len(user_data):
-            raise ValueError('Not all user data entries inserted to redis.', successes, len(user_data))
-
-        if expire_seconds:
-            await redis.expire(user_id, expire_seconds)
-
-
-async def redis_get_user_data(user_id: int) -> dict | None:
-    """
-    Redis does not take dict values, so we json serialize it.
-    Keep that in mind when using this.
-    E.g. sets will be returned as lists.
-    """
-    redis = get_redis(REDIS_MOD_DB)
-    async with redis:
-        user_data = await redis.hgetall(user_id)
-
-    if not user_data:
-        return None
-
-    deserialized = {}
-    for key, value in user_data.items():
-        try:
-            deserialized[key] = json.loads(value)
-        except (json.JSONDecodeError, TypeError):
-            deserialized[key] = value
-
-    return deserialized
-
-
-async def redis_delete_user_data(user_id: int):
-    redis = get_redis(REDIS_MOD_DB)
-    async with redis:
-        await redis.delete(user_id)
 
 
 def get_permissions_from_string(permissions: str) -> set[Permissions]:
@@ -299,21 +241,11 @@ class User(AuthUser):
         self.permissions: set = set()
 
     async def load_user(self, expire_seconds: int = 10):
-        """We query user data from the database, and, if configured, cache it in redis for `expire_seconds`."""
+        """We query user data from the database."""
         if not self.auth_id:
             return
 
-        u = None
-        if mod_conf['redis']:
-            u = await redis_get_user_data(self.auth_id) # could not exist, or possibly be expired
-
-        if not u:
-            u = await get_user_by_id(self.auth_id)
-
-            if mod_conf['redis']:
-                key = self.auth_id
-                val = {k: u[k] for k in ['username', 'is_admin', 'is_active', 'permissions']}
-                await redis_set_user_data(key, val, expire_seconds)
+        u = await get_user_by_id(self.auth_id)
 
         if not u:
             return

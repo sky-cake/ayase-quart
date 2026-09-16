@@ -1,8 +1,9 @@
+from ...configs import ModerationConfig
 from .base_fc import BaseFilterCache
 
 empty_set = set()
 class FilterCacheNull(BaseFilterCache):
-    def __init__(self, mod_conf: dict):
+    def __init__(self, mod_conf: ModerationConfig):
         super().__init__(mod_conf)
 
     async def _create_cache(self) -> None: pass

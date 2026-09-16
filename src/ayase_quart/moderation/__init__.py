@@ -12,8 +12,8 @@ async def init_moderation():
 
     user_count = (await db_m.query_dict('select count(*) user_count from users'))[0].user_count
     if not user_count:
-        admin_username = mod_conf['admin_user']
-        admin_password = mod_conf['admin_password']
+        admin_username = mod_conf.admin_user
+        admin_password = mod_conf.admin_password
 
         await create_user_if_not_exists(admin_username, admin_password, True, True, set([p for p in Permissions]), notes=None)
 

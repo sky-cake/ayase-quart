@@ -35,7 +35,7 @@ class IndexSearchQuery:
     deleted: Optional[bool] = None
     op: Optional[bool] = None
     sticky: Optional[bool] = None
-    hits_per_page: int = index_search_conf['hits_per_page']
+    hits_per_page: int = index_search_conf.hits_per_page
     page: Optional[int] = 1
     sort: str = 'desc'
     sort_by: Optional[str] = 'timestamp'
@@ -75,7 +75,7 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
         q.clop = params['clop']
 
     if params['hits_per_page']:
-        q.hits_per_page = clamp_positive_int(params['hits_per_page'], 1, index_search_conf['hits_per_page'])
+        q.hits_per_page = clamp_positive_int(params['hits_per_page'], 1, index_search_conf.hits_per_page)
     if params['media_filename']:
         q.media_filename = params['media_filename']
     if params['media_hash']:

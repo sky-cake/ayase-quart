@@ -7,7 +7,7 @@ from quart_schema import RequestSchemaValidationError
 from werkzeug.exceptions import HTTPException
 
 from .blueprints import blueprints
-from .configs import QuartConfig, app_conf, mod_conf, index_search_conf, search_plugins_conf
+from .configs import app_conf, index_search_conf, mod_conf, search_plugins_conf
 from .db import db_q
 from .db.redis import close_redis
 from .moderation import fc, init_moderation
@@ -36,7 +36,7 @@ async def app_exception(e: Exception):
     current_app.logger.error(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
 
     message = 'We\'re sorry, our server ran into an issue.'
-    if app_conf.get('testing'):
+    if app_conf.testing:
         message = e
 
     render = await render_controller(template_error_message, message=message, tab_title='Error', title='Uh-oh...')
@@ -48,11 +48,11 @@ async def close_dbs():
 
     await db_q.close_db_pool()
 
-    if mod_conf['enabled']:
+    if mod_conf.enabled:
         from .db import db_m
         await db_m.close_db_pool()
 
-    if index_search_conf.get('enabled', False):
+    if index_search_conf.enabled:
         from .search import get_index_search_provider
         sp = get_index_search_provider()
         await sp.close()
@@ -61,44 +61,44 @@ async def close_dbs():
 def create_app():
     app = Quart2(__name__)
 
-    app.config.from_object(QuartConfig)
+    app.config.update(TESTING=app_conf.testing, SECRET_KEY=app_conf.secret)
 
-    RateLimiter(app, enabled=app_conf['rate_limiter'])
+    RateLimiter(app, enabled=app_conf.rate_limiter)
 
-    app.jinja_env.auto_reload = app_conf['autoreload']
+    app.jinja_env.auto_reload = app_conf.autoreload
     app.jinja_env.globals.update(render_constants)
 
     for bp in blueprints:
         app.register_blueprint(bp)
 
-    if search_plugins_conf['enabled']:
+    if search_plugins_conf.enabled:
         register_blueprint_plugins(app)
 
-    if mod_conf['enabled']:
+    if mod_conf.enabled:
         app.before_serving(init_moderation)
         app.before_serving(fc.init)
 
     # https://quart.palletsprojects.com/en/latest/how_to_guides/startup_shutdown.html#startup-and-shutdown
     app.after_serving(close_dbs)
 
-    if mod_conf['enabled']:
+    if mod_conf.enabled:
         from quart_schema import QuartSchema
 
         from .moderation.auth_web import auth_web
         auth_web.init_app(app)
 
-        if mod_conf.get('api'):
+        if mod_conf.api:
             from .moderation.auth_api import auth_api
             auth_api.init_app(app)
 
         QuartSchema(app)
 
-    if not app_conf.get('testing'):
+    if not app_conf.testing:
         app.register_error_handler(HTTPException, http_exception)
         app.register_error_handler(Exception, app_exception)
         app.register_error_handler(RequestSchemaValidationError, api_validation_exception)
 
-    if app_conf.get('proxy_trusted_hops', 0):
+    if app_conf.proxy_trusted_hops:
         app = ProxyFixMiddleware(app, mode="legacy", trusted_hops=1).app
 
     return app
@@ -107,7 +107,7 @@ def create_app():
 app = create_app()
 
 
-if not app_conf.get('testing', False):
+if not app_conf.testing:
     print('Quart app initialized in production mode.')
     print('If you want to run this in production, you should stop this process with CTRL-C')
     print('and point hypercorn to this asgi app with one of the following:')
@@ -120,11 +120,11 @@ if not app_conf.get('testing', False):
 elif __name__ == '__main__':
     app.run(
         '127.0.0.1',
-        port=app_conf.get('port', 9001),
+        port=app_conf.port,
         debug=True,
-        certfile=app_conf.get('ssl_cert'),
-        keyfile=app_conf.get('ssl_key'),
-        use_reloader=app_conf.get('autoreload', True),
+        certfile=app_conf.ssl_cert,
+        keyfile=app_conf.ssl_key,
+        use_reloader=app_conf.autoreload,
     )
 else:
     print('Quart app initialized in production mode. - AQ')

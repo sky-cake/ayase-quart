@@ -43,7 +43,7 @@ search_index_fields = [
 def get_index_search_provider():
     if hasattr(get_index_search_provider, 'search_p'):
         return get_index_search_provider.search_p
-    match IndexSearchType[index_search_conf['provider']]:
+    match index_search_conf.provider:
         case IndexSearchType.meili:
             from .meili import MeiliSearch as Search_p
         case IndexSearchType.typesense:

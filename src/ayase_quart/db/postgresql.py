@@ -1,17 +1,19 @@
 import asyncpg
+from dataclasses import asdict
 
+from ..configs.structs import PostgresqlConfig
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
 class PostgresqlPoolManager(BasePoolManager):
-    def __init__(self, postgresql_conf=None):
-        self.postgresql_conf = postgresql_conf or {}
+    def __init__(self, postgresql_conf: PostgresqlConfig | None=None):
+        self.postgresql_conf: PostgresqlConfig = postgresql_conf or PostgresqlConfig()
         self.pool = None
 
 
     async def get_pool(self):
         if self.pool is None:
-            self.pool = await asyncpg.create_pool(**self.postgresql_conf)
+            self.pool = await asyncpg.create_pool(**asdict(self.postgresql_conf))
         return self.pool
 
 

@@ -264,7 +264,7 @@ async def create_report(
     mod_notes: str = None
 ) -> int:
     now = datetime.now()
-    public_access = PublicAccess.hidden if mod_conf['hide_post_if_reported'] else PublicAccess.visible
+    public_access = PublicAccess.hidden if mod_conf.hide_post_if_reported else PublicAccess.visible
 
     report_parent_id = await get_report_parent_id(board, num)
 
@@ -337,7 +337,7 @@ async def delete_post_from_index_if_applicable(board: str, post: dict, remove_en
     """
     Assumes board was already validated.
     """
-    if not index_search_conf['enabled']:
+    if not index_search_conf.enabled:
         return False
 
     index_searcher = get_index_search_provider()
@@ -471,7 +471,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
                 await fc.delete_post(report['board_shortname'], report['num'], report['op'])
             flash_msg = 'Post now publicly visible.'
 
-            if mod_conf.get('hidden_images_path'):
+            if mod_conf.hidden_images_path:
                 post = await get_post(report.board_shortname, report.num)
                 if not post:
                     return 'Could not find post.', 404
@@ -488,7 +488,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
                 await fc.insert_post(report['board_shortname'], report['num'], report['op'])
             flash_msg = 'Post now publicly hidden.'
 
-            if mod_conf.get('hidden_images_path'):
+            if mod_conf.hidden_images_path:
                 post = await get_post(report.board_shortname, report.num)
                 if not post:
                     return 'Could not find post.', 404

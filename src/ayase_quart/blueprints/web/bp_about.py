@@ -22,5 +22,5 @@ async def about(is_admin: bool, logged_in: bool):
         tab_title='About',
         logged_in=logged_in,
         is_admin=is_admin,
-        site_email=site_conf['site_email'],
+        site_email=site_conf.site_email,
     )

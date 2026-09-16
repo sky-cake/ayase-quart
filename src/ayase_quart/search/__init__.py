@@ -6,7 +6,7 @@ from .query import IndexSearchQuery, get_index_search_query
 
 # should probably make /fts and /sql StrEnums
 # definitely not url_for, otherwise circular import headaches
-BEST_SEARCH_ENDPOINT: str = '/fts' if index_search_conf.get('enabled', False) else ('/sql' if vanilla_search_conf.get('enabled', False) else '')
+BEST_SEARCH_ENDPOINT: str = '/fts' if index_search_conf.enabled else ('/sql' if vanilla_search_conf.enabled else '')
 
 async def _get_posts_and_total_hits_fts(form_data: dict) -> tuple[list[dict], int]:
     if not isinstance(form_data['boards'], list):
@@ -21,7 +21,7 @@ async def _get_posts_and_total_hits_fts(form_data: dict) -> tuple[list[dict], in
             comment=form_data['op_comment'] if form_data['op_comment'] else None,
             title=form_data['op_title'] if form_data['op_title'] else None,
             boards=board_ints,
-            hits_per_page=index_search_conf['max_hits'], # max_hits due to facet search
+            hits_per_page=index_search_conf.max_hits, # max_hits due to facet search
         )
         boards_2_threadnums, total_threads_hits = await index_searcher.search_posts_get_thread_nums(q)
         # TODO: introduce form_data['boards_2_threadnums'] = boards_2_threadnums
@@ -48,4 +48,4 @@ async def get_posts_and_total_hits_fts(form_data: dict):
 
 
 async def get_posts_and_total_hits_sql(form_data: dict):
-    return await search_posts(form_data, vanilla_search_conf['max_hits'])
+    return await search_posts(form_data, vanilla_search_conf.max_hits)

@@ -1,6 +1,7 @@
 import aiosqlite
 
 from ..configs import mod_conf
+from ..configs.structs import ModerationSqliteConfig, SqliteConfig
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
@@ -17,21 +18,21 @@ def row_factory(cursor: aiosqlite.Cursor, row: tuple):
 
 
 class SqlitePoolManager(BasePoolManager):
-    def __init__(self, sqlite_conf=None, sql_echo=False):
-        self.sqlite_conf = sqlite_conf or {}
+    def __init__(self, sqlite_conf: SqliteConfig | ModerationSqliteConfig | None=None, sql_echo=False):
+        self.sqlite_conf: SqliteConfig | ModerationSqliteConfig = sqlite_conf or SqliteConfig()
         self.sql_echo = sql_echo
         self.pool = None
 
 
     async def get_pool(self):
-        db_path = self.sqlite_conf['database']
+        db_path = self.sqlite_conf.database
 
         if self.pool is None:
             self.pool = await aiosqlite.connect(db_path)
 
-        if mod_conf['enabled'] and mod_conf['regex_filter'] and mod_conf['path_to_regex_so']:
+        if mod_conf.enabled and mod_conf.regex_filter and mod_conf.path_to_regex_so:
             await self.pool.enable_load_extension(True)
-            await self.pool.load_extension(mod_conf['path_to_regex_so'])
+            await self.pool.load_extension(mod_conf.path_to_regex_so)
 
             async with self.pool.execute('select regex_version();') as cursor:
                 result = await cursor.fetchone()

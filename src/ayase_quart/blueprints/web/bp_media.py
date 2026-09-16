@@ -10,17 +10,17 @@ from ...utils.web_helpers import send_file_no_headers
 bp = Blueprint("bp_app_media", __name__)
 
 
-if media_conf.get('endpoint') and media_conf['serve_outside_static'] and media_conf['media_root_path']:
+if media_conf.endpoint and media_conf.serve_outside_static and media_conf.media_root_path:
 
-    valid_exts = set(media_conf['valid_extensions'])
-    boards_with_image = set(media_conf['boards_with_image'])
-    boards_with_thumb = set(media_conf['boards_with_thumb'])
+    valid_exts = set(media_conf.valid_extensions)
+    boards_with_image = set(media_conf.boards_with_image)
+    boards_with_thumb = set(media_conf.boards_with_thumb)
 
-    use_nginx_sendfile = media_conf.get('use_nginx_sendfile', False)
-    nginx_x_accel_redirect_path = media_conf.get('nginx_x_accel_redirect_path', False)
+    use_nginx_sendfile = media_conf.use_nginx_sendfile
+    nginx_x_accel_redirect_path = media_conf.nginx_x_accel_redirect_path
 
 
-    @bp.route(f'/{media_conf["endpoint"]}/<path:suffix_path>')
+    @bp.route(f'/{media_conf.endpoint}/<path:suffix_path>')
     async def serve(suffix_path: str):
         # file_path = 'g/thumb/1763/69/1763698364803744s.jpg'
         # file_path = 'g/image/1763/67/1763679461297674.jpg'
@@ -34,12 +34,12 @@ if media_conf.get('endpoint') and media_conf['serve_outside_static'] and media_c
         elif suffix_path.startswith(f'{board}/thumb/') and board not in boards_with_thumb:
             abort(404)
 
-        full_path = safe_join(media_conf['media_root_path'], suffix_path)
+        full_path = safe_join(media_conf.media_root_path, suffix_path)
         if not full_path:
             abort(404)
 
         # faith in safe_join
-        # if not full_path.startswith(media_conf['media_root_path']):
+        # if not full_path.startswith(media_conf.media_root_path):
         #     abort(404)
 
         if full_path.rsplit('.', 1)[-1].lower() not in valid_exts:

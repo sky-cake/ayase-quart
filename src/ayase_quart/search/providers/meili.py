@@ -95,7 +95,7 @@ class MeiliSearch(BaseSearch):
             searchCutoffMs=20_000,  # time before search gives up
             typoTolerance=dict(enabled=False),  # disable typo
             pagination=dict(
-                maxTotalHits=index_search_conf['max_hits'],
+                maxTotalHits=index_search_conf.max_hits,
             ),
         )
         resp = await self.client.patch(f'{b_url}/settings', data=dumps(conf))

@@ -1,5 +1,6 @@
 from aiosqlite import Connection
 
+from ...configs import ModerationConfig
 from ...db import db_m
 from ...utils import make_src_path, read_file
 from .base_fc import BaseFilterCache
@@ -7,7 +8,7 @@ from .base_fc import BaseFilterCache
 class FilterCacheSqlite(BaseFilterCache):
     """Uses a single table in the moderation sqlite database."""
 
-    def __init__(self, mod_conf: dict):
+    def __init__(self, mod_conf: ModerationConfig):
         super().__init__(mod_conf)
 
 

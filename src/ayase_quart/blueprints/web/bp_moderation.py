@@ -90,13 +90,13 @@ async def route_create_report(board: str, thread_num: int, num: int):
             None,
         )
 
-        if mod_conf['hide_post_if_reported']:
+        if mod_conf.hide_post_if_reported:
             post_files_hide(post)
             await fc.insert_post(board, num, op)
 
-        elif mod_conf['n_reports_then_hide'] > 0:
+        elif mod_conf.n_reports_then_hide > 0:
             report_strikes = await get_report_count(board_shortnames=[board], num=num, number_of_reported_posts_only=False)
-            if report_strikes > mod_conf['n_reports_then_hide']:
+            if report_strikes > mod_conf.n_reports_then_hide:
                 post_files_hide(post)
                 await fc.insert_post(board, num, op)
 

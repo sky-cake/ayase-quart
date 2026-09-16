@@ -75,7 +75,7 @@ async def v_index(is_admin: bool, logged_in: bool):
 
 @bp.route('/robots.txt')
 async def robots():
-    if app_conf['allow_robots']:
+    if app_conf.allow_robots:
         abort(404)
     content = 'User-agent: *\nDisallow: /'
     return Response(content, mimetype='text/plain')

@@ -1,6 +1,8 @@
 import aiomysql
 from aiomysql.pool import _PoolContextManager
+from dataclasses import asdict
 
+from ..configs.structs import MysqlConfig
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 
 
@@ -15,13 +17,11 @@ class AttrDictCursor(aiomysql.DictCursor):
 
 
 class MysqlPoolManager(BasePoolManager):
-    def __init__(self, mysql_conf: dict | None=None):
+    def __init__(self, mysql_conf: MysqlConfig | None=None):
         """
-        `mysql_conf` is consumed by `aiomysql.create_pool` as kwargs. E.g. `host`, `port`, `db`, `user`, `minsize`, `maxsize`, etc.
-
-        `autocommit` is set to `True` by default.
+        `mysql_conf` is consumed by `aiomysql.create_pool` as kwargs. E.g. `host`, `port`, `db`, `user`, `minsize`, `maxsize`, `autocommit`, etc.
         """
-        self.mysql_conf = mysql_conf or dict()
+        self.mysql_conf: MysqlConfig = mysql_conf or MysqlConfig()
         self.pool: aiomysql.Pool = None
 
 
@@ -29,10 +29,7 @@ class MysqlPoolManager(BasePoolManager):
         if self.pool:
             return self.pool
 
-        d = dict(**self.mysql_conf['mysql'])
-        d['autocommit'] = True
-
-        self.pool = await aiomysql.create_pool(**d)
+        self.pool = await aiomysql.create_pool(**asdict(self.mysql_conf))
 
         return self.pool
 

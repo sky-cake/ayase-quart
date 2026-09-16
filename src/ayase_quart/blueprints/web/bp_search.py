@@ -4,7 +4,7 @@ from quart import flash
 from jinja2 import Template
 from quart_wtf import QuartForm
 
-from ...configs import app_conf, index_search_conf, vanilla_search_conf, search_plugins_conf, SITE_NAME
+from ...configs import app_conf, index_search_conf, search_plugins_conf, site_conf, vanilla_search_conf
 from ...forms import SearchFormFTS, SearchForm, SearchFormSQL
 from ...moderation import fc
 from ...posts.comments import html_comment, html_highlight
@@ -23,7 +23,7 @@ from ...moderation.report import generate_report_form
 
 class SearchHandler:
     form: SearchForm
-    form_title: str = SITE_NAME
+    form_title: str = site_conf.name
     html_search_memo: str
     html_message_error: str
     enabled: bool
@@ -81,10 +81,10 @@ class SearchHandler:
 
 class SearchHandlerSQL(SearchHandler):
     form = SearchFormSQL
-    form_title = f'{SITE_NAME} SQL Search'
-    enabled: bool = vanilla_search_conf['enabled']
-    multi_board_search: bool = vanilla_search_conf['multi_board_search']
-    highlight: bool = vanilla_search_conf['highlight']
+    form_title = f'{site_conf.name} SQL Search'
+    enabled: bool = vanilla_search_conf.enabled
+    multi_board_search: bool = vanilla_search_conf.multi_board_search
+    highlight: bool = vanilla_search_conf.highlight
     html_search_memo = """
     <div class="mtb-1">Slower search, but allows for more flexible queries.</div>
     <ul class="m-0 liststyle">
@@ -101,10 +101,10 @@ class SearchHandlerSQL(SearchHandler):
 
 class SearchHandlerFTS(SearchHandler):
     form = SearchFormFTS
-    form_title = f'{SITE_NAME} FTS Search'
-    enabled: bool = index_search_conf['enabled']
-    multi_board_search: bool = index_search_conf['multi_board_search']
-    highlight: bool = index_search_conf['highlight']
+    form_title = f'{site_conf.name} FTS Search'
+    enabled: bool = index_search_conf.enabled
+    multi_board_search: bool = index_search_conf.multi_board_search
+    highlight: bool = index_search_conf.highlight
     html_search_memo = """
     <div class="mtb-1">Full text search is much faster than SQL search, but it may not have recent data. FTS also ignores some characters (e.g. *:,~.) while matching others (e.g. 我é°🎃)</div>
     These search operations are supported,
@@ -132,7 +132,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
     p = Perf(f'{handler.form_title} search')
 
     plugin_templates: list[Template] = []
-    plugins_enabled = search_plugins_conf.get('enabled')
+    plugins_enabled = search_plugins_conf.enabled
     use_search_plugins = plugins_enabled and search_plugins
     if use_search_plugins:
         bind_plugin_fields_to_form(handler.form, search_plugins, plugin_templates)
@@ -175,7 +175,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
 
         if do_native_search:
             did_any_search = True
-            if app_conf.get('testing'):
+            if app_conf.testing:
                 # show the real errors
                 posts, total_hits = await handler.get_posts_and_total_hits()
             else:

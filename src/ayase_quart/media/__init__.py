@@ -5,11 +5,6 @@ from .filesystem import get_media_splits, MediaType
 from ..configs import media_conf
 from ..search import BEST_SEARCH_ENDPOINT
 
-THUMB_URI: str = media_conf.get('thumb_uri', '').rstrip('/')
-IMAGE_URI: str = media_conf.get('image_uri', '').rstrip('/')
-BOARDS_WITH_THUMB: tuple[str] = tuple(media_conf['boards_with_thumb'])
-BOARDS_WITH_IMAGE: tuple[str] = tuple(media_conf['boards_with_image'])
-
 
 @cache
 def ext_is_image(ext: str) -> bool:
@@ -21,19 +16,19 @@ def ext_is_video(ext: str) -> bool:
 
 @cache
 def board_has_image(board: str) -> bool:
-    return board in BOARDS_WITH_IMAGE and IMAGE_URI
+    return board in media_conf.boards_with_image and media_conf.image_uri
 
 @cache
 def board_has_thumb(board: str) -> bool:
-    return board in BOARDS_WITH_THUMB and THUMB_URI
+    return board in media_conf.boards_with_thumb and media_conf.thumb_uri
 
 @cache
 def get_image_baseuri(board: str) -> str:
-    return IMAGE_URI.format(board=board)
+    return media_conf.image_uri.format(board=board)
 
 @cache
 def get_thumb_baseuri(board: str) -> str:
-    return THUMB_URI.format(board=board)
+    return media_conf.thumb_uri.format(board=board)
 
 @cache
 def get_hash_search_baseuri(board: str) -> str:

@@ -1,9 +1,25 @@
 import asyncio
 from functools import cache, wraps
 
-from ..configs import db_conf, db_mod_conf
+from ..configs import DbConfig, db_conf, mod_conf
+from ..configs.structs import ModerationSqliteConfig, MysqlConfig, PostgresqlConfig, SqliteConfig
 from ..db.base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
 from ..enums import DbType
+
+
+DbSubConfig = MysqlConfig | SqliteConfig | PostgresqlConfig | ModerationSqliteConfig
+
+
+def get_db_sub_config(db_conf: DbConfig) -> MysqlConfig | SqliteConfig | PostgresqlConfig:
+    match db_conf.db_type:
+        case DbType.mysql:
+            return db_conf.mysql
+        case DbType.sqlite:
+            return db_conf.sqlite
+        case DbType.postgres:
+            return db_conf.postgresql
+        case _:
+            raise ValueError("Unsupported database type")
 
 
 @cache
@@ -46,7 +62,7 @@ def _get_db_module(db_type: DbType):
             raise ValueError("Unsupported database type")
 
 
-async def get_db_tables(db_conf: dict, db_type: DbType, close_pool_after=False) -> list[str]:
+async def get_db_tables(db_conf: DbSubConfig, db_type: DbType, close_pool_after=False) -> list[str]:
     '''Set `close_pool_after=True` if calling from a runtime that won't close the DB pool later.'''
     if not hasattr(get_db_tables, 'tables'):
         match db_type:
@@ -69,7 +85,7 @@ async def get_db_tables(db_conf: dict, db_type: DbType, close_pool_after=False) 
 
 
 class DbHandler:
-    def __init__(self, db_conf: dict, db_type: DbType, pool_manager: BasePoolManager = None, query_runner: BaseQueryRunner = None):
+    def __init__(self, db_conf: DbSubConfig, db_type: DbType, pool_manager: BasePoolManager = None, query_runner: BaseQueryRunner = None):
         self.db_type = db_type
         self.db_module: dict = _get_db_module(db_type)
         self.pool_manager: BasePoolManager = pool_manager or self.db_module['PoolManager'](db_conf)
@@ -102,7 +118,7 @@ def close_all_databases(func):
     return wrapper
 
 
-db_q = DbHandler(db_conf, db_conf['db_type']) # query
-db_m = DbHandler(db_mod_conf, DbType.sqlite) # moderation, only supports sqlite atm
+db_q = DbHandler(get_db_sub_config(db_conf), db_conf.db_type) # query
+db_m = DbHandler(mod_conf.sqlite, DbType.sqlite) # moderation, only supports sqlite atm
 
-# db_eav = DbHandler({'database': 'eav.db'}, DbType.sqlite)
+# db_eav = DbHandler(SqliteConfig(database='eav.db'), DbType.sqlite)

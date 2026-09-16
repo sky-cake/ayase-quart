@@ -8,6 +8,7 @@ from aiohttp import ClientSession, TCPConnector
 from orjson import dumps
 
 from ..post_metadata import unpack_metadata
+from ...configs import IndexSearchConfig
 
 from . import IndexSearchQuery
 
@@ -28,13 +29,13 @@ class BaseSearch(ABC):
     host: str
     client: ClientSession
 
-    def __init__(self, search_conf: dict):
-        self.host = search_conf['host'].strip('/')
+    def __init__(self, search_conf: IndexSearchConfig):
+        self.host = search_conf.host.strip('/')
         self.client = ClientSession(
             connector=TCPConnector(keepalive_timeout=600),
-            headers=search_conf.get('headers', None),
+            headers=search_conf.headers,
         )
-        self.version = search_conf.get('version', None)
+        self.version = search_conf.version
         if not self.version:
             print('Ignore warning if not using quickwit. Warning: quickwit version not set.')
 
