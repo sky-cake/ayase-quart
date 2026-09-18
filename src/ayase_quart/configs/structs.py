@@ -126,7 +126,6 @@ class AppConfig(BaseConfig):
     rate_limiter: bool = True
     allow_robots: bool = False
     login_endpoint: str = '/login'
-    use_asagi_side_tables: bool = False
 
     def __post_init__(self):
         _set(self, 'login_endpoint', f"/{strip_slashes(self.login_endpoint, both=True)}" if self.login_endpoint else '/login')
