@@ -256,17 +256,22 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
 
     board = post['board_shortname']
 
+    if thumb_src is None:
+        thumb_src = get_thumb_full_uri(board, post)
+
+    if not thumb_src:
+        # board has no thumbnails configured/served, render the msg box directly
+        return '<div class="media_cont fileThumb img_broken"></div>'
+
+    if full_src is None:
+        full_src = get_image_full_uri(board, post)
+
     classes: int = 0 # bitfield/flags
     if post['spoiler']:
         classes += ImgTagClass.spoiler
     if not is_catalog:
         classes += ImgTagClass.mtog
     classes += ImgTagClass.is_video if is_video else ImgTagClass.is_image
-
-    if full_src is None:
-        full_src = get_image_full_uri(board, post)
-    if thumb_src is None:
-        thumb_src = get_thumb_full_uri(board, post)
 
     _id = f'{post['board_shortname']}{post['num']}media'
 
@@ -466,7 +471,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             <div>{get_thread_stats_t(wpt)}</div>
             <div>
                 <span class="inblk">/{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]</span>
-                <span class="inblk"><a href="/{thread_path}" data-function="highlight" data-post="{num}">No. {num}</a></span>
+                <span class="inblk">No. {num}</span>
             </div>
             { wpt['t_cc'] }{nl}
         </div>

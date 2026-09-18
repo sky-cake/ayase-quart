@@ -241,18 +241,18 @@ div.post div.file {
 }
 
 div.post div.file div.fileInfo {
-    margin-right: 10px;
+    margin-right: 1em;
     word-break: break-all;
 }
 
 div.replyContainer div.post div.file div.fileInfo {
-    margin-left: 20px;
+    margin-left: 1em;
 }
 
 div.post div.file .fileThumb {
     float: left;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin-left: 1em;
+    margin-right: 1em;
     margin-top: 3px;
     margin-bottom: 5px;
 }
@@ -387,6 +387,41 @@ footer {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+}
+
+#catalog_threads .media_cont.img_broken img {
+    display: none;
+}
+
+#catalog_threads .media_cont.fileThumb.img_broken {
+    height: 50px;
+}
+
+#catalog_threads .media_cont.img_broken::after {
+    content: 'Visit thread';
+}
+
+.media_cont.img_broken {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    min-height: 50px;
+    padding: 4px;
+    background-color: #17191b;
+}
+
+.media_cont.img_broken img {
+    display: none;
+}
+
+.media_cont.img_broken .media-label {
+    display: none;
+}
+
+.media_cont.img_broken::after {
+    content: 'Not found';
+    color: #818181;
 }
 
 #catalog_threads>.thread:focus {

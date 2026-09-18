@@ -140,6 +140,29 @@ function set_up_image_toggles() {
     }
 }
 
+function mark_broken_media(img) {
+    const media_cont = img.closest('.media_cont');
+    if (!media_cont || media_cont.classList.contains('img_broken')) return;
+    media_cont.classList.add('img_broken');
+}
+
+function handle_broken_media_error(e) {
+    const img = e.target;
+    if (img instanceof HTMLImageElement && img.closest('.media_cont')) {
+        mark_broken_media(img);
+    }
+}
+
+window.addEventListener('error', handle_broken_media_error, true);
+
+function mark_already_broken_media() {
+    for (const img of doc_query_all('.media_cont img')) {
+        if (img.complete && img.naturalWidth === 0) {
+            mark_broken_media(img);
+        }
+    }
+}
+
 function close_video_via_btn(e) {
     const close_btn = e.target;
 
@@ -275,6 +298,7 @@ function init_index() {
     set_up_video_toggles();
     set_up_board_buttons();
     setup_top_pill();
+    mark_already_broken_media();
 }
 
 init_index();
