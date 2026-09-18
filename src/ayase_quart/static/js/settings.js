@@ -52,7 +52,7 @@ function open_settings_modal() {
 }
 
 function save_settings_modal() {
-	const font_size = parseInt(document.getElementById('settings_font_size').value, 10);
+	const font_size = parseInt(document.getElementById('settings_font_size').value, 12);
 	save_settings({
 		font_size: Number.isNaN(font_size) ? DEFAULT_SETTINGS.font_size : font_size,
 		display_relative_time: document.getElementById('settings_relative_time').checked,
