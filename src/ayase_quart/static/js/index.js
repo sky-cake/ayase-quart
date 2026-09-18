@@ -186,7 +186,7 @@ function close_video_via_btn(e) {
     new_img.dataset.thumb_src = close_video.dataset.thumb_src;
     new_img.dataset.full_media_src = close_video.dataset.full_media_src;
 
-    if (e.classList) {
+    if (close_video.classList) {
         new_img.classList = close_video.classList;
     }
     new_img.classList.add('play');
@@ -249,7 +249,12 @@ function replace_thumb_with_video(video_thumb) {
 
     remove_overlay_image();
     video_thumb.parentNode.replaceChild(new_video, video_thumb);
-    new_video.addEventListener('click', close_video_via_btn);
+    // On touch devices, tapping the video is needed to reveal and use the
+    // native controls (seek bar, etc). Closing on tap makes scrubbing
+    // impossible, so only bind click-to-close for hover-capable pointers.
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        new_video.addEventListener('click', close_video_via_btn);
+    }
 }
 
 function set_up_video_toggles() {
