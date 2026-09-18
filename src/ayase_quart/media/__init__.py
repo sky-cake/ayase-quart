@@ -60,4 +60,4 @@ def get_thumb_full_uri(board: str, post: dict) -> str:
 def get_hash_search_link(board: str, media_hash: str) -> str:
     if not BEST_SEARCH_ENDPOINT:
         return ''
-    return f'[<a href="{get_hash_search_baseuri(board)}{quote_plus(media_hash)}" target=_blank>View Same</a>]'
+    return f'<span class="inblk">[<a href="{get_hash_search_baseuri(board)}{quote_plus(media_hash)}" target=_blank>View Same</a>]</span>'

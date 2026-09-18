@@ -141,11 +141,11 @@ function format_timestamp(ts, now=undefined, date_only=false) {
     }
 
     const parts = [];
+    if (settings.show_datetime) {
+        parts.push(`<span class="inblk">${formatted_ts}</span>`);
+    }
     if (settings.display_relative_time) {
         parts.push(`<span class="inblk">${relative_time}</span>`);
-    }
-    if (settings.show_datetime) {
-        parts.push(`<span class="inblk">(${formatted_ts})</span>`);
     }
 
     return parts.join(' ');

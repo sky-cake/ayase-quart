@@ -60,10 +60,16 @@ function update_datetimes() {
     const now = new Date();
     for (const datetime_el of datetime_els) {
         const data_utc = get_data_integer(datetime_el, 'utc');
-        if (data_utc) {
-            const formattedString = format_timestamp(data_utc, now);
-            datetime_el.innerHTML = formattedString;
+        if (!data_utc) continue;
+
+        const formattedString = format_timestamp(data_utc, now);
+        if (!formattedString) {
+            datetime_el.textContent = '';
+            datetime_el.style.display = 'none';
+            continue;
         }
+        datetime_el.style.display = '';
+        datetime_el.innerHTML = formattedString;
     }
 }
 

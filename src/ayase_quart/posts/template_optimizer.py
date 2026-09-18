@@ -170,7 +170,7 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 def get_report_t(post: dict) -> str:
     if not mod_conf.enabled:
         return ''
-    return f"""[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>] """
+    return f"""<span class="inblk">[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>]</span> """
 
 
 def get_sub_t(post: dict):
