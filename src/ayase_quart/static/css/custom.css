@@ -547,11 +547,10 @@ code {
     white-space: pre;
     overflow: auto;
     width: min-content;
-    display: block;
     border: 1px solid #717171;
     border-radius: 4px;
     margin: 3px 0 3px 0;
-    padding: 0.5em;
+    padding: 0 4px 0 4px;
     background-color: #1e1e1e;
     max-width: 70vw;
 }
