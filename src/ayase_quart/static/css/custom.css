@@ -1065,9 +1065,6 @@ h3 {
         width: 150px;
         max-height: 360px;
     }
-    #catalog_threads .dateTime {
-        display: none;
-    }
     .meta {
         display: inline-block;
     }
