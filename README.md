@@ -55,6 +55,7 @@ Assuming you have a data source set up, you can:
 1. Copy `./config.tpl.toml` to `./config.toml` and edit `./config.toml` with proper settings.
     -  Run `ayaseq prep secret` to generate a secret key and automatically it in `./config.toml`
         - It is used for CSRF, API tokens, and other things.
+    - Run `ayaseq check` to check your configs are ok.
     - If you do not have a data source to point to, set up one of the following. Ayase Quart provides some notes [below](#archive-set-up) to help set them up.
         - [Ritual (SQLite)](https://github.com/sky-cake/Ritual)
         - [Neofuuka (MySQL)](https://github.com/bibanon/neofuuka-scraper)
