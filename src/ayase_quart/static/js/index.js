@@ -58,7 +58,7 @@ function update_datetimes() {
     for (const datetime_el of datetime_els) {
         const data_utc = get_data_integer(datetime_el, 'utc');
         if (data_utc) {
-            const formattedString = format_timestamp(data_utc, now, is_catalog);
+            const formattedString = format_timestamp(data_utc, now, is_catalog, is_catalog);
             datetime_el.innerHTML = formattedString;
         }
     }

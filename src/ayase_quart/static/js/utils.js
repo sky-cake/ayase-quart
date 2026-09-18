@@ -88,6 +88,12 @@ const locale_ts_opts = {
 	timeZoneName: 'short',
 };
 
+const locale_ts_opts_catalog = {
+	year: 'numeric',
+	month: 'short',
+	day: 'numeric',
+};
+
 function plural_past(val) {
 	return val > 1 ? `s ago` : ' ago';
 }
@@ -97,14 +103,16 @@ function plural_past(val) {
  * @param {number} ts utc unix timestamp
  * @param {Date|undefined} now optional Date() object when calculating many
  * @param {Boolean|undefined} relative_time_nl Put (N <unit of time> ago) on a new line?
+ * @param {Boolean|undefined} date_only Omit time/timezone, showing only the date
  * @returns {string} formatted timestamp
  */
-function format_timestamp(ts, now=undefined, relative_time_nl=false) {
+function format_timestamp(ts, now=undefined, relative_time_nl=false, date_only=false) {
     const postDate = new Date(ts * 1000);
     const _now = now ?? new Date();
     const delta = _now - postDate;
     
-    const formatted_ts = postDate.toLocaleString(undefined, locale_ts_opts);
+    const ts_opts = date_only ? locale_ts_opts_catalog : locale_ts_opts;
+    const formatted_ts = postDate.toLocaleString(undefined, ts_opts);
     
     const seconds = Math.floor(delta / 1000);
     const minutes = Math.floor(seconds / 60);
@@ -129,9 +137,9 @@ function format_timestamp(ts, now=undefined, relative_time_nl=false) {
     }
 
 	let sep = ' ';
-	if (relative_time_nl) sep = '<br>'
-    
-    return `${formatted_ts}${sep}(${relative_time})`;
+	if (relative_time_nl) sep = ' '
+
+    return `<span class="inblk">${relative_time}</span>${sep}<span class="inblk">(${formatted_ts})</span>`;
 }
 
 const video_extensions = new Map([

@@ -4,6 +4,7 @@ function toggle_nuke_mode() {
     nuke_toggle = !nuke_toggle;
     doc_query_all('.nukethreadform').forEach(function(el) {
         el.style.display = nuke_toggle ? 'inline' : 'none';
+        el.parentElement.style.marginBottom = nuke_toggle ? '4px' : '0';
     });
     document.getElementById('nuke_toggle').textContent = nuke_toggle
         ? 'Leave Nuke Mode'

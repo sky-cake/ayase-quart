@@ -48,7 +48,7 @@ async def make_pagination_board_index(board: str, index: dict, page_num: int):
 
     board_index_thread_count = len(index['threads'])
 
-    info = f'Displaying <b>{board_index_thread_count}</b> threads. <b>{op_thread_count}</b> threads in total.'
+    info = f'Displaying <b>{board_index_thread_count:,}</b> threads. <b>{op_thread_count:,}</b> threads in total.'
 
     index_post_count = 10  # threads per index page
     page_links = template_pagination_links(
@@ -188,7 +188,7 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
     for c in catalog:
         catalog_page_thread_count += len(c['threads'])
 
-    info = f'Displaying <b>{catalog_page_thread_count}</b> threads. <b>{op_thread_count}</b> threads in total.'
+    info = f'Displaying <b>{catalog_page_thread_count:,}</b> threads. <b>{op_thread_count:,}</b> threads in total.'
 
     page_links = template_pagination_links(
         path=f'/{board}/catalog',

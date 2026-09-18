@@ -342,20 +342,45 @@ footer {
 
 #catalog_threads>.thread {
     vertical-align: top;
-    display: inline-block;
+    display: block;
     word-wrap: break-word;
     overflow: hidden;
-    margin-top: 5px;
-    margin-bottom: 20px;
-    padding: 5px 0 3px;
+    padding: 6px;
+    box-sizing: border-box;
+    background-color: #282a2e;
+    border: 1px solid #30343c;
+    border-radius: 4px;
     position: relative;
     width: 270px;
     max-height: 410px;
+    text-align: left;
 }
 
 #catalog_threads {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 6px;
+    row-gap: 1em;
     padding: 0 0.5em;
-    text-align: center;
+}
+
+#catalog_threads .media_cont.fileThumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    background-color: #17191b;
+    padding: 4px;
+    margin: 4px 0 4px 0;
+}
+
+#catalog_threads .fileThumb img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 #catalog_threads>.thread:focus {
@@ -805,7 +830,7 @@ span.spoiler:hover a:hover {
     margin: 0.5em;
 }
 
-.mb-2 {
+.mb-1 {
     margin-bottom: 1em;
 }
 
@@ -1052,9 +1077,20 @@ h3 {
 }
 
 @media (max-width: 800px) {
+    body {
+        padding-inline: 4px;
+    }
     .cover {
         width: 30vw;
         height: 30vw;
+    }
+    #catalog_threads {
+        gap: 4px;
+        row-gap: 1em;
+        padding: 0;
+    }
+    #catalog_threads .media_cont.fileThumb {
+        height: 150px;
     }
     #catalog_threads .fileThumb img {
         width: 150px;
@@ -1062,7 +1098,8 @@ h3 {
         object-fit: contain;
     }
     #catalog_threads>.thread {
-        width: 150px;
+        width: calc(50% - 2px);
+        max-width: none;
         max-height: 360px;
     }
     .meta {
@@ -1082,14 +1119,5 @@ h3 {
     }
     .ul3col {
         grid-template-rows: repeat(100, auto);
-    }
-    #catalog_threads .fileThumb img {
-        width: 100%;
-        height: 120px;
-        object-fit: contain;
-    }
-    #catalog_threads>.thread {
-        width: 45%;
-        max-height: 360px;
     }
 }

@@ -456,20 +456,23 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
         # no js required
         nuke_btn = f"""<form class="form plain nukethreadform" action="/nuke/{board}/{num}" method="post">{csrf_input}[<button class="abtn nukethreadbtn" type="submit"></button>]</form>"""
 
+    sep = '<br>' if title_t else ''
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
-            <div class="post_controls">
-                {wpt['t_filedeleted']} {nuke_btn} /{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]
+            <div class="center">{nuke_btn}</div>
+            <div class="post_deleted">{wpt['t_filedeleted']}</div>
+            <div class="dateTime inblk" data-utc="{ts_unix}"></div>
+            <div>{get_thread_stats_t(wpt)}</div>
+            <div>
+                <span class="inblk">/{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]</span>
+                <span class="inblk"><a href="/{thread_path}" data-function="highlight" data-post="{num}">No. {num}</a></span>
             </div>
             { wpt['t_cc'] }{nl}
-            <div class="dateTime inblk" data-utc="{ts_unix}"></div>
-            <div><a href="/{thread_path}" data-function="highlight" data-post="{num}">No. {num}</a> {get_thread_stats_t(wpt)}</div>
         </div>
     <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
     <div class="teaser">
-        { title_t }
-        { wpt.get('comment', '')}
+        { title_t }{sep}{ wpt.get('comment', '')}
     </div>
     </div>
     """

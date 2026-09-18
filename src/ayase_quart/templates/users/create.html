@@ -18,7 +18,7 @@
 
         <p><label for="{{ form.is_active.id }}">{{ form.is_active.label }}</label>{{ form.is_active() }}</p>
         <p><label for="{{ form.notes.id }}">{{ form.notes.label }}</label>{{ form.notes() }}</p>
-        <button class="btn mb-2" type="submit">Create</button>
+        <button class="btn mb-1" type="submit">Create</button>
     </form>
 
     <script type="text/javascript" defer src="/static/js/admin_users.js" {{ get_integrity("admin_users.js")|safe }}></script>

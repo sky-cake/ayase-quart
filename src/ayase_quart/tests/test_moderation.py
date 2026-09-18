@@ -56,7 +56,7 @@ class TestFilterReportedPosts(unittest.IsolatedAsyncioTestCase):
             result = await self.fc.filter_reported_posts(posts, is_authority=True)
 
         expected = [
-            {"board_shortname": "a", "num": 1, "thread_num": 1, "deleted": "Only visible to AQ staff."},
+            {"board_shortname": "a", "num": 1, "thread_num": 1, "deleted": "Hidden"},
             {"board_shortname": "b", "num": 2, "thread_num": 2}
         ]
         self.assertEqual(result, expected)
@@ -84,8 +84,8 @@ class TestFilterReportedPosts(unittest.IsolatedAsyncioTestCase):
         async with self.app.test_request_context(path='/'):
             result = await self.fc.filter_reported_posts(posts, is_authority=True)
         expected = [
-            {"board_shortname": "a", "num": 1, "thread_num": 0, "deleted": "Only visible to AQ staff."},
-            {"board_shortname": "a", "num": 2, "thread_num": 1, "deleted": "Only visible to AQ staff."},
+            {"board_shortname": "a", "num": 1, "thread_num": 0, "deleted": "Hidden"},
+            {"board_shortname": "a", "num": 2, "thread_num": 1, "deleted": "Hidden"},
             {"board_shortname": "b", "num": 3, "thread_num": 3,},
         ]
         self.assertEqual(result, expected)

@@ -140,7 +140,7 @@ class BaseFilterCache(ABC):
 
         board_num_pairs = await self.get_board_num_pairs(posts)
 
-        note = 'Only visible to AQ staff.'
+        note = 'Hidden'
 
         if is_authority:
             return [
