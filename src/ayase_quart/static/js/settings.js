@@ -64,6 +64,28 @@ function save_settings_modal() {
 	close_settings_modal();
 }
 
+function open_settings_via_click(event) {
+	event.preventDefault();
+	open_settings_modal();
+}
+
+function close_settings_via_overlay_click(event) {
+	if (event.target === event.currentTarget) {
+		close_settings_modal();
+	}
+}
+
+function handle_settings_keydown(event) {
+	if (event.key === 'Escape') {
+		close_settings_modal();
+	}
+	const modal = document.getElementById('settings_modal');
+	if (event.key === 'Enter' && modal.style.display === 'block') {
+		event.preventDefault();
+		save_settings_modal();
+	}
+}
+
 function init_settings() {
 	const open_button = document.getElementById('settings_open');
 	const overlay = document.getElementById('settings_overlay');
@@ -71,26 +93,15 @@ function init_settings() {
 
 	if (!open_button || !overlay || !modal) { return; }
 
-	open_button.addEventListener('click', (event) => {
-		event.preventDefault();
-		open_settings_modal();
-	});
+	open_button.addEventListener('click', open_settings_via_click);
 
 	document.getElementById('settings_close').addEventListener('click', close_settings_modal);
 
 	document.getElementById('settings_show_datetime').addEventListener('change', update_display_time_state);
 
-	overlay.addEventListener('click', (event) => {
-		if (event.target === overlay) { close_settings_modal(); }
-	});
+	overlay.addEventListener('click', close_settings_via_overlay_click);
 
-	document.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') { close_settings_modal(); }
-		if (event.key === 'Enter' && modal.style.display === 'block') {
-			event.preventDefault();
-			save_settings_modal();
-		}
-	});
+	document.addEventListener('keydown', handle_settings_keydown);
 
 	document.getElementById('settings_save').addEventListener('click', save_settings_modal);
 }

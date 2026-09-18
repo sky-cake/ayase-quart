@@ -25,6 +25,18 @@ function getColor(board) {
     return boardColorAssignments.get(board);
 }
 
+function filter_chart_legend_item(item) {
+    return !item.text.startsWith('%');
+}
+
+function get_chart_title_text() {
+    return 'Archive Posts per Month';
+}
+
+function random_sort_order() {
+    return 0.5 - Math.random();
+}
+
 function initChart() {
     Chart.defaults.color = '#000000';
     const ctx = document.getElementById('activityChart').getContext('2d');
@@ -42,7 +54,7 @@ function initChart() {
                     labels: {
                         usePointStyle: true,
                         pointStyle: 'rect',
-                        filter: item => !item.text.startsWith('%')
+                        filter: filter_chart_legend_item
                     }
                 },
                 tooltip: {
@@ -51,7 +63,7 @@ function initChart() {
                 },
                 title: {
                     display: true,
-                    text: () => 'Archive Posts per Month'
+                        text: get_chart_title_text
                 }
             },
             responsive: true,
@@ -198,7 +210,7 @@ function clearAllButtons() {
 async function handleSelectRandomClick() {
     clearAllButtons();
     const buttons = Array.from(doc_query_all('.board-toggle'));
-    const shuffled = [...buttons].sort(() => 0.5 - Math.random());
+    const shuffled = [...buttons].sort(random_sort_order);
     const selected = shuffled.slice(0, maxBoards);
 
     for (const button of selected) {

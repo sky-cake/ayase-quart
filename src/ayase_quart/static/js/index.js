@@ -28,26 +28,30 @@ function get_video_mimetype(ext) {
     return m[ext?.toLowerCase()] || "video/webm";
 }
 
+function check_all_boards() {
+    const checkboxes = doc_query_all('#searchform input[name="boards"][type="checkbox"]');
+    for (const checkbox of checkboxes) {
+        checkbox.checked = true;
+    }
+}
+
+function uncheck_all_boards() {
+    const checkboxes = doc_query_all('#searchform input[name="boards"][type="checkbox"]');
+    for (const checkbox of checkboxes) {
+        checkbox.checked = false;
+    }
+}
+
 function set_up_board_buttons() {
     const all_btn = doc_query_all('.check_all_boards');
     const none_btn = doc_query_all('.uncheck_all_boards');
 
     if (all_btn.length) {
-        all_btn[0].addEventListener('click', () => {
-            const checkboxes = doc_query_all('#searchform input[name="boards"][type="checkbox"]');
-            for (const checkbox of checkboxes) {
-                checkbox.checked = true;
-            }
-        });
+        all_btn[0].addEventListener('click', check_all_boards);
     }
 
     if (none_btn.length) {
-        none_btn[0].addEventListener('click', () => {
-            const checkboxes = doc_query_all('#searchform input[name="boards"][type="checkbox"]');
-            for (const checkbox of checkboxes) {
-                checkbox.checked = false;
-            }
-        });
+        none_btn[0].addEventListener('click', uncheck_all_boards);
     }
 }
 
@@ -64,7 +68,7 @@ function update_datetimes() {
 }
 
 // global variable video expand
-const video_interobs = new IntersectionObserver((entries) => {
+function handle_video_intersection(entries) {
 	for (const entry of entries) {
 		const video = entry.target;
 		if (!(video instanceof HTMLVideoElement)) return;
@@ -72,7 +76,10 @@ const video_interobs = new IntersectionObserver((entries) => {
 		if (!entry.isIntersecting && !video.paused) {
 			video.pause();
 		}
-	}}, {
+	}
+}
+
+const video_interobs = new IntersectionObserver(handle_video_intersection, {
 		threshold: 0.1 // video is "visible" if at least 10% is in view
 	}
 );
@@ -233,29 +240,32 @@ function set_up_video_toggles() {
     }
 }
 
-function setup_top_pill() {
+function update_top_pill_visibility() {
     const top = document.getElementById('top');
     if (!top) return;
 
     const form = document.getElementById('searchform');
+    if (window.matchMedia('(min-width: 901px)').matches || !form) {
+        top.classList.add('visible');
+        return;
+    }
+
     const results = document.getElementById('resulttop');
     const has_results = results && results.querySelector('.board, .gallery-grid');
+    if (!has_results) {
+        top.classList.remove('visible');
+        return;
+    }
+    top.classList.toggle('visible', form.getBoundingClientRect().bottom <= 0);
+}
 
-    const update = () => {
-        if (window.matchMedia('(min-width: 901px)').matches || !form) {
-            top.classList.add('visible');
-            return;
-        }
-        if (!has_results) {
-            top.classList.remove('visible');
-            return;
-        }
-        top.classList.toggle('visible', form.getBoundingClientRect().bottom <= 0);
-    };
+function setup_top_pill() {
+    const top = document.getElementById('top');
+    if (!top) return;
 
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
+    update_top_pill_visibility();
+    window.addEventListener('scroll', update_top_pill_visibility, { passive: true });
+    window.addEventListener('resize', update_top_pill_visibility);
 }
 
 function init_index() {

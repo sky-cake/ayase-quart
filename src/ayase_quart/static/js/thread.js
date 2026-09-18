@@ -32,6 +32,34 @@ function setup_media_events() {
 const quotelink_resp_cache = new Map();
 const quotelink_fetching = new Set();
 let current_hovered_quotelink = null;
+function quotelink_response_to_json(response) {
+    return response.ok ? response.json() : Promise.reject();
+}
+
+function quotelink_store_response(target_post, quotelink, post_key, board, id_post_num, data) {
+    const previewContent = data && data.html_content ? data.html_content : get_quotelink_preview_default_string();
+    target_post.innerHTML = previewContent;
+    if (data && data.html_content) { // only cache good results
+        quotelink_resp_cache.set(post_key, data.html_content);
+        quotelink.href = `/${board}/thread/${data.thread_num}${id_post_num}`; // update off-page href with real thread_num
+        quotelink.dataset.thread = data.thread_num;
+        const icon = quotelink.nextElementSibling;
+        if (icon && icon.querySelector?.('.quotelink-icon')) icon.href = quotelink.href;
+    }
+}
+
+function quotelink_show_default(target_post) {
+    target_post.innerHTML = get_quotelink_preview_default_string();
+}
+
+function quotelink_fetch_finalize(target_post, quotelink, backlink_num, post_key) {
+    quotelink_spinner_hide();
+    if (current_hovered_quotelink === quotelink) {
+        quotelink_preview_show(target_post, quotelink, backlink_num);
+    }
+    quotelink_fetching.delete(post_key); // clear in flight
+}
+
 function quotelink_mouseover(event) {
     const quotelink = event.target;
     const num = quotelink.getAttribute("href").split("#p")[1];
@@ -64,27 +92,10 @@ function quotelink_mouseover(event) {
 
     quotelink_fetching.add(post_key)
     quotelink_spinner_show(quotelink);
-    fetch(post_key).then(response => {
-        return response.ok ? response.json() : Promise.reject();
-    }).then(data => {
-        let previewContent = data && data.html_content ? data.html_content : get_quotelink_preview_default_string();
-        target_post.innerHTML = previewContent;
-        if (data && data.html_content) { // only cache good results
-            quotelink_resp_cache.set(post_key, data.html_content);
-            quotelink.href = `/${board}/thread/${data.thread_num}${id_post_num}`; // update off-page href with real thread_num
-            quotelink.dataset.thread = data.thread_num;
-            const icon = quotelink.nextElementSibling;
-            if (icon && icon.querySelector?.('.quotelink-icon')) icon.href = quotelink.href;
-        }
-    }).catch(() => {
-        target_post.innerHTML = get_quotelink_preview_default_string();
-    }).finally(() => {
-        quotelink_spinner_hide();
-        if (current_hovered_quotelink === quotelink) {
-            quotelink_preview_show(target_post, quotelink, backlink_num);
-        }
-        quotelink_fetching.delete(post_key); // clear in flight
-    });
+    fetch(post_key).then(quotelink_response_to_json)
+        .then(quotelink_store_response.bind(null, target_post, quotelink, post_key, board, id_post_num))
+        .catch(quotelink_show_default.bind(null, target_post))
+        .finally(quotelink_fetch_finalize.bind(null, target_post, quotelink, backlink_num, post_key));
 }
 
 function quotelink_mouseleave() {
@@ -107,17 +118,23 @@ function quotelink_goto(event) {
         return;
     }
 
-    fetch(post_key).then(response => {
-        return response.ok ? response.json() : Promise.reject();
-    }).then(data => {
-        const thread_num = data.thread_num;
-        quotelink.dataset.thread = thread_num;
-        quotelink.href = `/${board}/thread/${thread_num}#p${num}`;
-        icon.href = quotelink.href;
-        window.location = quotelink.href;
-    }).catch(() => {
-        window.location = quotelink.getAttribute('href');
-    });
+    fetch(post_key).then(quotelink_response_to_json).then(
+        quotelink_goto_to_thread.bind(null, quotelink, icon, board, num)
+    ).catch(
+        quotelink_goto_fallback.bind(null, quotelink)
+    );
+}
+
+function quotelink_goto_to_thread(quotelink, icon, board, num, data) {
+    const thread_num = data.thread_num;
+    quotelink.dataset.thread = thread_num;
+    quotelink.href = `/${board}/thread/${thread_num}#p${num}`;
+    icon.href = quotelink.href;
+    window.location = quotelink.href;
+}
+
+function quotelink_goto_fallback(quotelink) {
+    window.location = quotelink.getAttribute('href');
 }
 
 function remove_link(event){

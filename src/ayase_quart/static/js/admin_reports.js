@@ -1,25 +1,31 @@
 const report_checkboxes = document.querySelectorAll('.select_report');
-report_checkboxes.forEach(checkbox => {
-    checkbox.checked = false;
-});
+report_checkboxes.forEach(uncheck_checkbox);
 
 const select_all_checkboxes = document.querySelectorAll('#select_all');
-select_all_checkboxes.forEach(checkbox => {
-    checkbox.checked = false;
-});
+select_all_checkboxes.forEach(uncheck_checkbox);
 
 const bulk_action_dropdown = document.getElementById('bulk_action');
 if (bulk_action_dropdown) {
     bulk_action_dropdown.value = 'post_hide';
 }
 
-document.getElementById('select_all').addEventListener('change', function () {
-    const checkboxes = document.querySelectorAll('.select_report');
-    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-});
+function uncheck_checkbox(checkbox) {
+    checkbox.checked = false;
+}
 
-document.getElementById('apply_action').addEventListener('click', async function () {
-    const report_parent_ids = Array.from(document.querySelectorAll('.select_report:checked')).map(checkbox => checkbox.getAttribute('data-report-id'));
+function get_report_parent_id(checkbox) {
+    return checkbox.getAttribute('data-report-id');
+}
+
+function handle_select_all_change() {
+    const checkboxes = document.querySelectorAll('.select_report');
+    for (const checkbox of checkboxes) {
+        checkbox.checked = this.checked;
+    }
+}
+
+async function apply_bulk_action() {
+    const report_parent_ids = Array.from(document.querySelectorAll('.select_report:checked')).map(get_report_parent_id);
     if (!report_parent_ids.length) {
         alert('No reports selected!');
         return;
@@ -55,4 +61,8 @@ document.getElementById('apply_action').addEventListener('click', async function
     }
 
     location.reload(); // reload after receiving response
-});
+}
+
+document.getElementById('select_all').addEventListener('change', handle_select_all_change);
+
+document.getElementById('apply_action').addEventListener('click', apply_bulk_action);

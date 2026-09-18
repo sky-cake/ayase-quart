@@ -17,6 +17,45 @@ function show_modal(report_button) {
 	reportModal.style.display = 'block';
 }
 
+function close_report_modal() {
+	modalOverlay.style.display = 'none';
+	reportModal.style.display = 'none';
+}
+
+function handle_report_overlay_click(event) {
+	if (event.target === modalOverlay) {
+		close_report_modal();
+	}
+}
+
+function uncheck_submitter_category(checkbox) {
+	checkbox.checked = false;
+}
+
+async function handle_report_submit(event) {
+	event.preventDefault();
+	const formData = new FormData(reportForm);
+	try {
+		const response = await fetch(reportForm.action, {
+			method: 'POST',
+			body: formData,
+		});
+		if (response.ok) {
+			alert('Report submitted successfully.')
+			document.querySelectorAll('input[name="submitter_category"]').forEach(uncheck_submitter_category);
+			document.getElementById('submitter_notes').value = '';
+			close_report_modal();
+		} else {
+			const errorData = await response.json();
+			feedbackReport.textContent = errorData.message || 'An error occurred.';
+			feedbackReport.style.color = 'red';
+		}
+	} catch (error) {
+		feedbackReport.textContent = 'Unable to submit report. Please try again.';
+		feedbackReport.style.color = 'red';
+	}
+}
+
 function setup_report_buttons() {
 	const reportButtons = doc_query_all('button[report_url]');
 	for (const button of reportButtons) {
@@ -25,42 +64,11 @@ function setup_report_buttons() {
 }
 
 function setup_report_modal() {
-	closeReportButton.addEventListener('click', () => {
-		modalOverlay.style.display = 'none';
-		reportModal.style.display = 'none';
-	});
+	closeReportButton.addEventListener('click', close_report_modal);
 
-	modalOverlay.addEventListener('click', (event) => {
-		if (event.target === modalOverlay) {
-			modalOverlay.style.display = 'none';
-			reportModal.style.display = 'none';
-		}
-	});
+	modalOverlay.addEventListener('click', handle_report_overlay_click);
 
-	reportForm.addEventListener('submit', async (event) => {
-		event.preventDefault();
-		const formData = new FormData(reportForm);
-		try {
-			const response = await fetch(reportForm.action, {
-				method: 'POST',
-				body: formData,
-			});
-			if (response.ok) {
-				alert('Report submitted successfully.')
-				document.querySelectorAll('input[name="submitter_category"]').forEach(b => b.checked = false);
-				document.getElementById('submitter_notes').value = '';
-				modalOverlay.style.display = 'none';
-				reportModal.style.display = 'none';
-			} else {
-				const errorData = await response.json();
-				feedbackReport.textContent = errorData.message || 'An error occurred.';
-				feedbackReport.style.color = 'red';
-			}
-		} catch (error) {
-			feedbackReport.textContent = 'Unable to submit report. Please try again.';
-			feedbackReport.style.color = 'red';
-		}
-	});
+	reportForm.addEventListener('submit', handle_report_submit);
 }
 
 function init_report() {
