@@ -160,7 +160,6 @@ class ArchiveConfig(BaseConfig):
     thread_path: str = '/thread/{thread}'
     post_path: str = '#p{num}'
     catalog_path: str = '/catalog'
-    cross_thread_previews: bool = False
 
     def __post_init__(self):
         _or_default(self, 'thread_path')

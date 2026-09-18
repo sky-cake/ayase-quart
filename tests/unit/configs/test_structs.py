@@ -67,7 +67,6 @@ def test_archive_config_defaults():
     assert conf.thread_path == '/thread/{thread}'
     assert conf.post_path == '#p{num}'
     assert conf.catalog_path == '/catalog'
-    assert conf.cross_thread_previews is False
 
 
 def test_db_config_converts_type_and_nested():
