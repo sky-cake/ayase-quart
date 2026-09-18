@@ -1,5 +1,4 @@
 from quart import Blueprint
-from urllib.parse import unquote
 
 from ...asagi_converter import generate_catalog, generate_index, generate_thread
 from ...configs import app_conf

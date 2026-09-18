@@ -6,7 +6,7 @@ def test_sanitize_free_text():
     assert sanitize_free_text('°') == '°'
 
     assert sanitize_free_text("don't") == "don't"
-    
+
     assert sanitize_free_text('sun and sky') == 'sun and sky'
 
     assert sanitize_free_text('foo(bar)') == 'foo bar'

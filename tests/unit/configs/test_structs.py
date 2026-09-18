@@ -1,4 +1,5 @@
 import pytest
+from msgspec import ValidationError
 
 from ayase_quart.configs import (
     app_conf,
@@ -145,23 +146,23 @@ def test_db_config_no_nested_default_warnings(capsys):
 
 
 def test_wrong_types_raise():
-    with pytest.raises(TypeError, match="config key 'port' has type str, but port: int"):
+    with pytest.raises(ValidationError, match='port'):
         AppConfig.from_dict({'port': 'not-a-port'})
-    with pytest.raises(TypeError, match="config key 'testing' has type str, but testing: bool"):
+    with pytest.raises(ValidationError, match='testing'):
         AppConfig.from_dict({'testing': 'true'})
-    with pytest.raises(TypeError, match="config key 'theme' has type int, but theme: str"):
+    with pytest.raises(ValidationError, match='theme'):
         SiteConfig.from_dict({'theme': 5})
-    with pytest.raises(TypeError, match="config key 'redis_db' has type float, but redis_db: int"):
+    with pytest.raises(ValidationError, match='redis_db'):
         StatsConfig.from_dict({'redis_db': 2.5})
-    with pytest.raises(TypeError, match="config key 'admin_user' has type int, but admin_user: str"):
+    with pytest.raises(ValidationError, match='admin_user'):
         ModerationConfig.from_dict({'admin_user': 1})
 
 
-def test_stringified_numbers_coerced():
-    assert AppConfig.from_dict({'port': '9001'}).port == 9001
-    assert AppConfig.from_dict({'port': 9001}).port == 9001
-    assert StatsConfig.from_dict({'redis_db': '2'}).redis_db == 2
-    assert AppConfig.from_dict({'proxy_trusted_hops': ' 3 '}).proxy_trusted_hops == 3
+def test_range_validation():
+    with pytest.raises(ValidationError, match='port'):
+        AppConfig.from_dict({'port': 0})
+    with pytest.raises(ValidationError, match='max_connections'):
+        RedisConfig.from_dict({'max_connections': 0})
 
 
 def test_optional_none_allowed():
@@ -184,22 +185,7 @@ def test_check_cli_ok(monkeypatch, capsys):
     assert 'config.toml valid' in out
 
 
-def test_or_default_coerces_falsy():
-    conf = SiteConfig.from_dict({'theme': '', 'anonymous_username': ''})
-    assert conf.theme == 'tomorrow'
-    assert conf.anonymous_username == 'Anonymous'
-
-    redis = RedisConfig.from_dict({'host': '', 'port': 0, 'password': ''})
-    assert redis.host == '127.0.0.1'
-    assert redis.port == 6379
-    assert redis.password is None
-
-    search = IndexSearchConfig.from_dict({'hits_per_page': 0, 'host': ''})
-    assert search.hits_per_page == 50
-    assert search.host == 'http://localhost:8000'
-
-
-def test_or_default_preserves_explicit_values_and_none():
+def test_explicit_values_preserved():
     conf = SiteConfig.from_dict({'theme': 'ocean', 'site_email': '', 'custom_banner': None})
     assert conf.theme == 'ocean'
     assert conf.site_email == ''
@@ -209,6 +195,16 @@ def test_or_default_preserves_explicit_values_and_none():
     assert redis.port == 1234
     assert redis.password is None
     assert redis.ssl is False
+
+
+def test_empty_string_not_coerced_to_default():
+    assert SiteConfig.from_dict({'theme': ''}).theme == ''
+
+
+def test_missing_required_keys_warn(capsys):
+    with pytest.raises(ValidationError):
+        ArchiveConfig.from_dict({'canonical_name': '4chan'})
+    assert "missing required config key 'canonical_host'" in capsys.readouterr().out
 
 
 def test_missing_keys_warn(capsys):
@@ -222,4 +218,4 @@ def test_missing_keys_warn(capsys):
     assert "missing config key 'theme'" not in out
     assert "missing config key 'site_email'" in out
     assert "missing config key 'anonymous_username'" in out
-    assert "missing config key 'custom_banner'" in out
+    assert "missing config key 'custom_banner', using None" in out

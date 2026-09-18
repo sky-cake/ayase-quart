@@ -47,7 +47,7 @@ def _get_db_module(db_type: DbType):
                 'QueryRunner': SqliteQueryRunner,
                 'PlaceholderGenerator': SqlitePlaceholderGen,
             }
-        case DbType.postgresql:
+        case DbType.postgres:
             from .postgresql import (
                 PostgresqlPlaceholderGen,
                 PostgresqlPoolManager,

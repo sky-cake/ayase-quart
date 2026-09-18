@@ -1,6 +1,6 @@
 import aiomysql
 from aiomysql.pool import _PoolContextManager
-from dataclasses import asdict
+from msgspec import to_builtins
 
 from ..configs.structs import MysqlConfig
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
@@ -29,7 +29,7 @@ class MysqlPoolManager(BasePoolManager):
         if self.pool:
             return self.pool
 
-        self.pool = await aiomysql.create_pool(**asdict(self.mysql_conf))
+        self.pool = await aiomysql.create_pool(**to_builtins(self.mysql_conf))
 
         return self.pool
 

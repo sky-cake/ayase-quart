@@ -157,7 +157,7 @@ class FilterCacheRedis(BaseFilterCache):
                 pipe: Pipeline
                 for board, del_ops in board_del_ops.items():
                     pipe.incrby(fmt_op_count_key(board), del_ops)
-        
+
         # auto execute()s on context exit in coredis 6.x
 
         sql = """

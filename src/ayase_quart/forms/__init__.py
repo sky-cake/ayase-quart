@@ -11,7 +11,6 @@ from wtforms.fields import (
     BooleanField,
     DateField,
     Field,
-    HiddenField,
     IntegerField,
     PasswordField,
     RadioField,

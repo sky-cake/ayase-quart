@@ -1,4 +1,4 @@
-from enum import Enum, StrEnum, IntFlag, auto
+from enum import StrEnum, IntFlag, auto
 
 
 class MediaFP(StrEnum):
@@ -6,10 +6,10 @@ class MediaFP(StrEnum):
     sutra = 'sutra'
 
 
-class DbType(Enum):
-    mysql = 1
-    sqlite = 2
-    postgres = 3
+class DbType(StrEnum):
+    mysql = 'mysql'
+    sqlite = 'sqlite'
+    postgres = 'postgres'
 
 
 class IndexSearchType(StrEnum):

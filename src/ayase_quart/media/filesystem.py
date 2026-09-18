@@ -86,7 +86,7 @@ elif media_conf.media_fp == MediaFP.asagi:
             filename = post.get('preview_orig')
         else:
             raise ValueError(media_type)
-        
+
         if not filename:
             return
 

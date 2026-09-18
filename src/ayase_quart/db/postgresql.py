@@ -1,5 +1,5 @@
 import asyncpg
-from dataclasses import asdict
+from msgspec import to_builtins
 
 from ..configs.structs import PostgresqlConfig
 from .base_db import BasePlaceHolderGen, BasePoolManager, BaseQueryRunner
@@ -13,7 +13,7 @@ class PostgresqlPoolManager(BasePoolManager):
 
     async def get_pool(self):
         if self.pool is None:
-            self.pool = await asyncpg.create_pool(**asdict(self.postgresql_conf))
+            self.pool = await asyncpg.create_pool(**to_builtins(self.postgresql_conf))
         return self.pool
 
 
