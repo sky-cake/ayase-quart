@@ -1,0 +1,27 @@
+<div id="settings_overlay" hidden>
+    <div id="settings_modal" class="form" hidden>
+        <div class="modal_header">
+            <div class="modal_title">Settings</div>
+        </div>
+        <div class="settings_field">
+            <label for="settings_font_size">Font size</label>
+            <input type="number" id="settings_font_size" min="6" max="24" step="1" value="10">
+        </div>
+        <div class="settings_field">
+            <input type="checkbox" id="settings_relative_time">
+            <label for="settings_relative_time">Show relative time (e.g. 1 day ago)</label>
+        </div>
+        <div class="settings_field">
+            <input type="checkbox" id="settings_show_datetime">
+            <label for="settings_show_datetime">Show date and time parts</label>
+        </div>
+        <div class="settings_field">
+            <input type="checkbox" id="settings_display_time">
+            <label for="settings_display_time">Show time parts</label>
+        </div>
+        <div class="modal_footer">
+            <button id="settings_save" class="btn" type="button">Save</button>
+            <div id="settings_close" class="btn">Close</div>
+        </div>
+    </div>
+</div>

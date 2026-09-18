@@ -47,23 +47,30 @@ html {
     -ms-text-size-adjust: 100%;
 }
 
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #666666 transparent;
-}
-
 body {
     background: #1d1f21 none;
     font-family: arial, helvetica, sans-serif;
-    font-size: 10pt;
     margin-left: 0;
     margin-right: 0;
     margin-top: 5px;
     padding-inline: 5px;
 }
 
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #666666 transparent;
+}
+
+body * {
+    font-size: inherit !important;
+}
+
 html, body {
     color: #dddddd;
+}
+
+button, input, select, textarea {
+    font: inherit;
 }
 
 fieldset {
@@ -341,7 +348,6 @@ footer {
 }
 
 #catalog_threads>.thread {
-    vertical-align: top;
     display: block;
     word-wrap: break-word;
     overflow: hidden;
@@ -444,11 +450,6 @@ span.subject {
     text-decoration: none;
 }
 
-.btnlink {
-    text-decoration: underline;
-    font-size: small;
-}
-
 .btnlink:hover, .click:hover {
     color: #5f89ac !important;
 }
@@ -500,7 +501,6 @@ ul {
     cursor: pointer;
     padding: 0;
     filter: none;
-    font-size: inherit;
     font-family: arial, helvetica, sans-serif;
 }
 
@@ -545,7 +545,6 @@ hr {
 code {
     color: #55d67c;
     white-space: pre;
-    font-size: medium;
     overflow: auto;
     width: min-content;
     display: block;
@@ -583,7 +582,6 @@ div.post blockquote.postMessage {
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    font-size: 12px;
 }
 
 .codecopybtn:hover {
@@ -932,18 +930,19 @@ img, video {
     text-align: center;
 }
 
-#report_modal {
+#report_modal,
+#settings_modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 20px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
+    padding: 1em;
+    border-radius: 4px;
     z-index: 1000;
 }
 
-#modal_overlay {
+#modal_overlay,
+#settings_overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -954,13 +953,44 @@ img, video {
     display: none;
 }
 
-#report_close {
+#report_close,
+#settings_save,
+#settings_close {
     cursor: pointer;
     text-align: right;
 }
 
-#report_close:hover {
+#report_close:hover,
+#settings_save:hover,
+#settings_close:hover {
     text-decoration: underline;
+}
+
+.settings_field {
+    margin-bottom: 10px;
+}
+
+.settings_field.disabled {
+    opacity: 0.4;
+}
+
+.settings_field label,
+.settings_field input[type='checkbox'] {
+    cursor: pointer;
+}
+
+.settings_field.disabled label,
+.settings_field.disabled input[type='checkbox'] {
+    cursor: not-allowed;
+}
+
+.settings_field label {
+    margin-left: 4px;
+}
+
+#settings_modal {
+    width: min(90vw, 360px);
+    box-sizing: border-box;
 }
 
 .modal_header {
@@ -970,8 +1000,15 @@ img, video {
     margin-bottom: 10px;
 }
 
+.modal_footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2em;
+}
+
 .modal_title {
-    font-size: 18px;
     font-weight: bold;
 }
 
@@ -1005,7 +1042,6 @@ button:disabled {
 
 label span {
     margin-right: 2px;
-    font-size: small;
 }
 
 div.message {
@@ -1051,8 +1087,6 @@ h3 {
     margin-top: 3px;
     margin-bottom: 3px;
 }
-
-
 
 .ul3col {
     display: grid;

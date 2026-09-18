@@ -12,6 +12,7 @@
 {% block css %}{% endblock %}
 {% block scripts %}
     <script type="text/javascript" defer src="/static/js/utils.js" {{ get_integrity("utils.js")|safe }}></script>
+    <script type="text/javascript" defer src="/static/js/settings.js" {{ get_integrity("settings.js")|safe }}></script>
     <script type="text/javascript" defer src="/static/js/index.js" {{ get_integrity("index.js")|safe }}></script>
 {%- endblock scripts %}
 </head>
@@ -22,6 +23,8 @@
         {% include 'macros/flash.html' %}
 
         {% block body %}{% endblock %}
+
+        {% include 'settings.html' %}
 
         {% if report_form_t %}
             {{ report_form_t|safe }}

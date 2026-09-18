@@ -5,6 +5,7 @@
         <a href="/">Home</a>
         / <a href="{{url_for('bp_web_about.about')}}">About</a>
         {% if stats_enabled %} / <a href="{{ url_for('bp_web_stats.v_stats') }}">Stats</a>{% endif %}
+        / <span id="settings_open" class="btnlink">Settings</span>
     ]
     {% if vanilla_search_enabled or index_search_enabled %}
         <span class="inblk">Search:

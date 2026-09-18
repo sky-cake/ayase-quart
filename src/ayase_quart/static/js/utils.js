@@ -102,16 +102,20 @@ function plural_past(val) {
  * Render utc unix timestamp to client locale + relative humanized
  * @param {number} ts utc unix timestamp
  * @param {Date|undefined} now optional Date() object when calculating many
- * @param {Boolean|undefined} relative_time_nl Put (N <unit of time> ago) on a new line?
  * @param {Boolean|undefined} date_only Omit time/timezone, showing only the date
  * @returns {string} formatted timestamp
  */
-function format_timestamp(ts, now=undefined, relative_time_nl=false, date_only=false) {
+function format_timestamp(ts, now=undefined, date_only=false) {
+    const settings = typeof get_settings === 'function'
+        ? get_settings()
+        : { display_relative_time: true, display_time: true, show_datetime: true };
+
     const postDate = new Date(ts * 1000);
     const _now = now ?? new Date();
     const delta = _now - postDate;
     
-    const ts_opts = date_only ? locale_ts_opts_catalog : locale_ts_opts;
+    const date_only_fmt = date_only || !settings.display_time;
+    const ts_opts = date_only_fmt ? locale_ts_opts_catalog : locale_ts_opts;
     const formatted_ts = postDate.toLocaleString(undefined, ts_opts);
     
     const seconds = Math.floor(delta / 1000);
@@ -136,10 +140,15 @@ function format_timestamp(ts, now=undefined, relative_time_nl=false, date_only=f
         relative_time = `${seconds} sec${plural_past(seconds)}`;
     }
 
-	let sep = ' ';
-	if (relative_time_nl) sep = ' '
+    const parts = [];
+    if (settings.display_relative_time) {
+        parts.push(`<span class="inblk">${relative_time}</span>`);
+    }
+    if (settings.show_datetime) {
+        parts.push(`<span class="inblk">(${formatted_ts})</span>`);
+    }
 
-    return `<span class="inblk">${relative_time}</span>${sep}<span class="inblk">(${formatted_ts})</span>`;
+    return parts.join(' ');
 }
 
 const video_extensions = new Map([

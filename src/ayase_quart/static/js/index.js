@@ -53,12 +53,11 @@ function set_up_board_buttons() {
 
 function update_datetimes() {
     const datetime_els = doc_query_all('.dateTime');
-    const is_catalog = Boolean(document.getElementById('catalog_threads'));
     const now = new Date();
     for (const datetime_el of datetime_els) {
         const data_utc = get_data_integer(datetime_el, 'utc');
         if (data_utc) {
-            const formattedString = format_timestamp(data_utc, now, is_catalog, is_catalog);
+            const formattedString = format_timestamp(data_utc, now);
             datetime_el.innerHTML = formattedString;
         }
     }
