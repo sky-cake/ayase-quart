@@ -374,7 +374,7 @@ def get_filedeleted_t(post: dict):
     if not (deleted := post.get('deleted')):
         return ''
     msg = f'deleted on {ts_2_formatted(del_time)}' if (del_time := post.get('ts_expired')) else 'prematurely deleted'
-    deleted = '[Del]' if deleted == 1 else escape(deleted)
+    deleted = 'Deleted' if deleted == 1 else escape(deleted)
     return f'<strong class="warning" title="This post was {msg}.">{deleted}</strong>'
 
 
