@@ -487,7 +487,7 @@ def get_title_t(thread: dict):
 # almost same as threads.render_thread_stats...
 def get_thread_stats_t(thread: dict) -> str:
     posters_t = f'/ P: <b>{posters}</b>' if (posters := thread.get('posters')) else ''
-    return f"""<span class="meta">R: <b>{ thread['nreplies'] }</b> / I: <b>{ thread['nimages'] }</b> {posters_t}</span>"""
+    return f"""<span class="meta">R: <b>{ thread['nreplies'] }</b> / F: <b>{ thread['nimages'] }</b> {posters_t}</span>"""
 
 def get_thread_sticky_locked_t(thread: dict) -> str:
     locked = thread['locked']

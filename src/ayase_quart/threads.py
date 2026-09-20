@@ -9,14 +9,14 @@ def get_thread_path(board: str, thread_num: int) -> str:
 
 # re-implemented from templates/macros.html
 def render_thread_stats(post: dict) -> str:
-    posters_t = f'/ <span class="ts-ips" data-tip="Posters" title="Posters">{posters}</span>' if (posters := post.get('posters')) else ''
+    posters_t = f'/ <span class="ts-ips" data-tip="Posters" title="Posters">P: <b>{posters}</b></span>' if (posters := post.get('posters')) else ''
     return f"""
     <div class="thread-stats">
         { 'Sticky /' if post['sticky'] else ''}
         { 'Closed /' if post['locked'] else ''}
-        <span class="ts-replies" data-tip="Replies" title="Replies">{ post.get('nreplies', '?') }</span>
+        <span class="ts-replies" data-tip="Replies" title="Replies">R: <b>{ post.get('nreplies', '?') }</b></span>
         /
-        <span class="ts-images" data-tip="Images" title="Files">{ post.get('nimages', '?') }</span>
+        <span class="ts-images" data-tip="Files" title="Files">F: <b>{ post.get('nimages', '?') }</b></span>
         {posters_t}
     </div>
     """
