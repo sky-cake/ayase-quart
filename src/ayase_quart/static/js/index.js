@@ -62,15 +62,6 @@ function update_datetimes(root) {
 function mark_broken_media(img) {
     const media_cont = img.closest('.media_cont');
     if (!media_cont || media_cont.classList.contains('img_broken')) return;
-    if (!media_cont.closest('#catalog_threads')) {
-        const w = img.clientWidth;
-        const h = img.clientHeight;
-        if (w > 0 && h > 0) {
-            media_cont.style.width = `${w}px`;
-            media_cont.style.height = `${h}px`;
-            media_cont.classList.add('img_broken_sized');
-        }
-    }
     media_cont.classList.add('img_broken');
 }
 
@@ -119,10 +110,25 @@ function setup_top_pill() {
     window.addEventListener('resize', update_top_pill_visibility);
 }
 
+function handle_top_bottom_link_click(event) {
+    event.preventDefault();
+    const bottom = event.currentTarget.getAttribute('href') === '#bottom_hidden';
+    window.scrollTo(0, bottom ? document.documentElement.scrollHeight : 0);
+}
+
+function setup_top_bottom_links() {
+    const top = document.getElementById('top');
+    if (!top) return;
+    for (const link of top.querySelectorAll('a[href="#top_hidden"], a[href="#bottom_hidden"]')) {
+        link.addEventListener('click', handle_top_bottom_link_click);
+    }
+}
+
 function init_index() {
 	update_datetimes();
     set_up_board_buttons();
     setup_top_pill();
+    setup_top_bottom_links();
     mark_already_broken_media();
 }
 

@@ -122,6 +122,12 @@ div.post > .kuroba_replies_btn {
     font-size: 1.2em;
 }
 
+img.mtog[data-expanded='false'] {
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    object-fit: contain;
+}
+
 .kuroba_entry_content .media_cont {
     float: left;
     margin: 6px 8px 6px 0;
@@ -130,8 +136,9 @@ div.post > .kuroba_replies_btn {
 .kuroba_entry_content .kuroba_thumb {
     float: none;
     margin: 0;
-    max-width: var(--thumb-size);
-    max-height: var(--thumb-size);
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    object-fit: contain;
     cursor: pointer;
 }
 
