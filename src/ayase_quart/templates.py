@@ -24,7 +24,6 @@ def get_integrity(filename: str) -> str:
 
 render_constants = dict(
     site_name=site_conf.name,
-    theme=site_conf.theme,
     vanilla_search_enabled=vanilla_search_conf.enabled,
     index_search_enabled=index_search_conf.enabled,
     moderation_enabled=mod_conf.enabled,

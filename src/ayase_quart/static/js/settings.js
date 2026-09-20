@@ -5,6 +5,11 @@ const DEFAULT_SETTINGS = {
 	display_relative_time: true,
 	display_time: true,
 	show_datetime: true,
+	kurobaex_mode: true,
+	thumb_size: 100,
+	show_media_hover: true,
+	autoplay_videos: true,
+	mute_videos: false,
 };
 
 function get_settings() {
@@ -23,6 +28,7 @@ function save_settings(settings) {
 function apply_settings() {
 	const settings = get_settings();
 	document.body.style.fontSize = `${settings.font_size}pt`;
+	document.documentElement.style.setProperty('--thumb-size', `${settings.thumb_size}px`);
 }
 
 function close_settings_modal() {
@@ -43,9 +49,14 @@ function update_display_time_state() {
 function open_settings_modal() {
 	const settings = get_settings();
 	document.getElementById('settings_font_size').value = settings.font_size;
+	document.getElementById('settings_thumb_size').value = settings.thumb_size;
 	document.getElementById('settings_relative_time').checked = settings.display_relative_time;
 	document.getElementById('settings_display_time').checked = settings.display_time;
 	document.getElementById('settings_show_datetime').checked = settings.show_datetime;
+	document.getElementById('settings_kurobaex_mode').checked = settings.kurobaex_mode;
+	document.getElementById('settings_show_media_hover').checked = settings.show_media_hover;
+	document.getElementById('settings_autoplay_videos').checked = settings.autoplay_videos;
+	document.getElementById('settings_mute_videos').checked = settings.mute_videos;
 	update_display_time_state();
 	document.getElementById('settings_overlay').style.display = 'block';
 	document.getElementById('settings_modal').style.display = 'block';
@@ -53,14 +64,26 @@ function open_settings_modal() {
 
 function save_settings_modal() {
 	const font_size = parseInt(document.getElementById('settings_font_size').value, 10);
-	save_settings({
+	const thumb_size = parseInt(document.getElementById('settings_thumb_size').value, 10);
+	const previous = get_settings();
+	const settings = {
 		font_size: Number.isNaN(font_size) ? DEFAULT_SETTINGS.font_size : font_size,
+		thumb_size: Number.isNaN(thumb_size) ? DEFAULT_SETTINGS.thumb_size : thumb_size,
 		display_relative_time: document.getElementById('settings_relative_time').checked,
 		display_time: document.getElementById('settings_display_time').checked,
 		show_datetime: document.getElementById('settings_show_datetime').checked,
-	});
+		kurobaex_mode: document.getElementById('settings_kurobaex_mode').checked,
+		show_media_hover: document.getElementById('settings_show_media_hover').checked,
+		autoplay_videos: document.getElementById('settings_autoplay_videos').checked,
+		mute_videos: document.getElementById('settings_mute_videos').checked,
+	};
+	save_settings(settings);
 	apply_settings();
 	if (typeof update_datetimes === 'function') { update_datetimes(); }
+	if (settings.kurobaex_mode !== previous.kurobaex_mode) {
+		location.reload();
+		return;
+	}
 	close_settings_modal();
 }
 

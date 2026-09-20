@@ -278,8 +278,6 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
     label_parts = []
     if is_search and not is_catalog:
         label_parts.append(f'[<a href="/{board}/thread/{post['thread_num']}#p{post['num']}" rel="noreferrer" target="_blank" class="click">Post</a>]')
-    if is_video and not is_catalog:
-        label_parts.append('[<span class="mtog play click">Play</span>]')
     media_link = f'<span class="media-label">{" ".join(label_parts)}</span>' if label_parts else ''
     br = '<br>' if media_link else ''
     return f"""<div class="media_cont fileThumb">{media_link}{br}

@@ -27,7 +27,6 @@ login_endpoint = '/login'
 
 [site]
 name = 'Ayase Quart'
-theme = 'tomorrow' # 'tomorrow' 'yotsuba' 'yotsuba_b' 'futaba' 'burichan' 'photon'
 site_email = ''
 anonymous_username = 'Anonymous'
 custom_banner = '' # html, empty string ('') to disable, default None == promo banner

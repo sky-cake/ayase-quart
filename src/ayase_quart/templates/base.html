@@ -9,10 +9,12 @@
     <link href="/static/css/polflags2.css" rel="stylesheet" type="text/css">
 {% endif %}
     <link href="/static/css/custom.css" rel="stylesheet" type="text/css">
+    <link href="/static/css/viewer.css" rel="stylesheet" type="text/css">
 {% block css %}{% endblock %}
 {% block scripts %}
     <script type="text/javascript" defer src="/static/js/utils.js" {{ get_integrity("utils.js")|safe }}></script>
     <script type="text/javascript" defer src="/static/js/settings.js" {{ get_integrity("settings.js")|safe }}></script>
+    <script type="text/javascript" defer src="/static/js/viewer.js" {{ get_integrity("viewer.js")|safe }}></script>
     <script type="text/javascript" defer src="/static/js/index.js" {{ get_integrity("index.js")|safe }}></script>
 {%- endblock scripts %}
 </head>

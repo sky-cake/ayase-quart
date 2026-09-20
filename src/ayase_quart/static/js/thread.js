@@ -5,19 +5,43 @@ function media_mouseout(event) {
     }
 }
 
+function media_hover_video_play_failed() {
+}
+
+function media_hover_video_play(video) {
+    video.muted = true;
+    const play_promise = video.play();
+    if (play_promise) {
+        play_promise.catch(media_hover_video_play_failed);
+    }
+}
+
 function media_mouseover(event) {
-    const img = event.target;
-    const extension = get_data_string(img, 'ext')
-    if (!extension || ext_is_video(extension)) return;
-    if (get_data_string(img, 'expanded') === "true") return;
-    if (!(img instanceof HTMLImageElement)) return;
-    if (!img.getAttribute('data-full_media_src') && !img.getAttribute('data-thumb_src')) return;
+    if (!get_settings().show_media_hover) return;
+    const media_el = event.target;
+    const extension = get_data_string(media_el, 'ext')
+    if (!extension) return;
+    if (get_data_string(media_el, 'expanded') === "true") return;
+    if (!(media_el instanceof HTMLImageElement)) return;
+    if (!media_el.getAttribute('data-full_media_src') && !media_el.getAttribute('data-thumb_src')) return;
     if (document.getElementById('img_cloned')) return;
+
+    if (ext_is_video(extension)) {
+        const video = document.createElement('video');
+        video.id = 'img_cloned';
+        video.classList.add('hover_image');
+        video.src = media_el.getAttribute('data-full_media_src') || media_el.getAttribute('data-thumb_src');
+        video.loop = true;
+        video.playsInline = true;
+        document.body.appendChild(video);
+        media_hover_video_play(video);
+        return;
+    }
 
     const img_cloned = document.createElement('img');
     img_cloned.id = 'img_cloned';
     img_cloned.classList.add('hover_image');
-    img_cloned.src = img.getAttribute('data-full_media_src') || img.getAttribute('data-thumb_src');
+    img_cloned.src = media_el.getAttribute('data-full_media_src') || media_el.getAttribute('data-thumb_src');
     document.body.appendChild(img_cloned);
 }
 
@@ -295,7 +319,9 @@ function quotelink_preview_show(target_post, quotelink, backlink_num) {
 
 function init_thread() {
     setup_media_events();
-    setup_quotelink_events();
+    if (!kurobaex_mode_active()) {
+        setup_quotelink_events();
+    }
 }
 
 init_thread();

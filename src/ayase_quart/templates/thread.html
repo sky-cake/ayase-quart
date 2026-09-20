@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 
+{% block css -%}
+    <link href="/static/css/kuroba.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
 {% block scripts -%}
 	{{ super() }}
 	<script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
+	<script type="text/javascript" defer src="/static/js/kuroba.js" {{ get_integrity("kuroba.js")|safe }}></script>
 {% endblock %}
 
 {% block body %}

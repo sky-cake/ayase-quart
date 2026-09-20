@@ -1,0 +1,164 @@
+.kuroba_hidden {
+    display: none;
+}
+
+.kuroba_replies_btn,
+.kuroba_goto_btn,
+#kuroba_back,
+#kuroba_close {
+    background-color: #1d1d1d;
+    border: none;
+}
+
+.kuroba_replies_btn {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    cursor: pointer;
+    color: #888888;
+    background: none;
+    padding: 0;
+    margin-top: 1em;
+}
+
+div.post > .kuroba_replies_btn {
+    margin: 0 0 0.5em 1em;
+    padding-top: 0.5em;
+}
+
+#kuroba_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1100;
+}
+
+#kuroba_modal {
+    position: fixed;
+    top: 5vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 640px);
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.75em;
+    z-index: 1101;
+}
+
+#kuroba_modal_body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+#kuroba_modal_footer {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid #494949;
+    gap: 4px;
+}
+
+#kuroba_back,
+#kuroba_close {
+    flex: 1 1 0;
+    width: 100%;
+    height: 2em;
+}
+
+#kuroba_back:disabled {
+    text-decoration: none;
+    opacity: 0.4;
+    cursor: default;
+}
+
+.kuroba_entry {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    border-bottom: 1px solid #494949;
+    padding: 8px 2px;
+}
+
+.kuroba_entry:last-child {
+    border-bottom: none;
+}
+
+.kuroba_entry_content {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flow-root;
+}
+
+.kuroba_entry_header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888888;
+}
+
+.kuroba_entry_no {
+    font-weight: bold;
+}
+
+.kuroba_goto_btn {
+    flex: 0 0 auto;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+}
+
+.kuroba_thumb {
+    float: left;
+    margin: 6px 8px 6px 0;
+    max-width: var(--thumb-size);
+    max-height: var(--thumb-size);
+    cursor: pointer;
+}
+
+.kuroba_entry_comment {
+    margin: 4px 0;
+}
+
+.kuroba_entry_content .kuroba_replies_btn {
+    clear: both;
+}
+
+.kuroba_empty {
+    padding: 1em 0;
+    text-align: center;
+    opacity: 0.7;
+}
+
+@keyframes kuroba_target_flash {
+    0%, 40% {
+        background-color: #66666659;
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.kuroba_target_flash {
+    animation: kuroba_target_flash 1s ease-out 1;
+}
+
+@media (max-width: 600px) {
+    #kuroba_modal {
+        left: 0;
+        transform: none;
+        width: 100%;
+        height: 90%;
+        border-radius: 0;
+        padding: 4px;
+    }
+}

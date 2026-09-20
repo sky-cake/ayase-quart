@@ -60,7 +60,6 @@ def test_app_config_login_endpoint():
 def test_site_config_defaults_name():
     conf = SiteConfig.from_dict({'name': 'My Site'})
     assert conf.name == 'My Site'
-    assert conf.theme == 'tomorrow'
 
 
 def test_archive_config_defaults():
@@ -150,8 +149,6 @@ def test_wrong_types_raise():
         AppConfig.from_dict({'port': 'not-a-port'})
     with pytest.raises(ValidationError, match='testing'):
         AppConfig.from_dict({'testing': 'true'})
-    with pytest.raises(ValidationError, match='theme'):
-        SiteConfig.from_dict({'theme': 5})
     with pytest.raises(ValidationError, match='redis_db'):
         StatsConfig.from_dict({'redis_db': 2.5})
     with pytest.raises(ValidationError, match='admin_user'):
@@ -186,8 +183,7 @@ def test_check_cli_ok(monkeypatch, capsys):
 
 
 def test_explicit_values_preserved():
-    conf = SiteConfig.from_dict({'theme': 'ocean', 'site_email': '', 'custom_banner': None})
-    assert conf.theme == 'ocean'
+    conf = SiteConfig.from_dict({'site_email': '', 'custom_banner': None})
     assert conf.site_email == ''
     assert conf.custom_banner is None
 
@@ -198,7 +194,7 @@ def test_explicit_values_preserved():
 
 
 def test_empty_string_not_coerced_to_default():
-    assert SiteConfig.from_dict({'theme': ''}).theme == ''
+    assert SiteConfig.from_dict({'name': ''}).name == ''
 
 
 def test_missing_required_keys_warn(capsys):
@@ -208,14 +204,13 @@ def test_missing_required_keys_warn(capsys):
 
 
 def test_missing_keys_warn(capsys):
-    full = {'name': 'S', 'theme': 'ocean', 'site_email': 'e', 'anonymous_username': 'a', 'custom_banner': 'b'}
+    full = {'name': 'S', 'site_email': 'e', 'anonymous_username': 'a', 'custom_banner': 'b'}
     SiteConfig.from_dict(full)
     assert "missing config key" not in capsys.readouterr().out
 
-    SiteConfig.from_dict({'name': 'S', 'theme': 'ocean'})
+    SiteConfig.from_dict({'name': 'S'})
     out = capsys.readouterr().out
     assert "missing config key 'name'" not in out
-    assert "missing config key 'theme'" not in out
     assert "missing config key 'site_email'" in out
     assert "missing config key 'anonymous_username'" in out
     assert "missing config key 'custom_banner', using None" in out

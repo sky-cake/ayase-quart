@@ -145,6 +145,9 @@ function format_timestamp(ts, now=undefined, date_only=false) {
         parts.push(`<span class="inblk">${formatted_ts}</span>`);
     }
     if (settings.display_relative_time) {
+		if (settings.show_datetime){
+			relative_time = `(${relative_time})`
+		}
         parts.push(`<span class="inblk">${relative_time}</span>`);
     }
 
@@ -169,6 +172,17 @@ function is_mobile_device() {
 }
 
 const is_mobile = is_mobile_device();
+
+function kurobaex_mode_active() {
+	if (typeof get_settings !== 'function') {
+		return false;
+	}
+	if (!get_settings().kurobaex_mode) {
+		return false;
+	}
+	const tools = document.getElementById('tools');
+	return !!(tools && get_data_string(tools, 'thread_num'));
+}
 
 /**
  * Determine if file extension is for video files

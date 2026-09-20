@@ -93,7 +93,6 @@ class AppConfig(BaseConfig):
 
 class SiteConfig(BaseConfig):
     name: str = 'Ayase Quart'
-    theme: str = 'tomorrow'
     site_email: str = ''
     anonymous_username: str = 'Anonymous'
     custom_banner: str | None = None
