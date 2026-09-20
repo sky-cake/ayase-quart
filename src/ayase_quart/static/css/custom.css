@@ -612,14 +612,13 @@ hr {
 
 code {
     color: #55d67c;
-    white-space: pre;
-    overflow: auto;
-    width: min-content;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     border-radius: 4px;
     margin: 3px 0 3px 0;
     padding: 0 4px 0 4px;
     background-color: #1e1e1e;
-    max-width: 70vw;
 }
 
 .codetext {
