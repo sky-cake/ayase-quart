@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS = {
 	display_time: true,
 	show_datetime: true,
 	kurobaex_mode: true,
-	thumb_size: 100,
+	thumb_size: 150,
 	show_media_hover: true,
 	autoplay_videos: true,
 	mute_videos: false,
