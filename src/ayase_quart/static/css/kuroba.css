@@ -42,7 +42,7 @@ div.post > .kuroba_replies_btn {
     top: 5vh;
     left: 50%;
     transform: translateX(-50%);
-    width: min(92vw, 640px);
+    width: min(92vw, 960px);
     height: 90vh;
     display: flex;
     flex-direction: column;
@@ -95,6 +95,8 @@ div.post > .kuroba_replies_btn {
     flex: 1 1 auto;
     min-width: 0;
     display: flow-root;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .kuroba_entry_header {
@@ -102,10 +104,13 @@ div.post > .kuroba_replies_btn {
     align-items: center;
     gap: 8px;
     color: #888888;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 .kuroba_entry_no {
     font-weight: bold;
+    white-space: nowrap;
 }
 
 .kuroba_goto_btn {
@@ -117,9 +122,14 @@ div.post > .kuroba_replies_btn {
     font-size: 1.2em;
 }
 
-.kuroba_thumb {
+.kuroba_entry_content .media_cont {
     float: left;
     margin: 6px 8px 6px 0;
+}
+
+.kuroba_entry_content .kuroba_thumb {
+    float: none;
+    margin: 0;
     max-width: var(--thumb-size);
     max-height: var(--thumb-size);
     cursor: pointer;
@@ -139,17 +149,18 @@ div.post > .kuroba_replies_btn {
     opacity: 0.7;
 }
 
-@keyframes kuroba_target_flash {
-    0%, 40% {
-        background-color: #66666659;
-    }
-    100% {
-        background-color: transparent;
-    }
+.kuroba_target_flash {
+    position: relative;
 }
 
-.kuroba_target_flash {
-    animation: kuroba_target_flash 1s ease-out 1;
+.target_flash_on .kuroba_target_flash::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #6666661e;
+    pointer-events: none;
+    opacity: 0;
+    animation: kuroba_target_flash_fade 1s ease-in-out 1;
 }
 
 @media (max-width: 600px) {

@@ -273,11 +273,33 @@ div.reply span.fileThumb img {
     margin-bottom: 0 !important;
 }
 
-.reply:target,
 .reply.highlight {
     background: #1d1d21 !important;
     border: 1px solid #111 !important;
     padding: 2px;
+}
+
+.reply:target {
+    position: relative;
+}
+
+.target_flash_on .reply:target::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #6666662e;
+    pointer-events: none;
+    opacity: 0;
+    animation: kuroba_target_flash_fade 1.4s ease-in-out 1;
+}
+
+@keyframes kuroba_target_flash_fade {
+    0%, 100% {
+        opacity: 0;
+    }
+    35% {
+        opacity: 1;
+    }
 }
 
 div.post div.file .fileThumb img {

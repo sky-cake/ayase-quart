@@ -413,7 +413,7 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     is_op = wpt['op']
     num = wpt['num']
     ts_unix = wpt['ts_unix']
-
+    nameblock = f"""<span class="nameBlock { wpt['t_cc_class'] }">{ wpt['t_cc'] }</span>""" if wpt['t_cc'] else ''
     return f"""
     { wpt['t_header'] }
     { wpt['t_media'] if is_op else '' }
@@ -423,9 +423,7 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
         { wpt['t_filedeleted'] }
         { wpt['t_sub'] }
         { wpt['t_name'] }
-        <span class="nameBlock { wpt['t_cc_class'] }">
-            { wpt['t_cc'] }
-        </span>{ wpt['t_poster_hash'] }
+        { nameblock }{ wpt['t_poster_hash'] }
         { wpt['t_since4pass'] }
         { wpt['t_country'] }
         { wpt['t_troll_country'] }

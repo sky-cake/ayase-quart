@@ -6,10 +6,8 @@
     {% endif %}
     {{ t_filedeleted }}
     {{ t_sub }}
-    <span class="nameBlock {{ t_cc_class }}">
-        {{t_name}}
-        {{t_cc}}
-    </span>{{ t_poster_hash }}
+    {{ t_name }}
+    {% if t_cc %}<span class="nameBlock {{ t_cc_class }}">{{t_cc}}</span>{% endif %}{{ t_poster_hash }}
     {{ t_since4pass }}
     {{ t_country }}
     {{ t_troll_country }}

@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
 	show_media_hover: true,
 	autoplay_videos: true,
 	mute_videos: false,
+	target_flash: true,
 };
 
 function get_settings() {
@@ -29,6 +30,7 @@ function apply_settings() {
 	const settings = get_settings();
 	document.body.style.fontSize = `${settings.font_size}pt`;
 	document.documentElement.style.setProperty('--thumb-size', `${settings.thumb_size}px`);
+	document.documentElement.classList.toggle('target_flash_on', !!settings.target_flash);
 }
 
 function close_settings_modal() {
@@ -54,6 +56,7 @@ function open_settings_modal() {
 	document.getElementById('settings_display_time').checked = settings.display_time;
 	document.getElementById('settings_show_datetime').checked = settings.show_datetime;
 	document.getElementById('settings_kurobaex_mode').checked = settings.kurobaex_mode;
+	document.getElementById('settings_target_flash').checked = settings.target_flash;
 	document.getElementById('settings_show_media_hover').checked = settings.show_media_hover;
 	document.getElementById('settings_autoplay_videos').checked = settings.autoplay_videos;
 	document.getElementById('settings_mute_videos').checked = settings.mute_videos;
@@ -73,6 +76,7 @@ function save_settings_modal() {
 		display_time: document.getElementById('settings_display_time').checked,
 		show_datetime: document.getElementById('settings_show_datetime').checked,
 		kurobaex_mode: document.getElementById('settings_kurobaex_mode').checked,
+		target_flash: document.getElementById('settings_target_flash').checked,
 		show_media_hover: document.getElementById('settings_show_media_hover').checked,
 		autoplay_videos: document.getElementById('settings_autoplay_videos').checked,
 		mute_videos: document.getElementById('settings_mute_videos').checked,

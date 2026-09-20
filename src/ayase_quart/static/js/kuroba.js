@@ -29,6 +29,24 @@ function kuroba_make_replies_btn(num) {
 	return btn;
 }
 
+function kuroba_build_media(media_img) {
+	const source_cont = media_img.closest('.media_cont');
+	if (source_cont && source_cont.classList.contains('img_broken')) {
+		const broken = document.createElement('div');
+		broken.classList.add('media_cont');
+		broken.classList.add('img_broken');
+		return broken;
+	}
+	const media_cont = document.createElement('div');
+	media_cont.classList.add('media_cont');
+	const thumb = media_img.cloneNode(false);
+	thumb.removeAttribute('id');
+	thumb.removeAttribute('data-expanded');
+	thumb.classList.add('kuroba_thumb');
+	media_cont.appendChild(thumb);
+	return media_cont;
+}
+
 function kuroba_build_entry(num) {
 	const entry = document.createElement('div');
 	entry.classList.add('kuroba_entry');
@@ -54,11 +72,7 @@ function kuroba_build_entry(num) {
 
 	const media_img = document.querySelector(`#p${num} .media_cont img.mtog`);
 	if (media_img) {
-		const thumb = media_img.cloneNode(false);
-		thumb.removeAttribute('id');
-		thumb.removeAttribute('data-expanded');
-		thumb.classList.add('kuroba_thumb');
-		content.appendChild(thumb);
+		content.appendChild(kuroba_build_media(media_img));
 	}
 
 	const comment = document.getElementById('m' + num);
@@ -81,7 +95,7 @@ function kuroba_build_entry(num) {
 	goto_btn.classList.add('kuroba_goto_btn');
 	goto_btn.classList.add('btn');
 	goto_btn.dataset.num = String(num);
-	goto_btn.textContent = '🠊';
+	goto_btn.textContent = '→';
 	goto_btn.title = 'Go to post';
 	entry.appendChild(goto_btn);
 
@@ -171,11 +185,7 @@ function kuroba_build_cross_entry(num, data) {
 	if (post) {
 		const media_img = post.querySelector('.media_cont img.mtog');
 		if (media_img) {
-			const thumb = media_img.cloneNode(false);
-			thumb.removeAttribute('id');
-			thumb.removeAttribute('data-expanded');
-			thumb.classList.add('kuroba_thumb');
-			content.appendChild(thumb);
+			content.appendChild(kuroba_build_media(media_img));
 		}
 
 		const comment = post.querySelector('.postMessage');
@@ -198,7 +208,7 @@ function kuroba_build_cross_entry(num, data) {
 	if (data.thread_num) {
 		goto_btn.dataset.thread = String(data.thread_num);
 	}
-	goto_btn.textContent = '🠊';
+	goto_btn.textContent = '→';
 	goto_btn.title = 'Go to post';
 	entry.appendChild(goto_btn);
 
