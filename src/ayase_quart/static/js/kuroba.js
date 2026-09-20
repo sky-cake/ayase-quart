@@ -243,8 +243,8 @@ function kuroba_ensure_modal() {
 	close_btn.id = 'kuroba_close';
 	close_btn.classList.add('btn');
 	close_btn.textContent = 'Close';
-	footer.appendChild(close_btn);
 	footer.appendChild(back_btn);
+	footer.appendChild(close_btn);
 
 	modal.appendChild(body);
 	modal.appendChild(footer);
