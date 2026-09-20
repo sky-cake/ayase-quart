@@ -62,6 +62,15 @@ function update_datetimes(root) {
 function mark_broken_media(img) {
     const media_cont = img.closest('.media_cont');
     if (!media_cont || media_cont.classList.contains('img_broken')) return;
+    if (!media_cont.closest('#catalog_threads')) {
+        const w = img.clientWidth;
+        const h = img.clientHeight;
+        if (w > 0 && h > 0) {
+            media_cont.style.width = `${w}px`;
+            media_cont.style.height = `${h}px`;
+            media_cont.classList.add('img_broken_sized');
+        }
+    }
     media_cont.classList.add('img_broken');
 }
 

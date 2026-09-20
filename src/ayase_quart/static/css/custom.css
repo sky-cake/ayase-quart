@@ -437,6 +437,12 @@ footer {
     background-color: #17191b;
 }
 
+.media_cont.img_broken.img_broken_sized {
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
 .media_cont.img_broken img {
     display: none;
 }
