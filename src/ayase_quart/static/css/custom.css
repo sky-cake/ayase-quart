@@ -1196,7 +1196,19 @@ h3 {
 
 @media (max-width: 800px) {
     body {
-        padding-inline: 4px;
+        padding-inline: 2px;
+        margin-top: 3px;
+    }
+    div.post {
+        margin: 3px 0;
+        padding: 2px;
+    }
+    div.post div.file .fileThumb {
+        margin: 6px 8px 6px 0;
+    }
+    div.post blockquote.postMessage,
+    div.replyContainer div.post div.file div.fileInfo {
+        margin: 4px 0;
     }
     .cover {
         width: 30vw;
