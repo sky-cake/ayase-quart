@@ -46,6 +46,9 @@ function media_mouseover(event) {
 }
 
 function setup_media_events() {
+    if (is_mobile) {
+        return;
+    }
     const media_containers = doc_query_all('.media_cont');
     for (const container of media_containers) {
         container.addEventListener('mouseover', media_mouseover);
