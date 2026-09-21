@@ -89,7 +89,9 @@ function quotelink_fetch_finalize(target_post, quotelink, backlink_num, post_key
 
 function quotelink_mouseover(event) {
     const quotelink = event.target;
-    const num = quotelink.getAttribute("href").split("#p")[1];
+    const href = quotelink.getAttribute('href');
+    if (!href) return; // dead quotelink
+    const num = href.split("#p")[1];
     const board = get_data_string(quotelink, 'board');
 
     const backlink = quotelink.parentElement.parentElement.id;
@@ -135,6 +137,7 @@ function quotelink_goto(event) {
     const icon = event.currentTarget;
     const quotelink = icon.previousElementSibling;
     if (!quotelink) return;
+    if (!quotelink.getAttribute('href')) return; // dead quotelink
 
     const board = get_data_string(quotelink, 'board');
     const num = quotelink.getAttribute("href").split("#p")[1];
@@ -175,7 +178,7 @@ function hide_preview_if_not_preview_click(event) {
 }
 
 function setup_quotelink_events() {
-    const quotelinks = doc_query_all("a.quotelink");
+    const quotelinks = doc_query_all("a.quotelink[href]");
     if (is_mobile) {
         for (const quotelink of quotelinks) {
             if (quotelink.parentElement.classList.contains('nowrap')) {

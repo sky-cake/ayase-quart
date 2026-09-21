@@ -54,8 +54,6 @@ html {
 body {
     background: #1d1f21 none;
     font-family: arial, helvetica, sans-serif;
-    margin-left: 0;
-    margin-right: 0;
     margin-top: 5px;
     padding-inline: 5px;
 }
@@ -134,13 +132,6 @@ div.opContainer {
     display: inline;
 }
 
-.sideArrows {
-    color: #c5c8c6;
-    margin-right: 4px;
-}
-.sideArrows::after {
-	content: '>>';
-}
 .sourcelink::after {
 	content: 'Source';
 }
@@ -151,7 +142,7 @@ div.thread, .clear_both {
 }
 
 div.post {
-    margin: 4px 0;
+    margin: 6px 0;
     overflow: hidden;
 }
 
@@ -167,7 +158,6 @@ div.reply {
     background-color: #282a2e;
     border: 1px solid #282a2e;
     display: table;
-    padding: 2px;
 }
 
 div.reply input {
@@ -237,7 +227,9 @@ a:hover {
 
 div.post div.file .fileThumb img {
     border: none;
-    float: left;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 div.post div.file {
@@ -259,6 +251,13 @@ div.post div.file .fileThumb {
     margin-right: 1em;
     margin-top: 3px;
     margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    background-color: #17191b;
 }
 
 span.fileThumb {
@@ -304,7 +303,9 @@ div.reply span.fileThumb img {
 
 div.post div.file .fileThumb img {
     border: none;
-    float: left;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 span.summary {
@@ -404,7 +405,6 @@ footer {
     justify-content: center;
     height: 200px;
     background-color: #17191b;
-    padding: 4px;
     margin: 4px 0 4px 0;
 }
 
@@ -433,7 +433,6 @@ footer {
     justify-content: center;
     min-width: var(--thumb-size);
     min-height: var(--thumb-size);
-    padding: 4px;
     background-color: #17191b;
 }
 
@@ -1198,15 +1197,12 @@ h3 {
     body {
         padding-inline: 2px;
         margin-top: 3px;
-    }
-    div.post {
-        margin: 3px 0;
-        padding: 2px;
+        margin-left: 0;
+        margin-right: 0;
     }
     div.post div.file .fileThumb {
         margin: 6px 8px 6px 0;
     }
-    div.post blockquote.postMessage,
     div.replyContainer div.post div.file div.fileInfo {
         margin: 4px 0;
     }

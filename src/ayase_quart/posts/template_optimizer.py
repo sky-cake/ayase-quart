@@ -115,12 +115,15 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     report_t = get_report_t(post)
 
     return f'''<div id="pc{num}"><div id="p{num}" class="post reply">
+    {media_t}
     <div class="postInfo" id="pi{num}">
-        <span class="sideArrows"></span> <b class="inblk">/{board}/</b> <span class="name N">{site_conf.anonymous_username}</span>
-        <span class="dateTime inblk" data-utc="{ts_unix}"></span> <a href="/{post_path_t}">No.{num}</a>
-        {report_t}[<a class="sourcelink" href="{upstream_path}" rel="noreferrer" target="_blank"></a>]
+        <div class="post_meta"><b class="inblk">/{board}/</b>
+        <span class="name N">{site_conf.anonymous_username}</span>
+        <a href="/{post_path_t}">No.{num}</a>
+        <div class="dateTime" data-utc="{ts_unix}"></div>
+        {report_t}[<a class="sourcelink" href="{upstream_path}" rel="noreferrer" target="_blank"></a>]</div>
     </div>
-    {media_t}<blockquote class="postMessage" id="m{num}">{comment}</blockquote>{quotelinks_t}
+    <blockquote class="postMessage" id="m{num}">{comment}</blockquote>{quotelinks_t}
 </div></div>'''
 
 
@@ -153,7 +156,7 @@ def get_media_t_thread(post: dict, num: int, board: str):
     return f"""<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
-            (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
+            <span class="inblk" title="{md5h}">({spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])})</span>
 	        {get_hash_search_link(board, md5h)}
         </div>
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
@@ -304,7 +307,7 @@ def get_media_t(post: dict):
 	<div class="file" id="f{num}">
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
-            (<span title="{md5h}">{spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])}</span>)
+            <span class="inblk" title="{md5h}">({spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])})</span>
 	        {get_hash_search_link(board, md5h)}
         </div>
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
@@ -416,26 +419,23 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     nameblock = f"""<span class="nameBlock { wpt['t_cc_class'] }">{ wpt['t_cc'] }</span>""" if wpt['t_cc'] else ''
     return f"""
     { wpt['t_header'] }
-    { wpt['t_media'] if is_op else '' }
+    { wpt['t_media'] }
     <div class="postInfo" id="pi{num}">
-        { '' if is_op else '<span class="sideArrows"></span>' }
-        <span class="inblk"><b>/{wpt['board_shortname']}/</b> { op_label if is_op else '' }</span>
         { wpt['t_filedeleted'] }
-        { wpt['t_sub'] }
-        { wpt['t_name'] }
-        { nameblock }{ wpt['t_poster_hash'] }
-        { wpt['t_since4pass'] }
-        { wpt['t_country'] }
-        { wpt['t_troll_country'] }
-        <span class="dateTime inblk" data-utc="{ts_unix}"></span>
+        { f'<div class="post_subject">{wpt['t_sub']}</div>' if wpt['t_sub'] else '' }
+        <div class="post_meta">
+        <span class="inblk"><b>/{wpt['board_shortname']}/</b></span>
+        { op_label if is_op else '' } { wpt['t_name'] }
         <a href="/{wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel']}">No.{num}</a>
+        <div class="dateTime" data-utc="{ts_unix}"></div>
         { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
-        <span class="inblk">
-        { wpt['t_report'] } [<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]
-        </span>
+        <span class="inblk">{ wpt['t_report'] }[<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]</span>
+        </div>
+        <div class="post_name">
+        { nameblock }{ wpt['t_poster_hash'] } { wpt['t_since4pass'] } { wpt['t_country'] } { wpt['t_troll_country'] }
+        </div>
     </div>
     <div>
-        { wpt['t_media'] if not is_op else '' }
         <blockquote class="postMessage" id="m{num}">{wpt['comment']}</blockquote>
     </div>
     { wpt['t_quotelink'] }
