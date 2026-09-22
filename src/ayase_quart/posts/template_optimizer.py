@@ -182,10 +182,10 @@ def get_view_same_t(post: dict) -> str:
 def get_post_menu_t(post: dict, source_href: str, include_report: bool=True) -> str:
     view_same_t = get_view_same_t(post)
     report_t = get_report_t(post) if include_report else ''
-    return f"""<details class="post_menu">
-    <summary class="post_menu_btn" title="Post menu" tabindex="0"></summary>
-    <div class="post_menu_dropdown">{view_same_t}{report_t}<a href="{source_href}" rel="noreferrer" target="_blank">Visit source</a>
-    </div></details>"""
+    return f"""<div class="post_menu">
+    <span class="post_menu_btn"></span>
+    <div class="post_menu_dropdown">{view_same_t}{report_t}<a href="{source_href}" rel="noreferrer" target="_blank">Visit Source</a>
+    </div></div>"""
 
 
 def get_sub_t(post: dict):

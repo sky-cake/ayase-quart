@@ -146,6 +146,10 @@ div.post {
     overflow: hidden;
 }
 
+.post_meta {
+    color: #888888;
+}
+
 div.thread>div:nth-of-type(2)>div.reply {
     margin-top: 2px !important;
 }
@@ -158,6 +162,7 @@ div.reply {
     background-color: #282a2e;
     border: 1px solid #282a2e;
     display: table;
+    min-width: 480px;
 }
 
 div.reply input {
@@ -595,19 +600,16 @@ ul {
     color: #81a2be;
     cursor: pointer;
     font-family: arial, helvetica, sans-serif;
-    font-weight: bold;
-}
-
-.post_menu_btn::-webkit-details-marker {
-    display: none;
 }
 
 .post_menu_btn::after {
+    content: '➤';
     display: inline-block;
     margin-bottom: 2px;
 }
 
 .post_menu_dropdown {
+    display: none;
     position: absolute;
     left: 0;
     top: 100%;
@@ -630,6 +632,10 @@ ul {
 .post_menu_dropdown a:hover,
 .post_menu_dropdown .rbtn:hover {
     color: #5f89ac;
+}
+
+.post_menu:hover .post_menu_dropdown {
+    display: block;
 }
 
 .nukethreadbtn::after {
@@ -1298,6 +1304,13 @@ h3 {
         width: calc(50% - 2px);
         max-width: none;
         max-height: 360px;
+    }
+    div.post.reply,
+    div.replyContainer div.post.reply {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
     }
     .meta {
         display: inline-block;
