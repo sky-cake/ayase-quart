@@ -10,7 +10,7 @@ async def generate_post_html(board: str, num: int) -> str:
     post_2_quotelinks, post = await generate_post(board, num)
     if not post:
         return 'Error fetching post.'
-    post_t = wrap_post_t(post | dict(quotelinks={})) | dict(t_report='')
+    post_t = wrap_post_t(post | dict(quotelinks={}), include_report=False)
     return render_wrapped_post_t(post_t)
 
 

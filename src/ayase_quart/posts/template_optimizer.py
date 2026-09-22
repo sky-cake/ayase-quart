@@ -13,7 +13,7 @@ from ..upstream import get_thread_upstream, get_post_upstream
 type QuotelinkD = dict[int, list[int]]
 
 
-def wrap_post_t(post: dict):
+def wrap_post_t(post: dict, include_report: bool=True):
     if not (post and post.get('num')): # Are there cases when post doesn't have a num?
         return post
     esc_user_data(post)
@@ -34,7 +34,7 @@ def wrap_post_t(post: dict):
         t_filedeleted=get_filedeleted_t(post),
         t_header=get_header_t(post),
         t_quotelink=get_quotelink_t(post),
-        t_report=get_report_t(post),
+        t_menu=get_post_menu_t(post, post['t_thread_link_src'] if post.get('op') else post['t_post_link_src'], include_report=include_report),
     )
     return post
 
@@ -112,16 +112,14 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
     upstream_path = get_post_upstream(board, thread_num, num)
-    report_t = get_report_t(post)
 
     return f'''<div id="pc{num}"><div id="p{num}" class="post reply">
     {media_t}
     <div class="postInfo" id="pi{num}">
-        <div class="post_meta"><b class="inblk">/{board}/</b>
+        <div class="post_meta">{get_post_menu_t(post, upstream_path)}<b class="inblk">/{board}/</b>
         <span class="name N">{site_conf.anonymous_username}</span>
         <a href="/{post_path_t}">No.{num}</a>
-        <div class="dateTime" data-utc="{ts_unix}"></div>
-        {report_t}[<a class="sourcelink" href="{upstream_path}" rel="noreferrer" target="_blank"></a>]</div>
+        <div class="dateTime" data-utc="{ts_unix}"></div></div>
     </div>
     <blockquote class="postMessage" id="m{num}">{comment}</blockquote>{quotelinks_t}
 </div></div>'''
@@ -157,7 +155,6 @@ def get_media_t_thread(post: dict, num: int, board: str):
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             <span class="inblk" title="{md5h}">({spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])})</span>
-	        {get_hash_search_link(board, md5h)}
         </div>
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
     </div>"""
@@ -173,7 +170,22 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
 def get_report_t(post: dict) -> str:
     if not mod_conf.enabled:
         return ''
-    return f"""<span class="inblk">[<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>]</span> """
+    return f"""<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>"""
+
+
+def get_view_same_t(post: dict) -> str:
+    if post['media_filename']:
+        return get_hash_search_link(post['board_shortname'], post['media_hash'])
+    return ''
+
+
+def get_post_menu_t(post: dict, source_href: str, include_report: bool=True) -> str:
+    view_same_t = get_view_same_t(post)
+    report_t = get_report_t(post) if include_report else ''
+    return f"""<details class="post_menu">
+    <summary class="post_menu_btn" title="Post menu" tabindex="0"></summary>
+    <div class="post_menu_dropdown">{view_same_t}{report_t}<a href="{source_href}" rel="noreferrer" target="_blank">Visit source</a>
+    </div></details>"""
 
 
 def get_sub_t(post: dict):
@@ -308,7 +320,6 @@ def get_media_t(post: dict):
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             <span class="inblk" title="{md5h}">({spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])})</span>
-	        {get_hash_search_link(board, md5h)}
         </div>
         {get_media_img_t(post, full_src=full_src, thumb_src=thumb_src)}
     </div>
@@ -424,12 +435,11 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
         { wpt['t_filedeleted'] }
         { f'<div class="post_subject">{wpt['t_sub']}</div>' if wpt['t_sub'] else '' }
         <div class="post_meta">
-        <span class="inblk"><b>/{wpt['board_shortname']}/</b></span>
+        { wpt['t_menu'] }<span class="inblk"><b>/{wpt['board_shortname']}/</b></span>
         { op_label if is_op else '' } { wpt['t_name'] }
         <a href="/{wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel']}">No.{num}</a>
         <div class="dateTime" data-utc="{ts_unix}"></div>
         { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
-        <span class="inblk">{ wpt['t_report'] }[<a href="{ wpt['t_thread_link_src'] if is_op else wpt['t_post_link_src'] }" rel="noreferrer" target="_blank">Source</a>]</span>
         </div>
         <div class="post_name">
         { nameblock }{ wpt['t_poster_hash'] } { wpt['t_since4pass'] } { wpt['t_country'] } { wpt['t_troll_country'] }
@@ -466,8 +476,8 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
             <div>{get_thread_stats_t(wpt)}</div>
             <div>
-                <span class="inblk">/{board}/ [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]</span>
-                <span class="inblk">No. {num}</span>
+                <span class="inblk">/{board}/ No. {num}</span>
+                [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]
             </div>
             { wpt['t_cc'] }{nl}
         </div>

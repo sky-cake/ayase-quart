@@ -580,7 +580,56 @@ ul {
 }
 
 .rbtn::after {
-	content: 'Report';
+	content: 'Report post';
+}
+
+.post_menu {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.post_menu_btn {
+    background-color: inherit;
+    border: none;
+    color: #81a2be;
+    cursor: pointer;
+    font-family: arial, helvetica, sans-serif;
+    font-weight: bold;
+}
+
+.post_menu_btn::-webkit-details-marker {
+    display: none;
+}
+
+.post_menu_btn::after {
+    display: inline-block;
+    margin-bottom: 2px;
+}
+
+.post_menu_dropdown {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    z-index: 20;
+    min-width: 90px;
+    padding: 4px;
+    background-color: #282a2e;
+    border: 1px solid #666666;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.post_menu_dropdown a,
+.post_menu_dropdown .rbtn {
+    display: block;
+    text-align: left;
+    color: #81a2be;
+    white-space: nowrap;
+}
+
+.post_menu_dropdown a:hover,
+.post_menu_dropdown .rbtn:hover {
+    color: #dddddd;
 }
 
 .nukethreadbtn::after {
