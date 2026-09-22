@@ -629,7 +629,7 @@ ul {
 
 .post_menu_dropdown a:hover,
 .post_menu_dropdown .rbtn:hover {
-    color: #dddddd;
+    color: #5f89ac;
 }
 
 .nukethreadbtn::after {
@@ -1044,12 +1044,25 @@ img, video {
     text-align: center;
 }
 
-#report_modal,
 #settings_modal {
     position: fixed;
     top: 30%;
     left: 50%;
     transform: translate(-50%, -50%);
+    padding: 1em;
+    border-radius: 4px;
+    z-index: 1000;
+}
+
+#report_modal {
+    position: fixed;
+    top: 5vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 520px);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
     padding: 1em;
     border-radius: 4px;
     z-index: 1000;
@@ -1078,6 +1091,15 @@ img, video {
 #settings_save:hover,
 #settings_close:hover {
     text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+    #report_modal {
+        left: 0;
+        transform: none;
+        width: 100%;
+        border-radius: 0;
+    }
 }
 
 .settings_field {

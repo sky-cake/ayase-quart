@@ -21,7 +21,7 @@ from .user import Permissions, User
 
 category_options_html = '\n'.join(
     f"""
-    <div>
+    <div class="settings_field">
         <input type="radio" id="{category.name}" name="submitter_category" value="{category.value}" required>
         <label for="{category.name}">{category.value}</label>
     </div>
@@ -38,22 +38,26 @@ def generate_report_form() -> str:
         <div id="report_modal" class="form" hidden>
             <div class="modal_header">
                 <div class="modal_title">Report</div>
-                <div id="report_close" class="btn">Close</div>
             </div>
-            <form class="form" id="report_form" action="" method="POST">
+            <form id="report_form" action="" method="POST">
                 {get_csrf_input()}
-                <div>
-                    <label for="submitter_category">Category:</label>
+                <div class="settings_group">
+                    <div class="settings_field">
+                        <label>Category</label>
+                    </div>
                     {category_options_html}
                 </div>
-                <br>
-                <div>
-                    <label for="submitter_notes">Details:</label>
-                    <textarea id="submitter_notes" name="submitter_notes" cols="48" rows="8" maxlength="512" placeholder="Provide details about the issue."></textarea>
+                <div class="settings_group">
+                    <div class="settings_field">
+                        <label for="submitter_notes">Details</label>
+                        <textarea id="submitter_notes" name="submitter_notes" cols="48" rows="8" maxlength="512" placeholder="Provide details about the issue."></textarea>
+                    </div>
                 </div>
-                <br>
                 <div id="feedback_report"></div>
-                <input type="submit" value="Submit" class="mb05">
+                <div class="modal_footer">
+                    <button class="btn" type="submit">Submit</button>
+                    <div id="report_close" class="btn">Cancel</div>
+                </div>
             </form>
         </div>
     </div>
