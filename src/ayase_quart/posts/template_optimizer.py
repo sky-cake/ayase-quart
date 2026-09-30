@@ -4,6 +4,7 @@ from itertools import product
 from ..configs import archive_conf, mod_conf, site_conf
 from ..media import ext_is_video, get_image_full_uri, get_thumb_full_uri, get_hash_search_link
 from ..posts.capcodes import Capcode
+from ..posts.countries import country_2_flag_code
 from ..threads import get_thread_path
 from ..utils.timestamps import ts_2_formatted
 from ..enums import ImgTagClass
@@ -26,7 +27,6 @@ def wrap_post_t(post: dict, include_report: bool=True):
         t_sticky=get_sticky_t(post),
         t_closed=get_closed_t(post),
         t_country=get_country_t(post),
-        t_troll_country=get_troll_country_t(post),
         t_trip=get_trip_t(post),
         t_name=get_name_t(post),
         t_poster_hash=get_poster_hash_t(post),
@@ -76,7 +76,6 @@ rare_keys = (
     'locked',
     'deleted',
     'poster_country',
-    'troll_country',
     'poster_hash',
     'since4pass',
     'trip',
@@ -349,15 +348,12 @@ def get_closed_t(post: dict):
 
 
 def get_country_t(post: dict):
-    if not (poster_country := post['poster_country']):
+    if post['board_shortname'] != 'pol':
         return ''
-    return f'<span title="{poster_country}" class="flag flag-{poster_country.lower()}"></span>'
 
-
-def get_troll_country_t(post: dict):
-    if not (troll_country := post.get('troll_country')):
-        return ''
-    return f'<span title="{post["poster_country"]}" class="flag-pol2 flag-{troll_country.lower()}"></span>'
+    poster_country = post['poster_country']
+    code = country_2_flag_code(poster_country)
+    return f'<span title="{poster_country or 'Unknown'}" class="flag flag-{code}"></span>'
 
 
 def get_trip_t(post: dict):
@@ -407,7 +403,8 @@ def get_quotelink_t(post: dict):
 
 
 def esc_user_data(post: dict):
-    post['name'] = escape(name) if (name := post.get('name')) else site_conf.anonymous_username
+    # Asagi stores 'Anonymous' in the DB by default, so we must check for that
+    post['name'] = escape(name) if (name := post.get('name')) and name != 'Anonymous' else site_conf.anonymous_username
     post['email'] = escape(email) if (email := post.get('email')) else ''
 
 
@@ -432,17 +429,16 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     { wpt['t_header'] }
     { wpt['t_media'] }
     <div class="postInfo" id="pi{num}">
-        { wpt['t_filedeleted'] }
+        { wpt['t_filedeleted'] } { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
         { f'<div class="post_subject">{wpt['t_sub']}</div>' if wpt['t_sub'] else '' }
         <div class="post_meta">
-        { wpt['t_menu'] }<span class="inblk"><b>/{wpt['board_shortname']}/</b></span>
-        { op_label if is_op else '' } { wpt['t_name'] }
-        <a href="/{wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel']}">No.{num}</a>
-        <div class="dateTime" data-utc="{ts_unix}"></div>
-        { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
-        </div>
-        <div class="post_name">
-        { nameblock }{ wpt['t_poster_hash'] } { wpt['t_since4pass'] } { wpt['t_country'] } { wpt['t_troll_country'] }
+            { wpt['t_menu'] }<span class="inblk"><b>/{wpt['board_shortname']}/</b></span>
+            { op_label if is_op else '' } { wpt['t_name'] }
+            <span class="post_name">
+            { nameblock }{ wpt['t_poster_hash'] } { wpt['t_since4pass'] } { wpt['t_country'] }
+            </span>
+            <a href="/{wpt['t_thread_link_rel'] if is_op else wpt['t_post_link_rel']}">No.{num}</a>
+            <div class="dateTime" data-utc="{ts_unix}"></div>
         </div>
     </div>
     <div>
@@ -476,6 +472,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             <div class="dateTime inblk" data-utc="{ts_unix}"></div>
             <div>{get_thread_stats_t(wpt)}</div>
             <div>
+                { wpt['t_country'] }
                 <span class="inblk">/{board}/ No. {num}</span>
                 [<a href="{ wpt['t_thread_link_src'] }" class="btnr parent" rel="noreferrer" target="_blank">Source</a>]
             </div>

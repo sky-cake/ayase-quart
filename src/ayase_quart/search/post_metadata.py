@@ -14,7 +14,7 @@ To avoid frequent mysql/sqlite database lookups for random search queries, we st
 2. **Zlib_ng**: Compresses the MessagePack (chosen for speed over Brotli, which is slow without JSON). Analogous to orjson vs json.
 3. **Base64**: Encodes the compressed data (due to lack of support for byte fields).
 
-We focus on retaining only fields needed for rendering search results (fields consumed by: `index_search/post_t.html` and `template_optimizer.py`), so we  remove the following fields.
+We focus on retaining only fields needed for rendering search results (fields consumed by: `template_optimizer.py`), so we remove the following fields.
 
 - op
 - deleted
@@ -42,7 +42,7 @@ fields = (
     'since4pass',
     'poster_hash',
     'poster_country',
-    'troll_country',
+    'troll_country', # useless field, needs removing, but this will result in a mandatory re-indexing
     'title',
     'name',
     'email',

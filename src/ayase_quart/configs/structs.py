@@ -94,7 +94,7 @@ class AppConfig(BaseConfig):
 class SiteConfig(BaseConfig):
     name: str = 'Ayase Quart'
     site_email: str = ''
-    anonymous_username: str = 'Anonymous'
+    anonymous_username: str = ''
     custom_banner: str | None = None
 
 
