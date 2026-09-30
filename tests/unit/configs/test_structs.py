@@ -57,6 +57,11 @@ def test_app_config_login_endpoint():
     assert AppConfig.from_dict({}).login_endpoint == '/login'
 
 
+def test_app_config_enable_board_index_web_routes_default():
+    assert AppConfig.from_dict({}).enable_board_index_web_routes is True
+    assert AppConfig.from_dict({'enable_board_index_web_routes': False}).enable_board_index_web_routes is False
+
+
 def test_site_config_defaults_name():
     conf = SiteConfig.from_dict({'name': 'My Site'})
     assert conf.name == 'My Site'

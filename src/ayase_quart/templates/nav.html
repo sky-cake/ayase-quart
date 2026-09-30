@@ -51,8 +51,8 @@
 
 {% if endpoint() in [
     'bp_web_app.v_thread',
-    'bp_web_app.v_board_index',
-    'bp_web_app.v_board_index_page',
+    'bp_web_board_index.v_board_index',
+    'bp_web_board_index.v_board_index_page',
     'bp_web_app.v_catalog',
     'bp_web_app.v_catalog_page',
     'bp_web_vanilla_search.v_vanilla_search_get',
@@ -66,7 +66,7 @@
 {% if board %}
 [
     <a href="{{board_objects_d[board]['upstream_catalog']}}" rel="noreferrer" target="_blank">/{{board}}/ on {{canonical_name}}</a> /
-    <a href="/{{ board }}">Index</a> /
+    {% if enable_board_index_web_routes %}<a href="/{{ board }}">Index</a> /{% endif %}
     <a href="/{{ board }}/catalog">Catalog</a>
 ]
 {% endif %}

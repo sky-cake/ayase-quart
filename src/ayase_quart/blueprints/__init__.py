@@ -2,6 +2,7 @@ from .api.bp_app import bp as bp_api_app
 from .web.bp_about import bp as bp_about
 from .web.bp_app import bp as bp_web_app
 from ..configs import (
+    app_conf,
     index_search_conf,
     media_conf,
     mod_conf,
@@ -14,6 +15,11 @@ blueprints = [
     bp_api_app, # the configurable (on/off) .json endpoints
     bp_web_app,
 ]
+
+
+if app_conf.enable_board_index_web_routes:
+    from .web.bp_board_index import bp as bp_board_index
+    blueprints += [bp_board_index]
 
 
 if index_search_conf.enabled:

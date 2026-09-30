@@ -73,6 +73,7 @@ class AppConfig(BaseConfig):
     validate_boards_db: bool = True
     autoreload: bool = False
     api: bool = False
+    enable_board_index_web_routes: bool = True
     url: str = ''
     port: Port = 9001
     ssl_key: str | None = None
