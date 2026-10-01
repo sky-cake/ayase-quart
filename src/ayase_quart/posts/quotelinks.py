@@ -17,7 +17,8 @@ def get_quotelink_lookup_raw(posts: list[dict]) -> dict[int, list[int]]:
 
         num = post['num']
         for quotelink in extract_quotelinks_raw(comment):
-            lookup[quotelink].append(num)
+            if num not in lookup[quotelink]:
+                lookup[quotelink].append(num)
 
     return lookup
 
@@ -33,7 +34,8 @@ def get_quotelink_lookup(rows: list[dict]) -> dict[int, list[int]]:
             continue
         num = row['num']
         for quotelink in extract_quotelinks(comment):
-            post_2_quotelinks[quotelink].append(num)
+            if num not in post_2_quotelinks[quotelink]:
+                post_2_quotelinks[quotelink].append(num)
     return post_2_quotelinks
 
 

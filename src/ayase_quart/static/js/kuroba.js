@@ -13,7 +13,10 @@ function kuroba_get_reply_nums(num) {
 		return nums;
 	}
 	for (const link of backlink_div.querySelectorAll('a.quotelink')) {
-		nums.push(kuroba_num_from_quotelink(link));
+		const reply_num = kuroba_num_from_quotelink(link);
+		if (!nums.includes(reply_num)) {
+			nums.push(reply_num);
+		}
 	}
 	return nums;
 }
@@ -47,7 +50,7 @@ function kuroba_build_media(media_img) {
 	return media_cont;
 }
 
-function kuroba_build_entry(num) {
+function kuroba_build_entry(num, highlight_num = null) {
 	const entry = document.createElement('div');
 	entry.classList.add('kuroba_entry');
 
@@ -81,6 +84,14 @@ function kuroba_build_entry(num) {
 		blockquote.removeAttribute('id');
 		blockquote.classList.add('kuroba_entry_comment');
 		blockquote.innerHTML = comment.innerHTML;
+		if (highlight_num !== null) {
+			for (const link of blockquote.querySelectorAll('a.quotelink')) {
+				if (kuroba_num_from_quotelink(link) === highlight_num) {
+					link.classList.add('hl_dark');
+					break;
+				}
+			}
+		}
 		content.appendChild(blockquote);
 	}
 
@@ -269,7 +280,7 @@ function kuroba_render_modal() {
 			body.appendChild(empty);
 		} else {
 			for (const num of nums) {
-				body.appendChild(kuroba_build_entry(num));
+				body.appendChild(kuroba_build_entry(num, view.num));
 			}
 		}
 	} else if (view.type === 'cross_post') {
