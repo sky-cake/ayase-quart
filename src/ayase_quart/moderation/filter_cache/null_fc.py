@@ -10,7 +10,7 @@ class FilterCacheNull(BaseFilterCache):
     async def _is_cache_populated(self) -> bool: return True
     async def _populate_cache(self) -> None: pass
     async def _teardown(self) -> None: pass
-    async def is_post_removed(self, board: str, num: int) -> bool: return False
+    async def get_posts_removed(self, board: str, nums: list[int]) -> set[int]: return empty_set
     async def get_op_thread_removed_count(self, board: str) -> int: return 0
     async def get_board_num_pairs(self, posts: list) -> set[tuple[str, int]]: return empty_set
     async def insert_post(self, board: str, num: int, op: int) -> None: pass

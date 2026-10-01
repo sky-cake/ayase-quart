@@ -112,7 +112,7 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     post_path_t = get_post_path(board, thread_num, num)
     upstream_path = get_post_upstream(board, thread_num, num)
 
-    return f'''<div id="pc{num}"><div id="p{num}" class="post reply">
+    return f'''<div id="pc{num}" data-board="{board}"><div id="p{num}" class="post reply">
     {media_t}
     <div class="postInfo" id="pi{num}">
         <div class="post_meta">{get_post_menu_t(post, upstream_path)}<b class="inblk">/{board}/</b>
@@ -131,7 +131,7 @@ def get_quotelink_t_thread(num: int, board: str, thread_num: int, quotelinks: li
         f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink" data-board="{board}">&gt;&gt;{quotelink}</a>'
         for quotelink in quotelinks
     )
-    return f'<div id="bl_{num}" class="clear_both backlink">Replies: {" ".join(quotelink_gen)}</div>'
+    return f'<div id="bl_{num}" data-board="{board}" class="clear_both backlink">Replies: {" ".join(quotelink_gen)}</div>'
 
 
 def get_post_path(board: str, thread_num: int, num: int) -> str:
@@ -390,7 +390,8 @@ def get_filedeleted_t(post: dict):
 
 def get_header_t(post: dict):
     num = post['num']
-    return f"""<div id="pc{num}"> <div id="p{num}" class="post reply">"""
+    board = post['board_shortname']
+    return f"""<div id="pc{num}" data-board="{board}"> <div id="p{num}" class="post reply">"""
 
 
 def get_quotelink_t(post: dict):
@@ -399,7 +400,7 @@ def get_quotelink_t(post: dict):
     board = post['board_shortname']
     thread_num = post['thread_num']
     quotelinks = ' '.join(f'<a href="/{get_post_path(board, thread_num, quotelink)}" class="quotelink inblk" data-board="{board}">&gt;&gt;{quotelink}</a>' for quotelink in quotelinks)
-    return f'<div id="bl_{post["num"]}" class="backlink clear_both">Replies: {quotelinks}</div>'
+    return f'<div id="bl_{post["num"]}" data-board="{board}" class="backlink clear_both">Replies: {quotelinks}</div>'
 
 
 def esc_user_data(post: dict):
@@ -464,6 +465,8 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
         nuke_btn = f"""<form class="form plain nukethreadform" action="/nuke/{board}/{num}" method="post">{csrf_input}[<button class="abtn nukethreadbtn" type="submit"></button>]</form>"""
 
     sep = '<br>' if title_t else ''
+    # a card with no media would otherwise render no link to the thread
+    media_t = get_media_img_t(wpt, is_catalog=True) or '<div class="media_cont fileThumb img_broken"></div>'
     return f"""
     <div id="{num}" class="thread doc_id_{num}" tabindex="0">
         <div class="post_data">
@@ -478,7 +481,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
             </div>
             { wpt['t_cc'] }{nl}
         </div>
-    <a href="/{thread_path}" rel="noreferrer">{get_media_img_t(wpt, is_catalog=True)}</a>
+    <a href="/{thread_path}" rel="noreferrer">{media_t}</a>
     <div class="teaser">
         { title_t }{sep}{ wpt.get('comment', '')}
     </div>

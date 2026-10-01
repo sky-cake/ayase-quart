@@ -1,8 +1,10 @@
-from quart import Blueprint, Response, abort, current_app, jsonify
+from asyncio import gather
+from quart import Blueprint, Response, abort, current_app, jsonify, request
 
 from ...asagi_converter import (
     generate_catalog,
     generate_post,
+    generate_posts,
     generate_thread,
     get_counts_from_posts,
     get_op_thread_count
@@ -29,6 +31,7 @@ from ...templates import (
      template_thread
  )
 from ...perf import Perf
+from ...utils.integers import is_uint
 from ...utils.validation import validate_board_query_parameter
 from ...moderation.report import generate_report_form
 from ...security import inject_csrf_token_to_session, get_csrf_input
@@ -229,3 +232,37 @@ async def v_post(board: str, post_id: int):
     p.check('render')
     p.emit()
     return jsonify(html_content=html_content, thread_num=post['thread_num'])
+
+
+@bp.get("/<string:board>/posts")
+@validate_board_query_parameter
+async def v_posts(board: str):
+    p = Perf('posts')
+    num_limit = 100
+
+    raw_nums = (request.args.get('nums') or '').split(',')
+    capped = len(raw_nums) > num_limit
+
+    nums = [int(n) for n in raw_nums[:num_limit] if is_uint(n)]
+    p.check('parse nums')
+
+    if not nums:
+        return jsonify(posts=[], missing=[], capped=False)
+
+    (posts, missing), removed_nums = await gather(
+        generate_posts(board, nums),
+        fc.get_posts_removed(board, nums),
+    )
+    p.check('query + get_posts_removed')
+
+    out_posts = []
+    for post in posts:
+        if post['num'] in removed_nums:
+            missing.append(post['num'])
+            continue
+        html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks={})))
+        out_posts.append(dict(num=post['num'], thread_num=post['thread_num'], html_content=html_content))
+    p.check('rendered')
+
+    p.emit()
+    return jsonify(posts=out_posts, missing=missing, capped=capped)

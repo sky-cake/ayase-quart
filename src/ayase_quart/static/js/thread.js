@@ -23,14 +23,18 @@ function media_mouseover(event) {
     if (!extension) return;
     if (get_data_string(media_el, 'expanded') === "true") return;
     if (!(media_el instanceof HTMLImageElement)) return;
-    if (!media_el.getAttribute('data-full_media_src') && !media_el.getAttribute('data-thumb_src')) return;
+    // an empty media src resolves to file:/// in firefox - don't use falsy values
+    const full_src = media_el.getAttribute('data-full_media_src');
+    const thumb_src = media_el.getAttribute('data-thumb_src');
+    const hover_src = full_src || thumb_src;
+    if (!hover_src) return;
     if (document.getElementById('img_cloned')) return;
 
     if (ext_is_video(extension)) {
         const video = document.createElement('video');
         video.id = 'img_cloned';
         video.classList.add('hover_image');
-        video.src = media_el.getAttribute('data-full_media_src') || media_el.getAttribute('data-thumb_src');
+        video.src = hover_src;
         video.loop = true;
         video.playsInline = true;
         document.body.appendChild(video);
@@ -41,7 +45,7 @@ function media_mouseover(event) {
     const img_cloned = document.createElement('img');
     img_cloned.id = 'img_cloned';
     img_cloned.classList.add('hover_image');
-    img_cloned.src = media_el.getAttribute('data-full_media_src') || media_el.getAttribute('data-thumb_src');
+    img_cloned.src = hover_src;
     document.body.appendChild(img_cloned);
 }
 

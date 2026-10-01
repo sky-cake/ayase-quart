@@ -10,30 +10,30 @@ def test_clickable_links():
     cases = [
         # typical url
         ('text http://example.com text',
-         'text <a href="http://example.com">http://example.com</a> text'),
+         'text <a href="http://example.com" rel="noreferrer" target="_blank">http://example.com</a> text'),
 
 
         # ending sentences / punctuation
         ('text http://example.com/.',
-         'text <a href="http://example.com/">http://example.com/</a>.'),
+         'text <a href="http://example.com/" rel="noreferrer" target="_blank">http://example.com/</a>.'),
 
         ('text http://example.com. ..',
-         'text <a href="http://example.com">http://example.com</a>. ..'),
+         'text <a href="http://example.com" rel="noreferrer" target="_blank">http://example.com</a>. ..'),
 
         ('text http://example.com...',
-        'text <a href="http://example.com">http://example.com</a>...'),
+        'text <a href="http://example.com" rel="noreferrer" target="_blank">http://example.com</a>...'),
 
         ('text http://example.com/...',
-        'text <a href="http://example.com/">http://example.com/</a>...'),
+        'text <a href="http://example.com/" rel="noreferrer" target="_blank">http://example.com/</a>...'),
 
         ('text http://example.com!',
-         'text <a href="http://example.com">http://example.com</a>!'),
+         'text <a href="http://example.com" rel="noreferrer" target="_blank">http://example.com</a>!'),
 
         ('http://example.com',
-        '<a href="http://example.com">http://example.com</a>'),
+        '<a href="http://example.com" rel="noreferrer" target="_blank">http://example.com</a>'),
 
         ('text http://example.com/page, text',
-         'text <a href="http://example.com/page">http://example.com/page</a>, text'),
+         'text <a href="http://example.com/page" rel="noreferrer" target="_blank">http://example.com/page</a>, text'),
 
 
         # tld needs to be 2+ chars
@@ -43,29 +43,29 @@ def test_clickable_links():
 
         # multiple tlds
         ('text http://sub.example.co.uk text',
-         'text <a href="http://sub.example.co.uk">http://sub.example.co.uk</a> text'),
+         'text <a href="http://sub.example.co.uk" rel="noreferrer" target="_blank">http://sub.example.co.uk</a> text'),
 
 
         # various edge cases
         ('text http://example.co!.. m! text',
-         'text <a href="http://example.co">http://example.co</a>!.. m! text'),
+         'text <a href="http://example.co" rel="noreferrer" target="_blank">http://example.co</a>!.. m! text'),
 
         ('text http://example.com/?',
-        'text <a href="http://example.com/?">http://example.com/?</a>'),
+        'text <a href="http://example.com/?" rel="noreferrer" target="_blank">http://example.com/?</a>'),
 
         ('text http://a.com, http://b.org!',
-         'text <a href="http://a.com">http://a.com</a>, <a href="http://b.org">http://b.org</a>!'),
+         'text <a href="http://a.com" rel="noreferrer" target="_blank">http://a.com</a>, <a href="http://b.org" rel="noreferrer" target="_blank">http://b.org</a>!'),
 
         ('text http://example.com/page/,/ text',
-         'text <a href="http://example.com/page/,/">http://example.com/page/,/</a> text'),
+         'text <a href="http://example.com/page/,/" rel="noreferrer" target="_blank">http://example.com/page/,/</a> text'),
 
 
         # ports
         ('http://beastie.sdf.org:4200/',
-         '<a href="http://beastie.sdf.org:4200/">http://beastie.sdf.org:4200/</a>'),
+         '<a href="http://beastie.sdf.org:4200/" rel="noreferrer" target="_blank">http://beastie.sdf.org:4200/</a>'),
 
         ('http://beastie.sdf.org:4200/q',
-         '<a href="http://beastie.sdf.org:4200/q">http://beastie.sdf.org:4200/q</a>'),
+         '<a href="http://beastie.sdf.org:4200/q" rel="noreferrer" target="_blank">http://beastie.sdf.org:4200/q</a>'),
 
 
         # text
@@ -84,13 +84,13 @@ def test_clickable_links():
 
         # query parms
         ('text http://example.com/page?id=123 text',
-         'text <a href="http://example.com/page?id=123">http://example.com/page?id=123</a> text'),
+         'text <a href="http://example.com/page?id=123" rel="noreferrer" target="_blank">http://example.com/page?id=123</a> text'),
 
         ('text http://example.com/page?id=123, text',
-         'text <a href="http://example.com/page?id=123">http://example.com/page?id=123</a>, text'),
+         'text <a href="http://example.com/page?id=123" rel="noreferrer" target="_blank">http://example.com/page?id=123</a>, text'),
 
         ('text http://example.com/page?id=123,. text',
-         'text <a href="http://example.com/page?id=123">http://example.com/page?id=123</a>,. text'),
+         'text <a href="http://example.com/page?id=123" rel="noreferrer" target="_blank">http://example.com/page?id=123</a>,. text'),
     ]
 
     for comment, expected in cases:

@@ -98,9 +98,13 @@ class BaseFilterCache(ABC):
         """Remove all inserts"""
         raise NotImplementedError()
 
-    @abstractmethod
     async def is_post_removed(self, board: str, num: int) -> bool:
         """Is the post removed?"""
+        return bool(await self.get_posts_removed(board, [num]))
+
+    @abstractmethod
+    async def get_posts_removed(self, board: str, nums: list[int]) -> set[int]:
+        """Returns the subset of nums that are removed."""
         raise NotImplementedError()
 
     @abstractmethod

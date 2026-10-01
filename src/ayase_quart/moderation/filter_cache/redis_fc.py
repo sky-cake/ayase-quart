@@ -251,10 +251,10 @@ class FilterCacheRedis(BaseFilterCache):
     async def _remove_deleted_num(self, board: str, num: int, op: int) -> None:
         return await self.delete_post(board, num, op)
 
-    async def is_post_removed(self, board: str, num: int) -> bool:
-        if await self.get_deleted(board, nums := [num]):
-            return True
-        return bool(await self.get_reported(board, nums))
+    async def get_posts_removed(self, board: str, nums: list[int]) -> set[int]:
+        deleted = await self.get_deleted(board, nums)
+        reported = await self.get_reported(board, nums)
+        return {num for _, num in deleted | reported}
 
     async def insert_post(self, board: str, num: int, op: int) -> None:
         await self.bf.add_num(board, num)

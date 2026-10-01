@@ -149,6 +149,6 @@ def clickable_links(comment: str):
         if punc_groups := punc_ending_re.match(url):
             url = punc_groups.group(1)
             punc = punc_groups.group(2)
-            return f'<a href="{url}">{url}</a>{punc}'
-        return f'<a href="{url}">{url}</a>'
+            return f'<a href="{url}" rel="noreferrer" target="_blank">{url}</a>{punc}'
+        return f'<a href="{url}" rel="noreferrer" target="_blank">{url}</a>'
     return link_re.sub(replace_link, comment)

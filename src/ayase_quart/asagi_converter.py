@@ -504,7 +504,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     board_quotelinks = await get_board_2_ql_lookup(posts)
 
     for post in posts:
-        post['quotelinks'] = board_quotelinks.get(post['board_shortname'], {}).get(post['num'], set())
+        post['quotelinks'] = sorted(board_quotelinks.get(post['board_shortname'], {}).get(post['num'], set()))
 
     return posts, total_hits
 
@@ -791,6 +791,28 @@ async def generate_post(board: str, post_id: int) -> tuple[dict]:
     # escapes title and comment for us
     post_2_quotelinks, posts = get_qls_and_posts(posts)
     return post_2_quotelinks, posts[0]
+
+
+async def generate_posts(board: str, nums: list[int]) -> tuple[list[dict], list[int]]:
+    if not nums:
+        return [], []
+
+    placeholders = db_q.Phg().size(nums)
+    sql = f"""
+        {get_selector(board)}
+        from `{board}`
+        where num in ({placeholders})
+    ;"""
+    found_posts = await db_q.query_dict(sql, params=tuple(nums))
+
+    found_nums = {post['num'] for post in found_posts}
+    missing = [num for num in nums if num not in found_nums]
+
+    # escapes title and comment
+    _, posts = get_qls_and_posts(found_posts, gather_qls=False)
+    posts.sort(key=lambda post: post['num'])
+
+    return posts, missing
 
 
 async def get_post(board: str, post_id: int) -> dict:

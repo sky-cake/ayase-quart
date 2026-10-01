@@ -19,6 +19,7 @@ function viewer_collect_media() {
 }
 
 function viewer_thumb_click(thumb) {
+	// an empty media src resolves to file:/// in firefox, don't use falsy values
 	const full_src = get_data_string(thumb, 'full_media_src');
 	if (!full_src) {
 		return;
@@ -142,6 +143,12 @@ function viewer_render() {
 	const item = viewer_media_list[viewer_media_index];
 	const ext = get_data_string(item, 'ext');
 	const full_src = get_data_string(item, 'full_media_src');
+
+	if (!full_src) {
+		viewer_mark_current_broken();
+		viewer_media_load_done();
+		return;
+	}
 
 	if (ext_is_video(ext)) {
 		const video = document.createElement('video');

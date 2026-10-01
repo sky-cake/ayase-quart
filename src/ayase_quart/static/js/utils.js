@@ -177,11 +177,7 @@ function kurobaex_mode_active() {
 	if (typeof get_settings !== 'function') {
 		return false;
 	}
-	if (!get_settings().kurobaex_mode) {
-		return false;
-	}
-	const tools = document.getElementById('tools');
-	return !!(tools && get_data_string(tools, 'thread_num'));
+	return !!get_settings().kurobaex_mode;
 }
 
 /**

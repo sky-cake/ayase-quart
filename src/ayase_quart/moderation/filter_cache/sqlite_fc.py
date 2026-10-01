@@ -82,13 +82,11 @@ class FilterCacheSqlite(BaseFilterCache):
         return {(row[0], row[1]) for row in rows}
 
 
-    async def is_post_removed(self, board: str, num: int) -> bool:
+    async def get_posts_removed(self, board: str, nums: list[int]) -> set[int]:
         phg = db_m.Phg()
-        sql = f"""select num from board_nums_cache where board_shortname = {phg()} and num = {phg()}"""
-        row = await db_m.query_tuple(sql, params=[board, num])
-        if not row:
-            return False
-        return True
+        sql = f"""select num from board_nums_cache where board_shortname = {phg()} and num in ({phg.size(nums)})"""
+        rows = await db_m.query_tuple(sql, params=[board, *nums])
+        return {row[0] for row in rows}
 
 
     async def insert_post(self, board: str, num: int, op: int):
