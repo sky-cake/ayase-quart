@@ -1,4 +1,6 @@
+import errno
 import os
+import shutil
 
 from .asagi_converter import generate_post
 from .posts.template_optimizer import render_wrapped_post_t, wrap_post_t
@@ -35,13 +37,25 @@ def post_files_show(post: dict) -> tuple[bool]:
     )
 
 
+def _move_file(src: str, dst: str) -> None:
+    """`os.replace` fails with `EXDEV` when src and dst are on different filesystems"""
+    try:
+        os.replace(src, dst)
+    except OSError as e:
+        if e.errno != errno.EXDEV:
+            raise
+        # https://docs.python.org/3/library/shutil.html#shutil.copy2
+        shutil.copy2(src, dst)
+        os.remove(src)
+
+
 def _post_files_hide(post: dict, media_type: MediaType) -> bool:
     """accessible path -> hidden path"""
     src = get_fs_path(post, media_type)
     if src and os.path.isfile(src):
         dst = get_fs_path(post, media_type, hidden=True)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        os.replace(src, dst)
+        _move_file(src, dst)
         return True
     return False
 
@@ -52,7 +66,7 @@ def _post_files_show(post: dict, media_type: MediaType) -> bool:
     if src and os.path.isfile(src):
         dst = get_fs_path(post, media_type)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
-        os.replace(src, dst)
+        _move_file(src, dst)
         return True
     return False
 
