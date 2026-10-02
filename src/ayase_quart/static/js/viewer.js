@@ -1,5 +1,6 @@
 let viewer_media_list = [];
 let viewer_media_index = 0;
+const viewer_broken_items = new WeakSet();
 
 function viewer_update_scroll_lock() {
 	const locked = !!document.getElementById('kuroba_overlay') || !!document.getElementById('viewer');
@@ -106,14 +107,8 @@ function viewer_media_load_done() {
 
 function viewer_mark_current_broken() {
 	const item = viewer_media_list[viewer_media_index];
-	if (!item) {
-		return;
-	}
-	const media_cont = item.closest('.media_cont');
-	if (media_cont) {
-		media_cont.classList.add('img_broken');
-	} else {
-		item.classList.add('img_broken');
+	if (item) {
+		viewer_broken_items.add(item);
 	}
 }
 
@@ -123,13 +118,7 @@ function viewer_media_error() {
 }
 
 function viewer_item_is_broken(item) {
-	if (!item) {
-		return true;
-	}
-	const media_cont = item.closest('.media_cont');
-	return media_cont
-		? media_cont.classList.contains('img_broken')
-		: item.classList.contains('img_broken');
+	return !item || viewer_broken_items.has(item);
 }
 
 function viewer_render() {

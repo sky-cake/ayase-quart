@@ -32,11 +32,13 @@
 }
 
 .gallery-grid .media_cont img,
+.gallery-grid .media_cont img[data-expanded='false'],
 .gallery-grid .media_cont video {
     flex: 1 1 auto;
     min-height: 0;
 
     width: 100%;
+    height: auto;
     max-width: 100%;
     max-height: none;
 
