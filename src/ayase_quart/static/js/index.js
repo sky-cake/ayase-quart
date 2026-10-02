@@ -124,11 +124,76 @@ function setup_top_bottom_links() {
     }
 }
 
+let post_menu_config = null;
+
+function get_post_menu_config() {
+    if (post_menu_config) { return post_menu_config; }
+    const body_data = document.body.dataset;
+    post_menu_config = {
+        report_enabled: body_data.reportEnabled === 'true',
+        search_endpoint: body_data.searchEndpoint || '',
+        upstream_host: body_data.upstreamHost || '',
+        upstream_thread_path: body_data.upstreamThreadPath || '',
+        upstream_post_path: body_data.upstreamPostPath || '',
+    };
+    return post_menu_config;
+}
+
+function build_post_menu(menu) {
+    const post = menu.closest('[data-board]');
+    if (!post) { return; }
+    menu.dataset.menuBuilt = 'true';
+
+    const config = get_post_menu_config();
+    if (!config.upstream_host) { return; }
+
+    const board = post.dataset.board;
+    const num = post.dataset.num;
+    const thread_num = post.dataset.threadNum;
+    if (!board || !num || !thread_num) { return; }
+
+    const parts = [];
+
+    const file = post.querySelector('[data-media-hash]');
+    if (file && config.search_endpoint) {
+        const media_hash = encodeURIComponent(file.dataset.mediaHash || '');
+        parts.push(`<a href="${config.search_endpoint}?boards=${board}&media_hash=${media_hash}" target="_blank" rel="noreferrer">View same media</a>`);
+    }
+
+    if (config.report_enabled) {
+        parts.push(`<button class="rbtn" report_url="/report/${board}/${thread_num}/${num}"></button>`);
+    }
+
+    const thread_path = config.upstream_thread_path.replace('{thread}', thread_num);
+    const is_op = !!post.querySelector('.op_label');
+    const source_href = is_op
+        ? `${config.upstream_host}/${board}${thread_path}`
+        : `${config.upstream_host}/${board}${thread_path}${config.upstream_post_path.replace('{num}', num)}`;
+    parts.push(`<a href="${source_href}" rel="noreferrer" target="_blank">Visit Source</a>`);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'post_menu_dropdown';
+    dropdown.innerHTML = parts.join('');
+    menu.appendChild(dropdown);
+}
+
+function handle_post_menu_hover(event) {
+    const menu = event.target instanceof Element ? event.target.closest('.post_menu') : null;
+    if (!menu || menu.dataset.menuBuilt) { return; }
+    build_post_menu(menu);
+}
+
+function setup_post_menus() {
+    document.addEventListener('mouseover', handle_post_menu_hover);
+    document.addEventListener('click', handle_post_menu_hover);
+}
+
 function init_index() {
 	update_datetimes();
     set_up_board_buttons();
     setup_top_pill();
     setup_top_bottom_links();
+    setup_post_menus();
     mark_already_broken_media();
 }
 

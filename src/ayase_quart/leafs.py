@@ -8,11 +8,10 @@ from .media.filesystem import get_fs_path, MediaType
 
 
 async def generate_post_html(board: str, num: int) -> str:
-    """Removes [Report]"""
     post_2_quotelinks, post = await generate_post(board, num)
     if not post:
         return 'Error fetching post.'
-    post_t = wrap_post_t(post | dict(quotelinks={}), include_report=False)
+    post_t = wrap_post_t(post | dict(quotelinks={}))
     return render_wrapped_post_t(post_t)
 
 

@@ -56,11 +56,17 @@ async function handle_report_submit(event) {
 	}
 }
 
-function setup_report_buttons() {
-	const reportButtons = doc_query_all('button[report_url]');
-	for (const button of reportButtons) {
-		button.addEventListener('click', show_modal.bind(null, button), false);
+function handle_report_button_click(event) {
+	if (!(event.target instanceof Element)) { return; }
+	const report_button = event.target.closest('button[report_url]');
+	if (report_button) {
+		show_modal(report_button);
 	}
+}
+
+function setup_report_buttons() {
+	// report buttons are generated on hover (see index.js), so use delegation
+	document.addEventListener('click', handle_report_button_click);
 }
 
 function setup_report_modal() {

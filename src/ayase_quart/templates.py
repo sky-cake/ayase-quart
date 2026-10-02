@@ -14,6 +14,7 @@ from .configs import (
     vanilla_search_conf,
 )
 from .configs.conf_loader import load_asset_hashes
+from .search import BEST_SEARCH_ENDPOINT
 from .utils.timestamps import ts_2_formatted
 
 @cache
@@ -40,6 +41,9 @@ render_constants = dict(
     testing=app_conf.testing,
     canonical_host=archive_conf.canonical_host,
     canonical_name=archive_conf.canonical_name,
+    post_menu_search_endpoint=BEST_SEARCH_ENDPOINT,
+    post_menu_thread_path=archive_conf.thread_path,
+    post_menu_post_path=archive_conf.post_path,
 )
 
 env = Environment(

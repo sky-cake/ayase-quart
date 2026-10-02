@@ -1,20 +1,23 @@
 from html import escape
 from itertools import product
 
-from ..configs import archive_conf, mod_conf, site_conf
-from ..media import ext_is_video, get_image_full_uri, get_thumb_full_uri, get_hash_search_link
+from ..configs import archive_conf, site_conf
+from ..media import ext_is_video, get_image_full_uri, get_thumb_full_uri
 from ..posts.capcodes import Capcode
 from ..posts.countries import country_2_flag_code
 from ..threads import get_thread_path
 from ..utils.timestamps import ts_2_formatted
 from ..enums import ImgTagClass
-from ..upstream import get_thread_upstream, get_post_upstream
+from ..upstream import get_thread_upstream
 
 
 type QuotelinkD = dict[int, list[int]]
 
+# dropdown content is generated client-side on hover (see index.js)
+post_menu_t = '<div class="post_menu"><span class="post_menu_btn"></span></div>'
 
-def wrap_post_t(post: dict, include_report: bool=True):
+
+def wrap_post_t(post: dict):
     if not (post and post.get('num')): # Are there cases when post doesn't have a num?
         return post
     esc_user_data(post)
@@ -34,7 +37,7 @@ def wrap_post_t(post: dict, include_report: bool=True):
         t_filedeleted=get_filedeleted_t(post),
         t_header=get_header_t(post),
         t_quotelink=get_quotelink_t(post),
-        t_menu=get_post_menu_t(post, post['t_thread_link_src'] if post.get('op') else post['t_post_link_src'], include_report=include_report),
+        t_menu=post_menu_t,
     )
     return post
 
@@ -110,12 +113,11 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     quotelinks_t = get_quotelink_t_thread(num, board, thread_num, post['quotelinks'])
     media_t = get_media_t_thread(post, num, board)
     post_path_t = get_post_path(board, thread_num, num)
-    upstream_path = get_post_upstream(board, thread_num, num)
 
-    return f'''<div id="pc{num}" data-board="{board}"><div id="p{num}" class="post reply">
+    return f'''<div id="pc{num}" data-board="{board}" data-num="{num}" data-thread-num="{thread_num}"><div id="p{num}" class="post reply">
     {media_t}
     <div class="postInfo" id="pi{num}">
-        <div class="post_meta">{get_post_menu_t(post, upstream_path)}<b class="inblk">/{board}/</b>
+        <div class="post_meta">{post_menu_t}<b class="inblk">/{board}/</b>
         <span class="name N">{site_conf.anonymous_username}</span>
         <a href="/{post_path_t}">No.{num}</a>
         <div class="dateTime" data-utc="{ts_unix}"></div></div>
@@ -150,7 +152,7 @@ def get_media_t_thread(post: dict, num: int, board: str):
     full_src = get_image_full_uri(board, post)
     thumb_src = get_thumb_full_uri(board, post)
 
-    return f"""<div class="file" id="f{num}">
+    return f"""<div class="file" id="f{num}" data-media-hash="{md5h}">
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             <span class="inblk" title="{md5h}">({spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])})</span>
@@ -164,27 +166,6 @@ def get_posts_t(posts: list[dict], post_2_quotelinks: QuotelinkD) -> str:
     set_posts_quotelinks(posts, post_2_quotelinks)
     posts_t = ''.join(render_wrapped_post_t(wrap_post_t(p)) for p in posts)
     return posts_t
-
-
-def get_report_t(post: dict) -> str:
-    if not mod_conf.enabled:
-        return ''
-    return f"""<button class="rbtn" report_url="/report/{post['board_shortname']}/{post['thread_num']}/{post['num']}"></button>"""
-
-
-def get_view_same_t(post: dict) -> str:
-    if post['media_filename']:
-        return get_hash_search_link(post['board_shortname'], post['media_hash'])
-    return ''
-
-
-def get_post_menu_t(post: dict, source_href: str, include_report: bool=True) -> str:
-    view_same_t = get_view_same_t(post)
-    report_t = get_report_t(post) if include_report else ''
-    return f"""<div class="post_menu">
-    <span class="post_menu_btn"></span>
-    <div class="post_menu_dropdown">{view_same_t}{report_t}<a href="{source_href}" rel="noreferrer" target="_blank">Visit Source</a>
-    </div></div>"""
 
 
 def get_sub_t(post: dict):
@@ -315,7 +296,7 @@ def get_media_t(post: dict):
     thumb_src = get_thumb_full_uri(board, post)
 
     return f"""
-	<div class="file" id="f{num}">
+	<div class="file" id="f{num}" data-media-hash="{md5h}">
         <div class="fileText" id="fT{num}">
             <a href="{full_src}" title="{media_orig}">{escape(media_filename)}</a>
             <span class="inblk" title="{md5h}">({spoiler}{media_metadata_t(post['media_size'], post['media_w'], post['media_h'])})</span>
@@ -334,7 +315,6 @@ def set_links(post: dict):
     post['t_thread_link_rel'] = thread_path
     post['t_post_link_rel'] = post_path
     post['t_thread_link_src'] = get_thread_upstream(board, thread_num)
-    post['t_post_link_src'] = get_post_upstream(board, thread_num, num)
 
 
 sticky_t = '<img src="/static/images/sticky.gif" alt="Sticky" title="Sticky" class="stickyIcon retina">'
@@ -391,7 +371,7 @@ def get_filedeleted_t(post: dict):
 def get_header_t(post: dict):
     num = post['num']
     board = post['board_shortname']
-    return f"""<div id="pc{num}" data-board="{board}"> <div id="p{num}" class="post reply">"""
+    return f"""<div id="pc{num}" data-board="{board}" data-num="{num}" data-thread-num="{post['thread_num']}"> <div id="p{num}" class="post reply">"""
 
 
 def get_quotelink_t(post: dict):

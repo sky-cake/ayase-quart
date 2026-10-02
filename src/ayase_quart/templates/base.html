@@ -18,7 +18,7 @@
     <script type="text/javascript" defer src="/static/js/index.js" {{ get_integrity("index.js")|safe }}></script>
 {%- endblock scripts %}
 </head>
-<body>
+<body data-report-enabled="{{ 'true' if moderation_enabled else 'false' }}" data-search-endpoint="{{ post_menu_search_endpoint }}" data-upstream-host="{{ canonical_host }}" data-upstream-thread-path="{{ post_menu_thread_path }}" data-upstream-post-path="{{ post_menu_post_path }}">
     <span id="top_hidden"></span>
     <div id="body">
         {% include 'nav.html' %}
