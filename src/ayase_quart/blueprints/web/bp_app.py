@@ -6,6 +6,7 @@ from ...asagi_converter import (
     generate_post,
     generate_posts,
     generate_thread,
+    get_board_thread_quotelinks,
     get_counts_from_posts,
     get_op_thread_count
 )
@@ -227,11 +228,15 @@ async def v_post(board: str, post_id: int):
     if is_removed:
         return {}
 
-    html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks={})))
+    thread_qls = await get_board_thread_quotelinks(board, (post['thread_num'],), sort=True)
+    quotelinks = thread_qls.get(post_id, [])
+    p.check('quotelinks')
+
+    html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks=quotelinks)))
 
     p.check('render')
     p.emit()
-    return jsonify(html_content=html_content, thread_num=post['thread_num'])
+    return jsonify(html_content=html_content, thread_num=post['thread_num'], quotelinks=quotelinks)
 
 
 @bp.get("/<string:board>/posts")
@@ -256,12 +261,17 @@ async def v_posts(board: str):
     p.check('query + get_posts_removed')
 
     out_posts = []
+    thread_nums = tuple({post['thread_num'] for post in posts})
+    ql_lookup = await get_board_thread_quotelinks(board, thread_nums, sort=True) if posts else {}
+    p.check('quotelinks')
+
     for post in posts:
         if post['num'] in removed_nums:
             missing.append(post['num'])
             continue
-        html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks={})))
-        out_posts.append(dict(num=post['num'], thread_num=post['thread_num'], html_content=html_content))
+        quotelinks = ql_lookup.get(post['num'], [])
+        html_content = render_wrapped_post_t(wrap_post_t(post | dict(quotelinks=quotelinks)))
+        out_posts.append(dict(num=post['num'], thread_num=post['thread_num'], html_content=html_content, quotelinks=quotelinks))
     p.check('rendered')
 
     p.emit()

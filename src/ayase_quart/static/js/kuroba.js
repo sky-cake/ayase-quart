@@ -272,6 +272,10 @@ function kuroba_build_cross_entry(num, board, data, highlight_num = null) {
 		}
 	}
 
+	if (data.quotelinks && data.quotelinks.length > 0) {
+		content.appendChild(kuroba_make_replies_btn(num, board, data.quotelinks));
+	}
+
 	kuroba_make_goto_btn(entry, num, board, data.thread_num || null);
 
 	return entry;
@@ -400,12 +404,14 @@ function kuroba_open_post_view(num, board) {
 	kuroba_fetch_post(board, num);
 }
 
-function kuroba_open_replies_view(num, board) {
-	if (kuroba_is_thread_page(board)) {
+function kuroba_open_replies_view(num, board, nums = null) {
+	if (!nums && kuroba_is_thread_page(board)) {
 		kuroba_view_stack.push({ type: 'replies', num: num, board: board });
 	} else {
 		// posts aren't rendered on search/index pages, fetch them in one batch
-		const nums = kuroba_get_reply_nums(num, board);
+		if (!nums) {
+			nums = kuroba_get_reply_nums(num, board);
+		}
 		const nums_capped = nums.length > 100;
 		kuroba_view_stack.push({ type: 'replies_remote', num: num, board: board, nums: nums, nums_capped: nums_capped });
 	}
@@ -462,7 +468,15 @@ function kuroba_doc_click(event) {
 
 	const replies_btn = target.closest('.kuroba_replies_btn');
 	if (replies_btn) {
-		kuroba_open_replies_view(parseInt(replies_btn.dataset.num, 10), replies_btn.dataset.board);
+		const num = parseInt(replies_btn.dataset.num, 10);
+		const board = replies_btn.dataset.board;
+		// if the backlink div is in the document, use the DOM-based flow;
+		// otherwise carry the nums from the button (posts fetched remotely)
+		let nums = null;
+		if (!document.querySelector(`#bl_${num}[data-board="${board}"]`)) {
+			nums = (replies_btn.dataset.nums || '').split(',').filter(Boolean).map(Number);
+		}
+		kuroba_open_replies_view(num, board, nums && nums.length > 0 ? nums : null);
 		return;
 	}
 

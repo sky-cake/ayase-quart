@@ -543,7 +543,7 @@ async def get_board_2_ql_lookup(posts: list[dict]) -> dict[str, dict[int, list[i
     return {board: ql_lookup for (board, _thread_nums), ql_lookup in zip(board_thread_nums, board_qls)}
 
 
-async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
+async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int], sort: bool=False):
     sql = f'''
         select num, comment
         from `{board}`
@@ -551,7 +551,11 @@ async def get_board_thread_quotelinks(board: str, thread_nums: tuple[int]):
         and thread_num in ({db_q.Phg().size(thread_nums)})
     '''
     rows = await db_q.query_dict(sql, params=thread_nums)
-    return get_quotelink_lookup(rows)
+    ql_lookup = get_quotelink_lookup(rows)
+    if sort:
+        for quotelinks in ql_lookup.values():
+            quotelinks.sort()
+    return ql_lookup
 
 
 @alru_cache(ttl=60*2)
