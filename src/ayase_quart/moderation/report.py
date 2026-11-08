@@ -361,7 +361,7 @@ async def delete_post_from_index_if_applicable(board: str, post: dict, remove_en
     return True
 
 
-async def delete_post(current_usr: User, board_shortname: str, num: int, report_parent_id: int=None) -> str:
+async def delete_post(current_usr: User, board_shortname: str, num: int, report_parent_id: int=None) -> tuple[str, int]:
     """
     - The main post deletion function.
     - Assumes board was already validated.
@@ -414,7 +414,7 @@ async def delete_post(current_usr: User, board_shortname: str, num: int, report_
         else:
             flash_msg += ' Report seems to already be deleted.'
 
-    return flash_msg.strip()
+    return flash_msg.strip(), 200
 
 
 async def reports_action_routine(current_usr: User, report_parent_id: int, action: str, mod_notes: str=None) -> tuple[str, int]:
@@ -439,7 +439,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
                 flash_msg = 'Report deleted.'
 
         case ReportAction.post_delete:
-            flash_msg = await delete_post(current_usr, report['board_shortname'], report['num'], report_parent_id=report_parent_id)
+            return await delete_post(current_usr, report['board_shortname'], report['num'], report_parent_id=report_parent_id)
 
         case ReportAction.media_delete:
             if not current_usr.has_permissions([Permissions.media_delete]):

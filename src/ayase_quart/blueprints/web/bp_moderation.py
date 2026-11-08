@@ -55,9 +55,9 @@ bp = Blueprint('bp_web_moderation', __name__)
 @require_web_usr_permissions([Permissions.post_delete])
 async def route_nuke_post(board: str, num: int):
 
-    msg = await delete_post(current_web_usr, board, num)
+    msg, code = await delete_post(current_web_usr, board, num)
 
-    return jsonify({'message': msg})
+    return jsonify({'message': msg}), code
 
 
 
