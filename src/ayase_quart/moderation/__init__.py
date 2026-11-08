@@ -6,7 +6,7 @@ from .user import Permissions, create_user_if_not_exists
 
 
 async def init_moderation():
-    moderation_scripts = ['users.sql', 'user_permissions.sql', 'report_parent.sql', 'report_child.sql', 'message.sql']
+    moderation_scripts = ['users.sql', 'user_permissions.sql', 'report_parent.sql', 'report_child.sql', 'message.sql', 'deleted_media.sql']
     for script in moderation_scripts:
         await db_m.query_dict(read_file(make_src_path('moderation', 'sql', script)))
 

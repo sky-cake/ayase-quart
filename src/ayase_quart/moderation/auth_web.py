@@ -105,3 +105,11 @@ def web_usr_is_admin(func):
     async def wrapper(*args, **kwargs):
         return await func(*args, is_admin=bool(current_web_usr.is_admin), **kwargs)
     return wrapper
+
+
+def web_usr_can_post_delete(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        can_post_delete = bool(current_web_usr.has_permissions([Permissions.post_delete]))
+        return await func(*args, can_post_delete=can_post_delete, **kwargs)
+    return wrapper

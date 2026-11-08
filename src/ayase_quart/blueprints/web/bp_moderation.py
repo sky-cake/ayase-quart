@@ -51,7 +51,7 @@ bp = Blueprint('bp_web_moderation', __name__)
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
-@require_web_usr_is_admin
+@require_web_usr_permissions([Permissions.post_delete])
 @validate_board_query_parameter
 async def route_nuke_post(board: str, num: int):
 

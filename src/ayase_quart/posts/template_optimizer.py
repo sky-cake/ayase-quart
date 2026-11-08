@@ -115,6 +115,7 @@ def render_post_t_basic(post: dict, include_view_link: bool=True):
     post_path_t = get_post_path(board, thread_num, num)
 
     return f'''<div id="pc{num}" data-board="{board}" data-num="{num}" data-thread-num="{thread_num}"><div id="p{num}" class="post reply">
+    {post.get('t_nuke', '')}
     {media_t}
     <div class="postInfo" id="pi{num}">
         <div class="post_meta">{post_menu_t}<b class="inblk">/{board}/</b>
@@ -408,6 +409,7 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     nameblock = f"""<span class="nameBlock { wpt['t_cc_class'] }">{ wpt['t_cc'] }</span>""" if wpt['t_cc'] else ''
     return f"""
     { wpt['t_header'] }
+    { wpt.get('t_nuke', '') }
     { wpt['t_media'] }
     <div class="postInfo" id="pi{num}">
         { wpt['t_filedeleted'] } { wpt['t_sticky'] + wpt['t_closed'] if is_op else '' }
@@ -431,6 +433,12 @@ def render_wrapped_post_t(wpt: dict, include_view_link: bool=True): # wrapped_po
     """
 
 
+def get_nuke_btn_t(board: str, num: int, csrf_input: str) -> str:
+    if not csrf_input:
+        return ''
+    return f"""<form class="form plain nukethreadform" action="/nuke/{board}/{num}" method="post">{csrf_input}[<button class="abtn nukethreadbtn" type="submit"></button>]</form>"""
+
+
 def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=None) -> str: # a thread card is just the op post
     num = wpt['num']
     board = wpt['board_shortname']
@@ -439,10 +447,7 @@ def render_catalog_card(wpt: dict, show_nuke_btn: bool=False, csrf_input: str=No
     nl = '<br>' if wpt['t_cc'] else ''
     thread_path = wpt['t_thread_link_rel']
 
-    nuke_btn = ''
-    if show_nuke_btn and csrf_input:
-        # no js required
-        nuke_btn = f"""<form class="form plain nukethreadform" action="/nuke/{board}/{num}" method="post">{csrf_input}[<button class="abtn nukethreadbtn" type="submit"></button>]</form>"""
+    nuke_btn = get_nuke_btn_t(board, num, csrf_input) if show_nuke_btn else ''
 
     sep = '<br>' if title_t else ''
     # a card with no media would otherwise render no link to the thread

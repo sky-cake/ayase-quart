@@ -10,11 +10,13 @@ from ...moderation import fc
 from ...posts.comments import html_comment, html_highlight
 from ...posts.template_optimizer import (
     get_media_img_t,
+    get_nuke_btn_t,
     render_wrapped_post_t,
     wrap_post_t
 )
 from ...search import get_posts_and_total_hits_fts, get_posts_and_total_hits_sql
 from ...search.pagination import get_total_pages, template_pagination_links
+from ...security import get_csrf_input
 from ...templates import template_search
 from ...perf import Perf
 from ...plugins.i_search import search_plugins, intersect_search_plugin_results, SearchPlugin
@@ -29,6 +31,7 @@ class SearchHandler:
     enabled: bool
     multi_board_search: bool
     highlight: bool
+    nuke_csrf_input: str = None
     board_2_nums: dict[str, set[int]] = dict()
 
     @property
@@ -61,6 +64,9 @@ class SearchHandler:
                     hl_search_term_title = self.form.title.data if self.form.title.data else None
                     post['comment'] = html_highlight(post['comment'], hl_search_term_comment)
                     post['title'] = html_highlight(post['title'], hl_search_term_title)
+
+                if self.nuke_csrf_input:
+                    post['t_nuke'] = get_nuke_btn_t(post['board_shortname'], post['num'], self.nuke_csrf_input)
 
                 posts_t.append(wrap_post_t(post))
 
@@ -128,8 +134,11 @@ def bind_plugin_fields_to_form(form: QuartForm, search_plugins: dict[str, Search
             setattr(form, field.name, field)
 
 
-async def search_handler(handler: SearchHandler, request_args: dict, endpoint_path: str, logged_in=False, is_admin=False) -> str:
+async def search_handler(handler: SearchHandler, request_args: dict, endpoint_path: str, logged_in=False, is_admin=False, can_post_delete=False) -> str:
     p = Perf(f'{handler.form_title} search')
+
+    if can_post_delete:
+        handler.nuke_csrf_input = get_csrf_input()
 
     plugin_templates: list[Template] = []
     plugins_enabled = search_plugins_conf.enabled
@@ -242,6 +251,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
         total_hits=f'{total_hits:,}' if total_hits else 0,
         logged_in=logged_in,
         is_admin=is_admin,
+        can_nuke=can_post_delete,
         report_form_t=generate_report_form(),
     )
 

@@ -15,6 +15,7 @@ from ..search.post_metadata import board_2_int, board_int_doc_id_2_pk
 from ..search.providers import get_index_search_provider
 from ..utils.validation import validate_board
 from ..security import get_csrf_input
+from .deleted_media import record_deleted_media
 from . import fc
 from .user import Permissions, User
 
@@ -397,6 +398,13 @@ async def delete_post(current_usr: User, board_shortname: str, num: int, report_
     flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
     flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
 
+    if post.get('media_hash'):
+        try:
+            recorded = await record_deleted_media(post, user_id=int(current_usr.auth_id))
+            flash_msg += ' Media hash recorded.' if recorded else ' Media hash already recorded.'
+        except:
+            flash_msg += ' An error arose when recording the media hash.'
+
     if report_parent_id:
         # delete report cus the post no longer exists, otherwise a bunch of empty reports will accumulate
         report = await delete_report_if_exists(report_parent_id)
@@ -443,6 +451,13 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             full_del, prev_del = post_files_delete(post)
             flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
             flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
+
+            if post.get('media_hash'):
+                try:
+                    recorded = await record_deleted_media(post, user_id=int(current_usr.auth_id))
+                    flash_msg += ' Media hash recorded.' if recorded else ' Media hash already recorded.'
+                except:
+                    flash_msg += ' An error arose when recording the media hash.'
 
         case ReportAction.media_hide:
             if not current_usr.has_permissions([Permissions.media_hide]):

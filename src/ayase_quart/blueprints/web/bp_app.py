@@ -16,10 +16,12 @@ from ...moderation import fc
 from ...moderation.auth_web import (
      load_web_usr_data,
      web_usr_is_admin,
-     web_usr_logged_in
+     web_usr_logged_in,
+     web_usr_can_post_delete
  )
 from ...search.pagination import get_total_pages, template_pagination_links
 from ...posts.template_optimizer import (
+     get_nuke_btn_t,
      get_posts_t_thread,
      render_catalog_card,
      render_wrapped_post_t,
@@ -94,8 +96,9 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@web_usr_can_post_delete
 @validate_board_query_parameter
-async def v_catalog(board: str, is_admin: bool, logged_in: bool):
+async def v_catalog(board: str, is_admin: bool, logged_in: bool, can_post_delete: bool):
     p = Perf('catalog')
     catalog = await generate_catalog(board)
     p.check('query')
@@ -107,9 +110,9 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
     pagination_info, pagination_links = await make_pagination_catalog(board, catalog, 0)
     p.check('paginate')
 
-    csrf_input = get_csrf_input()
+    csrf_input = get_csrf_input() if can_post_delete else None
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin, csrf_input=csrf_input)
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=can_post_delete, csrf_input=csrf_input)
         for batch in catalog
         for op in batch['threads']
     )
@@ -122,6 +125,7 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
         tab_title=f"/{board}/ Catalog",
         logged_in=logged_in,
         is_admin=is_admin,
+        can_nuke=can_post_delete,
     )
     p.check('render')
     p.emit()
@@ -134,8 +138,9 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool):
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@web_usr_can_post_delete
 @validate_board_query_parameter
-async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: bool):
+async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: bool, can_post_delete: bool):
     p = Perf('catalog page')
     catalog = await generate_catalog(board, page_num)
     p.check('query')
@@ -147,9 +152,9 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
     pagination_info, pagination_links = await make_pagination_catalog(board, catalog, page_num)
     p.check('paginate')
 
-    csrf_input = get_csrf_input()
+    csrf_input = get_csrf_input() if can_post_delete else None
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin, csrf_input=csrf_input)
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=can_post_delete, csrf_input=csrf_input)
         for batch in catalog
         for op in batch['threads']
     )
@@ -162,6 +167,7 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
         tab_title=f"/{board}/ Catalog",
         logged_in=logged_in,
         is_admin=is_admin,
+        can_nuke=can_post_delete,
     )
     p.check('render')
     p.emit()
@@ -174,8 +180,9 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
+@web_usr_can_post_delete
 @validate_board_query_parameter
-async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool):
+async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool, can_post_delete: bool):
     p = Perf('thread')
     # use the existing json app function to grab the data
     post_2_quotelinks, thread_dict = await generate_thread(board, thread_num)
@@ -183,6 +190,12 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
 
     thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=logged_in)
     p.check('filter_reported')
+
+    if can_post_delete:
+        csrf_input = get_csrf_input()
+        for post in thread_dict['posts']:
+            post['t_nuke'] = get_nuke_btn_t(post['board_shortname'], post['num'], csrf_input)
+    p.check('nuke_btns')
 
     # TODO: only count manually if we can't get the counts from the side tables
     nreplies, nimages = get_counts_from_posts(thread_dict['posts'])
@@ -204,6 +217,7 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool)
         tab_title=title,
         logged_in=logged_in,
         is_admin=is_admin,
+        can_nuke=can_post_delete,
         report_form_t=generate_report_form(),
     )
     p.check('rendered')

@@ -9,7 +9,8 @@ from ...moderation.auth_web import (
     login_web_usr_required,
     require_web_usr_is_active,
     require_web_usr_permissions,
-    web_usr_is_admin
+    web_usr_is_admin,
+    web_usr_can_post_delete
 )
 from ...moderation.user import (
     Permissions,
@@ -42,11 +43,12 @@ bp = Blueprint('bp_web_admin', __name__)
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.archive_latest_view])
 @web_usr_is_admin
-async def latest(is_admin: bool):
+@web_usr_can_post_delete
+async def latest(is_admin: bool, can_post_delete: bool):
     catalog = await get_latest_ops_as_catalog(board_shortnames)
-    csrf_input = get_csrf_input()
+    csrf_input = get_csrf_input() if can_post_delete else None
     threads = ''.join(
-        render_catalog_card(wrap_post_t(op), show_nuke_btn=is_admin, csrf_input=csrf_input)
+        render_catalog_card(wrap_post_t(op), show_nuke_btn=can_post_delete, csrf_input=csrf_input)
         for batch in catalog
         for op in batch['threads']
     )
@@ -56,6 +58,7 @@ async def latest(is_admin: bool):
         title='Latest Threads',
         tab_title='Latest Threads',
         is_admin=is_admin,
+        can_nuke=can_post_delete,
     )
 
 

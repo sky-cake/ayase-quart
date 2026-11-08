@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-{% if is_admin %}
+{% if can_nuke %}
 [<span id="nuke_toggle" class="abtn">Go To Nuke Mode</span>]
 {% endif %}
 {% include 'pagination.html' %}
@@ -8,7 +8,7 @@
     {{threads|safe}}
 </div>
 {% include 'pagination.html' %}
-{% if is_admin %}
-<script type="text/javascript" defer src="/static/js/catalog_admin.js" {{ get_integrity("catalog_admin.js")|safe }}></script>
+{% if can_nuke %}
+<script type="text/javascript" defer src="/static/js/nuke.js" {{ get_integrity("nuke.js")|safe }}></script>
 {% endif %}
 {% endblock %}

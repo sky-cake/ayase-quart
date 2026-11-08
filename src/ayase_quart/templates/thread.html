@@ -8,10 +8,16 @@
 	{{ super() }}
 	<script type="text/javascript" defer src="/static/js/thread.js" {{ get_integrity("thread.js")|safe }}></script>
 	<script type="text/javascript" defer src="/static/js/kuroba.js" {{ get_integrity("kuroba.js")|safe }}></script>
+	{% if can_nuke %}
+	<script type="text/javascript" defer src="/static/js/nuke.js" {{ get_integrity("nuke.js")|safe }}></script>
+	{% endif %}
 {% endblock %}
 
 {% block body %}
     <div id="main">
+        {% if can_nuke %}
+        [<span id="nuke_toggle" class="abtn">Go To Nuke Mode</span>]
+        {% endif %}
         <div class="board">
             R: <b>{{nreplies}}</b> / F: <b>{{nimages}}</b>
             {{posts_t}}
