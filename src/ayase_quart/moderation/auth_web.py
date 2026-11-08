@@ -28,6 +28,19 @@ from .user import Permissions, User
 # https://quart-auth.readthedocs.io/en/latest/how_to_guides/multiple_auth.html
 
 
+# Decorator stacking order. Execution is top-down, outermost wrapper first.
+#   1. @rate_limit
+#   2. @<cheap and important validation>
+#   3. @<csrf>
+#   4. @login_web_usr_required
+#   5. @load_web_usr_data
+#   6. @require_web_usr_is_active
+#   7. @require_web_usr_permissions
+#   8. @web_usr_is_admin, @web_usr_can_post_delete, @web_usr_logged_in, etc
+
+# Note: anything that reads current_web_usr attributes (is_admin, is_active, permissions) must sit below @load_web_usr_data.
+
+
 auth_web = QuartAuth(
     attribute_name='auth_web_user',
     mode='cookie',

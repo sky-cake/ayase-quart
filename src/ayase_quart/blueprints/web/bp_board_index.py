@@ -41,11 +41,11 @@ async def make_pagination_board_index(board: str, index: dict, page_num: int):
 
 
 @bp.get("/<string:board>")
+@validate_board_query_parameter
 @inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-@validate_board_query_parameter
 async def v_board_index(board: str, is_admin: bool, logged_in: bool):
     p = Perf('index')
 
@@ -86,11 +86,11 @@ async def v_board_index(board: str, is_admin: bool, logged_in: bool):
 
 
 @bp.get("/<string:board>/page/<int:page_num>")
+@validate_board_query_parameter
 @inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
-@validate_board_query_parameter
 async def v_board_index_page(board: str, page_num: int, is_admin: bool, logged_in: bool):
     p = Perf('index page')
 

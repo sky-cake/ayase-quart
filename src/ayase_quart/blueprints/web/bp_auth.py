@@ -39,8 +39,8 @@ def logout_required(func):
 
 @bp.post(app_conf.login_endpoint)
 @rate_limit(4, timedelta(hours=1))
-@logout_required
 @load_web_usr_data
+@logout_required
 @web_usr_logged_in
 @web_usr_is_admin
 async def login_post(is_admin: bool, logged_in: bool):
@@ -49,8 +49,8 @@ async def login_post(is_admin: bool, logged_in: bool):
 
 @bp.get(app_conf.login_endpoint)
 @rate_limit(6, timedelta(hours=1))
-@logout_required
 @load_web_usr_data
+@logout_required
 @web_usr_logged_in
 @web_usr_is_admin
 async def login_get(is_admin: bool, logged_in: bool):

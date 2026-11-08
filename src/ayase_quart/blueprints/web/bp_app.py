@@ -92,12 +92,12 @@ async def make_pagination_catalog(board: str, catalog: list[dict], page_num: int
 
 
 @bp.get("/<string:board>/catalog")
+@validate_board_query_parameter
 @inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
 @web_usr_can_post_delete
-@validate_board_query_parameter
 async def v_catalog(board: str, is_admin: bool, logged_in: bool, can_post_delete: bool):
     p = Perf('catalog')
     catalog = await generate_catalog(board)
@@ -134,12 +134,12 @@ async def v_catalog(board: str, is_admin: bool, logged_in: bool, can_post_delete
 
 
 @bp.get("/<string:board>/catalog/<int:page_num>")
+@validate_board_query_parameter
 @inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
 @web_usr_can_post_delete
-@validate_board_query_parameter
 async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: bool, can_post_delete: bool):
     p = Perf('catalog page')
     catalog = await generate_catalog(board, page_num)
@@ -176,12 +176,12 @@ async def v_catalog_page(board: str, page_num: int, is_admin: bool, logged_in: b
 
 
 @bp.get("/<string:board>/thread/<int:thread_num>")
+@validate_board_query_parameter
 @inject_csrf_token_to_session
 @load_web_usr_data
 @web_usr_logged_in
 @web_usr_is_admin
 @web_usr_can_post_delete
-@validate_board_query_parameter
 async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool, can_post_delete: bool):
     p = Perf('thread')
     # use the existing json app function to grab the data

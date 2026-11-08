@@ -47,12 +47,12 @@ bp = Blueprint('bp_web_moderation', __name__)
 
 
 @bp.post('/nuke/<string:board>/<int:num>')
+@validate_board_query_parameter
 @apply_csrf_validation_on_endpoint
 @login_web_usr_required
 @load_web_usr_data
 @require_web_usr_is_active
 @require_web_usr_permissions([Permissions.post_delete])
-@validate_board_query_parameter
 async def route_nuke_post(board: str, num: int):
 
     msg = await delete_post(current_web_usr, board, num)
@@ -62,9 +62,9 @@ async def route_nuke_post(board: str, num: int):
 
 
 @bp.post('/report/<string:board>/<int:thread_num>/<int:num>')
-@apply_csrf_validation_on_endpoint
 @rate_limit(4, timedelta(hours=1))
 @validate_board_query_parameter
+@apply_csrf_validation_on_endpoint
 async def route_create_report(board: str, thread_num: int, num: int):
     # turn csrf on the form, and use route decorator to validate csrf on api requests
     form: ReportUserForm = await ReportUserForm.create_form(meta={'csrf': False})
