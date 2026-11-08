@@ -1,8 +1,9 @@
+import os
 import tomllib
 import json
 from functools import cache
 
-CONF_FILE = 'config.toml'
+CONF_FILE = os.environ.get('AQ_C', 'config.toml')
 TEST_CONF_FILE = 'config-test.toml' # not used yet
 ASSET_HASHES_FILE = 'asset_hashes.json'
 

@@ -7,7 +7,7 @@ from ..configs import app_conf, db_conf, media_conf
 from ..db import get_db_sub_config, get_db_tables
 from ..upstream import get_catalog_upstream
 
-BOARDS_FILE = 'boards.toml'
+BOARDS_FILE = os.environ.get('AQ_B', 'boards.toml')
 DEFAULT_BOARDS_FILE = 'boards.tpl.toml'
 
 def _load_boards_toml():

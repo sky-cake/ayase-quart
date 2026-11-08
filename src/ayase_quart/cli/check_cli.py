@@ -1,3 +1,4 @@
+import os
 import sys
 
 CONFIG_SECTIONS = [
@@ -17,6 +18,7 @@ CONFIG_SECTIONS = [
 
 def check_cli(args) -> None:
     try:
+        from ..configs.conf_loader import CONF_FILE
         from ..configs import (
             archive_conf,
             app_conf,
@@ -31,7 +33,8 @@ def check_cli(args) -> None:
             vanilla_search_conf,
         )
     except Exception as e:
-        print(f'config.toml invalid: {e}', file=sys.stderr)
+        conf_file = os.environ.get('AQ_C', 'config.toml')
+        print(f'{conf_file} invalid: {e}', file=sys.stderr)
         raise SystemExit(1)
 
     configs = {
@@ -53,4 +56,4 @@ def check_cli(args) -> None:
         conf.as_dict()
         print(f'{section}: OK')
 
-    print('config.toml valid')
+    print(f'{CONF_FILE} valid')
