@@ -829,6 +829,39 @@
     background: var(--color-accent);
 }
 
+.search-panel .date-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.search-panel .date-branch {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.search-panel .date-branch.hidden {
+    display: none;
+}
+
+.search-panel .date-row {
+    display: flex;
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.search-panel .date-row > * {
+    flex: 1 1 0;
+
+    min-width: 0;
+}
+
 .search-panel .tri-hidden {
     display: none;
 }

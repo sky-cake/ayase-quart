@@ -1,27 +1,30 @@
 {% extends "base.html" %}
 
-{% macro dropdown(field) -%}
-{% set current = field.data if field.data else (field.choices[0][0] if field.choices else '') -%}
+{% macro dropdown_raw(name, choices, current) -%}
 {% set ns = namespace(label=current) -%}
-{% for value, label in field.choices -%}
+{% for value, label in choices -%}
     {% if value == current %}{% set ns.label = label %}{% endif %}
 {%- endfor %}
 <div class="dropdown">
-    <button type="button" class="dropdown-btn{{ ' dropdown-muted' if current == 'any' }}" aria-haspopup="listbox" aria-expanded="false">
+    <button type="button" class="dropdown-btn{{ ' dropdown-muted' if current in ['any', ''] }}" aria-haspopup="listbox" aria-expanded="false">
         <span class="dropdown-value">{{ ns.label }}</span>
     </button>
     <div class="dropdown-menu hidden" role="listbox">
-        {% for value, label in field.choices -%}
+        {% for value, label in choices -%}
         <button type="button" class="dropdown-option{{ ' active' if value == current }}" role="option"
             aria-selected="{{ 'true' if value == current else 'false' }}" data-value="{{ value }}">{{ label }}</button>
         {%- endfor %}
     </div>
-    <select class="dropdown-hidden" name="{{ field.name }}" tabindex="-1" aria-hidden="true">
-        {% for value, label in field.choices -%}
+    <select class="dropdown-hidden" name="{{ name }}" tabindex="-1" aria-hidden="true">
+        {% for value, label in choices -%}
         <option value="{{ value }}"{{ ' selected' if value == current }}>{{ label }}</option>
         {%- endfor %}
     </select>
 </div>
+{%- endmacro %}
+
+{% macro dropdown(field) -%}
+{{- dropdown_raw(field.name, field.choices, field.data if field.data else (field.choices[0][0] if field.choices else '')) }}
 {%- endmacro %}
 
 {% block css -%}
@@ -36,6 +39,18 @@
     <script type="text/javascript" defer src="/static/js/kuroba.js" {{ get_integrity("kuroba.js")|safe }}></script>
     <script type="text/javascript" defer src="/static/js/search.js" {{ get_integrity("search.js")|safe }}></script>
 {% endblock %}
+
+{% set date_preset_choices = [
+    ('', 'All'),
+    ('1d', '1d'),
+    ('2d', '2d'),
+    ('7d', '7d'),
+    ('1m', '1m'),
+    ('3m', '3m'),
+    ('6m', '6m'),
+    ('1y', '1y'),
+    ('ytd', 'ytd'),
+] -%}
 
 {% block body %}
 <div class="search_container">
@@ -94,12 +109,30 @@
             </div>
 
             <div class="group-card">
-                <div class="group-field">
-                    {{ form.date_after() }}
+                <div class="tri-toggle binary-toggle date-toggle">
+                    <div class="toggle-group" data-control="radio" data-name="date_mode" role="tablist" aria-label="Date mode">
+                        <button type="button" class="binary-option active" data-value="relative">Relative</button>
+                        <button type="button" class="binary-option" data-value="absolute">Date</button>
+                    </div>
+                    <div class="tri-hidden">
+                        <input type="radio" name="date_mode" value="absolute">
+                        <input type="radio" name="date_mode" value="relative" checked>
+                    </div>
                 </div>
 
-                <div class="group-field">
-                    {{ form.date_before() }}
+                <div class="date-fields">
+                    <div class="date-branch date-branch-absolute hidden">
+                        <div class="date-row">
+                            <input type="date" name="date_after_date" class="date-empty">
+                        </div>
+                        <div class="date-row">
+                            <input type="date" name="date_before_date" class="date-empty">
+                        </div>
+                    </div>
+
+                    <div class="date-branch date-branch-relative">
+                        {{ dropdown_raw('date_preset', date_preset_choices, '') }}
+                    </div>
                 </div>
             </div>
 

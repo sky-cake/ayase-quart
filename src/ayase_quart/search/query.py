@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
 
 from ..configs import index_search_conf
@@ -107,11 +106,9 @@ def get_index_search_query(params: dict, board_ints=None) -> IndexSearchQuery:
     if params['is_not_sticky']:
         q.sticky = False
     if params['date_after']:
-        dt = datetime.combine(params['date_after'], datetime.min.time())
-        q.after = int(dt.timestamp())
+        q.after = params['date_after']
     if params['date_before']:
-        dt = datetime.combine(params['date_before'], datetime.min.time())
-        q.before = int(dt.timestamp())
+        q.before = params['date_before']
     if (order_by := params.get('order_by')) in ('asc', 'desc'):
         q.sort = order_by
     if page := params.get('page'):

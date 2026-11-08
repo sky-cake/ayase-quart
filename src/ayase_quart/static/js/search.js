@@ -1,5 +1,7 @@
 const searchform = document.getElementById('searchform');
 
+const DATE_STORAGE_KEY = 'aq_search_date';
+
 const searchInfoBtn = document.getElementById('search-info');
 const searchHelper = document.getElementById('search-helper');
 
@@ -29,9 +31,14 @@ function on_searchform_submit(event) {
         'hop': 'height',
     };
 
+    const datePrefixes = ['date_after_', 'date_before_'];
+
     for (const [key, value] of formData.entries()) {
         if (value === "") continue;
         if (key === 'capcode' && value === "any") continue;
+        if (key === 'date_mode') continue;
+        if (key === 'date_preset') continue;
+        if (datePrefixes.some((prefix) => key.startsWith(prefix))) continue;
 
         if (operatorToBaseKey[key]) {
             const baseKeyValue = formData.get(operatorToBaseKey[key]);
@@ -43,6 +50,49 @@ function on_searchform_submit(event) {
         } else {
             params.append(key, value);
         }
+    }
+
+    const mode_input = searchform.querySelector('input[name="date_mode"]:checked');
+    const isRelative = Boolean(mode_input && mode_input.value === 'relative');
+
+    let afterTs = null;
+    let beforeTs = null;
+
+    if (isRelative) {
+        afterTs = compute_relative_ts();
+    } else {
+        afterTs = compute_date_ts('after');
+        beforeTs = compute_date_ts('before');
+        const maxTs = Math.floor(Date.now() / 1000) + 86400;
+
+        if (afterTs !== null && afterTs > maxTs) {
+            alert('Start date is in the future. No posts can match.');
+            return;
+        }
+
+        if (afterTs !== null && beforeTs !== null && beforeTs < afterTs) {
+            alert('Start date must be before the end date.');
+            return;
+        }
+    }
+
+    if (afterTs !== null) {
+        params.append('date_after', afterTs);
+    }
+
+    if (beforeTs !== null) {
+        params.append('date_before', beforeTs);
+    }
+
+    if (afterTs !== null || beforeTs !== null) {
+        save_date_storage(isRelative ? {
+            mode: 'relative',
+            preset: searchform.querySelector('select[name="date_preset"]').value,
+        } : {
+            mode: 'absolute',
+            after_date: searchform.querySelector('input[name="date_after_date"]').value,
+            before_date: searchform.querySelector('input[name="date_before_date"]').value,
+        });
     }
 
     let query = '';
@@ -87,25 +137,31 @@ function on_dropdown_btn_click(e) {
     }
 }
 
+function sync_dropdown(select) {
+    const drop = select.closest('.dropdown');
+    if (!drop) return;
+    const btn = drop.querySelector('.dropdown-btn');
+    const value = select.value;
+
+    btn.classList.toggle('dropdown-muted', value === 'any' || value === '');
+
+    for (const option of drop.querySelectorAll('.dropdown-option')) {
+        const active = option.dataset.value === value;
+        option.classList.toggle('active', active);
+        option.setAttribute('aria-selected', active ? 'true' : 'false');
+        if (active) btn.querySelector('.dropdown-value').textContent = option.textContent.trim();
+    }
+}
+
 function on_dropdown_option_click(e) {
     const opt = e.target.closest('.dropdown-option');
     if (!opt) return;
 
     const drop = opt.closest('.dropdown');
-    const btn = drop.querySelector('.dropdown-btn');
     const select = drop.querySelector('select');
-    const value = opt.dataset.value;
 
-    select.value = value;
-    btn.classList.toggle('dropdown-muted', value === 'any');
-    btn.querySelector('.dropdown-value').textContent = opt.textContent.trim();
-
-    for (const option of drop.querySelectorAll('.dropdown-option')) {
-        const active = option === opt;
-        option.classList.toggle('active', active);
-        option.setAttribute('aria-selected', active ? 'true' : 'false');
-    }
-
+    select.value = opt.dataset.value;
+    sync_dropdown(select);
     close_dropdowns();
 }
 
@@ -251,6 +307,117 @@ function on_date_input() {
     this.classList.toggle('date-empty', !this.value);
 }
 
+function compute_relative_ts() {
+    const preset = searchform.querySelector('select[name="date_preset"]').value;
+    const now = new Date();
+
+    if (preset === 'ytd') {
+        return Math.floor(new Date(now.getFullYear(), 0, 1).getTime() / 1000);
+    }
+
+    const days = { '1d': 1, '2d': 2, '7d': 7 }[preset];
+    const months = { '1m': 1, '3m': 3, '6m': 6 }[preset];
+
+    if (days === undefined && months === undefined) return null;
+
+    const after = new Date(now);
+    if (days !== undefined) {
+        after.setDate(after.getDate() - days);
+    } else {
+        after.setMonth(after.getMonth() - months);
+    }
+
+    return Math.floor(after.getTime() / 1000);
+}
+
+function compute_date_ts(side) {
+    const dateStr = searchform.querySelector(`input[name="date_${side}_date"]`).value;
+    if (!dateStr) return null;
+    const ts = Date.parse(`${dateStr}T${side === 'before' ? '23:59:59' : '00:00:00'}`) / 1000;
+    return isNaN(ts) ? null : Math.floor(ts);
+}
+
+function toggle_date_branch(mode) {
+    for (const el of doc_query_all('#searchform .date-branch-absolute')) {
+        el.classList.toggle('hidden', mode !== 'absolute');
+    }
+    for (const el of doc_query_all('#searchform .date-branch-relative')) {
+        el.classList.toggle('hidden', mode !== 'relative');
+    }
+}
+
+function on_date_mode_click(e) {
+    const btn = e.target.closest('.binary-option');
+    if (!btn) return;
+    const group = btn.closest('.toggle-group');
+    if (!group || group.dataset.name !== 'date_mode') return;
+    toggle_date_branch(btn.dataset.value);
+}
+
+function get_date_storage() {
+    try {
+        return JSON.parse(localStorage.getItem(DATE_STORAGE_KEY)) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function save_date_storage(state) {
+    localStorage.setItem(DATE_STORAGE_KEY, JSON.stringify(state));
+}
+
+function clear_date_storage() {
+    localStorage.removeItem(DATE_STORAGE_KEY);
+}
+
+function restore_date_fields() {
+    const sp = new URLSearchParams(window.location.search);
+    const stored = get_date_storage();
+    const mode_group = searchform.querySelector('.toggle-group[data-name="date_mode"]');
+
+    const set_mode = (mode) => {
+        searchform.querySelector(`input[name="date_mode"][value="${mode}"]`).checked = true;
+        if (mode_group) refresh_binary_toggle(mode_group);
+    };
+
+    if (sp.get('date_after') && stored.mode === 'relative') {
+        set_mode('relative');
+
+        const presetSelect = searchform.querySelector('select[name="date_preset"]');
+        if (stored.preset) {
+            presetSelect.value = stored.preset;
+        }
+        sync_dropdown(presetSelect);
+
+        toggle_date_branch('relative');
+        return;
+    }
+
+    if (sp.get('date_after') && stored.mode === 'absolute') {
+        for (const side of ['after', 'before']) {
+            const dateInput = searchform.querySelector(`input[name="date_${side}_date"]`);
+
+            if (stored[`${side}_date`]) {
+                dateInput.value = stored[`${side}_date`];
+            } else if (sp.get(`date_${side}`)) {
+                const ts = parseInt(sp.get(`date_${side}`), 10);
+                if (!isNaN(ts) && ts > 0) {
+                    const d = new Date(ts * 1000);
+                    dateInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                }
+            }
+
+            if (dateInput.value) dateInput.classList.remove('date-empty');
+        }
+        set_mode('absolute');
+        toggle_date_branch('absolute');
+        return;
+    }
+
+    clear_date_storage();
+    toggle_date_branch('relative');
+}
+
 function on_panel_number_paste(e) {
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text') || '';
@@ -288,12 +455,15 @@ function init_search() {
     for (const group of doc_query_all('#searchform .binary-toggle .toggle-group')) {
         refresh_binary_toggle(group);
     }
+
+    restore_date_fields();
 }
 
 if (searchform) {
     searchform.addEventListener('submit', on_searchform_submit);
     document.addEventListener('click', on_tri_option_click);
     document.addEventListener('click', on_binary_toggle_click);
+    document.addEventListener('click', on_date_mode_click);
     document.addEventListener('click', on_dropdown_btn_click);
     document.addEventListener('click', on_dropdown_option_click);
     document.addEventListener('click', on_document_click_dropdown);

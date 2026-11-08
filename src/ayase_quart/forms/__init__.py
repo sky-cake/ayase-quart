@@ -9,7 +9,6 @@ from werkzeug.exceptions import BadRequest
 from wtforms import widgets
 from wtforms.fields import (
     BooleanField,
-    DateField,
     Field,
     IntegerField,
     PasswordField,
@@ -82,10 +81,6 @@ def is_too_long(s: str):
     return s.count('\n') > 20 if s else False
 
 
-def date_filter(x):
-    return datetime.fromisoformat(x) if x else None
-
-
 class MultiCheckboxCSVField(MultiCheckboxField):
     def process_data(self, data: str):
         if data is None:
@@ -134,8 +129,8 @@ class SearchForm(StripForm):
     media_filename = StringField('Filename', validators=[Optional(), Length(2, 256)])
     media_hash = StringField('File Hash', validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
     tripcode = StringField('Tripcode', validators=[Optional(), Length(8, 15)])
-    date_after = DateField('Start', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
-    date_before = DateField('End', validators=[Optional()], format='%Y-%m-%d', filters=[date_filter])
+    date_after = IntegerField('Start', validators=[Optional(), NumberRange(min=0)])
+    date_before = IntegerField('End', validators=[Optional(), NumberRange(min=0)])
     has_file = BooleanField('Has file', default=False, validators=[Optional()])
     has_no_file = BooleanField('No file', default=False, validators=[Optional()])
 
@@ -225,6 +220,14 @@ def validate_search_form(form: SearchForm):
 
     if form.is_sticky.data and form.is_not_sticky.data:
         raise BadRequest('is_sticky is contradicted')
+
+    max_ts = int(datetime.now().timestamp()) + 86400
+
+    if form.date_after.data and form.date_after.data > max_ts:
+        raise BadRequest('selected start date filter is in the future')
+
+    if form.date_before.data and form.date_before.data > max_ts:
+        form.date_before.data = None
 
     if form.date_before.data and form.date_after.data and (form.date_before.data < form.date_after.data):
         raise BadRequest('the dates are contradicted')

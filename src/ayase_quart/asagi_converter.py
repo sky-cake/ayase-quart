@@ -3,7 +3,6 @@ import html
 import json
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime
 from functools import cache
 from itertools import batched
 from textwrap import dedent
@@ -246,9 +245,6 @@ def validate_and_generate_params(form_data: dict, phg1: BasePlaceHolderGen) -> t
             elif field_val.startswith('"') and field_val.endswith('"') and '"' not in field_val[1:-1]:
                 field_val = field_val[1:-1]
             field_val = f'%{field_val}%'
-
-        if isinstance(field_val, date) and 1970 <= field_val.year <= 2038:
-            field_val = int(datetime.combine(field_val, datetime.min.time()).timestamp())
 
         if s_filter.in_list and isinstance(field_val, (list, tuple)) and len(field_val) > 0 and s_filter.fieldname:
             s_filter.fragment = f'{s_filter.fieldname} in ({phg1.size(field_val)})'
