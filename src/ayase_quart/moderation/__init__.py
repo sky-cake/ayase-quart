@@ -8,7 +8,7 @@ from .user import Permissions, create_user_if_not_exists
 async def init_moderation():
     moderation_scripts = ['users.sql', 'user_permissions.sql', 'report_parent.sql', 'report_child.sql', 'message.sql', 'deleted_media.sql']
     for script in moderation_scripts:
-        await db_m.query_dict(read_file(make_src_path('moderation', 'sql', script)))
+        await db_m.run_script(read_file(make_src_path('moderation', 'sql', script)))
 
     user_count = (await db_m.query_dict('select count(*) user_count from users'))[0].user_count
     if not user_count:
