@@ -10,6 +10,7 @@ from ...boards import board_shortnames
 from ...configs import mod_conf
 from ...moderation.auth_api import (
     login_api_usr_required,
+    load_api_usr_data,
     require_api_usr_is_active,
     require_api_usr_permissions
 )
@@ -28,9 +29,10 @@ bp = Blueprint('bp_api_admin', __name__, url_prefix='/api/v1')
 
 @bp.get("/latest")
 @login_api_usr_required
+@load_api_usr_data
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.archive_latest_view])
-async def latest(current_api_usr_id: int):
+async def latest():
     catalog = await get_latest_ops_as_catalog(board_shortnames)
     if catalog:
         return jsonify(catalog), 200
@@ -39,9 +41,10 @@ async def latest(current_api_usr_id: int):
 
 @bp.get("/configs")
 @login_api_usr_required
+@load_api_usr_data
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.archive_configs_view])
-async def configs(current_api_usr_id: int):
+async def configs():
     cs = [
         'hide_post_if_reported',
         'hide_upstream_deleted_posts',
@@ -54,9 +57,10 @@ async def configs(current_api_usr_id: int):
 
 @bp.get('/users')
 @login_api_usr_required
+@load_api_usr_data
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.user_read])
-async def users_index(current_api_usr_id: int):
+async def users_index():
     users = await get_all_users()
     if users:
         return jsonify(users), 200
@@ -65,9 +69,10 @@ async def users_index(current_api_usr_id: int):
 
 @bp.get('/users/<int:user_id>')
 @login_api_usr_required
+@load_api_usr_data
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.user_read])
-async def users_view(current_api_usr_id: int, user_id: int):
+async def users_view(user_id: int):
     user = await get_user_by_id(user_id)
     if user:
         return jsonify(user), 200
@@ -87,8 +92,10 @@ class UserPOST(Struct):
 @validate_request(UserPOST)
 @rate_limit(6, timedelta(hours=1))
 @login_api_usr_required
+@load_api_usr_data
+@require_api_usr_is_active
 @require_api_usr_permissions([Permissions.user_create])
-async def users_create(data: UserPOST, current_api_usr_id: int):
+async def users_create(data: UserPOST):
     is_valid = (data.username.strip() and data.password.strip())
     if is_valid:
         message = await create_user_if_not_exists(
@@ -116,9 +123,10 @@ class UserPUT(Struct):
 @bp.put('/users/<int:user_id>')
 @validate_request(UserPUT)
 @login_api_usr_required
+@load_api_usr_data
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.user_update])
-async def users_edit(data: UserPUT, current_api_usr_id: int, user_id: int):
+async def users_edit(data: UserPUT, user_id: int):
     user = await get_user_by_id(user_id)
     if not user:
         return {'error': 'User not found'}, 404
@@ -147,9 +155,10 @@ async def users_edit(data: UserPUT, current_api_usr_id: int, user_id: int):
 
 @bp.delete('/users/<int:user_id>')
 @login_api_usr_required
+@load_api_usr_data
 @require_api_usr_is_active
 @require_api_usr_permissions([Permissions.user_delete])
-async def users_delete(current_api_usr_id: int, user_id: int):
+async def users_delete(user_id: int):
     msg, code = await delete_user(user_id)
     if code < 400:
         return {'msg': msg}, code

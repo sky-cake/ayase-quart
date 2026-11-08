@@ -46,10 +46,17 @@ def login_api_usr_required(func):
         if not user_id:
             return {'error': 'Bad token'}, 401
 
-        kwargs['current_api_usr_id'] = int(user_id)
         return await func(*args, **kwargs)
 
     return decorated_function
+
+
+def load_api_usr_data(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        await current_api_usr.load_user()
+        return await func(*args, **kwargs)
+    return wrapper
 
 
 def require_api_usr_is_admin(func):
