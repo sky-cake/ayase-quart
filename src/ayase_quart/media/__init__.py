@@ -16,11 +16,11 @@ def ext_is_video(ext: str) -> bool:
 
 @cache
 def board_has_image(board: str) -> bool:
-    return board in media_conf.boards_with_image and media_conf.image_uri
+    return (media_conf.serve_all_board_media or board in media_conf.boards_with_image) and media_conf.image_uri
 
 @cache
 def board_has_thumb(board: str) -> bool:
-    return board in media_conf.boards_with_thumb and media_conf.thumb_uri
+    return (media_conf.serve_all_board_media or board in media_conf.boards_with_thumb) and media_conf.thumb_uri
 
 @cache
 def get_image_baseuri(board: str) -> str:

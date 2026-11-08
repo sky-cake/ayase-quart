@@ -13,6 +13,7 @@ bp = Blueprint("bp_app_media", __name__)
 if media_conf.endpoint and media_conf.serve_outside_static and media_conf.media_root_path:
 
     valid_exts = set(media_conf.valid_extensions)
+    serve_all_board_media = media_conf.serve_all_board_media
     boards_with_image = set(media_conf.boards_with_image)
     boards_with_thumb = set(media_conf.boards_with_thumb)
 
@@ -29,9 +30,9 @@ if media_conf.endpoint and media_conf.serve_outside_static and media_conf.media_
         if not board:
             abort(404)
 
-        if suffix_path.startswith(f'{board}/image/') and board not in boards_with_image:
+        if suffix_path.startswith(f'{board}/image/') and not (serve_all_board_media or board in boards_with_image):
             abort(404)
-        elif suffix_path.startswith(f'{board}/thumb/') and board not in boards_with_thumb:
+        elif suffix_path.startswith(f'{board}/thumb/') and not (serve_all_board_media or board in boards_with_thumb):
             abort(404)
 
         full_path = safe_join(media_conf.media_root_path, suffix_path)

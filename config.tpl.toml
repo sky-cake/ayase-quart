@@ -124,8 +124,12 @@ media_root_path = ''
 valid_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4']
 
 
-# The default is to serve media from all boards [Aside: set image_uri or thumb_url to '' to not serve the images, or thumbs, respectively]
-# You can specify a subset of boards with a whitelist
+# serve image and thumb media for all boards?
+# true = ignore the whitelists below
+serve_all_board_media = false
+# note: set image_uri to '' to not serve the images
+# note: set thumb_uri to '' to not serve the thumbs
+
 boards_with_image = '' # comma separated list of board shortnames like '' or 'a,o'
 boards_with_thumb = '' # comma separated list of board shortnames like '' or 'g,ck,o'
 

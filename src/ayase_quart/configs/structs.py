@@ -164,6 +164,7 @@ class MediaConfig(BaseConfig):
     serve_outside_static: bool = False
     media_root_path: str = ''
     valid_extensions: tuple[str, ...] = ('jpg', 'jpeg', 'png', 'gif', 'webm', 'mp4')
+    serve_all_board_media: bool = False
     boards_with_image: list[str] | str = field(default_factory=list)
     boards_with_thumb: list[str] | str = field(default_factory=list)
     use_nginx_sendfile: bool = False
