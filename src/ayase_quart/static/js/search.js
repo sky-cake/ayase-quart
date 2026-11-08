@@ -1,7 +1,5 @@
 const searchform = document.getElementById('searchform');
 
-const DATE_STORAGE_KEY = 'aq_search_date';
-
 const searchInfoBtn = document.getElementById('search-info');
 const searchHelper = document.getElementById('search-helper');
 
@@ -59,7 +57,10 @@ function on_searchform_submit(event) {
     let beforeDate = null;
 
     if (isRelative) {
-        afterDate = compute_relative_date(searchform.querySelector('select[name="date_preset"]').value);
+        const preset = searchform.querySelector('select[name="date_preset"]').value;
+        if (preset) {
+            params.append('date_rel', preset);
+        }
     } else {
         afterDate = searchform.querySelector('input[name="date_after_date"]').value || null;
         beforeDate = searchform.querySelector('input[name="date_before_date"]').value || null;
@@ -81,17 +82,6 @@ function on_searchform_submit(event) {
 
     if (beforeDate !== null) {
         params.append('date_before', beforeDate);
-    }
-
-    if (afterDate !== null || beforeDate !== null) {
-        save_date_storage(isRelative ? {
-            mode: 'relative',
-            preset: searchform.querySelector('select[name="date_preset"]').value,
-        } : {
-            mode: 'absolute',
-            after_date: searchform.querySelector('input[name="date_after_date"]').value,
-            before_date: searchform.querySelector('input[name="date_before_date"]').value,
-        });
     }
 
     let query = '';
@@ -310,33 +300,6 @@ function format_date(d) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function compute_relative_date(preset) {
-    const now = new Date();
-
-    const hours = { '1h': 1, '4h': 4 }[preset];
-    if (hours !== undefined) {
-        return Math.floor(now.getTime() / 1000) - hours * 3600;
-    }
-
-    if (preset === 'ytd') {
-        return format_date(new Date(now.getFullYear(), 0, 1));
-    }
-
-    const days = { '1d': 1, '2d': 2, '7d': 7 }[preset];
-    const months = { '1m': 1, '3m': 3, '6m': 6 }[preset];
-
-    if (days === undefined && months === undefined) return null;
-
-    const after = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (days !== undefined) {
-        after.setDate(after.getDate() - days);
-    } else {
-        after.setMonth(after.getMonth() - months);
-    }
-
-    return format_date(after);
-}
-
 function toggle_date_branch(mode) {
     for (const el of doc_query_all('#searchform .date-branch-absolute')) {
         el.classList.toggle('hidden', mode !== 'absolute');
@@ -354,27 +317,10 @@ function on_date_mode_click(e) {
     toggle_date_branch(btn.dataset.value);
 }
 
-function get_date_storage() {
-    try {
-        return JSON.parse(localStorage.getItem(DATE_STORAGE_KEY)) || {};
-    } catch (e) {
-        return {};
-    }
-}
-
-function save_date_storage(state) {
-    localStorage.setItem(DATE_STORAGE_KEY, JSON.stringify(state));
-}
-
-function clear_date_storage() {
-    localStorage.removeItem(DATE_STORAGE_KEY);
-}
-
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function restore_date_fields() {
     const sp = new URLSearchParams(window.location.search);
-    const stored = get_date_storage();
     const mode_group = searchform.querySelector('.toggle-group[data-name="date_mode"]');
 
     const set_mode = (mode) => {
@@ -382,43 +328,26 @@ function restore_date_fields() {
         if (mode_group) refresh_binary_toggle(mode_group);
     };
 
-    // no dates in the query string -> reset to the empty absolute default
-    if (!sp.get('date_after') && !sp.get('date_before')) {
-        clear_date_storage();
-        set_mode('absolute');
-        toggle_date_branch('absolute');
-        return;
-    }
-
-    // after a search, local storage decides which toggle to display
-    if (stored.mode === 'relative' && stored.preset) {
-        set_mode('relative');
-
+    // relative: ?date_rel=1h
+    const preset = sp.get('date_rel');
+    if (preset) {
         const presetSelect = searchform.querySelector('select[name="date_preset"]');
-        presetSelect.value = stored.preset;
+        presetSelect.value = preset;
         sync_dropdown(presetSelect);
 
+        set_mode('relative');
         toggle_date_branch('relative');
         return;
     }
 
-    // absolute (stored state, or a direct/shared visit when there is no storage):
-    // stored dates win, URL values are the fallback. legacy unix ts links are converted
+    // absolute: ?date_after=YYYY-MM-DD&date_before=YYYY-MM-DD.
+    // no dates in the query string -> reset to the empty absolute default
     for (const side of ['after', 'before']) {
         const dateInput = searchform.querySelector(`input[name="date_${side}_date"]`);
         const urlValue = sp.get(`date_${side}`);
 
-        if (stored[`${side}_date`]) {
-            dateInput.value = stored[`${side}_date`];
-        } else if (urlValue) {
-            if (DATE_RE.test(urlValue)) {
-                dateInput.value = urlValue;
-            } else {
-                const ts = parseInt(urlValue, 10);
-                if (!isNaN(ts) && ts > 0) {
-                    dateInput.value = format_date(new Date(ts * 1000));
-                }
-            }
+        if (urlValue && DATE_RE.test(urlValue)) {
+            dateInput.value = urlValue;
         }
 
         if (dateInput.value) dateInput.classList.remove('date-empty');

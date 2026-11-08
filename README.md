@@ -205,13 +205,6 @@ The `main` branch of this repo is considered to be the latest and greatest versi
 
 Certificates are required for moderation (any web-based authentication). AQ will not work without them unless `moderation.auth.cookie_secure=false`.
 
-If you're on Windows, you can use Git Bash to execute the command.
-
-`openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem`
-
-Save the two certs in `./`.
-
-
 ## Themes
 
 AQ only serves a single CSS file, `static/css/custom.css`, which implements the tomorrow theme. Other themes are archived in this repository, but we don't support them.

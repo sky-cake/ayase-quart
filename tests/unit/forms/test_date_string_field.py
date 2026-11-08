@@ -14,16 +14,16 @@ if 'ayase_quart.boards' not in sys.modules:
     boards_stub.board_objects = []
     sys.modules['ayase_quart.boards'] = boards_stub
 
-from ayase_quart.forms import UnixTsOrDateField  # noqa: E402
+from ayase_quart.forms import DateStringField  # noqa: E402
 
 
-class UnixTsOrDateForm(Form):
-    date_after = UnixTsOrDateField(validators=[Optional(), NumberRange(min=0)])
-    date_before = UnixTsOrDateField(end_of_day=True, validators=[Optional(), NumberRange(min=0)])
+class DateStringForm(Form):
+    date_after = DateStringField(validators=[Optional(), NumberRange(min=0)])
+    date_before = DateStringField(end_of_day=True, validators=[Optional(), NumberRange(min=0)])
 
 
 def make_form(data: dict) -> Form:
-    return UnixTsOrDateForm(data=data)
+    return DateStringForm(data=data)
 
 
 def test_date_string_after_is_start_of_day():
@@ -41,12 +41,14 @@ def test_same_day_range_is_not_contradicted():
     assert form.date_after.data <= form.date_before.data
 
 
-def test_unix_timestamp_passthrough():
+def test_unix_timestamp_strings_are_rejected():
     form = make_form({'date_after': '1731000000'})
-    assert form.date_after.data == 1731000000
+    assert form.date_after.data is None
+    assert form.date_after.process_errors
 
     form = make_form({'date_after': 1731000000})
-    assert form.date_after.data == 1731000000
+    assert form.date_after.data is None
+    assert form.date_after.process_errors
 
 
 def test_missing_and_blank_values_are_none():

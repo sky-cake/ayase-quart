@@ -40,20 +40,6 @@
     <script type="text/javascript" defer src="/static/js/search.js" {{ get_integrity("search.js")|safe }}></script>
 {% endblock %}
 
-{% set date_preset_choices = [
-    ('', 'All'),
-    ('1h', '1h'),
-    ('4h', '4h'),
-    ('1d', '1d'),
-    ('2d', '2d'),
-    ('7d', '7d'),
-    ('1m', '1m'),
-    ('3m', '3m'),
-    ('6m', '6m'),
-    ('1y', '1y'),
-    ('ytd', 'ytd'),
-] -%}
-
 {% block body %}
 <div class="search_container">
     <form action="" id="searchform" method="get" role="form" autocomplete="off" enctype="multipart/form-data" class="search-panel">
@@ -133,7 +119,7 @@
                     </div>
 
                     <div class="date-branch date-branch-relative hidden">
-                        {{ dropdown_raw('date_preset', date_preset_choices, '') }}
+                        {{ dropdown_raw('date_preset', date_rel_presets, '') }}
                     </div>
                 </div>
             </div>

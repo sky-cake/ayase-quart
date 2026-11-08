@@ -5,7 +5,7 @@ from jinja2 import Template
 from quart_wtf import QuartForm
 
 from ...configs import app_conf, index_search_conf, search_plugins_conf, site_conf, vanilla_search_conf
-from ...forms import SearchFormFTS, SearchForm, SearchFormSQL
+from ...forms import REL_DATE_PRESETS, SearchFormFTS, SearchForm, SearchFormSQL
 from ...moderation import fc
 from ...posts.comments import html_comment, html_highlight
 from ...posts.template_optimizer import (
@@ -226,6 +226,7 @@ async def search_handler(handler: SearchHandler, request_args: dict, endpoint_pa
 
     rendered_page = template_search.render(
         html_search_memo=handler.html_search_memo,
+        date_rel_presets=[('', 'All')] + [(p, p) for p in REL_DATE_PRESETS],
         yield_message=yield_message,
         gallery_mode=handler.is_gallery_mode,
         form=handler.form,

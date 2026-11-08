@@ -3,6 +3,7 @@ from collections import Counter
 from datetime import datetime, timedelta
 from enum import Enum
 
+from dateutil.relativedelta import relativedelta
 from quart import flash, session
 from quart_wtf import QuartForm
 from werkzeug.exceptions import BadRequest
@@ -81,9 +82,9 @@ def is_too_long(s: str):
     return s.count('\n') > 20 if s else False
 
 
-class UnixTsOrDateField(IntegerField):
+class DateStringField(IntegerField):
     """
-    Accepts a unix ts, or a yyyy-mm-dd date string.
+    Accepts a yyyy-mm-dd date string, converts it to a unix ts.
     """
     eod_td = timedelta(hours=23, minutes=59, seconds=59)
 
@@ -97,16 +98,8 @@ class UnixTsOrDateField(IntegerField):
         if data is None:
             return
 
-        elif isinstance(data, int):
-            self.data = data
-            return
-
         elif isinstance(data, str):
             data = data.strip()
-
-            if data.isdecimal():
-                self.data = int(data)
-                return
 
             try:
                 d = datetime.strptime(data, '%Y-%m-%d')
@@ -149,6 +142,36 @@ capcode_choices = [('any', 'any')] + sorted(
     [(cc.value, cc.name) for cc in Capcode if cc != Capcode.any],
     key=lambda c: c[1],
 )
+
+
+REL_DATE_HOURS = {'1h': 1, '4h': 4}
+REL_DATE_DAYS = {'1d': 1, '2d': 2, '7d': 7}
+REL_DATE_MONTHS = {'1m': 1, '3m': 3, '6m': 6}
+REL_DATE_YEARS = {'1y': 1}
+REL_DATE_PRESETS = (*REL_DATE_HOURS, *REL_DATE_DAYS, *REL_DATE_MONTHS, *REL_DATE_YEARS, 'ytd')
+
+
+def compute_rel_date_cutoff(preset: str) -> int:
+    now = datetime.now()
+    if preset == 'ytd':
+        return int(datetime(now.year, 1, 1).timestamp())
+
+    if preset in REL_DATE_HOURS:
+        return int(now.timestamp()) - REL_DATE_HOURS[preset] * 3600
+
+    midnight = datetime(now.year, now.month, now.day)
+    if preset in REL_DATE_DAYS:
+        return int((midnight - timedelta(days=REL_DATE_DAYS[preset])).timestamp())
+    
+    if preset in REL_DATE_MONTHS:
+        return int((midnight - relativedelta(months=REL_DATE_MONTHS[preset])).timestamp())
+    
+    if preset in REL_DATE_YEARS:
+        return int((midnight - relativedelta(years=REL_DATE_YEARS[preset])).timestamp())
+
+    raise BadRequest(f'unknown relative date preset: {preset}')
+
+
 class SearchForm(StripForm):
     do_not_strip: tuple[str] = ('comment',)
 
@@ -169,8 +192,9 @@ class SearchForm(StripForm):
     media_filename = StringField('Filename', validators=[Optional(), Length(2, 256)])
     media_hash = StringField('File Hash', validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
     tripcode = StringField('Tripcode', validators=[Optional(), Length(8, 15)])
-    date_after = UnixTsOrDateField('Start', validators=[Optional(), NumberRange(min=0)])
-    date_before = UnixTsOrDateField('End', end_of_day=True, validators=[Optional(), NumberRange(min=0)])
+    date_after = DateStringField('Start', validators=[Optional(), NumberRange(min=0)])
+    date_before = DateStringField('End', end_of_day=True, validators=[Optional(), NumberRange(min=0)])
+    date_rel = SelectField('Relative', default=None, choices=[(p, p) for p in REL_DATE_PRESETS], validate_choice=False)
     has_file = BooleanField('Has file', default=False, validators=[Optional()])
     has_no_file = BooleanField('No file', default=False, validators=[Optional()])
 
@@ -262,6 +286,11 @@ def validate_search_form(form: SearchForm):
         raise BadRequest('is_sticky is contradicted')
 
     max_ts = int(datetime.now().timestamp()) + 86400
+
+    if form.date_rel.data:
+        if form.date_rel.data not in REL_DATE_PRESETS:
+            raise BadRequest('invalid relative date preset')
+        form.date_after.data = compute_rel_date_cutoff(form.date_rel.data)
 
     if form.date_after.data and form.date_after.data > max_ts:
         raise BadRequest('selected start date filter is in the future')
