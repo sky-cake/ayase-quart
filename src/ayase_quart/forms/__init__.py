@@ -1,6 +1,6 @@
 import re
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 from quart import flash, session
@@ -81,6 +81,46 @@ def is_too_long(s: str):
     return s.count('\n') > 20 if s else False
 
 
+class UnixTsOrDateField(IntegerField):
+    """
+    Accepts a unix ts, or a yyyy-mm-dd date string.
+    """
+    eod_td = timedelta(hours=23, minutes=59, seconds=59)
+
+    def __init__(self, *args, end_of_day: bool = False, **kwargs):
+        self.end_of_day = end_of_day
+        super().__init__(*args, **kwargs)
+
+    def process_data(self, data):
+        self.data = None
+
+        if data is None:
+            return
+
+        elif isinstance(data, int):
+            self.data = data
+            return
+
+        elif isinstance(data, str):
+            data = data.strip()
+
+            if data.isdecimal():
+                self.data = int(data)
+                return
+
+            try:
+                d = datetime.strptime(data, '%Y-%m-%d')
+                if self.end_of_day:
+                    d += self.eod_td
+
+                self.data = int(d.timestamp())
+            except ValueError:
+                raise ValueError('bad date string')
+
+        else:
+            raise ValueError('bad type for date')
+
+
 class MultiCheckboxCSVField(MultiCheckboxField):
     def process_data(self, data: str):
         if data is None:
@@ -129,8 +169,8 @@ class SearchForm(StripForm):
     media_filename = StringField('Filename', validators=[Optional(), Length(2, 256)])
     media_hash = StringField('File Hash', validators=[Optional(), Length(22, LENGTH_MD5_HASH)])
     tripcode = StringField('Tripcode', validators=[Optional(), Length(8, 15)])
-    date_after = IntegerField('Start', validators=[Optional(), NumberRange(min=0)])
-    date_before = IntegerField('End', validators=[Optional(), NumberRange(min=0)])
+    date_after = UnixTsOrDateField('Start', validators=[Optional(), NumberRange(min=0)])
+    date_before = UnixTsOrDateField('End', end_of_day=True, validators=[Optional(), NumberRange(min=0)])
     has_file = BooleanField('Has file', default=False, validators=[Optional()])
     has_no_file = BooleanField('No file', default=False, validators=[Optional()])
 

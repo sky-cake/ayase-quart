@@ -42,6 +42,8 @@
 
 {% set date_preset_choices = [
     ('', 'All'),
+    ('1h', '1h'),
+    ('4h', '4h'),
     ('1d', '1d'),
     ('2d', '2d'),
     ('7d', '7d'),
@@ -111,17 +113,17 @@
             <div class="group-card">
                 <div class="tri-toggle binary-toggle date-toggle">
                     <div class="toggle-group" data-control="radio" data-name="date_mode" role="tablist" aria-label="Date mode">
-                        <button type="button" class="binary-option active" data-value="relative">Relative</button>
-                        <button type="button" class="binary-option" data-value="absolute">Date</button>
+                        <button type="button" class="binary-option" data-value="relative">Relative</button>
+                        <button type="button" class="binary-option active" data-value="absolute" data-default="1">Date</button>
                     </div>
                     <div class="tri-hidden">
-                        <input type="radio" name="date_mode" value="absolute">
-                        <input type="radio" name="date_mode" value="relative" checked>
+                        <input type="radio" name="date_mode" value="relative">
+                        <input type="radio" name="date_mode" value="absolute" checked>
                     </div>
                 </div>
 
                 <div class="date-fields">
-                    <div class="date-branch date-branch-absolute hidden">
+                    <div class="date-branch date-branch-absolute">
                         <div class="date-row">
                             <input type="date" name="date_after_date" class="date-empty">
                         </div>
@@ -130,7 +132,7 @@
                         </div>
                     </div>
 
-                    <div class="date-branch date-branch-relative">
+                    <div class="date-branch date-branch-relative hidden">
                         {{ dropdown_raw('date_preset', date_preset_choices, '') }}
                     </div>
                 </div>

@@ -55,36 +55,35 @@ function on_searchform_submit(event) {
     const mode_input = searchform.querySelector('input[name="date_mode"]:checked');
     const isRelative = Boolean(mode_input && mode_input.value === 'relative');
 
-    let afterTs = null;
-    let beforeTs = null;
+    let afterDate = null;
+    let beforeDate = null;
 
     if (isRelative) {
-        afterTs = compute_relative_ts();
+        afterDate = compute_relative_date(searchform.querySelector('select[name="date_preset"]').value);
     } else {
-        afterTs = compute_date_ts('after');
-        beforeTs = compute_date_ts('before');
-        const maxTs = Math.floor(Date.now() / 1000) + 86400;
+        afterDate = searchform.querySelector('input[name="date_after_date"]').value || null;
+        beforeDate = searchform.querySelector('input[name="date_before_date"]').value || null;
 
-        if (afterTs !== null && afterTs > maxTs) {
+        if (afterDate && afterDate > format_date(new Date())) {
             alert('Start date is in the future. No posts can match.');
             return;
         }
 
-        if (afterTs !== null && beforeTs !== null && beforeTs < afterTs) {
+        if (afterDate && beforeDate && beforeDate < afterDate) {
             alert('Start date must be before the end date.');
             return;
         }
     }
 
-    if (afterTs !== null) {
-        params.append('date_after', afterTs);
+    if (afterDate !== null) {
+        params.append('date_after', afterDate);
     }
 
-    if (beforeTs !== null) {
-        params.append('date_before', beforeTs);
+    if (beforeDate !== null) {
+        params.append('date_before', beforeDate);
     }
 
-    if (afterTs !== null || beforeTs !== null) {
+    if (afterDate !== null || beforeDate !== null) {
         save_date_storage(isRelative ? {
             mode: 'relative',
             preset: searchform.querySelector('select[name="date_preset"]').value,
@@ -307,12 +306,20 @@ function on_date_input() {
     this.classList.toggle('date-empty', !this.value);
 }
 
-function compute_relative_ts() {
-    const preset = searchform.querySelector('select[name="date_preset"]').value;
+function format_date(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function compute_relative_date(preset) {
     const now = new Date();
 
+    const hours = { '1h': 1, '4h': 4 }[preset];
+    if (hours !== undefined) {
+        return Math.floor(now.getTime() / 1000) - hours * 3600;
+    }
+
     if (preset === 'ytd') {
-        return Math.floor(new Date(now.getFullYear(), 0, 1).getTime() / 1000);
+        return format_date(new Date(now.getFullYear(), 0, 1));
     }
 
     const days = { '1d': 1, '2d': 2, '7d': 7 }[preset];
@@ -320,21 +327,14 @@ function compute_relative_ts() {
 
     if (days === undefined && months === undefined) return null;
 
-    const after = new Date(now);
+    const after = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     if (days !== undefined) {
         after.setDate(after.getDate() - days);
     } else {
         after.setMonth(after.getMonth() - months);
     }
 
-    return Math.floor(after.getTime() / 1000);
-}
-
-function compute_date_ts(side) {
-    const dateStr = searchform.querySelector(`input[name="date_${side}_date"]`).value;
-    if (!dateStr) return null;
-    const ts = Date.parse(`${dateStr}T${side === 'before' ? '23:59:59' : '00:00:00'}`) / 1000;
-    return isNaN(ts) ? null : Math.floor(ts);
+    return format_date(after);
 }
 
 function toggle_date_branch(mode) {
@@ -370,6 +370,8 @@ function clear_date_storage() {
     localStorage.removeItem(DATE_STORAGE_KEY);
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 function restore_date_fields() {
     const sp = new URLSearchParams(window.location.search);
     const stored = get_date_storage();
@@ -380,42 +382,49 @@ function restore_date_fields() {
         if (mode_group) refresh_binary_toggle(mode_group);
     };
 
-    if (sp.get('date_after') && stored.mode === 'relative') {
+    // no dates in the query string -> reset to the empty absolute default
+    if (!sp.get('date_after') && !sp.get('date_before')) {
+        clear_date_storage();
+        set_mode('absolute');
+        toggle_date_branch('absolute');
+        return;
+    }
+
+    // after a search, local storage decides which toggle to display
+    if (stored.mode === 'relative' && stored.preset) {
         set_mode('relative');
 
         const presetSelect = searchform.querySelector('select[name="date_preset"]');
-        if (stored.preset) {
-            presetSelect.value = stored.preset;
-        }
+        presetSelect.value = stored.preset;
         sync_dropdown(presetSelect);
 
         toggle_date_branch('relative');
         return;
     }
 
-    if (sp.get('date_after') && stored.mode === 'absolute') {
-        for (const side of ['after', 'before']) {
-            const dateInput = searchform.querySelector(`input[name="date_${side}_date"]`);
+    // absolute (stored state, or a direct/shared visit when there is no storage):
+    // stored dates win, URL values are the fallback. legacy unix ts links are converted
+    for (const side of ['after', 'before']) {
+        const dateInput = searchform.querySelector(`input[name="date_${side}_date"]`);
+        const urlValue = sp.get(`date_${side}`);
 
-            if (stored[`${side}_date`]) {
-                dateInput.value = stored[`${side}_date`];
-            } else if (sp.get(`date_${side}`)) {
-                const ts = parseInt(sp.get(`date_${side}`), 10);
+        if (stored[`${side}_date`]) {
+            dateInput.value = stored[`${side}_date`];
+        } else if (urlValue) {
+            if (DATE_RE.test(urlValue)) {
+                dateInput.value = urlValue;
+            } else {
+                const ts = parseInt(urlValue, 10);
                 if (!isNaN(ts) && ts > 0) {
-                    const d = new Date(ts * 1000);
-                    dateInput.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    dateInput.value = format_date(new Date(ts * 1000));
                 }
             }
-
-            if (dateInput.value) dateInput.classList.remove('date-empty');
         }
-        set_mode('absolute');
-        toggle_date_branch('absolute');
-        return;
-    }
 
-    clear_date_storage();
-    toggle_date_branch('relative');
+        if (dateInput.value) dateInput.classList.remove('date-empty');
+    }
+    set_mode('absolute');
+    toggle_date_branch('absolute');
 }
 
 function on_panel_number_paste(e) {
