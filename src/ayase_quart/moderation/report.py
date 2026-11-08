@@ -394,9 +394,7 @@ async def delete_post(current_usr: User, board_shortname: str, num: int, report_
     # Old Note: do not delete the report here. It is still needed to filter outgoing posts from full text search.
     flash_msg += (await move_post_to_delete_table(post))
 
-    full_del, prev_del = post_files_delete(post)
-    flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
-    flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
+    flash_msg += ' ' + ' '.join(post_files_delete(post))
 
     if post.get('media_hash'):
         try:
@@ -448,9 +446,7 @@ async def reports_action_routine(current_usr: User, report_parent_id: int, actio
             post = await get_post(report.board_shortname, report.num)
             if not post:
                 return 'Could not find post.', 404
-            full_del, prev_del = post_files_delete(post)
-            flash_msg += ' Deleted full media.' if full_del else ' Did not delete full media.'
-            flash_msg += ' Deleted thumbnail.' if prev_del else ' Did not delete thumbnail.'
+            flash_msg += ' ' + ' '.join(post_files_delete(post))
 
             if post.get('media_hash'):
                 try:

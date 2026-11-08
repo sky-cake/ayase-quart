@@ -22,11 +22,11 @@ def post_files_hide(post: dict) -> tuple[bool]:
     )
 
 
-def post_files_delete(post: dict) -> tuple[bool]:
-    return (
+def post_files_delete(post: dict) -> list[str]:
+    return [
         _post_files_delete(post, MediaType.full_media),
         _post_files_delete(post, MediaType.thumbnail),
-    )
+    ]
 
 
 def post_files_show(post: dict) -> tuple[bool]:
@@ -70,17 +70,23 @@ def _post_files_show(post: dict, media_type: MediaType) -> bool:
     return False
 
 
-def _post_files_delete(post: dict, media_type: MediaType) -> bool:
+def _post_files_delete(post: dict, media_type: MediaType) -> str:
+    label = 'full media' if media_type is MediaType.full_media else 'thumbnail'
+
     # already hidden?
     src = get_fs_path(post, media_type, hidden=True)
-    if src and os.path.isfile(src):
-        os.remove(src)
-        return True
+    if not src:
+        # still accessible?
+        src = get_fs_path(post, media_type)
 
-    # still accessible?
-    src = get_fs_path(post, media_type)
-    if src and os.path.isfile(src):
-        os.remove(src)
-        return True
+    if not src:
+        return f'No local path for {label} - the post may have no media.'
 
-    return False
+    if os.path.isfile(src):
+        try:
+            os.remove(src)
+            return f'Deleted {label}.'
+        except OSError as e:
+            return f'An error arose when deleting {label} ({e}).'
+
+    return f'{label.capitalize()} not found on disk - media may be stored on another server, or already deleted.'
