@@ -14,10 +14,12 @@ async def record_deleted_media(post: dict, user_id: int) -> bool:
         post['num'],
         post['thread_num'],
         user_id,
+        post.get('media_orig'),
+        post.get('preview_orig'),
     ]
     sql = f"""
         insert or ignore into
-            deleted_media (media_hash, board_shortname, num, thread_num, user_id)
+            deleted_media (media_hash, board_shortname, num, thread_num, user_id, media_orig, preview_orig)
         values ({db_m.Phg().size(params)})
         returning deleted_media_id
     ;"""

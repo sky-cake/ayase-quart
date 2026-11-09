@@ -85,6 +85,18 @@ cron_flag = CmdArg(
     '--cron', help='run every N seconds',
     type=int, default=None, metavar='SECONDS',
 )
+dry_run_flag = CmdArg(
+    '--dry', help='print what would be deleted without deleting',
+    action='store_true', dest='dry_run',
+)
+media_fp_flag = CmdArg(
+    '--fp', help='media fingerprint used to derive filenames for rows missing media_orig/preview_orig (defaults to media_fp from config)',
+    choices=['sutra', 'asagi'], default=None,
+)
+opt_board_arg = CmdArg(
+    'boards', help='board(s) to operate on (defaults to all boards)',
+    nargs='*', metavar='BOARD',
+)
 report_category_flag = CmdArg(
     '-c', '--category', help='report category',
     choices=['illegal_content', 'dcma', 'underage', 'embedded_data', 'doxxing', 'work_safe', 'spamming', 'advertising', 'impersonation', 'bots', 'other',],
@@ -172,6 +184,9 @@ root_cmds = [
         ]),
     ]),
     Command(Cmd.mod, 'moderation managemnt', [
+        Command('clean_deleted_media', 'delete orphaned media files of deleted posts',
+            post_args=[opt_board_arg, dry_run_flag, media_fp_flag],
+        ),
         Command('report', 'manage user reports', [
             Command('list', 'list reports with filters', post_args=report_filter_flags),
             Command('count', 'show report counts'),

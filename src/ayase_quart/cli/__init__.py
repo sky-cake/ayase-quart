@@ -17,4 +17,9 @@ def main():
             except KeyboardInterrupt:
                 pass
         case Cmd.mod:
-            pass
+            import asyncio
+            from .mod_cli import mod_cli
+            try:
+                asyncio.run(mod_cli(args))
+            except KeyboardInterrupt:
+                pass

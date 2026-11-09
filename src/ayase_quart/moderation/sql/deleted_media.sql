@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS deleted_media (
     num INTEGER NOT NULL,
     thread_num INTEGER NOT NULL,
     user_id INTEGER NOT NULL, -- user_id of the mod/admin that deleted the post
+    media_orig TEXT, -- full media filename e.g. 1696291733998594.jpg - needed to compute asagi fs paths
+    preview_orig TEXT, -- thumbnail filename e.g. 1696291733998594s.jpg - needed to compute asagi fs paths
     deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (board_shortname, num, media_hash)
 );
