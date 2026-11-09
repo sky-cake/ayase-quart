@@ -1,7 +1,6 @@
 import os
 from argparse import Namespace
 
-from ..boards import board_shortnames
 from ..configs import media_conf
 from ..db import db_m
 from ..enums import MediaFP
@@ -19,21 +18,24 @@ async def clean_deleted_media_cli(args: Namespace) -> None:
         print(f'media_root_path is not set - cannot resolve local media paths.')
         return
 
-    boards = args.boards or list(board_shortnames)
     dry_run = args.dry_run
 
     print(f'Running clean_deleted_media {"(dry run)" if dry_run else ""}')
-    print(f'Boards: {" ".join(boards)}')
     if not dry_run and not get_confirm('Delete orphaned media files of deleted posts?'):
         print('Exiting')
         return
 
-    sql = f"""
-        select board_shortname, num, thread_num, media_hash, media_orig, preview_orig
-        from deleted_media
-        where board_shortname in ({db_m.Phg().size(boards)})
-    ;"""
-    rows = await db_m.query_dict(sql, params=boards)
+    sql = 'select board_shortname, num, thread_num, media_hash, media_orig, preview_orig from deleted_media'
+    if args.boards:
+        sql += f' where board_shortname in ({db_m.Phg().size(args.boards)});'
+        rows = await db_m.query_dict(sql, params=args.boards)
+    else:
+        sql += ';'
+        rows = await db_m.query_dict(sql)
+    if not rows:
+        print('No rows in deleted_media' + (f' for boards: {" ".join(args.boards)}' if args.boards else '') + '.')
+        return
+    print(f'Boards: {" ".join(sorted({row["board_shortname"] for row in rows}))}')
 
     media_fp = MediaFP(args.fp) if args.fp else media_conf.media_fp
 
