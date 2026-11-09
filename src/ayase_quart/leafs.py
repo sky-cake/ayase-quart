@@ -80,7 +80,7 @@ def _post_files_delete(post: dict, media_type: MediaType) -> str:
         src = get_fs_path(post, media_type)
 
     if not src:
-        return f'No local path for {label} - the post may have no media.'
+        return f'No media to delete.'
 
     if os.path.isfile(src):
         try:
@@ -89,4 +89,4 @@ def _post_files_delete(post: dict, media_type: MediaType) -> str:
         except OSError as e:
             return f'An error arose when deleting {label} ({e}).'
 
-    return f'{label.capitalize()} not found on disk - media may be stored on another server, or already deleted.'
+    return f'{label.capitalize()} not found on disk.'
