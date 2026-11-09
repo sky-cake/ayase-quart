@@ -8,18 +8,22 @@ async def record_deleted_media(post: dict, user_id: int) -> bool:
     if not media_hash:
         return False
 
+    media_orig = post.get('media_orig')
+    ext = media_orig.rsplit('.', 1)[-1] if media_orig and '.' in media_orig else None
+
     params = [
         media_hash,
         post['board_shortname'],
         post['num'],
         post['thread_num'],
         user_id,
-        post.get('media_orig'),
+        media_orig,
         post.get('preview_orig'),
+        ext,
     ]
     sql = f"""
         insert or ignore into
-            deleted_media (media_hash, board_shortname, num, thread_num, user_id, media_orig, preview_orig)
+            deleted_media (media_hash, board_shortname, num, thread_num, user_id, media_orig, preview_orig, ext)
         values ({db_m.Phg().size(params)})
         returning deleted_media_id
     ;"""

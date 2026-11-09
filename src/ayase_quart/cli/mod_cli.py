@@ -25,7 +25,7 @@ async def clean_deleted_media_cli(args: Namespace) -> None:
         print('Exiting')
         return
 
-    sql = 'select board_shortname, num, thread_num, media_hash, media_orig, preview_orig from deleted_media'
+    sql = 'select board_shortname, num, thread_num, media_hash, media_orig, preview_orig, ext from deleted_media'
     if args.boards:
         sql += f' where board_shortname in ({db_m.Phg().size(args.boards)});'
         rows = await db_m.query_dict(sql, params=args.boards)
@@ -52,7 +52,10 @@ async def clean_deleted_media_cli(args: Namespace) -> None:
         if media_fp == MediaFP.sutra:
             post = {'board_shortname': board, 'media_hash': media_hash, 'media_orig': f'{media_hash}.jpg'}
             candidates = [(MediaType.thumbnail, post)]
-            candidates += [(MediaType.full_media, post | {'media_orig': f'{media_hash}.{ext}'}) for ext in exts]
+            if row['ext']:
+                candidates.append((MediaType.full_media, post | {'media_orig': f'{media_hash}.{row["ext"]}'}))
+            else:
+                candidates += [(MediaType.full_media, post | {'media_orig': f'{media_hash}.{e}'}) for e in exts]
         else:
             if not row['media_orig'] or not row['preview_orig']:
                 skipped += 1
@@ -66,7 +69,9 @@ async def clean_deleted_media_cli(args: Namespace) -> None:
             candidates = [(MediaType.full_media, post), (MediaType.thumbnail, post)]
 
         for media_type, candidate_post in candidates:
-            path = get_fs_path(candidate_post, media_type, hidden=True) or get_fs_path(candidate_post, media_type)
+            path = get_fs_path(candidate_post, media_type, hidden=True)
+            if not path or not os.path.isfile(path):
+                path = get_fs_path(candidate_post, media_type)
             if not path or path in seen_paths:
                 continue
             seen_paths.add(path)

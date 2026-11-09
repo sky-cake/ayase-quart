@@ -75,8 +75,8 @@ def _post_files_delete(post: dict, media_type: MediaType) -> str:
 
     # already hidden?
     src = get_fs_path(post, media_type, hidden=True)
-    if not src:
-        # still accessible?
+    if not src or not os.path.isfile(src):
+        # still there?
         src = get_fs_path(post, media_type)
 
     if not src:
