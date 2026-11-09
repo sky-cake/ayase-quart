@@ -1,4 +1,4 @@
-from quart import Blueprint
+from quart import Blueprint, abort
 
 from ...asagi_converter import generate_catalog, generate_index, generate_thread
 from ...configs import app_conf
@@ -26,6 +26,9 @@ if app_conf.api:
         post_2_quotelinks, thread_dict = await generate_thread(board, thread_id)
 
         thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=authenticated)
+
+        if not thread_dict['posts'] or thread_dict['posts'][0]['op'] != 1:
+            abort(404)
 
         return thread_dict
 

@@ -191,6 +191,9 @@ async def v_thread(board: str, thread_num: int, is_admin: bool, logged_in: bool,
     thread_dict['posts'] = await fc.filter_reported_posts(thread_dict['posts'], is_authority=logged_in)
     p.check('filter_reported')
 
+    if not thread_dict['posts'] or thread_dict['posts'][0]['op'] != 1:
+        abort(404)
+
     if can_post_delete:
         csrf_input = get_csrf_input()
         for post in thread_dict['posts']:
