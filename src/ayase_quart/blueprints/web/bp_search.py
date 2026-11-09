@@ -74,7 +74,11 @@ class SearchHandler:
 
         else:
             # doesn't require restored comments because it's just a gallery
-            posts_t = ''.join(get_media_img_t(post, is_search=True) for post in posts)
+            posts_t = ''
+            for post in posts:
+                # nuke mode works in gallery mode too, same as regular results
+                nuke_btn = get_nuke_btn_t(post['board_shortname'], post['num'], self.nuke_csrf_input) if self.nuke_csrf_input else None
+                posts_t += get_media_img_t(post, is_search=True, nuke_btn=nuke_btn)
         return posts_t
 
     async def filter_posts_and_total_hits(self, posts: list[dict], total_hits: int, logged_in: bool=False):

@@ -241,8 +241,13 @@ def make_imgclassbf_lu() -> dict[int, str]:
     }
 
 imgclass_lu = make_imgclassbf_lu()
-def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_search=False, is_catalog=False):
-    """Will render image with object-fit: cover by default"""
+def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_search=False, is_catalog=False, nuke_btn: str=None):
+    """Will render image with object-fit: cover by default
+
+    `nuke_btn` renders a nuke form next to the media, for search gallery mode.
+    Gallery items have no post container (`#pc{num}`) for nuke.js to remove,
+    so the media container itself is marked with data-board/data-num.
+    """
 
     if not (media_filename := post['media_filename']):
         return ''
@@ -257,7 +262,8 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
 
     if not thumb_src:
         # board has no thumbnails configured/served, render the msg box directly
-        return '<div class="media_cont fileThumb img_broken"></div>'
+        nuke_data_t = f' data-board="{board}" data-num="{post["num"]}"' if nuke_btn else ''
+        return f'<div class="media_cont fileThumb img_broken"{nuke_data_t}>{nuke_btn or ""}</div>'
 
     if full_src is None:
         full_src = get_image_full_uri(board, post)
@@ -274,9 +280,12 @@ def get_media_img_t(post: dict, full_src: str=None, thumb_src: str=None, is_sear
     label_parts = []
     if is_search and not is_catalog:
         label_parts.append(f'[<a href="/{board}/thread/{post['thread_num']}#p{post['num']}" rel="noreferrer" target="_blank" class="click">Post</a>]')
+    if nuke_btn:
+        label_parts.append(nuke_btn)
     media_link = f'<span class="media-label">{" ".join(label_parts)}</span>' if label_parts else ''
     br = '<br>' if media_link else ''
-    return f"""<div class="media_cont fileThumb">{media_link}{br}
+    nuke_data_t = f' data-board="{board}" data-num="{post["num"]}"' if nuke_btn else ''
+    return f"""<div class="media_cont fileThumb"{nuke_data_t}>{media_link}{br}
 <img loading="lazy" src="{thumb_src}" width="{ post['preview_w'] }" height="{ post['preview_h'] }"
   id="{_id}" class="{imgclass_lu[classes]}" data-expanded="false" data-ext="{ext}"
   data-full_media_src="{full_src}" data-thumb_src="{thumb_src}"
