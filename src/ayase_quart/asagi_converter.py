@@ -333,7 +333,6 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, wher
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
 
         where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
-        params = tuple(params) if params else None
 
         sql = f"""
         select count(*)
@@ -341,7 +340,7 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, wher
         {where_query}
         ;"""
 
-        query_tuple_calls.append(db_q.query_tuple(sql, params=params))
+        query_tuple_calls.append(db_q.query_tuple(sql, params=tuple(params) if params else None))
 
     total_hits_per_board = await asyncio.gather(*query_tuple_calls)
 
@@ -473,7 +472,6 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
 
         where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
-        params = tuple(params) if params else None
 
         sql = f"""
             {get_selector(board)}
@@ -484,7 +482,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
             {offset}
         """
 
-        calls.append(db_q.query_dict(sql, params=params))
+        calls.append(db_q.query_dict(sql, params=tuple(params) if params else None))
 
     board_posts = await asyncio.gather(*calls)
 

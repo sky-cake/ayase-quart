@@ -9,6 +9,7 @@ from ..upstream import get_catalog_upstream
 
 BOARDS_FILE = os.environ.get('AQ_B', 'boards.toml')
 DEFAULT_BOARDS_FILE = 'boards.tpl.toml'
+MAX_BOARD_NAME_LEN = 5 # search engine pk encodes board shorts at 6 bits/char over 32 bits: 32 / 6 = 5 chars max
 
 def _load_boards_toml():
     if not hasattr(_load_boards_toml, 'boards'):
@@ -36,11 +37,18 @@ def get_shorts_objects(boards: dict):
     return board_shorts, board_objects
 
 # TODO: figure out how to integrate with _get_board_views
+def _drop_len_invalid_boards(boards: dict) -> None:
+    if invalid := [board for board in boards if not 0 < len(board) <= MAX_BOARD_NAME_LEN]:
+        print(f'Boards not passing the {MAX_BOARD_NAME_LEN} char limit:\n\t[{", ".join(invalid)}]\nWill be ignored.')
+        for b in invalid:
+            del boards[b]
+
 def validate_boards_in_db(boards: dict=None) -> dict:
     if boards is None:
         boards = _load_boards_toml()
+    _drop_len_invalid_boards(boards)
     db_tables = asyncio.run(get_db_tables(get_db_sub_config(db_conf), db_conf.db_type, close_pool_after=True))
-    valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
+    valid_boards = set(db_tables) & boards.keys()
     if removals := [board for board in boards if board not in valid_boards]:
         for b in removals:
             del boards[b]
@@ -50,9 +58,10 @@ def validate_boards_in_db(boards: dict=None) -> dict:
 
 def _get_board_views():
     boards = _load_boards_toml()
+    _drop_len_invalid_boards(boards)
     if app_conf.validate_boards_db:
         db_tables = asyncio.run(get_db_tables(get_db_sub_config(db_conf), db_conf.db_type, close_pool_after=True))
-        valid_boards = {t for t in db_tables if len(t) < 5} & boards.keys()
+        valid_boards = set(db_tables) & boards.keys()
         if removals := [board for board in boards if board not in valid_boards]:
             # print(f'Boards not found in database:\n\t[{", ".join(removals)}]\nWill be ignored.')
             for b in removals:

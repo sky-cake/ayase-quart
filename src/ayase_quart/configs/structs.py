@@ -86,6 +86,12 @@ class AppConfig(BaseConfig):
     def __post_init__(self):
         force_setattr(self, 'login_endpoint', f"/{strip_slashes(self.login_endpoint, both=True)}" if self.login_endpoint else '/login')
 
+        if not self.ssl_key:
+            force_setattr(self, 'ssl_key', None)
+
+        if not self.ssl_cert:
+            force_setattr(self, 'ssl_cert', None)
+
         if self.secret == 'DEFAULT_CHANGE_ME':
             from secrets import token_hex
             force_setattr(self, 'secret', token_hex(32))
