@@ -375,6 +375,46 @@ footer {
     max-width: 95%;
 }
 
+#catalog_search_bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 300px;
+    max-width: 95%;
+    margin: 4px auto;
+}
+
+#catalog_search_wrap {
+    position: relative;
+    flex: 1;
+}
+
+#catalog_search_input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 22px 4px 6px;
+}
+
+#catalog_search_clear {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #818181;
+    line-height: 1;
+    font-size: 15px;
+    user-select: none;
+}
+
+#catalog_search_clear:hover {
+    color: #dddddd;
+}
+
+#catalog_search_go_wrap[hidden] {
+    display: none;
+}
+
 #threads {
     text-align: center;
 }
@@ -1300,7 +1340,8 @@ h3 {
         height: 150px;
         object-fit: contain;
     }
-    #catalog_threads>.thread {
+
+#catalog_threads>.thread {
         width: calc(50% - 2px);
         max-width: none;
         max-height: 360px;

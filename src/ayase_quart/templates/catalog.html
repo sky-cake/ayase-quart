@@ -3,6 +3,13 @@
 {% if can_nuke %}
 [<span id="nuke_toggle" class="abtn">Go To Nuke Mode</span>]
 {% endif %}
+<div id="catalog_search_bar" data-board="{{ board }}">
+    <div id="catalog_search_wrap">
+        <input type="text" id="catalog_search_input" placeholder="Filter page" autocomplete="off" spellcheck="false">
+        <span id="catalog_search_clear" title="Clear">&times;</span>
+    </div>
+    <span id="catalog_search_go_wrap">[<a id="catalog_search_go" class="abtn" href="" target="_blank" rel="noreferrer" title="Search the archive for this text">Search</a>]</span>
+</div>
 {% include 'pagination.html' %}
 <div id="catalog_threads">
     {{threads|safe}}
@@ -11,4 +18,5 @@
 {% if can_nuke %}
 <script type="text/javascript" defer src="/static/js/nuke.js" {{ get_integrity("nuke.js")|safe }}></script>
 {% endif %}
+<script type="text/javascript" defer src="/static/js/catalog.js" {{ get_integrity("catalog.js")|safe }}></script>
 {% endblock %}
