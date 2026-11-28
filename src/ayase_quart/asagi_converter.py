@@ -312,17 +312,17 @@ def get_board_2_nums_where(board: str, where_query: str, form_data: dict, phg: B
     return '', []
 
 
-def get_board_specific_where_clause(board: str, where_query: str, params: list[str], form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
-    """Additional where filters MUST come after `where_query` for Postgresql param counting."""
+def get_board_specific_where_clause(board: str, where_query: str, form_data: dict, phg: BasePlaceHolderGen) -> tuple[str, list]:
+    """Additional where filters MUST come after `where_query` for Postgresql param counting.
+    Returns the extended where clause and any extra params the caller must append to its own params."""
     where_query += get_tl_where(where_query, form_data)
     where_query += get_cl_where(where_query, form_data)
     where_query += get_facet_where(board, where_query, form_data, phg)
 
     board_2_nums_where, board_2_nums_params = get_board_2_nums_where(board, where_query, form_data, phg)
     where_query += board_2_nums_where
-    params += board_2_nums_params
 
-    return where_query, params
+    return where_query, board_2_nums_params
 
 
 is_counter_db = 'counter' in db_q.Phg.__slots__
@@ -332,15 +332,16 @@ async def get_total_hits(form_data: dict, boards: list[str], max_hits: int, wher
 
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
 
-        where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
+        board_where_query, extra_params = get_board_specific_where_clause(board, where_query, form_data, phg2)
+        board_params = params + extra_params
 
         sql = f"""
         select count(*)
         from `{board}`
-        {where_query}
+        {board_where_query}
         ;"""
 
-        query_tuple_calls.append(db_q.query_tuple(sql, params=tuple(params) if params else None))
+        query_tuple_calls.append(db_q.query_tuple(sql, params=tuple(board_params) if board_params else None))
 
     total_hits_per_board = await asyncio.gather(*query_tuple_calls)
 
@@ -435,7 +436,7 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
 
     params += get_facet_params(form_data)
 
-    total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits, where_query, phg1, params.copy())
+    total_hits, total_hits_per_board = await get_total_hits(form_data, boards, max_hits, where_query, phg1, params)
 
     if not total_hits:
         return [], 0
@@ -471,18 +472,19 @@ async def search_posts(form_data: dict, max_hits: int) -> tuple[list[dict], int]
     for board in hits_per_board_to_query.keys():
         phg2 = db_q.Phg(start=phg1.counter) if hasattr(phg1, 'counter') else db_q.Phg()
 
-        where_query, params = get_board_specific_where_clause(board, where_query, params, form_data, phg2)
+        board_where_query, extra_params = get_board_specific_where_clause(board, where_query, form_data, phg2)
+        board_params = params + extra_params
 
         sql = f"""
             {get_selector(board)}
             from `{board}`
-            {where_query}
+            {board_where_query}
             order by ts_unix {order_by}
             limit {hits_per_board_to_query[board]}
             {offset}
         """
 
-        calls.append(db_q.query_dict(sql, params=tuple(params) if params else None))
+        calls.append(db_q.query_dict(sql, params=tuple(board_params) if board_params else None))
 
     board_posts = await asyncio.gather(*calls)
 
