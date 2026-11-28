@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 from ...configs import index_search_conf
-from ...enums import IndexSearchType
 
 from ..query import IndexSearchQuery  # noqa: F401
 
@@ -43,16 +42,7 @@ search_index_fields = [
 def get_index_search_provider():
     if hasattr(get_index_search_provider, 'search_p'):
         return get_index_search_provider.search_p
-    match index_search_conf.provider:
-        case IndexSearchType.meili:
-            from .meili import MeiliSearch as Search_p
-        case IndexSearchType.typesense:
-            from .typesense import TypesenseSearch as Search_p
-        case IndexSearchType.lnx:
-            from .lnx import LnxSearch as Search_p
-        case _:
-            from .lnx import LnxSearch as Search_p
-
+    from .lnx import LnxSearch as Search_p
     search_p = Search_p(index_search_conf)
     get_index_search_provider.search_p = search_p
     return search_p

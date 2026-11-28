@@ -13,9 +13,7 @@ class DbType(StrEnum):
 
 
 class IndexSearchType(StrEnum):
-    meili = 'meili'
     lnx = 'lnx'
-    typesense = 'typesense'
 
 
 class ModStatus(StrEnum):

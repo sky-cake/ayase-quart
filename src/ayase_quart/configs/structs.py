@@ -232,7 +232,6 @@ class IndexSearchConfig(BaseConfig):
     provider: IndexSearchType = IndexSearchType.lnx
     host: str = 'http://localhost:8000'
     headers: dict[str, str] | None = None
-    version: str | None = None
     multi_board_search: bool = True
     lnx: LnxConfig = LnxConfig()
 

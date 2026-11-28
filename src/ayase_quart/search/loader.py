@@ -34,7 +34,7 @@ Pros for lower value:
 THREAD_BATCH = 80
 
 THREAD_BATCH_MULT = 20 # this calculation is wrong, should depend on THREAD_BATCH and the optimal thread select size
-POST_BATCH = 5_000 # currently fitted for meili & lnx
+POST_BATCH = 5_000 # currently fitted for lnx
 EXTRACT_TASKS = 8 # if THREAD_BATCH is lower, increase, if its higher, decrease. modify THREAD_BATCH first, then try to find optimum.
 TRANSFORM_TASKS = 6 # Have just enough to keep the row_batch_q always low, competes for cpu with the search engine
 EXEC_PROCESSES = TRANSFORM_TASKS + 1 # always keep an extra around in case one of them hiccups

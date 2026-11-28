@@ -35,9 +35,6 @@ class BaseSearch(ABC):
             connector=TCPConnector(keepalive_timeout=600),
             headers=search_conf.headers,
         )
-        self.version = search_conf.version
-        if not self.version:
-            print('Ignore warning if not using quickwit. Warning: quickwit version not set.')
 
     async def close(self):
         if not self.client.closed:

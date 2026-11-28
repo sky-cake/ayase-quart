@@ -9,7 +9,7 @@ Ayase Quart (AQ) is an interface for 4chan/Lainchan archives using the Asagi dat
   - See [here](preview/README.md) for images.
 - Advanced search options.
   - Search replies where the opening post's comment includes a specific pattern.
-  - Full-text-search (FTS) using lnx, meilisearch, and others engines are supported.
+  - Full-text-search (FTS) using lnx.
   - Gallery mode for search results.
 - A moderation system.
   - View reports.
@@ -68,13 +68,11 @@ Assuming you have a data source set up, you can:
 1. [Optional] Set up a full text search (FTS) database for index searching.
    - Choose a search engine and run its docker container with `docker compose up`.
    - Learn about configuring search engines [here](https://github.com/sky-cake/ayase-quart/wiki/03_SE_Quickstart).
-   - Ayase Quart aims to provide (at least partial) support following engines. We have compiled some [search engine notes](./index_search/README.md) during testing phase for your discretion.
+   - Ayase Quart supports the LNX search engine. We have compiled some [search engine notes](./index_search/README.md) during testing phase for your discretion.
 
         | Engine | GitHub | Notes |
         |-------------|--------|-------|
         | [LNX      ](https://docs.lnx.rs/) | [lnx](https://github.com/lnx-search/lnx) | (fully supported, tested) |
-        | [Meili    ](https://www.meilisearch.com/docs/learn/getting_started/installation) | [meilisearch](https://github.com/meilisearch/meilisearch) | (partial support, not tested) |
-        | [TypeSense](https://typesense.org/docs/guide/install-typesense.html) | [typesense](https://github.com/typesense/typesense) | (partial support, not tested) |
 
     - Remember to check that your config port matches the docker container port.
     - Run:
