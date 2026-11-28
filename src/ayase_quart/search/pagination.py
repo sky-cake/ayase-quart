@@ -97,8 +97,9 @@ def template_pagination_links(path: str, params: dict, total_pages: int, section
         if any(v == x for x in (None, '', False)):
             continue
         if type(v) is list:
-            for e in v:
-                params_t.append((k, e))
+            # csv params in one key, matching the search routes' arg parsing
+            # (`request.args.to_dict(flat=True)` keeps only the first of repeated keys)
+            params_t.append((k, ','.join(str(e) for e in v)))
         else:
             params_t.append((k, v))
     enc_params = urlencode(params_t)
