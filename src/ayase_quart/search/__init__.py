@@ -16,28 +16,31 @@ async def _get_posts_and_total_hits_fts(form_data: dict) -> tuple[list[dict], in
     board_ints = [board_2_int(board) for board in form_data['boards']]
 
     if form_data['op_title'] or form_data['op_comment']:
-        q = IndexSearchQuery(
+        # two-step search,
+        # 1. find thread_nums per board for op_title, op_comment queries
+        # 2. search for those thread_nums while keeping board:thread_num integrity
+        facet_q = IndexSearchQuery(
             op=True,
             comment=form_data['op_comment'] if form_data['op_comment'] else None,
             title=form_data['op_title'] if form_data['op_title'] else None,
             boards=board_ints,
-            hits_per_page=index_search_conf.max_hits, # max_hits due to facet search
+            hits_per_page=index_search_conf.max_hits,
         )
-        boards_2_threadnums, total_threads_hits = await index_searcher.search_posts_get_thread_nums(q)
-        # TODO: introduce form_data['boards_2_threadnums'] = boards_2_threadnums
-        # this results in 1 query rather than len(boards) queries
-        posts = []
-        total_hits = 0
-        for board, thread_nums in boards_2_threadnums.items():
-            # must go one board at a time to maintain board:thread_num integrity
-            # if we want, we can limit faceted search to 1 board in the form validation
-            form_data['boards'] = [board]
-            form_data['thread_nums'] = thread_nums
-            query = get_index_search_query(form_data)
-            _posts, _total_hits = await index_searcher.search_posts(query)
-            posts.extend(_posts)
-            total_hits += _total_hits
-        return posts, total_hits
+
+        # note: capped at index_search_conf.max_hits, not index_search_conf.hits_per_page
+        # this functions like our sql search
+        page_board_2_nums, total_hits = await index_searcher.search_posts_get_thread_nums(facet_q)
+
+        if not total_hits or not page_board_2_nums:
+            return [], 0
+
+        boards_2_threadnums: dict[int, set[int]] = {board_2_int(board): set(nums) for board, nums in page_board_2_nums.items()}
+
+        # search-plugins use board_2_nums
+        # some deduplication could be done here, but it likely doesn't make a difference
+        query = get_index_search_query(form_data)
+        query.board_2_thread_nums = boards_2_threadnums
+        return await index_searcher.search_posts(query)
 
     query = get_index_search_query(form_data, board_ints=board_ints)
     return await index_searcher.search_posts(query)

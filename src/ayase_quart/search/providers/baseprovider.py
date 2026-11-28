@@ -88,7 +88,7 @@ class BaseSearch(ABC):
         results = [unpack_metadata(r['data'], r['comment']) for r in results]
         return results, total_hits
 
-    async def search_posts_get_thread_nums(self, q: IndexSearchQuery) -> dict:
+    async def search_posts_get_thread_nums(self, q: IndexSearchQuery) -> tuple[dict, int]:
         """Returns {board_shortname: nums} mappings. nums = thread_nums when op=1. Used for faceted search.
         """
         results, total_hits = await self._search_index(INDEXES.posts.value, q)

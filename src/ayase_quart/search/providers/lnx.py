@@ -240,6 +240,20 @@ class LnxSearch(BaseSearch):
                     },
                 }
             )
+        if q.board_2_thread_nums:
+            pair_strs = []
+            for board, thread_nums in q.board_2_thread_nums.items():
+                nums_str = ' OR '.join(f'thread_num:{int(thread_num)}' for thread_num in thread_nums)
+                pair_str = f'(board:{board}) AND ({nums_str})'
+                pair_strs.append(pair_str)
+            query.append(
+                {
+                    'occur': 'must',
+                    'normal': {
+                        'ctx': ' OR '.join(pair_strs),
+                    },
+                }
+            )
         if q.tl:
             operator = q.tlop if hasattr(q, 'tlop') and q.tlop else '='
             if operator == '=':
